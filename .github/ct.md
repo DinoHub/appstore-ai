@@ -1,4 +1,4 @@
-Note that any line with '#' will be ignored
+# Note that any line with '#' will be ignored
 
 # Write your commit message here
 # -------- Preferably using up to 50 chars ----->|
