@@ -1,11 +1,29 @@
 import tempfile
 from pathlib import Path
+from enum import Enum
 from typing import Dict, List, Optional
 
 from clearml.datasets import Dataset
 from fastapi import FastAPI, File, Query, UploadFile
+from pydantic import BaseModel
 
 app = FastAPI()
+
+class SecurityClassification(str, Enum):
+    unclassified = "unclassified"
+class ModelDescription(BaseModel):
+    text: str
+    title: str
+    media: Optional[List[str]]
+class ModelCard(BaseModel):
+    title: str
+    description: List[ModelDescription]
+    datetime: str
+    tags: List[str]
+    security_classification: SecurityClassification
+    owner: str
+    creator: Optional[str]
+
 
 
 @app.get("/")
@@ -66,4 +84,12 @@ async def create_dataset(
         )  # TODO: allow upload files to other locations
 
         dataset.finalize(verbose=True)
-        return dataset.file_entries_dict
+        return dataset.id, dataset.file_entries_dict
+
+@app.get("/models")
+async def get_all_model_cards():
+    raise NotImplementedError
+
+@app.post("/models/")
+async def create_model_card(card: ModelCard):
+    print(card.dict())
