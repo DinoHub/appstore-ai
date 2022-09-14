@@ -43,32 +43,25 @@ async def create_dataset(
         dataset_name (str): Name of dataset
         files (List[UploadFile]): Files in dataset to be uploaded (multipart-form)
     """
-    # TODO: Check if dataset name already exists
-    # Start by creating a new dataset
-    dataset = Dataset.create(
-        dataset_name=dataset_name,
-        dataset_project=project_name
-    )
-
     # TODO: Use add_external_files to allow upload dataset from other locations
     # Write dataset to temp directory
     # NOTE: not using aiofiles for async read and write as performance is slow
-    with tempfile.TemporaryDirectory(dataset_name ,"clearml-dataset") as dirpath:
+    with tempfile.TemporaryDirectory(dataset_name, "clearml-dataset") as dirpath:
         for file in files:
             # write file to fs
             with open(Path(dirpath, file.filename), "wb") as f:
-                while content := file.file.read(1024): # Read in chunks
+                while content := file.file.read(1024):  # Read in chunks
                     f.write(content)
-        # then, add entire dir
-        dataset.add_files(
-            dirpath,
-            verbose=True # TODO: Set to False in prod
+        
+        dataset = Dataset.create( # only when writing is finished then create data
+            dataset_name=dataset_name, dataset_project=project_name
         )
+        # then, add entire dir
+        dataset.add_files(dirpath, verbose=True)  # TODO: Set to False in prod
         # upload
         dataset.upload(
             show_progress=True
-        ) # TODO: allow upload files to other locations
+        )  # TODO: allow upload files to other locations
 
         dataset.finalize(verbose=True)
         return dataset.file_entries_dict
-        
