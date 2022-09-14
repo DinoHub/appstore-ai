@@ -1,8 +1,9 @@
 import tempfile
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List, Optional
+
 from clearml.datasets import Dataset
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Query, UploadFile
 
 app = FastAPI()
 
@@ -35,6 +36,7 @@ async def create_dataset(
     project_name: str,
     dataset_name: str,
     files: List[UploadFile] = File(description="Dataset files"),
+    compressed: bool = Query(default=False) # TODO: Add support for unzipping compressed dataset
 ):
     """Given a set of files, upload them to ClearML Data as a Dataset
 
