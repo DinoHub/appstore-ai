@@ -3,6 +3,7 @@ from pathlib import Path
 from enum import Enum
 from typing import Dict, List, Optional
 
+from clearml import Task
 from clearml.datasets import Dataset
 from fastapi import FastAPI, File, Query, UploadFile
 from pydantic import BaseModel
@@ -46,7 +47,7 @@ async def hello_world():
 @app.get("/experiments/{id}")
 async def get_experiment(id: str):
     exp_list = client.tasks.get_by_id(task=id)
-    return {"id": exp_list.data.id, "name" : exp_list.data.name}
+    return {"id": exp_list.data.id, "name" : exp_list.data.name, "rest" : exp_list.data}
     
 @app.post("/experiments/clone")
 async def clone_exp(item: ClonePackage):
@@ -121,7 +122,18 @@ async def get_all_model_cards():
 async def create_model_card(card: ModelCard):
     print(card.dict())
     # TODO: Check if clearml exp id is present
-    
+    if card.clearml_exp_id:
+        task = Task.get_task(
+            task_id=card.clearml_exp_id
+        )
+        # Retrieve metadata from ClearML experiment
+        # Get Scalars if present
+        scalar_data = task.get_reported_plots()
+
+        # get other metadata
+        tags = task.get_tags()
+
+
 
     # TODO: If clearml exp id is present, retrieve from clearml
     # GET: Tags, Created By, Framework of Model, Scalars, Pipelines (model performance)
