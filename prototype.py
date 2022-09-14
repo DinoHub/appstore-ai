@@ -23,6 +23,11 @@ class ModelCard(BaseModel):
     security_classification: SecurityClassification
     owner: str
     creator: Optional[str]
+    # TODO: Figure out model source stuff
+    clearml_exp_id: Optional[str]
+    inference_url: str
+    output_generator_url: str
+
 
 
 
