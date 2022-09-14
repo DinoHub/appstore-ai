@@ -43,7 +43,6 @@ async def create_dataset(
         dataset_name (str): Name of dataset
         files (List[UploadFile]): Files in dataset to be uploaded (multipart-form)
     """
-    # TODO: Include option to change output uri to upload dataset to different place
     # TODO: Check if dataset name already exists
     # Start by creating a new dataset
     dataset = Dataset.create(
