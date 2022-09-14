@@ -98,3 +98,11 @@ async def get_all_model_cards():
 @app.post("/models/")
 async def create_model_card(card: ModelCard):
     print(card.dict())
+    # TODO: Check if clearml exp id is present
+    
+
+    # TODO: If clearml exp id is present, retrieve from clearml
+    # GET: Tags, Created By, Framework of Model, Scalars, Pipelines (model performance)
+
+    # Save information into database
+    
