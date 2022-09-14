@@ -1,18 +1,20 @@
 import tempfile
-from pathlib import Path
 from enum import Enum
-from typing import Dict, List, Optional
+from pathlib import Path
+from typing import List, Optional
 
 from clearml import Task
+from clearml.backend_api.session.client import APIClient
 from clearml.datasets import Dataset
 from fastapi import FastAPI, File, Query, UploadFile
 from pydantic import BaseModel
-from clearml.backend_api.session.client import APIClient
+
 app = FastAPI()
 client = APIClient()
-import inspect
-from pydantic import BaseModel
 from typing import Union
+
+from pydantic import BaseModel
+
 
 class SecurityClassification(str, Enum):
     unclassified = "unclassified"
