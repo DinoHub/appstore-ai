@@ -17,3 +17,22 @@ install: poetry.lock
 	poetry install
 
 setup: create_venv install
+
+init_server: 
+	. venv/bin/activate && mlaunch init --single --port 27017 --name "app_store";\
+
+start_server: 
+	@echo "Starting MongoDB"
+	-@if [ -d "data" ];then\
+		. venv/bin/activate && mlaunch start;\
+	else\
+		echo "No mlaunch data, run make init_server";\
+	fi
+
+stop_server:
+	@echo "Stopping MongoDB"
+	@if [ -d "data" ];then\
+		. venv/bin/activate && mlaunch stop;\
+	else\
+		echo "No mlaunch data, run make init_server";\
+	fi
