@@ -73,6 +73,8 @@ async def create_dataset(
         # then, add entire dir
         dataset.add_files(dirpath, verbose=True)  # TODO: Set to False in prod
         # upload
+        # NOTE: this process takes quite long
+        # TODO: see if I can make this non-blocking
         dataset.upload(show_progress=True, output_url=output_url)
 
         dataset.finalize(verbose=True)
