@@ -5,28 +5,28 @@ from typing import List
 from clearml.datasets import Dataset
 from fastapi import APIRouter, File, Query, UploadFile
 
-router = APIRouter()
+router = APIRouter(prefix="/datasets")
 
 
-@router.get("/datasets")
+@router.get("/")
 async def get_all_datasets():
     datasets = Dataset.list_datasets()
     return datasets
 
 
-@router.get("/datasets/projects/{project_name}")
+@router.get("/projects/{project_name}")
 async def get_datasets_by_project(project_name: str):
     datasets = Dataset.list_datasets(partial_name=project_name)
     return datasets
 
 
-@router.get("/datasets/{dataset_id}")
+@router.get("/{dataset_id}")
 async def get_dataset_by_id(dataset_id: str):
     dataset = Dataset.get(dataset_id=dataset_id)
     return dataset.file_entries_dict
 
 
-@router.post("/datasets/{project_name}/{dataset_name}")
+@router.post("/{project_name}/{dataset_name}")
 async def create_dataset(
     project_name: str,
     dataset_name: str,

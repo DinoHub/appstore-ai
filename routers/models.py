@@ -1,7 +1,7 @@
 from typing import List, Mapping, Union, Optional
 
 from clearml import Model, Task
-from fastapi import APIRouter, Path, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -9,16 +9,16 @@ from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
 from models.model import ModelCard
 
-router = APIRouter()
+router = APIRouter(prefix="/models")
 
 
-@router.get("/models/")
+@router.get("/")
 async def get_model_cards(length: Optional[int] = Query(default=None, ge=0)):
     # Get all model cards
     results = await db["models"].find().to_list(length=length)
     return JSONResponse(content=results, status_code=status.HTTP_200_OK)
 
-@router.get("/models/{model_id}")
+@router.get("/{model_id}")
 async def get_model_card_by_id(model_id: str):
     # Get model card by database id (NOT clearml id)
     model = await db["models"].find_one(
@@ -30,7 +30,7 @@ async def get_model_card_by_id(model_id: str):
         status_code=status.HTTP_200_OK, content=model
     )
 
-@router.post("/models/", response_model=ModelCard, status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_model_card(card: ModelCard):
     # If exp id is provided, some metadata can be obtained from ClearML
     if card.clearml_exp_id:
@@ -92,10 +92,12 @@ async def create_model_card(card: ModelCard):
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             new_card = await db["models"].insert_one(card)
-            created_card = await db["models"].find_one({"_id": new_card.inserted_id})
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_card)
+            # created_card = await db["models"].find_one({"_id": new_card.inserted_id})
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=new_card.inserted_id)
 
-@router.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+# @router.patch("/models/{model_id}")
+
+@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model_card_by_id(model_id: str):
     # TODO: Check that user is the owner of the model card
     async with await mongo_client.start_session() as session:

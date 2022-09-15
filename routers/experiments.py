@@ -3,16 +3,16 @@ from fastapi import APIRouter
 from internal.clearml_client import clearml_client
 from models.experiment import ClonePackage
 
-router = APIRouter()
+router = APIRouter(prefix="/experiments")
 
 
-@router.get("/experiments/{id}")
+@router.get("/{id}")
 async def get_experiment(id: str):
     exp_list = clearml_client.tasks.get_by_id(task=id)
     return {"id": exp_list.data.id, "name": exp_list.data.name, "rest": exp_list.data}
 
 
-@router.post("/experiments/clone")
+@router.post("/clone")
 async def clone_exp(item: ClonePackage):
     exp_list = clearml_client.tasks.get_by_id(task=item.id)
     if item.clone_name == None:
