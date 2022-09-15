@@ -1,4 +1,4 @@
-from typing import List, Mapping, Union, Optional
+from typing import List, Mapping, Optional, Union
 
 from clearml import Model, Task
 from fastapi import APIRouter, HTTPException, Query, status
@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from models.model import ModelCard
+from models.model import ModelCardModel, UpdateModelCardModel
 
 router = APIRouter(prefix="/models")
 
@@ -31,7 +31,7 @@ async def get_model_card_by_id(model_id: str):
     )
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_model_card(card: ModelCard):
+async def create_model_card(card: ModelCardModel):
     # If exp id is provided, some metadata can be obtained from ClearML
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
@@ -45,7 +45,7 @@ async def create_model_card(card: ModelCard):
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="ClearML experiment not found.",
+                detail=f"ClearML experiment with id {card.clearml_exp_id} not found.",
             )
         if card.performance is None:
             card.performance = {"title": "Performance", "text": "", "media": []}
@@ -95,7 +95,31 @@ async def create_model_card(card: ModelCard):
             # created_card = await db["models"].find_one({"_id": new_card.inserted_id})
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=new_card.inserted_id)
 
-# @router.patch("/models/{model_id}")
+@router.put("/models/{model_id}", response_model=ModelCardModel)
+async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
+    # TODO: Check that user is the model owner
+    card = {
+        k : v for k, v in card.dict().items() if v is not None
+    }
+
+    if len(card) > 0:
+        # perform transaction to ensure we can roll back changes
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                result = await db["models"].update_one({
+                    "_id" : model_id
+                }, { "$set" : card })
+
+                if result.modified_count == 1:
+                    if (updated_card := await db["models"].find_one({"_id" : model_id})) is not None:
+                        return updated_card
+    # If no changes, try to return existing card
+    if (existing_card := await db["models"].find_one({ "_id" : model_id })) is not None:
+        return existing_card
+
+    # Else, card never existed
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Model Card with ID: {model_id} not found.")
+
 
 @router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model_card_by_id(model_id: str):
