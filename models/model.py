@@ -16,8 +16,7 @@ class PerformanceSectionModel(SectionModel):
     media: Optional[List[Dict[str, Dict[str, Dict[str, List[float]]]]]]
 
 
-class ModelCardModel(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+class ModelCardModelIn(BaseModel): # Input spec
     title: str
     # NOTE: flattened sections to make schema easier
     # description: Dict[SectionTypes, Section]
@@ -38,12 +37,12 @@ class ModelCardModel(BaseModel):
     inference_url: str
     output_generator_url: str
 
+class ModelCardModelDB(ModelCardModelIn): 
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     class Config:
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
-
-
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
     description: Optional[SectionModel]

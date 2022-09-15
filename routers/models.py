@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from models.model import ModelCardModel, UpdateModelCardModel
+from models.model import ModelCardModelIn, ModelCardModelDB, UpdateModelCardModel
 
 router = APIRouter(prefix="/models")
 
@@ -31,7 +31,7 @@ async def get_model_card_by_id(model_id: str):
     )
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_model_card(card: ModelCardModel):
+async def create_model_card(card: ModelCardModelIn):
     # If exp id is provided, some metadata can be obtained from ClearML
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
@@ -88,14 +88,14 @@ async def create_model_card(card: ModelCardModel):
                     # NOTE: if they provided the inference url, should still be usable
                     continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
-    card = jsonable_encoder(card)
+    card = jsonable_encoder(ModelCardModelDB(**card.dict()))
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             new_card = await db["models"].insert_one(card)
             # created_card = await db["models"].find_one({"_id": new_card.inserted_id})
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=new_card.inserted_id)
 
-@router.put("/models/{model_id}", response_model=ModelCardModel)
+@router.put("/models/{model_id}", response_model=ModelCardModelDB)
 async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
     # TODO: Check that user is the model owner
     card = {
