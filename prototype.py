@@ -37,6 +37,7 @@ class Section(BaseModel):
     title: str
     media: Optional[List[Dict]]
 
+
 class PerformanceSection(Section):
     media: Optional[List[Dict[str, Dict[str, Dict[str, List[float]]]]]]
 
@@ -51,7 +52,7 @@ class ModelCard(BaseModel):
     explanation: Section
     deployment: Section
     performance: Optional[PerformanceSection]
-    model_details: Optional[Section] # store model genre, format and framework
+    model_details: Optional[Section]  # store model genre, format and framework
     datetime: str
     tags: List[str]
     security_classification: SecurityClassification
@@ -160,10 +161,7 @@ async def get_all_model_cards():
 
 @app.post("/models/")
 async def create_model_card(card: ModelCard):
-    # card = card.dict()
     # If exp id is provided, some metadata can be obtained from ClearML
-    if not card.tags:
-        card.tags = []
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
         # Get Scalars if present
@@ -174,16 +172,9 @@ async def create_model_card(card: ModelCard):
         try:
             task = Task.get_task(task_id=card.clearml_exp_id)
         except ValueError:
-            # Could not find task
-            raise HTTPException(
-                status_code=404, detail="ClearML experiment not found."
-            )
+            raise HTTPException(status_code=404, detail="ClearML experiment not found.")
         if card.performance is None:
-            card.performance = {
-                "title" : "Performance",
-                "text" : "",
-                "media" : []
-            }
+            card.performance = {"title": "Performance", "text": "", "media": []}
         card.performance.media.append(
             task.get_reported_scalars()
         )  # do not override existing plots
@@ -196,7 +187,6 @@ async def create_model_card(card: ModelCard):
         # NOTE: consider using userid to form a url to the user account
         card.creator = task_data.user
         card.tags.extend(task_data.tags)
-        # Get info on model frameworks
         # Start by getting model id so that we can get them
         # NOTE: client api from testing seems to only give id and name if I use th
         # this is why I don't just use the get_all REST api
@@ -205,10 +195,7 @@ async def create_model_card(card: ModelCard):
         # Use set as there can be duplicate model ids as some files refer to same model
         model_ids = set(map(lambda model: model.model, output_models))
         if card.model_details is None:
-            card.model_details = {
-                "title" : "Model Details",
-                "text" : ""
-            }
+            card.model_details = {"title": "Model Details", "text": ""}
         # For each model,
         if len(model_ids) > 0:
             # potentially a script could output multiple models
@@ -217,16 +204,15 @@ async def create_model_card(card: ModelCard):
                     model = Model(model_id)
                     # NOTE: get_frameworks REST api will give ALL frameworks in project
                     # therefore, get them using Model object
-                    card.model_details["text"] += f"{model.name}:\n\tFramework: {model.framework}\n"
+                    card.model_details[
+                        "text"
+                    ] += f"{model.name}:\n\tFramework: {model.framework}\n"
                     card.tags.append(model.framework)
                 except ValueError as e:
                     # Possibly model has been deleted
                     # TODO: Warn user that model metadata was not found
                     # NOTE: if they provided the inference url, should still be usable
-                    continue # thus, just ignore this
-
-    card.tags = set(card.tags) # remove duplicates
-
+                    continue  # thus, just ignore this
+    card.tags = set(card.tags)  # remove duplicates
     # TODO: Save information into database
     return card
-
