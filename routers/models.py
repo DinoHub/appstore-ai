@@ -1,5 +1,6 @@
 from typing import List, Mapping, Optional, Union
-
+from bson import json_util
+import json
 from clearml import Model, Task
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
@@ -12,23 +13,38 @@ from models.model import ModelCardModelIn, ModelCardModelDB, UpdateModelCardMode
 router = APIRouter(prefix="/models")
 
 
-@router.get("/")
+@router.get("/", response_model=ModelCardModelIn)
 async def get_model_cards(length: Optional[int] = Query(default=None, ge=0)):
+    """Retrieve all model cards (or a set number of ards)
+
+    Args:
+        length (Optional[int], optional): Number of model cards to return. If `None`, returns all cards.
+            Defaults to None.
+
+    Returns:
+        _type_: _description_
+    """
     # Get all model cards
     results = await db["models"].find().to_list(length=length)
+    results = json.loads(
+        json_util.dumps(results)
+    )  # enable bson from mongodb to be converted to json
     return JSONResponse(content=results, status_code=status.HTTP_200_OK)
+
 
 @router.get("/{model_id}")
 async def get_model_card_by_id(model_id: str):
     # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one(
-        { "_id" : model_id }
-    )
+    model = await db["models"].find_one({"_id": model_id})
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    return JSONResponse(
-        status_code=status.HTTP_200_OK, content=model
+    model = json.loads(
+        json_util.dumps(
+            model
+        )
     )
+    return JSONResponse(status_code=status.HTTP_200_OK, content=model)
+
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_model_card(card: ModelCardModelIn):
@@ -93,32 +109,38 @@ async def create_model_card(card: ModelCardModelIn):
         async with session.start_transaction():
             new_card = await db["models"].insert_one(card)
             # created_card = await db["models"].find_one({"_id": new_card.inserted_id})
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=new_card.inserted_id)
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
+    )
+
 
 @router.put("/models/{model_id}", response_model=ModelCardModelDB)
 async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
     # TODO: Check that user is the model owner
-    card = {
-        k : v for k, v in card.dict().items() if v is not None
-    }
+    card = {k: v for k, v in card.dict().items() if v is not None}
 
     if len(card) > 0:
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                result = await db["models"].update_one({
-                    "_id" : model_id
-                }, { "$set" : card })
+                result = await db["models"].update_one(
+                    {"_id": model_id}, {"$set": card}
+                )
 
                 if result.modified_count == 1:
-                    if (updated_card := await db["models"].find_one({"_id" : model_id})) is not None:
+                    if (
+                        updated_card := await db["models"].find_one({"_id": model_id})
+                    ) is not None:
                         return updated_card
     # If no changes, try to return existing card
-    if (existing_card := await db["models"].find_one({ "_id" : model_id })) is not None:
+    if (existing_card := await db["models"].find_one({"_id": model_id})) is not None:
         return existing_card
 
     # Else, card never existed
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Model Card with ID: {model_id} not found.")
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Model Card with ID: {model_id} not found.",
+    )
 
 
 @router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -126,7 +148,5 @@ async def delete_model_card_by_id(model_id: str):
     # TODO: Check that user is the owner of the model card
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            await db["models"].delete_one({
-                "_id" : model_id
-            })
+            await db["models"].delete_one({"_id": model_id})
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
