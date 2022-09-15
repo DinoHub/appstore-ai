@@ -1,9 +1,10 @@
+from collections import defaultdict
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Mapping, Optional, Dict
 
-from clearml import Task
+from clearml import Task, Model
 from clearml.backend_api.session.client import APIClient
 from clearml.datasets import Dataset
 from fastapi import FastAPI, File, Query, UploadFile
@@ -18,13 +19,29 @@ from pydantic import BaseModel
 
 class SecurityClassification(str, Enum):
     unclassified = "unclassified"
+
+
+class SectionTypes(str, Enum):
+    use_case = "Model Use"
+    limitations = "Limitations"
+    evaluation_metrics = "Evaluation Metrics"
+    performance = "Performance"
+    explanation = "Explanation"
+    deployment = "Deployment"
+    license = "License"
+    remarks = "Remarks"
+    model_config = "Model Format and Framework"
+
+
 class ModelDescription(BaseModel):
     text: str
     title: str
-    media: Optional[List[str]]
+    media: Optional[Union[List[str], List[Dict]]]
+
+
 class ModelCard(BaseModel):
     title: str
-    description: List[ModelDescription]
+    description: Dict[SectionTypes, ModelDescription]
     datetime: str
     tags: List[str]
     security_classification: SecurityClassification
@@ -36,10 +53,10 @@ class ModelCard(BaseModel):
     output_generator_url: str
 
 
-
 class ClonePackage(BaseModel):
     id: str
     clone_name: Union[str, None] = None
+
 
 @app.get("/")
 async def hello_world():
@@ -49,17 +66,24 @@ async def hello_world():
 @app.get("/experiments/{id}")
 async def get_experiment(id: str):
     exp_list = client.tasks.get_by_id(task=id)
-    return {"id": exp_list.data.id, "name" : exp_list.data.name, "rest" : exp_list.data}
-    
+    return {"id": exp_list.data.id, "name": exp_list.data.name, "rest": exp_list.data}
+
+
 @app.post("/experiments/clone")
 async def clone_exp(item: ClonePackage):
     exp_list = client.tasks.get_by_id(task=item.id)
     if item.clone_name == None:
-        new_exp = exp_list.clone(new_task_name = f'Clone of {exp_list.data.name}')
-    else: 
-        new_exp = exp_list.clone(new_task_name = f'{item.clone_name}')
+        new_exp = exp_list.clone(new_task_name=f"Clone of {exp_list.data.name}")
+    else:
+        new_exp = exp_list.clone(new_task_name=f"{item.clone_name}")
     cloned = client.tasks.get_by_id(task=new_exp.id)
-    return {"id": exp_list.data.id, "name" : exp_list.data.name,"clone_id": cloned.data.id,"clone_name":cloned.data.name}
+    return {
+        "id": exp_list.data.id,
+        "name": exp_list.data.name,
+        "clone_id": cloned.data.id,
+        "clone_name": cloned.data.name,
+    }
+
 
 @app.get("/datasets")
 async def get_all_datasets():
@@ -84,7 +108,9 @@ async def create_dataset(
     project_name: str,
     dataset_name: str,
     files: List[UploadFile] = File(description="Dataset files"),
-    compressed: bool = Query(default=False) # TODO: Add support for unzipping compressed dataset
+    compressed: bool = Query(
+        default=False
+    ),  # TODO: Add support for unzipping compressed dataset
 ):
     """Given a set of files, upload them to ClearML Data as a Dataset
 
@@ -102,8 +128,8 @@ async def create_dataset(
             with open(Path(dirpath, file.filename), "wb") as f:
                 while content := file.file.read(1024):  # Read in chunks
                     f.write(content)
-        
-        dataset = Dataset.create( # only when writing is finished then create data
+
+        dataset = Dataset.create(  # only when writing is finished then create data
             dataset_name=dataset_name, dataset_project=project_name
         )
         # then, add entire dir
@@ -116,29 +142,67 @@ async def create_dataset(
         dataset.finalize(verbose=True)
         return dataset.id, dataset.file_entries_dict
 
+
 @app.get("/models")
 async def get_all_model_cards():
     raise NotImplementedError
 
+
 @app.post("/models/")
 async def create_model_card(card: ModelCard):
-    print(card.dict())
-    # TODO: Check if clearml exp id is present
+    # If exp id is provided, some metadata can be obtained from ClearML
+    tags = card.tags
+    sections = defaultdict(lambda: defaultdict(list), **card.description)
     if card.clearml_exp_id:
-        task = Task.get_task(
-            task_id=card.clearml_exp_id
-        )
         # Retrieve metadata from ClearML experiment
         # Get Scalars if present
-        scalar_data = task.get_reported_plots()
+        # this data will be passed to front end (Plotly.js)
+        # OR we can create plots within here and save the image to db
+        # NOTE: I specifically use clearml sdk as it is the only way to get the data points
+        # backend rest api does not expose this info (only summary statistics)
+        task = Task.get_task(task_id=card.clearml_exp_id)
+        plots = task.get_reported_plots()
+        sections["Evaluation Metrics"]["media"].extend(
+            plots
+        )  # do not override existing plots
+        # NOTE: switch to backend rest api as only that let's me get info on user
+        # NOTE: we can only obtain attributes using "." notation from the data below
+        task_data: Mapping[str, Union[str, Mapping]] = client.tasks.get_by_id(
+            task=card.clearml_exp_id
+        ).data
+        # NOTE: I can only get user id, not the name
+        # NOTE: consider using userid to form a url to the user account
+        user_id = task_data.user
 
-        # get other metadata
-        tags = task.get_tags()
+        tags.extend(task_data.tags)
+        # Get info on model frameworks
+        # Start by getting model id so that we can get them
+        # NOTE: client api from testing seems to only give id and name if I use th
+        # this is why I don't just use the get_all REST api
+        output_models: List[Mapping[str, str]] = task_data.models.output
+        # Obtain Id
+        # Use set as there can be duplicate model ids as some files refer to same model
+        model_ids = set(map(lambda model: model.model, output_models))
+        # For each model,
+        models = {}
+        if model_ids:
+            # potentially a script could output multiple models
+            for model_id in model_ids:
+                model = Model(model_id)
+                # NOTE: get_frameworks REST api will give ALL frameworks in project
+                # therefore, get them using Model object
+                models[model.name] = model.framework
+                tags.append(model.framework)
+    else:
+        # User should have manually filled up info
+        pass
 
+    # Finally, push this info into the metacards database
+    tags = set(tags)  # remove duplicated tags
 
+    return models, user_id, task_data, plots
 
     # TODO: If clearml exp id is present, retrieve from clearml
     # GET: Tags, Created By, Framework of Model, Scalars, Pipelines (model performance)
 
     # Save information into database
-    
