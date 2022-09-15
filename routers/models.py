@@ -1,8 +1,7 @@
 from typing import List, Mapping, Union, Optional
 
 from clearml import Model, Task
-from clearml.datasets import Dataset
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Path, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -14,10 +13,22 @@ router = APIRouter()
 
 
 @router.get("/models/")
-async def get_models(length: Optional[int] = Query(default=None, ge=0)):
-    # Get all models
+async def get_model_cards(length: Optional[int] = Query(default=None, ge=0)):
+    # Get all model cards
     results = await db["models"].find().to_list(length=length)
     return JSONResponse(content=results, status_code=status.HTTP_200_OK)
+
+@router.get("/models/{model_id}")
+async def get_model_card_by_id(model_id: str):
+    # Get model card by database id (NOT clearml id)
+    model = await db["models"].find_one(
+        { "_id" : model_id }
+    )
+    if model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK, content=model
+    )
 
 @router.post("/models/", response_model=ModelCard, status_code=status.HTTP_201_CREATED)
 async def create_model_card(card: ModelCard):
@@ -83,3 +94,13 @@ async def create_model_card(card: ModelCard):
             new_card = await db["models"].insert_one(card)
             created_card = await db["models"].find_one({"_id": new_card.inserted_id})
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_card)
+
+@router.delete("/models/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_model_card_by_id(model_id: str):
+    # TODO: Check that user is the owner of the model card
+    async with await mongo_client.start_session() as session:
+        async with session.start_transaction():
+            await db["models"].delete_one({
+                "_id" : model_id
+            })
+    # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
