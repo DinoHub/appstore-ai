@@ -82,6 +82,5 @@ async def create_dataset(
         return JSONResponse(
             content={
                 "id" : dataset.id,
-                "file_entries" : dataset.file_entries_dict
             }, status_code=status.HTTP_201_CREATED
         )
