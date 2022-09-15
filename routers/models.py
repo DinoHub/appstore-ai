@@ -1,4 +1,4 @@
-from typing import List, Mapping, Union
+from typing import List, Mapping, Union, Optional
 
 from clearml import Model, Task
 from clearml.datasets import Dataset
@@ -12,9 +12,12 @@ from models.model import ModelCard
 
 router = APIRouter()
 
+
 @router.get("/models/")
-async def get_models():
-    raise NotImplementedError
+async def get_models(length: Optional[int] = Query(default=None, ge=0)):
+    # Get all models
+    results = await db["models"].find().to_list(length=length)
+    return JSONResponse(content=results, status_code=status.HTTP_200_OK)
 
 @router.post("/models/", response_model=ModelCard, status_code=status.HTTP_201_CREATED)
 async def create_model_card(card: ModelCard):
@@ -64,7 +67,9 @@ async def create_model_card(card: ModelCard):
                     model = Model(model_id)
                     # NOTE: get_frameworks REST api will give ALL frameworks in project
                     # therefore, get them using Model object
-                    card.model_details.text += f"{model.name}:\n\tFramework: {model.framework}\n"
+                    card.model_details.text += (
+                        f"{model.name}:\n\tFramework: {model.framework}\n"
+                    )
                     card.tags.append(model.framework)
                 except ValueError as e:
                     # Possibly model has been deleted
