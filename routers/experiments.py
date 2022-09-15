@@ -13,7 +13,7 @@ async def get_experiment(id: str):
 
 
 @router.post("/clone")
-async def clone_exp(item: ClonePackageModel):
+async def clone_experiment(item: ClonePackageModel):
     exp_list = clearml_client.tasks.get_by_id(task=item.id)
     if item.clone_name == None:
         new_exp = exp_list.clone(new_task_name=f"Clone of {exp_list.data.name}")
