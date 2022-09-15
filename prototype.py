@@ -1,13 +1,12 @@
-from collections import defaultdict
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import List, Mapping, Optional, Dict
+from typing import Dict, List, Mapping, Optional
 
-from clearml import Task, Model
+from clearml import Model, Task
 from clearml.backend_api.session.client import APIClient
 from clearml.datasets import Dataset
-from fastapi import FastAPI, File, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -21,27 +20,38 @@ class SecurityClassification(str, Enum):
     unclassified = "unclassified"
 
 
-class SectionTypes(str, Enum):
-    use_case = "Model Use"
-    limitations = "Limitations"
-    evaluation_metrics = "Evaluation Metrics"
-    performance = "Performance"
-    explanation = "Explanation"
-    deployment = "Deployment"
-    license = "License"
-    remarks = "Remarks"
-    model_config = "Model Format and Framework"
+# class SectionTypes(str, Enum):
+#     use_case = "Model Use"
+#     limitations = "Limitations"
+#     evaluation_metrics = "Evaluation Metrics"
+#     performance = "Performance"
+#     explanation = "Explanation"
+#     deployment = "Deployment"
+#     license = "License"
+#     remarks = "Remarks"
+#     model_config = "Model Format and Framework"
 
 
-class ModelDescription(BaseModel):
+class Section(BaseModel):
     text: str
     title: str
-    media: Optional[Union[List[str], List[Dict]]]
+    media: Optional[List[Dict]]
+
+class PerformanceSection(Section):
+    media: Optional[List[Dict[str, Dict[str, Dict[str, List[float]]]]]]
 
 
 class ModelCard(BaseModel):
     title: str
-    description: Dict[SectionTypes, ModelDescription]
+    # NOTE: flattened sections to make schema easier
+    # description: Dict[SectionTypes, Section]
+    description: Section
+    limitations: Section
+    metrics: Section
+    explanation: Section
+    deployment: Section
+    performance: Optional[PerformanceSection]
+    model_details: Optional[Section] # store model genre, format and framework
     datetime: str
     tags: List[str]
     security_classification: SecurityClassification
@@ -150,9 +160,10 @@ async def get_all_model_cards():
 
 @app.post("/models/")
 async def create_model_card(card: ModelCard):
+    # card = card.dict()
     # If exp id is provided, some metadata can be obtained from ClearML
-    tags = card.tags
-    sections = defaultdict(lambda: defaultdict(list), **card.description)
+    if not card.tags:
+        card.tags = []
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
         # Get Scalars if present
@@ -160,10 +171,21 @@ async def create_model_card(card: ModelCard):
         # OR we can create plots within here and save the image to db
         # NOTE: I specifically use clearml sdk as it is the only way to get the data points
         # backend rest api does not expose this info (only summary statistics)
-        task = Task.get_task(task_id=card.clearml_exp_id)
-        plots = task.get_reported_plots()
-        sections["Evaluation Metrics"]["media"].extend(
-            plots
+        try:
+            task = Task.get_task(task_id=card.clearml_exp_id)
+        except ValueError:
+            # Could not find task
+            raise HTTPException(
+                status_code=404, detail="ClearML experiment not found."
+            )
+        if card.performance is None:
+            card.performance = {
+                "title" : "Performance",
+                "text" : "",
+                "media" : []
+            }
+        card.performance.media.append(
+            task.get_reported_scalars()
         )  # do not override existing plots
         # NOTE: switch to backend rest api as only that let's me get info on user
         # NOTE: we can only obtain attributes using "." notation from the data below
@@ -172,9 +194,8 @@ async def create_model_card(card: ModelCard):
         ).data
         # NOTE: I can only get user id, not the name
         # NOTE: consider using userid to form a url to the user account
-        user_id = task_data.user
-
-        tags.extend(task_data.tags)
+        card.creator = task_data.user
+        card.tags.extend(task_data.tags)
         # Get info on model frameworks
         # Start by getting model id so that we can get them
         # NOTE: client api from testing seems to only give id and name if I use th
@@ -183,26 +204,29 @@ async def create_model_card(card: ModelCard):
         # Obtain Id
         # Use set as there can be duplicate model ids as some files refer to same model
         model_ids = set(map(lambda model: model.model, output_models))
+        if card.model_details is None:
+            card.model_details = {
+                "title" : "Model Details",
+                "text" : ""
+            }
         # For each model,
-        models = {}
-        if model_ids:
+        if len(model_ids) > 0:
             # potentially a script could output multiple models
             for model_id in model_ids:
-                model = Model(model_id)
-                # NOTE: get_frameworks REST api will give ALL frameworks in project
-                # therefore, get them using Model object
-                models[model.name] = model.framework
-                tags.append(model.framework)
-    else:
-        # User should have manually filled up info
-        pass
+                try:
+                    model = Model(model_id)
+                    # NOTE: get_frameworks REST api will give ALL frameworks in project
+                    # therefore, get them using Model object
+                    card.model_details["text"] += f"{model.name}:\n\tFramework: {model.framework}\n"
+                    card.tags.append(model.framework)
+                except ValueError as e:
+                    # Possibly model has been deleted
+                    # TODO: Warn user that model metadata was not found
+                    # NOTE: if they provided the inference url, should still be usable
+                    continue # thus, just ignore this
 
-    # Finally, push this info into the metacards database
-    tags = set(tags)  # remove duplicated tags
+    card.tags = set(card.tags) # remove duplicates
 
-    return models, user_id, task_data, plots
+    # TODO: Save information into database
+    return card
 
-    # TODO: If clearml exp id is present, retrieve from clearml
-    # GET: Tags, Created By, Framework of Model, Scalars, Pipelines (model performance)
-
-    # Save information into database
