@@ -1,35 +1,47 @@
+# TODO: Refactor entire structure
+import json
 import tempfile
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Mapping, Optional
+from typing import Dict, List, Mapping, Optional, Union
 
+import motor.motor_asyncio
+from bson import ObjectId
 from clearml import Model, Task
 from clearml.backend_api.session.client import APIClient
 from clearml.datasets import Dataset
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
-from pydantic import BaseModel
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile, status
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse, Response
+from pydantic import BaseModel, Field
 
+MONGODB_URL = (
+    "localhost:27017"  # TODO: Implement better envvar handling through configs
+)
 app = FastAPI()
 client = APIClient()
-from typing import Union
+mongodb_client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
+db = mongodb_client.app_store
 
-from pydantic import BaseModel
+
+class PyObjectId(ObjectId):
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if not ObjectId.is_valid(v):
+            raise ValueError("Invalid objectid")
+        return ObjectId(v)
+
+    @classmethod
+    def __modify_schema__(cls, field_schema):
+        field_schema.update(type="string")
 
 
 class SecurityClassification(str, Enum):
     unclassified = "unclassified"
-
-
-# class SectionTypes(str, Enum):
-#     use_case = "Model Use"
-#     limitations = "Limitations"
-#     evaluation_metrics = "Evaluation Metrics"
-#     performance = "Performance"
-#     explanation = "Explanation"
-#     deployment = "Deployment"
-#     license = "License"
-#     remarks = "Remarks"
-#     model_config = "Model Format and Framework"
 
 
 class Section(BaseModel):
@@ -43,6 +55,7 @@ class PerformanceSection(Section):
 
 
 class ModelCard(BaseModel):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     title: str
     # NOTE: flattened sections to make schema easier
     # description: Dict[SectionTypes, Section]
@@ -62,6 +75,11 @@ class ModelCard(BaseModel):
     clearml_exp_id: Optional[str]
     inference_url: str
     output_generator_url: str
+
+    class Config:
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
 
 
 class ClonePackage(BaseModel):
@@ -159,7 +177,7 @@ async def get_all_model_cards():
     raise NotImplementedError
 
 
-@app.post("/models/")
+@app.post("/models/", response_model=ModelCard, status_code=status.HTTP_201_CREATED)
 async def create_model_card(card: ModelCard):
     # If exp id is provided, some metadata can be obtained from ClearML
     if card.clearml_exp_id:
@@ -172,7 +190,10 @@ async def create_model_card(card: ModelCard):
         try:
             task = Task.get_task(task_id=card.clearml_exp_id)
         except ValueError:
-            raise HTTPException(status_code=404, detail="ClearML experiment not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="ClearML experiment not found.",
+            )
         if card.performance is None:
             card.performance = {"title": "Performance", "text": "", "media": []}
         card.performance.media.append(
@@ -214,5 +235,7 @@ async def create_model_card(card: ModelCard):
                     # NOTE: if they provided the inference url, should still be usable
                     continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
-    # TODO: Save information into database
-    return card
+    card = jsonable_encoder(card)
+    new_card = await db["models"].insert_one(card)
+    created_card = await db["models"].find_one({"_id": new_card.inserted_id})
+    return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_card)
