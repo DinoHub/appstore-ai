@@ -17,5 +17,6 @@ class PyObjectId(ObjectId):
     def __modify_schema__(cls, field_schema):
         field_schema.update(type="string")
 
+
 class SecurityClassificationModel(str, Enum):
     unclassified = "unclassified"

@@ -6,8 +6,8 @@ from typing import List, Optional
 
 from clearml.datasets import Dataset
 from fastapi import APIRouter, File, Form, Query, UploadFile, status
-from fastapi.responses import JSONResponse
 from fastapi.exceptions import HTTPException
+from fastapi.responses import JSONResponse
 
 router = APIRouter(prefix="/datasets")
 
@@ -81,6 +81,7 @@ async def create_dataset(
 
         return JSONResponse(
             content={
-                "id" : dataset.id,
-            }, status_code=status.HTTP_201_CREATED
+                "id": dataset.id,
+            },
+            status_code=status.HTTP_201_CREATED,
         )

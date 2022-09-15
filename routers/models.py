@@ -1,6 +1,7 @@
-from typing import List, Mapping, Optional, Union
-from bson import json_util
 import json
+from typing import List, Mapping, Optional, Union
+
+from bson import json_util
 from clearml import Model, Task
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
@@ -8,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from models.model import ModelCardModelIn, ModelCardModelDB, UpdateModelCardModel
+from models.model import ModelCardModelDB, ModelCardModelIn, UpdateModelCardModel
 
 router = APIRouter(prefix="/models")
 
@@ -38,11 +39,7 @@ async def get_model_card_by_id(model_id: str):
     model = await db["models"].find_one({"_id": model_id})
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    model = json.loads(
-        json_util.dumps(
-            model
-        )
-    )
+    model = json.loads(json_util.dumps(model))
     return JSONResponse(status_code=status.HTTP_200_OK, content=model)
 
 
