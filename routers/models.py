@@ -7,7 +7,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
-from internal.db import db
+from internal.db import db, mongo_client
 from models.model import ModelCard
 
 router = APIRouter()
@@ -73,6 +73,8 @@ async def create_model_card(card: ModelCard):
                     continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
     card = jsonable_encoder(card)
-    new_card = await db["models"].insert_one(card)
-    created_card = await db["models"].find_one({"_id": new_card.inserted_id})
+    async with await mongo_client.start_session() as session:
+        async with session.start_transaction():
+            new_card = await db["models"].insert_one(card)
+            created_card = await db["models"].find_one({"_id": new_card.inserted_id})
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_card)
