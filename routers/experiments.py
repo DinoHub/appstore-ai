@@ -1,3 +1,4 @@
+from typing import Dict
 from fastapi import APIRouter
 
 from internal.clearml_client import clearml_client
@@ -26,3 +27,11 @@ async def clone_experiment(item: ClonePackageModel):
         "clone_id": cloned.data.id,
         "clone_name": cloned.data.name,
     }
+
+@router.put("/config/{experiment_id}")
+async def edit_experiment_config(experiment_id: str, config: Dict):
+    response = clearml_client.tasks.edit_configuration(
+        configuration=config,
+        task=experiment_id
+    ) # response is an integer indicating success of update
+    raise NotImplementedError
