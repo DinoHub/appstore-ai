@@ -203,15 +203,16 @@ async def submit_test_inference(model_id, input_data: UploadFile = File(descript
     # TODO: send file to inference engine to get output
     # Check if Triton Inference Server
     if is_triton_inference(inference_url): # NOTE: this is a fake function
-        raise NotImplementedError
         # NOTE: Current method is to use inferred input.
         # this has a few flaws. It assumes that there
         # is only a single input.
 
-        # model_metadata = triton_client.get_model_metadata(
-        #     model_name= model_name # TODO: Where to get it?
-        # )
-        
+        model_metadata = triton_client.get_model_metadata(
+            model_name= "test_model" # TODO: Where to get it?
+        )
+        model_config = triton_client.get_model_config(
+            model_name="test_model"
+        ) 
     # TODO: raise HTTP error if sample input invalid (let model handle)
     # TODO: then pipe output to HTML visualization engine
 
