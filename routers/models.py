@@ -41,7 +41,8 @@ async def get_model_cards(query: FindModelCardModel):
         db_query["title"] = (
             {
                 # NOTE: not sure if security risk
-                "$regex": re.escape(query.title),
+                # escape so that chars like / are accepted in title
+                "$regex": re.escape(query.title), 
                 "$options": "i",
             },
         )
