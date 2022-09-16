@@ -23,6 +23,7 @@ router = APIRouter(prefix="/models")
 @router.post("/search", response_model=ModelCardModelIn)
 async def get_model_cards(query: FindModelCardModel):
     # Search model cards
+    # TODO: Pagination support
     # NOTE: if nothing provided, return all
     # TODO: if possible, consider an option like elasticsearch or
     # mongodb atlas search to allow for fuzzy matching
