@@ -38,8 +38,8 @@ async def root():
 
 
 if __name__ == "__main__":
-    import uvicorn
     import click
+    import uvicorn
     @click.command()
     @click.option("--host", default="0.0.0.0")
     @click.option("--port", default=8000)
