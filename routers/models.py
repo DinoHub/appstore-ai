@@ -88,24 +88,20 @@ async def create_model_card(card: ModelCardModelIn):
             # potentially a script could output multiple models
             for model_id in model_ids:
                 try:
-                    model = Model(model_id)
                     # NOTE: get_frameworks REST api will give ALL frameworks in project
                     # therefore, get them using Model object
-                    card.model_details.text += (
-                        f"{model.name}:\n\tFramework: {model.framework}\n"
-                    )
-                    card.tags.append(model.framework)
+                    card.frameworks.append(Model(model_id).framework)
                 except ValueError as e:
                     # Possibly model has been deleted
                     # TODO: Warn user that model metadata was not found
                     # NOTE: if they provided the inference url, should still be usable
                     continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
+    card.frameworks = set(card.frameworks) # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
     card = jsonable_encoder(ModelCardModelDB(**card.dict()))
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             new_card = await db["models"].insert_one(card)
-            # created_card = await db["models"].find_one({"_id": new_card.inserted_id})
     return JSONResponse(
         status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
     )
@@ -124,7 +120,8 @@ async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
                     {"_id": model_id}, {"$set": card}
                 )
 
-                if result.modified_count == 1:
+                if result.modified_count == 1: # NOTE: how pythonic is this? (seems to violate DRY)
+                    # TODO: consider just removing the lines below
                     if (
                         updated_card := await db["models"].find_one({"_id": model_id})
                     ) is not None:

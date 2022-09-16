@@ -11,11 +11,6 @@ class SectionModel(BaseModel):
     title: str
     media: Optional[List[Dict]]
 
-
-class PerformanceSectionModel(SectionModel):
-    media: Optional[List[Dict[str, Dict[str, Dict[str, List[float]]]]]]
-
-
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str
     # NOTE: flattened sections to make schema easier
@@ -25,11 +20,13 @@ class ModelCardModelIn(BaseModel):  # Input spec
     metrics: SectionModel
     explanation: SectionModel
     deployment: SectionModel
-    performance: Optional[PerformanceSectionModel]
+    performance: Optional[SectionModel]
     model_details: Optional[SectionModel]  # store model genre, format and framework
     datetime: str
-    tags: List[str]
-    # security_classification: SecurityClassification
+    tags: List[str] # for all other tags 
+    task: str # a task is a tag
+    frameworks: List[str] # TODO: decide if this should be a singular tag or allow multiple
+    point_of_contact: str
     owner: str
     creator: Optional[str]
     # TODO: Figure out model source stuff
@@ -46,6 +43,11 @@ class ModelCardModelDB(ModelCardModelIn):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
+class FindModelCardModel(BaseModel):
+    title: Optional[str]
+    tags: Optional[List[str]]
+    owner: Optional[str]
+    creator: Optional[str]
 
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
@@ -54,10 +56,13 @@ class UpdateModelCardModel(BaseModel):
     metrics: Optional[SectionModel]
     explanation: Optional[SectionModel]
     deployment: Optional[SectionModel]
-    performance: Optional[PerformanceSectionModel]
+    performance: Optional[SectionModel]
     model_details: Optional[SectionModel]
     datetime: Optional[str]
     tags: Optional[List[str]]
+    task: Optional[str]
+    frameworks: Optional[List[str]] # NOTE: tbd if this should be just 1 string
+    point_of_contact: Optional[str]
     owner: Optional[str]
     creator: Optional[str]
     clearml_exp_id: Optional[str]
