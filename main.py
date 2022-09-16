@@ -34,3 +34,15 @@ app.include_router(datasets.router)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
+
+
+
+if __name__ == "__main__":
+    import uvicorn
+    import click
+    @click.command()
+    @click.option("--host", default="0.0.0.0")
+    @click.option("--port", default=8000)
+    def main(host, port):
+        uvicorn.run(app, host=host, port=port)
+    main()
