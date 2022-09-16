@@ -42,7 +42,8 @@ if __name__ == "__main__":
     import uvicorn
     @click.command()
     @click.option("--host", default="0.0.0.0")
-    @click.option("--port", default=8000)
-    def main(host, port):
-        uvicorn.run(app, host=host, port=port)
+    @click.option("--port", default=8080)
+    @click.option("--reload", is_flag=True)
+    def main(host, port, reload):
+        uvicorn.run(app, host=host, port=port, reload=reload)
     main()
