@@ -81,7 +81,9 @@ async def get_model_card_by_id(model_id: str):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_model_card(card: ModelCardModelIn):
+async def create_model_card_metadata(card: ModelCardModelIn):
+    # NOTE: After this, still need to submit inference engine
+    # TODO: Endpoint for submit inference engine
     # If exp id is provided, some metadata can be obtained from ClearML
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
@@ -147,7 +149,7 @@ async def create_model_card(card: ModelCardModelIn):
 
 
 @router.put("/{model_id}", response_model=ModelCardModelDB)
-async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
+async def update_model_card_metadata_by_id(model_id: str, card: UpdateModelCardModel):
     # TODO: Check that user is the model owner
     card = {k: v for k, v in card.dict().items() if v is not None}
 
@@ -170,6 +172,8 @@ async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
     # If no changes, try to return existing card
     if (existing_card := await db["models"].find_one({"_id": model_id})) is not None:
         return existing_card
+
+    # TODO: Might need to update inference engine
 
     # Else, card never existed
     raise HTTPException(
