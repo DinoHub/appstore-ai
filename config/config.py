@@ -41,5 +41,6 @@ class FactoryConfig:
         elif self.env_state == "prod":
             return ProductionConfig()
 
-config = FactoryConfig(GlobalConfig().ENV_STATE)()
-print(config.__repr__())
+config = FactoryConfig(GlobalConfig(MONGODB_URL="localhost:27017",ENV_STATE = 'dev').ENV_STATE)()
+print(dir(config))
+print(config.MONGODB_URL)

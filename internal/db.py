@@ -1,3 +1,4 @@
+from os import device_encoding
 from motor.motor_asyncio import AsyncIOMotorClient
 from config.config import config
 

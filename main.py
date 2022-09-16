@@ -18,6 +18,10 @@ tags_metadata = [
         "name": "Datasets",
         "description": "APIs mostly used for transfer learning feature to upload dataset used for transfer learning.",
     },
+    {
+        "name": "Users",
+        "description": "APIs mostly used for managing users in the IAM for system admins",
+    },
 ]
 app = FastAPI(
     title="Model Zoo",

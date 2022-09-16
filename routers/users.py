@@ -21,7 +21,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
-router = APIRouter(prefix="/users")
+router = APIRouter(prefix="/users",tags=["Users"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -55,8 +55,7 @@ async def delete_user(userid: List [str]):
         raise HTTPException(status_code=404, detail=f"")
 
 @router.put("/edit")
-async def update_student(user:  List [UserInsert]):
-    
+async def update_user(user:  List [UserInsert]):
         id_list =[]
         for x in user:
             try:
@@ -64,6 +63,6 @@ async def update_student(user:  List [UserInsert]):
                 update_result = await db["users"].update_one({"userid": x.userid}, {"$set": jsonable_encoder(UserEdit(**jsonable_encoder(x)))})
                 id_list.append(x.userid)
             except:
-                raise HTTPException(status_code=404, detail=f"Student {id} not found")
+                raise HTTPException(status_code=404, detail=f"Not found")
         return Response(status_code=204)
     

@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from internal.inference import is_triton_inference, triton_client
+#from internal.inference import is_triton_inference, triton_client
 from models.model import (
     ModelCardModelDB,
     ModelCardModelIn,
