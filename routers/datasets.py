@@ -1,7 +1,7 @@
 import tempfile
 from os import remove
 from pathlib import Path
-from shutil import unpack_archive
+from shutil import unpack_archive, disk_usage
 from typing import List, Optional
 
 from clearml.datasets import Dataset
@@ -45,6 +45,7 @@ async def create_dataset(
     file: UploadFile = File(description="Dataset files. We require that file be compressed."),
     output_url: Optional[str] = Form(default=None),
 ):
+    # TODO: check disk usage and size of compressed file to ensure no error. If too large, give appropriate HTTP error
     # TODO: Use add_external_files to allow upload dataset from other locations
     # Write dataset to temp directory
     # NOTE: not using aiofiles for async read and write as performance is slow
