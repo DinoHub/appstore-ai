@@ -46,8 +46,13 @@ class ModelCardModelDB(ModelCardModelIn):
 class FindModelCardModel(BaseModel):
     title: Optional[str]
     tags: Optional[List[str]]
+    task: Optional[str]
+    frameworks: Optional[List[str]]
+    point_of_contact: Optional[str]
     owner: Optional[str]
     creator: Optional[str]
+    sort: Optional[List[List[str]]] # [(sort col, sort direction)]
+    return_attrs: Optional[List[str]]
 
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]

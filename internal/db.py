@@ -6,3 +6,8 @@ MONGODB_URL = "localhost:27017"
 mongo_client = AsyncIOMotorClient(MONGODB_URL)
 
 db = mongo_client.app_store
+
+# Create text index to allow searching
+# db["models"].create_index([
+#   ( "title" , "text" )
+# ], default_language="english")

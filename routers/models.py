@@ -1,32 +1,68 @@
 import json
-from typing import List, Mapping, Optional, Union
+import re
+from typing import List, Mapping, Union
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from models.model import ModelCardModelDB, ModelCardModelIn, UpdateModelCardModel
+from models.model import (
+    ModelCardModelDB,
+    ModelCardModelIn,
+    UpdateModelCardModel,
+    FindModelCardModel,
+)
 
 router = APIRouter(prefix="/models")
 
 
-@router.get("/", response_model=ModelCardModelIn)
-async def get_model_cards(length: Optional[int] = Query(default=None, ge=0)):
-    """Retrieve all model cards (or a set number of ards)
+@router.post("/search", response_model=ModelCardModelIn)
+async def get_model_cards(query: FindModelCardModel):
+    # Search model cards
+    # NOTE: if nothing provided, return all
+    # TODO: if possible, consider an option like elasticsearch or
+    # mongodb atlas search to allow for fuzzy matching
+    db_query = {
+        "task": query.task,
+        "owner": query.owner,
+        "creator": query.creator,
+        "tags": {
+            # NOTE: assumes AND
+            "$all": query.tags
+        },
+        "frameworks": {"$in": query.frameworks},
+    }
+    if query.title:
+        db_query["title"] = (
+            {
+                # NOTE: not sure if security risk
+                "$regex": re.escape(query.title),
+                "$options": "i",
+            },
+        )
+    if query.sort:
+        # TODO: refactor this to be more intuitive
+        query.sort = [
+            (col_name, 1 if order == "ASC" else -1) for col_name, order in query.sort
+        ]
+    # Remove empty attributes
+    if not query.tags:
+        del db_query["tags"]
+    if not query.frameworks:
+        del db_query["frameworks"]
 
-    Args:
-        length (Optional[int], optional): Number of model cards to return. If `None`, returns all cards.
-            Defaults to None.
-
-    Returns:
-        _type_: _description_
-    """
-    # Get all model cards
-    results = await db["models"].find().to_list(length=length)
+    # If user only wants some attrs to be returned (e.g. summary card only needs some attributes)
+    db_projection = query.return_attrs
+    db_query = {k: v for k, v in db_query.items() if v is not None}
+    results = (
+        await db["models"]
+        .find(filter=db_query, projection=db_projection, sort=query.sort)
+        .to_list(length=None)
+    )
     results = json.loads(
         json_util.dumps(results)
     )  # enable bson from mongodb to be converted to json
@@ -97,7 +133,9 @@ async def create_model_card(card: ModelCardModelIn):
                     # NOTE: if they provided the inference url, should still be usable
                     continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
-    card.frameworks = set(card.frameworks) # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
+    card.frameworks = set(
+        card.frameworks
+    )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
     card = jsonable_encoder(ModelCardModelDB(**card.dict()))
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
@@ -120,7 +158,9 @@ async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
                     {"_id": model_id}, {"$set": card}
                 )
 
-                if result.modified_count == 1: # NOTE: how pythonic is this? (seems to violate DRY)
+                if (
+                    result.modified_count == 1
+                ):  # NOTE: how pythonic is this? (seems to violate DRY)
                     # TODO: consider just removing the lines below
                     if (
                         updated_card := await db["models"].find_one({"_id": model_id})
