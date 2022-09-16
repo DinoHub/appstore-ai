@@ -17,7 +17,7 @@ from models.model import (
     FindModelCardModel,
 )
 
-router = APIRouter(prefix="/models")
+router = APIRouter(prefix="/models", tags=["Models"])
 
 
 @router.post("/search", response_model=ModelCardModelIn)

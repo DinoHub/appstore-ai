@@ -9,7 +9,7 @@ from fastapi import APIRouter, File, Form, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 
-router = APIRouter(prefix="/datasets")
+router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
 
 @router.get("/")
