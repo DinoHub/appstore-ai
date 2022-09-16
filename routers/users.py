@@ -52,7 +52,7 @@ async def delete_user(userid: List [str]):
         delete_result = await db["users"].delete_many({"userid": {"$in": userid}})
         return Response(status_code=204)
     except:
-        raise HTTPException(status_code=404, detail=f"")
+        raise HTTPException(status_code=404, detail=f"Not found")
 
 @router.put("/edit")
 async def update_user(user:  List [UserInsert]):
