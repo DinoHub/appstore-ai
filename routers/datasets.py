@@ -3,11 +3,14 @@ from os import remove
 from pathlib import Path
 from shutil import unpack_archive, disk_usage
 from typing import List, Optional
+from urllib.request import Request
 
 from clearml.datasets import Dataset
 from fastapi import APIRouter, File, Form, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
+
+from internal.file_validator import MaxFileSizeException, MaxFileSizeValidator
 
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
@@ -40,16 +43,16 @@ async def get_dataset_by_id(dataset_id: str):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_dataset(
-    project_name: str = Form(),
-    dataset_name: str = Form(),
-    file: UploadFile = File(description="Dataset files. We require that file be compressed."),
-    output_url: Optional[str] = Form(default=None),
+  request: Request 
 ):
     # TODO: check disk usage and size of compressed file to ensure no error. If too large, give appropriate HTTP error
     # TODO: Use add_external_files to allow upload dataset from other locations
     # Write dataset to temp directory
     # NOTE: not using aiofiles for async read and write as performance is slow
     # https://stackoverflow.com/questions/73442335/how-to-upload-a-large-file-%E2%89%A53gb-to-fastapi-backend
+    # First determine max file size
+    max_file_size = determine_safe_file_size() # TODO
+    fs_validator = MaxFileSizeValidator() 
     with tempfile.TemporaryDirectory(dataset_name, "clearml-dataset") as dirpath:
         # write file to fs
         path = Path(dirpath, file.filename)
