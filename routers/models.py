@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
+from internal.inference import is_triton_inference, triton_client
 from models.model import (
     ModelCardModelDB,
     ModelCardModelIn,
@@ -193,17 +194,25 @@ async def delete_model_card_by_id(model_id: str):
     # TODO: Should actual model be deleted as well?
 
 @router.post("/{model_id}/inference")
-async def submit_test_inference(model_id, inference: UploadFile = File(description="Test samples for inference")):
+async def submit_test_inference(model_id, input_data: UploadFile = File(description="Test samples for inference")):
     # Obtain Inference Engine from model
     model = await db["models"].find_one({"_id": model_id}, projection=["inference_url", "output_generator_url"])
     inference_url = model.inference_url
     output_generator_url = model.output_generator_url
+
     # TODO: send file to inference engine to get output
     # Check if Triton Inference Server
+    if is_triton_inference(inference_url): # NOTE: this is a fake function
+        raise NotImplementedError
+        # NOTE: Current method is to use inferred input.
+        # this has a few flaws. It assumes that there
+        # is only a single input.
 
+        # model_metadata = triton_client.get_model_metadata(
+        #     model_name= model_name # TODO: Where to get it?
+        # )
+        
     # TODO: raise HTTP error if sample input invalid (let model handle)
     # TODO: then pipe output to HTML visualization engine
 
     # Finally, return the HTML
-
-    raise NotImplementedError
