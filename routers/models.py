@@ -4,7 +4,7 @@ from typing import List, Mapping, Union
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, File, UploadFile
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
@@ -146,7 +146,7 @@ async def create_model_card(card: ModelCardModelIn):
     )
 
 
-@router.put("/models/{model_id}", response_model=ModelCardModelDB)
+@router.put("/{model_id}", response_model=ModelCardModelDB)
 async def update_model_card_by_id(model_id: str, card: UpdateModelCardModel):
     # TODO: Check that user is the model owner
     card = {k: v for k, v in card.dict().items() if v is not None}
@@ -185,3 +185,14 @@ async def delete_model_card_by_id(model_id: str):
         async with session.start_transaction():
             await db["models"].delete_one({"_id": model_id})
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
+    # TODO: Should actual model be deleted as well?
+
+@router.post("/{model_id}/inference")
+async def submit_test_inference(inference: UploadFile = File(description="Test samples for inference")):
+    # TODO: send file to inference engine to get output
+    # TODO: raise HTTP error if sample input invalid (let model handle)
+    # TODO: then pipe output to HTML visualization engine
+
+    # Finally, return the HTML
+
+    raise NotImplementedError
