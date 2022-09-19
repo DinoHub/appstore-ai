@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
 from routers import datasets, experiments, models,iam
-
+import uvicorn
 with open("README.md", "r") as f:
     description = f.read()
 
@@ -39,14 +39,3 @@ app.include_router(iam.router)
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
-
-if __name__ == "__main__":
-    import click
-    import uvicorn
-    @click.command()
-    @click.option("--host", default="0.0.0.0")
-    @click.option("--port", default=8080)
-    @click.option("--reload", is_flag=True)
-    def main(host, port, reload):
-        uvicorn.run(app, host=host, port=port, reload=reload)
-    main()

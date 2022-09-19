@@ -1,6 +1,5 @@
 # https://rednafi.github.io/digressions/python/2020/06/03/python-configs.html
 from typing import Optional
-
 from pydantic import BaseModel, BaseSettings, Field
 
 # class AppConfig(BaseModel):
@@ -41,4 +40,5 @@ class FactoryConfig:
         elif self.env_state == "prod":
             return ProductionConfig()
 
-config = FactoryConfig(GlobalConfig(MONGODB_URL="localhost:27017",ENV_STATE = 'dev').ENV_STATE)()
+config = FactoryConfig(GlobalConfig().ENV_STATE)()
+print(config.__repr__())
