@@ -4,20 +4,15 @@ from typing import List, Mapping, Union
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, HTTPException, status, File, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-
-# from internal.inference import is_triton_inference, triton_client
-from models.model import (
-    ModelCardModelDB,
-    ModelCardModelIn,
-    UpdateModelCardModel,
-    FindModelCardModel,
-)
+#from internal.inference import is_triton_inference, triton_client
+from models.model import (FindModelCardModel, ModelCardModelDB,
+                          ModelCardModelIn, UpdateModelCardModel)
 
 router = APIRouter(prefix="/models", tags=["Models"])
 

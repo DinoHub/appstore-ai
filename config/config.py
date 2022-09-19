@@ -12,8 +12,7 @@ class GlobalConfig(BaseSettings):
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
 
     class Config:
-        env_file: str = "config/.env"
-
+        env_file: str = "./config/.env"
 
 class DevConfig(GlobalConfig):
     class Config:
