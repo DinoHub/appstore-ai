@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from routers import datasets, experiments, models,users
+from routers import datasets, experiments, models,iam
 
 with open("README.md", "r") as f:
     description = f.read()
@@ -19,8 +19,8 @@ tags_metadata = [
         "description": "APIs mostly used for transfer learning feature to upload dataset used for transfer learning.",
     },
     {
-        "name": "Users",
-        "description": "APIs mostly used for managing users in the IAM for system admins",
+        "name": "IAM",
+        "description": "APIs for system admins to manage users in database in IAM system",
     },
 ]
 app = FastAPI(
@@ -33,7 +33,7 @@ app = FastAPI(
 app.include_router(models.router)
 app.include_router(experiments.router)
 app.include_router(datasets.router)
-app.include_router(users.router)
+app.include_router(iam.router)
 
 
 @app.get("/")
