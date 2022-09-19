@@ -19,11 +19,7 @@ tags_metadata = [
         "description": "APIs mostly used for transfer learning feature to upload dataset used for transfer learning.",
     },
 ]
-app = FastAPI(
-    title="Model Zoo",
-    description=description,
-    openapi_tags=tags_metadata
-)
+app = FastAPI(title="Model Zoo", description=description, openapi_tags=tags_metadata)
 
 
 app.include_router(models.router)
@@ -36,14 +32,15 @@ async def root():
     return {"message": "Hello World"}
 
 
-
 if __name__ == "__main__":
     import click
     import uvicorn
+
     @click.command()
     @click.option("--host", default="0.0.0.0")
     @click.option("--port", default=8080)
     @click.option("--reload", is_flag=True)
     def main(host, port, reload):
         uvicorn.run(app, host=host, port=port, reload=reload)
+
     main()
