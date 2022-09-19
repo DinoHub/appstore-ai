@@ -40,8 +40,6 @@ app.include_router(users.router)
 async def root():
     return {"message": "Hello World"}
 
-
-
 if __name__ == "__main__":
     import click
     import uvicorn

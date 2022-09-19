@@ -1,10 +1,11 @@
 import json
 from typing import List, Mapping, Optional, Union
+from datetime import datetime, timedelta
 from xmlrpc.client import ResponseError
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status,Depends
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse,Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -13,7 +14,7 @@ from passlib.context import CryptContext
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from models.user import UserInsert,UserInsertDB,UserEdit
+from models.user import UserInsert,UserInsertDB,UserEdit,Token,TokenData,User
 from pymongo import errors as pyerrs
 
 SECRET_KEY = 'ef3bf6fad7742202730566ed48e140b7fb2b7439169cc6a45f9d8e3230a0a3a5'
@@ -23,7 +24,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 router = APIRouter(prefix="/users",tags=["Users"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/sys/auth" )
 
 
 def verify_password(plain_password, hashed_password):
@@ -50,20 +51,19 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        if username is None:
+        userid: str = payload.get("sub")
+        if userid is None:
             raise credentials_exception
-        token_data = TokenData(username=username)
+        token_data = TokenData(userid=userid)
     except JWTError:
         raise credentials_exception
-    user = await db["users"].find_one({"username": token_data.username})
+    user = await db["users"].find_one({"userid": token_data.userid})
     if user is None:
         raise credentials_exception
     return user 
 
-
 @router.post('/add')
-async def add_user(item: UserInsert):
+async def add_user(item: UserInsert,current_user: User = Depends(get_current_user)):
     try:
         item.password = get_password_hash(item.password)
         item = jsonable_encoder(item)
@@ -76,8 +76,8 @@ async def add_user(item: UserInsert):
     except:
         return JSONResponse(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content="An error occurred")
 
-@router.delete('/delete')
-async def delete_user(userid: List [str]):
+@router.delete('/delete',)
+async def delete_user(userid: List [str],current_user: User = Depends(get_current_user)):
     try:
         delete_result = await db["users"].delete_many({"userid": {"$in": userid}})
         return Response(status_code=204)
@@ -85,7 +85,7 @@ async def delete_user(userid: List [str]):
         raise HTTPException(status_code=404, detail=f"Not found")
 
 @router.put("/edit")
-async def update_user(user:  List [UserInsert]):
+async def update_user(user:  List [UserInsert],current_user: User = Depends(get_current_user)):
         id_list =[]
         for x in user:
             try:
@@ -96,25 +96,23 @@ async def update_user(user:  List [UserInsert]):
                 raise HTTPException(status_code=404, detail=f"Not found")
         return Response(status_code=204)
 
-
-
 @router.post("/sys/auth",response_model=Token)
-async def auth_admin(form_data: OAuth2PasswordRequestForm = Depends()):
-    if (user := await db["users"].find_one({"username": form_data.username})) is not None:
-        if verify_pw(form_data.password,user['password']) is True:
+async def auth_user_admin(form_data: OAuth2PasswordRequestForm = Depends()):
+    if (user := await db["users"].find_one({"userid": form_data.username})) is not None:
+        if verify_password(form_data.password,user['password']) is True:
             if user['admin_priv'] is True:
                 access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                access_token = create_access_token(data={"sub": user['username']}, expires_delta=access_token_expires)
+                access_token = create_access_token(data={"sub": user['userid']}, expires_delta=access_token_expires)
                 return {"access_token": access_token, "token_type": "bearer"}
             else:
                 raise HTTPException(status_code=401,detail=f"User is not admin",headers={"WWW-Authenticate": "Bearer"})
         else:
             raise HTTPException(status_code=401,detail=f"Password is wrong",headers={"WWW-Authenticate": "Bearer"})
     else:
-        raise HTTPException(status_code=404,detail=f"Username does not exist",headers={"WWW-Authenticate": "Bearer"})
+        raise HTTPException(status_code=404,detail=f"User ID does not exist",headers={"WWW-Authenticate": "Bearer"})
 
-@router.get("/sys/user", response_model=User)
-async def check_sys_user(current_user: User = Depends(get_current_user)):
-    if current_user['admin_priv'] is True:
+@router.get("/sys/check", response_model=User)
+async def check_user_admin(current_user: User = Depends(get_current_user)):
+    if current_user['admin_priv'] is False:
         return current_user
     raise HTTPException(status_code=401,detail=f"User is not admin",headers={"WWW-Authenticate": "Bearer"})

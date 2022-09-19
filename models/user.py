@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from bson import ObjectId
 from pydantic import BaseModel, Field
@@ -23,3 +23,16 @@ class UserInsertDB(UserInsert):
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    userid: Union[str, None] = None
+
+class User(BaseModel):
+    userid: str
+
+class UserInDB(User):
+    hashed_password: str
