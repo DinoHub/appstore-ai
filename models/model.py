@@ -11,6 +11,7 @@ class SectionModel(BaseModel):
     title: str
     media: Optional[List[Dict]]
 
+
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str
     # NOTE: flattened sections to make schema easier
@@ -23,9 +24,11 @@ class ModelCardModelIn(BaseModel):  # Input spec
     performance: Optional[SectionModel]
     model_details: Optional[SectionModel]  # store model genre, format and framework
     datetime: str
-    tags: List[str] # for all other tags 
-    task: str # a task is a tag
-    frameworks: List[str] # TODO: decide if this should be a singular tag or allow multiple
+    tags: List[str]  # for all other tags
+    task: str  # a task is a tag
+    frameworks: List[
+        str
+    ]  # TODO: decide if this should be a singular tag or allow multiple
     point_of_contact: str
     owner: str
     creator: Optional[str]
@@ -43,6 +46,7 @@ class ModelCardModelDB(ModelCardModelIn):
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
+
 class FindModelCardModel(BaseModel):
     title: Optional[str]
     tags: Optional[List[str]]
@@ -51,8 +55,9 @@ class FindModelCardModel(BaseModel):
     point_of_contact: Optional[str]
     owner: Optional[str]
     creator: Optional[str]
-    sort: Optional[List[List[str]]] # [(sort col, sort direction)]
+    sort: Optional[List[List[str]]]  # [(sort col, sort direction)]
     return_attrs: Optional[List[str]]
+
 
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
@@ -66,7 +71,7 @@ class UpdateModelCardModel(BaseModel):
     datetime: Optional[str]
     tags: Optional[List[str]]
     task: Optional[str]
-    frameworks: Optional[List[str]] # NOTE: tbd if this should be just 1 string
+    frameworks: Optional[List[str]]  # NOTE: tbd if this should be just 1 string
     point_of_contact: Optional[str]
     owner: Optional[str]
     creator: Optional[str]
