@@ -9,7 +9,7 @@ class GlobalConfig(BaseSettings):
     ENV_STATE: Optional[str] = Field(None, env="ENV_STATE")
     MONGODB_URL : Optional[str] = None
     class Config:
-        env_file: str = ".env"
+        env_file: str = "./config/.env"
 
 class DevConfig(GlobalConfig):
     class Config:
