@@ -1,4 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+
 from config.config import config
 
 mongo_client = AsyncIOMotorClient(config.MONGODB_URL)
