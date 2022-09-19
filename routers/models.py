@@ -1,23 +1,87 @@
+import json
+import re
 from typing import List, Mapping, Union
 
+from bson import json_util
 from clearml import Model, Task
-from clearml.datasets import Dataset
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from models.model import ModelCard
+#from internal.inference import is_triton_inference, triton_client
+from models.model import (FindModelCardModel, ModelCardModelDB,
+                          ModelCardModelIn, UpdateModelCardModel)
 
-router = APIRouter()
+router = APIRouter(prefix="/models", tags=["Models"])
 
-@router.get("/models/")
-async def get_models():
-    raise NotImplementedError
 
-@router.post("/models/", response_model=ModelCard, status_code=status.HTTP_201_CREATED)
-async def create_model_card(card: ModelCard):
+@router.post("/search", response_model=ModelCardModelIn)
+async def get_model_cards(query: FindModelCardModel):
+    # Search model cards
+    # TODO: Pagination support
+    # NOTE: if nothing provided, return all
+    # TODO: if possible, consider an option like elasticsearch or
+    # mongodb atlas search to allow for fuzzy matching
+    db_query = {
+        "task": query.task,
+        "owner": query.owner,
+        "creator": query.creator,
+        "tags": {
+            # NOTE: assumes AND
+            "$all": query.tags
+        },
+        "frameworks": {"$in": query.frameworks},
+    }
+    if query.title:
+        db_query["title"] = (
+            {
+                # NOTE: not sure if security risk
+                # escape so that chars like / are accepted in title
+                "$regex": re.escape(query.title),
+                "$options": "i",
+            },
+        )
+    if query.sort:
+        # TODO: refactor this to be more intuitive
+        query.sort = [
+            (col_name, 1 if order == "ASC" else -1) for col_name, order in query.sort
+        ]
+    # Remove empty attributes
+    if not query.tags:
+        del db_query["tags"]
+    if not query.frameworks:
+        del db_query["frameworks"]
+
+    # If user only wants some attrs to be returned (e.g. summary card only needs some attributes)
+    db_projection = query.return_attrs
+    db_query = {k: v for k, v in db_query.items() if v is not None}
+    results = (
+        await db["models"]
+        .find(filter=db_query, projection=db_projection, sort=query.sort)
+        .to_list(length=None)
+    )
+    results = json.loads(
+        json_util.dumps(results)
+    )  # enable bson from mongodb to be converted to json
+    return JSONResponse(content=results, status_code=status.HTTP_200_OK)
+
+
+@router.get("/{model_id}")
+async def get_model_card_by_id(model_id: str):
+    # Get model card by database id (NOT clearml id)
+    model = await db["models"].find_one({"_id": model_id})
+    if model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    model = json.loads(json_util.dumps(model))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=model)
+
+
+@router.post("/", status_code=status.HTTP_201_CREATED)
+async def create_model_card_metadata(card: ModelCardModelIn):
+    # NOTE: After this, still need to submit inference engine
+    # TODO: Endpoint for submit inference engine
     # If exp id is provided, some metadata can be obtained from ClearML
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
@@ -31,7 +95,7 @@ async def create_model_card(card: ModelCard):
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="ClearML experiment not found.",
+                detail=f"ClearML experiment with id {card.clearml_exp_id} not found.",
             )
         if card.performance is None:
             card.performance = {"title": "Performance", "text": "", "media": []}
@@ -61,20 +125,92 @@ async def create_model_card(card: ModelCard):
             # potentially a script could output multiple models
             for model_id in model_ids:
                 try:
-                    model = Model(model_id)
                     # NOTE: get_frameworks REST api will give ALL frameworks in project
                     # therefore, get them using Model object
-                    card.model_details.text += f"{model.name}:\n\tFramework: {model.framework}\n"
-                    card.tags.append(model.framework)
+                    card.frameworks.append(Model(model_id).framework)
                 except ValueError as e:
                     # Possibly model has been deleted
                     # TODO: Warn user that model metadata was not found
                     # NOTE: if they provided the inference url, should still be usable
                     continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
-    card = jsonable_encoder(card)
+    card.frameworks = set(
+        card.frameworks
+    )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
+    card = jsonable_encoder(ModelCardModelDB(**card.dict()))
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             new_card = await db["models"].insert_one(card)
-            created_card = await db["models"].find_one({"_id": new_card.inserted_id})
-    return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_card)
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
+    )
+
+
+@router.put("/{model_id}", response_model=ModelCardModelDB)
+async def update_model_card_metadata_by_id(model_id: str, card: UpdateModelCardModel):
+    # TODO: Check that user is the model owner
+    card = {k: v for k, v in card.dict().items() if v is not None}
+
+    if len(card) > 0:
+        # perform transaction to ensure we can roll back changes
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                result = await db["models"].update_one(
+                    {"_id": model_id}, {"$set": card}
+                )
+
+                if (
+                    result.modified_count == 1
+                ):  # NOTE: how pythonic is this? (seems to violate DRY)
+                    # TODO: consider just removing the lines below
+                    if (
+                        updated_card := await db["models"].find_one({"_id": model_id})
+                    ) is not None:
+                        return updated_card
+    # If no changes, try to return existing card
+    if (existing_card := await db["models"].find_one({"_id": model_id})) is not None:
+        return existing_card
+
+    # TODO: Might need to update inference engine
+
+    # Else, card never existed
+    raise HTTPException(
+        status_code=status.HTTP_404_NOT_FOUND,
+        detail=f"Model Card with ID: {model_id} not found.",
+    )
+
+
+@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_model_card_by_id(model_id: str):
+    # TODO: Check that user is the owner of the model card
+    async with await mongo_client.start_session() as session:
+        async with session.start_transaction():
+            await db["models"].delete_one({"_id": model_id})
+    # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
+    # TODO: Should actual model be deleted as well?
+
+
+# @router.post("/{model_id}/inference")
+# async def submit_test_inference(model_id, input_data: UploadFile = File(description="Test samples for inference")):
+#     # Obtain Inference Engine from model
+#     model = await db["models"].find_one({"_id": model_id}, projection=["inference_url", "output_generator_url"])
+#     inference_url = model.inference_url
+#     output_generator_url = model.output_generator_url
+
+#     # TODO: send file to inference engine to get output
+#     # Check if Triton Inference Server
+#     if is_triton_inference(inference_url): # NOTE: this is a fake function
+#         # NOTE: Current method is to use inferred input.
+#         # this has a few flaws. It assumes that there
+#         # is only a single input.
+
+#         model_metadata = triton_client.get_model_metadata(
+#             model_name= "test_model" # TODO: Where to get it?
+#         )
+#         model_config = triton_client.get_model_config(
+#             model_name="test_model"
+#         )
+#     # TODO: raise HTTP error if sample input invalid (let model handle)
+#     # TODO: then pipe output to HTML visualization engine
+
+#     # Finally, return the HTML

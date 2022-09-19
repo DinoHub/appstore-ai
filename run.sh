@@ -1,2 +1,2 @@
-#!/bin/sh
-uvicorn main:app --reload
+#!/bin/bash
+uvicorn main:app --reload --port 8080

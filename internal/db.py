@@ -1,11 +1,13 @@
+from os import device_encoding
 from motor.motor_asyncio import AsyncIOMotorClient
 
-# TODO: Get MONGODB_URL from config file
-MONGODB_URL = "localhost:27017"
+from config.config import config
 
-mongo_client = AsyncIOMotorClient(
-    MONGODB_URL
-)
+mongo_client = AsyncIOMotorClient(config.MONGODB_URL)
 
 db = mongo_client.app_store
 
+# Create text index to allow searching
+# db["models"].create_index([
+#   ( "title" , "text" )
+# ], default_language="english")
