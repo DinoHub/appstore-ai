@@ -17,6 +17,7 @@ from internal.db import db, mongo_client
 from models.iam import UserInsert,UserInsertDB,UserEdit,Token,TokenData,User
 from pymongo import errors as pyerrs
 
+# TODO: DONT STORE THIS HERE (this is a public repository)
 SECRET_KEY = 'ef3bf6fad7742202730566ed48e140b7fb2b7439169cc6a45f9d8e3230a0a3a5'
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 45
