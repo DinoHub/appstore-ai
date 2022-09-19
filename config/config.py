@@ -46,6 +46,13 @@ class FactoryConfig:
         elif self.env_state == "prod":
             return ProductionConfig()
 
+class AdminHashing(BaseSettings):
+    SECRET_KEY: str
+    ALGORITHM: str
+
+    class Config:
+        env_file: str = "./config/.env"
 
 config = FactoryConfig(GlobalConfig().ENV_STATE)()
 print(config.__repr__())
+admin = AdminHashing()

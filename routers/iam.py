@@ -11,22 +11,20 @@ from fastapi.responses import JSONResponse,Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-
+from config.config import admin
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
 from models.iam import UserInsert,UserInsertDB,UserEdit,Token,TokenData,User
 from pymongo import errors as pyerrs
 
-# TODO: DONT STORE THIS HERE (this is a public repository)
-SECRET_KEY = 'ef3bf6fad7742202730566ed48e140b7fb2b7439169cc6a45f9d8e3230a0a3a5'
-ALGORITHM = "HS256"
+
+# use openssl rand -hex 32 to generate secret key
 ACCESS_TOKEN_EXPIRE_MINUTES = 45
 
 
 router = APIRouter(prefix="/iam",tags=["IAM"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/iam/auth" )
-
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -41,7 +39,7 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    encoded_jwt = jwt.encode(to_encode,admin.SECRET_KEY, algorithm=admin.ALGORITHM)
     return encoded_jwt
 
 async def get_current_user(token: str = Depends(oauth2_scheme)):
@@ -51,7 +49,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, admin.SECRET_KEY, algorithms=[admin.ALGORITHM])
         userid: str = payload.get("sub")
         if userid is None:
             raise credentials_exception
