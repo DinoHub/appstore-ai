@@ -10,7 +10,8 @@ from fastapi.responses import JSONResponse
 
 from internal.clearml_client import clearml_client
 from internal.db import db, mongo_client
-from internal.inference import is_triton_inference, triton_client
+
+# from internal.inference import is_triton_inference, triton_client
 from models.model import (
     ModelCardModelDB,
     ModelCardModelIn,
@@ -43,7 +44,7 @@ async def get_model_cards(query: FindModelCardModel):
             {
                 # NOTE: not sure if security risk
                 # escape so that chars like / are accepted in title
-                "$regex": re.escape(query.title), 
+                "$regex": re.escape(query.title),
                 "$options": "i",
             },
         )
@@ -193,27 +194,28 @@ async def delete_model_card_by_id(model_id: str):
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     # TODO: Should actual model be deleted as well?
 
-@router.post("/{model_id}/inference")
-async def submit_test_inference(model_id, input_data: UploadFile = File(description="Test samples for inference")):
-    # Obtain Inference Engine from model
-    model = await db["models"].find_one({"_id": model_id}, projection=["inference_url", "output_generator_url"])
-    inference_url = model.inference_url
-    output_generator_url = model.output_generator_url
 
-    # TODO: send file to inference engine to get output
-    # Check if Triton Inference Server
-    if is_triton_inference(inference_url): # NOTE: this is a fake function
-        # NOTE: Current method is to use inferred input.
-        # this has a few flaws. It assumes that there
-        # is only a single input.
+# @router.post("/{model_id}/inference")
+# async def submit_test_inference(model_id, input_data: UploadFile = File(description="Test samples for inference")):
+#     # Obtain Inference Engine from model
+#     model = await db["models"].find_one({"_id": model_id}, projection=["inference_url", "output_generator_url"])
+#     inference_url = model.inference_url
+#     output_generator_url = model.output_generator_url
 
-        model_metadata = triton_client.get_model_metadata(
-            model_name= "test_model" # TODO: Where to get it?
-        )
-        model_config = triton_client.get_model_config(
-            model_name="test_model"
-        ) 
-    # TODO: raise HTTP error if sample input invalid (let model handle)
-    # TODO: then pipe output to HTML visualization engine
+#     # TODO: send file to inference engine to get output
+#     # Check if Triton Inference Server
+#     if is_triton_inference(inference_url): # NOTE: this is a fake function
+#         # NOTE: Current method is to use inferred input.
+#         # this has a few flaws. It assumes that there
+#         # is only a single input.
 
-    # Finally, return the HTML
+#         model_metadata = triton_client.get_model_metadata(
+#             model_name= "test_model" # TODO: Where to get it?
+#         )
+#         model_config = triton_client.get_model_config(
+#             model_name="test_model"
+#         )
+#     # TODO: raise HTTP error if sample input invalid (let model handle)
+#     # TODO: then pipe output to HTML visualization engine
+
+#     # Finally, return the HTML
