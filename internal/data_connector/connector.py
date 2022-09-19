@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
+from typing import Union
 
 
 class DatasetConnector(ABC):
@@ -12,12 +14,13 @@ class DatasetConnector(ABC):
     def file_entries_dict(self):
         raise NotImplementedError
 
+    @classmethod
     @abstractmethod
-    def create(self):
+    def from_scratch(cls):
         raise NotImplementedError
 
     @abstractmethod
-    def add_files(self):
+    def add_files(self, path: Union[str, Path], recursive: bool = True):
         raise NotImplementedError
 
     @abstractmethod

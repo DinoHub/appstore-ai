@@ -1,23 +1,19 @@
 import tempfile
-import filetype
 from os import remove
 from pathlib import Path
 from shutil import unpack_archive
 from typing import Optional
 
+import filetype
 from clearml.datasets import Dataset
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse
 
 from config.config import config
-from internal.file_validator import (
-    ValidateFileUpload,
-    MaxFileSizeException,
-    MaxFileSizeValidator,
-    clean_filename,
-    determine_safe_file_size,
-)
+from internal.file_validator import (MaxFileSizeException,
+                                     MaxFileSizeValidator, ValidateFileUpload,
+                                     clean_filename, determine_safe_file_size)
 
 ACCEPTED_CONTENT_TYPES = [
     "application/zip",
