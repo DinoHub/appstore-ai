@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "appstore-ai"
+name = "appstore-back-end"
 version = "0.1.0"
 description = ""
 authors = ["Mathias and Tien Cheng"]
 readme = "README.md"
-packages = [{include = "appstore_ai"}]
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"

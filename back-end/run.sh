@@ -1,2 +1,2 @@
-#!/bin/bash
-uvicorn main:app --reload --port 8080
+#!/bin/sh
+. venv/bin/activate && python -m uvicorn src.main:app --port 8080

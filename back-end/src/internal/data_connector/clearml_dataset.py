@@ -48,8 +48,6 @@ class ClearMLDataset(DatasetConnector):
 
     def add_files(self, path: Union[str, Path], recursive: bool = True):
         try:
-            self.dataset.add_files(
-                path, recursive=recursive
-            )
+            self.dataset.add_files(path, recursive=recursive)
         except AttributeError:
             raise AttributeError("Dataset has not been created or initialized.")

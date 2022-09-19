@@ -1,8 +1,8 @@
 from typing import Dict
 from fastapi import APIRouter
 
-from internal.clearml_client import clearml_client
-from models.experiment import ClonePackageModel
+from ..internal.clearml_client import clearml_client
+from ..models.experiment import ClonePackageModel
 
 router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
