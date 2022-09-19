@@ -1,0 +1,3 @@
+services:
+  back-end:
+    image: appstoreai:latest
