@@ -264,10 +264,12 @@ async def make_test_inference(
 
         # Send media file to inference
         async def get_prediction():
+            # TODO: Support non media upload
             async with httpx.AsyncClient() as client:
                 response = await client.post(
                     "http://" + inference_url + "/predict", files={"media": media.file}
                 )
+                # TODO: Improve error handling
                 try:
                     outputs = response.json()
                     # Encode as str to send as form-data to viz engine
@@ -279,7 +281,7 @@ async def make_test_inference(
                     )
                 # Feed response and file to visualization engine
                 media.file.seek(0)
-
+                # TODO: Potentially skip this if no visualization url? (ie. just return output)
                 async with client.stream(
                     "POST",
                     "http://" + visualization_url + "/visualize",
