@@ -226,7 +226,7 @@ async def delete_model_card_by_id(model_id: str):
 
 @router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
 async def make_test_inference(
-    model_id: str, media: Optional[UploadFile] = File(), text: Optional[str] = None
+    model_id: str, media: Optional[UploadFile] = File(None), text: Optional[str] = None
 ):
     # Get metadata of inference engine url and visualisation engine url
     model = await db["models"].find_one(
