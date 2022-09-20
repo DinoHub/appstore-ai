@@ -31,7 +31,7 @@ def health_check(
     )
 
 
-async def predict(media: UploadFile = File()):
+async def predict(media: UploadFile = File()) -> InferenceOutput:
     # Check health of model
     try:
         if not health_check(client, MODEL_NAME):

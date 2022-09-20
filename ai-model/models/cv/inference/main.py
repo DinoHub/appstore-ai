@@ -4,7 +4,9 @@ from engine import predict
 from fastapi import FastAPI, File, UploadFile
 from schema import InferenceOutput
 
-app = FastAPI()
+app = FastAPI(
+    title="YOLOv4 Inference Engine"
+)
 
 @app.get("/")
 async def hello_world():

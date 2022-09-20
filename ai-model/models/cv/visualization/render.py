@@ -1,14 +1,12 @@
-import numpy as np
-
 import cv2
-
-from math import sqrt
+import numpy as np
 
 _LINE_THICKNESS_SCALING = 500.0
 
 np.random.seed(0)
 RAND_COLORS = np.random.randint(50, 255, (64, 3), "int")  # used for class visu
 RAND_COLORS[0] = [220, 220, 220]
+
 
 def render_box(img, box, color=(200, 200, 200)):
     """
@@ -27,13 +25,10 @@ def render_box(img, box, color=(200, 200, 200)):
     )
     thickness = max(1, thickness)
     img = cv2.rectangle(
-        img,
-        (int(x1), int(y1)),
-        (int(x2), int(y2)),
-        color,
-        thickness=thickness
+        img, (int(x1), int(y1)), (int(x2), int(y2)), color, thickness=thickness
     )
     return img
+
 
 def render_filled_box(img, box, color=(200, 200, 200)):
     """
@@ -45,13 +40,10 @@ def render_filled_box(img, box, color=(200, 200, 200)):
     """
     x1, y1, x2, y2 = box
     img = cv2.rectangle(
-        img,
-        (int(x1), int(y1)),
-        (int(x2), int(y2)),
-        color,
-        thickness=cv2.FILLED
+        img, (int(x1), int(y1)), (int(x2), int(y2)), color, thickness=cv2.FILLED
     )
     return img
+
 
 _TEXT_THICKNESS_SCALING = 700.0
 _TEXT_SCALING = 520.0

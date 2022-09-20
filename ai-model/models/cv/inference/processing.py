@@ -2,52 +2,9 @@
 from typing import List, Tuple
 
 import cv2
-
 import numpy as np
-
-from schema import BoundingBox
 from labels import COCOLabels
-
-# class BoundingBox:
-#     def __init__(self, classID, confidence, x1, x2, y1, y2, img_w, img_h):
-#         self.classID = classID
-#         self.confidence = confidence
-#         self.x1 = x1
-#         self.x2 = x2
-#         self.y1 = y1
-#         self.y2 = y2
-#         self.u1 = x1 / img_w  # relative position to image
-#         self.u2 = x2 / img_w
-#         self.v1 = y1 / img_h
-#         self.v2 = y2 / img_h
-
-#     @property
-#     def box(self):
-#         return (self.x1, self.y1, self.x2, self.y2)
-
-#     @property
-#     def width(self):
-#         return self.x2 - self.x1
-
-#     @property
-#     def height(self):
-#         return self.y2 - self.y1
-
-#     @property
-#     def center_absolute(self):
-#         return (self.x1 + self.x2) / 2, (self.y1 + self.y2) / 2
-
-#     @property
-#     def center_normalized(self):
-#         return (self.u1 + self.u2) / 2, (self.v1 + self.v2) / 2
-
-#     @property
-#     def size_absolute(self):
-#         return (self.width, self.height)
-
-#     @property
-#     def size_normalized(self):
-#         return (self.u2 - self.u1, self.v2 - self.v1)
+from schema import BoundingBox
 
 
 def preprocess(
@@ -81,7 +38,7 @@ def preprocess(
     return img
 
 
-def _nms_boxes(detections, nms_threshold):
+def _nms_boxes(detections: np.ndarray, nms_threshold: float) -> np.ndarray:
     """Apply the Non-Maximum Suppression (NMS) algorithm on the bounding
     boxes with their confidence scores and return an array with the
     indexes of the bounding boxes we want to keep.
@@ -125,51 +82,7 @@ def _nms_boxes(detections, nms_threshold):
     return keep
 
 
-# def _nms_boxes(detections: np.ndarray, nms_threshold: float) -> np.ndarray:
-#     x_coord = detections[:, 0]
-#     y_coord = detections[:, 1]
-#     width = (detections[:, 2],)
-#     height = detections[:, 3]
-#     box_confidences = detections[:, 4] * detections[:, 6]
 
-#     areas = width * height
-#     ordered = box_confidences.argsort()[::-1]
-
-#     keep = []
-
-#     while ordered.size > 0:
-#         cur_idx = ordered[0]
-#         keep.append(cur_idx)
-
-#         xx1 = np.maximum(x_coord[cur_idx], x_coord[ordered[1:]])
-#         yy1 = np.maximum(y_coord[cur_idx], y_coord[ordered[1:]])
-#         xx2 = np.minimum(
-#             x_coord[cur_idx] + width[cur_idx], x_coord[ordered[1:]] + width[ordered[1:]]
-#         )
-#         yy2 = np.minimum(
-#             y_coord[cur_idx] + width[cur_idx],
-#             y_coord[ordered[1:]] + height[ordered[1:]],
-#         )
-
-#         width1 = np.maximum(0.0, xx2 - xx1 + 1)
-#         height1 = np.maximum(0.0, yy2 - yy1 + 1)
-
-#         intersection = (
-#             width1 * height1
-#         )  # area if intersection between the two bounding boxes
-#         union = (
-#             areas[cur_idx] + areas[ordered[1:]] - intersection
-#         )  # combined area of two bounding boxes
-#         intersection_over_union = (
-#             intersection / union
-#         )  # ratio of intersect area to combined area (high intersection suggest high overlap and thus redundancy)
-#         indexes = np.where(intersection_over_union <= nms_threshold)[
-#             0
-#         ]  # filter out detections where iou <= threshold
-#         ordered = ordered[indexes + 1]  # go to next detections
-
-#     keep = np.array(keep)
-#     return keep
 
 
 def postprocess(

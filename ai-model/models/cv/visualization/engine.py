@@ -1,25 +1,20 @@
-import json
 import io
+import json
 import tempfile
 from typing import List
 
 import cv2
 from fastapi import File, Form, UploadFile, status
-from fastapi.responses import StreamingResponse
 from fastapi.exceptions import HTTPException
-from render import (
-    RAND_COLORS,
-    get_text_size,
-    render_box,
-    render_filled_box,
-    render_text,
-)
+from fastapi.responses import StreamingResponse
+from render import (RAND_COLORS, get_text_size, render_box, render_filled_box,
+                    render_text)
 from schema import BoundingBox
 
 CHUNK_SIZE = 1024
 
 
-async def visualize(inputs: UploadFile = File(), outputs: str = Form()):
+async def visualize(inputs: UploadFile = File(), outputs: str = Form()) -> StreamingResponse:
     # Attempt to decode output of model
     try:
         outputs: List[BoundingBox] = json.loads(outputs)
@@ -59,9 +54,9 @@ async def visualize(inputs: UploadFile = File(), outputs: str = Form()):
         input_image = render_filled_box(
             input_image,
             (
-                output["bbox"][0] - 3,
-                output["bbox"][1] - 3,
-                output["bbox"][0] + size[0],
+                output["bbox"][0] - 3, # x1
+                output["bbox"][1] - 3, # y1
+                output["bbox"][0] + size[0], 
                 output["bbox"][1] + size[1],
             ),
             color=(220, 220, 220),
@@ -76,7 +71,7 @@ async def visualize(inputs: UploadFile = File(), outputs: str = Form()):
     input_image = cv2.imencode(
         ext=".jpg",
         img=input_image
-    )[1]
+    )[1] # hard-code to export image as jpeg
 
     return StreamingResponse(
         content=io.BytesIO(
