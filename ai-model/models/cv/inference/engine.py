@@ -11,7 +11,7 @@ from schema import InferenceOutput
 from tritonclient.utils import InferenceServerException
 
 MODEL_NAME = "yolov4"
-TRITON_URL = "localhost:8001"
+TRITON_URL = "triton_inference_server:8001"
 HEIGHT, WIDTH = 608, 608
 
 CHUNK_SIZE = 1024
