@@ -279,7 +279,7 @@ async def make_test_inference(
                     )
                 # Feed response and file to visualization engine
                 media.file.seek(0)
-                
+
                 async with client.stream(
                     "POST",
                     "http://" + visualization_url + "/visualize",
@@ -290,10 +290,8 @@ async def make_test_inference(
                     content_type = response.headers["Content-Type"]
                     async for chunk in response.aiter_bytes():
                         yield chunk
-        return StreamingResponse(
-            content=get_prediction(),
-            media_type=content_type
-        )
+
+        return StreamingResponse(content=get_prediction(), media_type=content_type)
 
     elif text is not None:
         raise NotImplementedError
