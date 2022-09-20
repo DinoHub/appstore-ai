@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from schema import BoundingBox
+from labels import COCOLabels
 
 # class BoundingBox:
 #     def __init__(self, classID, confidence, x1, x2, y1, y2, img_w, img_h):
@@ -79,6 +80,7 @@ def preprocess(
 
     return img
 
+
 def _nms_boxes(detections, nms_threshold):
     """Apply the Non-Maximum Suppression (NMS) algorithm on the bounding
     boxes with their confidence scores and return an array with the
@@ -104,19 +106,25 @@ def _nms_boxes(detections, nms_threshold):
         keep.append(i)
         xx1 = np.maximum(x_coord[i], x_coord[ordered[1:]])
         yy1 = np.maximum(y_coord[i], y_coord[ordered[1:]])
-        xx2 = np.minimum(x_coord[i] + width[i], x_coord[ordered[1:]] + width[ordered[1:]])
-        yy2 = np.minimum(y_coord[i] + height[i], y_coord[ordered[1:]] + height[ordered[1:]])
+        xx2 = np.minimum(
+            x_coord[i] + width[i], x_coord[ordered[1:]] + width[ordered[1:]]
+        )
+        yy2 = np.minimum(
+            y_coord[i] + height[i], y_coord[ordered[1:]] + height[ordered[1:]]
+        )
 
         width1 = np.maximum(0.0, xx2 - xx1 + 1)
         height1 = np.maximum(0.0, yy2 - yy1 + 1)
         intersection = width1 * height1
-        union = (areas[i] + areas[ordered[1:]] - intersection)
+        union = areas[i] + areas[ordered[1:]] - intersection
         iou = intersection / union
         indexes = np.where(iou <= nms_threshold)[0]
         ordered = ordered[indexes + 1]
 
     keep = np.array(keep)
     return keep
+
+
 # def _nms_boxes(detections: np.ndarray, nms_threshold: float) -> np.ndarray:
 #     x_coord = detections[:, 0]
 #     y_coord = detections[:, 1]
@@ -214,15 +222,21 @@ def postprocess(
             yy = yy - offset_h
         ww = nms_detections[:, 2].reshape(-1, 1)
         hh = nms_detections[:, 3].reshape(-1, 1)
-        boxes = np.concatenate([xx, yy, xx + ww, yy + hh], axis=1) + 0.5
+        boxes = np.concatenate([xx, yy, xx + ww, yy + hh], axis=1) + 0.5 # x1, y1, x2, y2
         boxes = boxes.astype(np.int)
         scores = nms_detections[:, 4] * nms_detections[:, 6]
         classes = nms_detections[:, 5].astype(np.int)
+        class_names = list(map(lambda class_id: COCOLabels(class_id).name, classes))
     detected_objects = []
-    for box, score, label in zip(boxes, scores, classes):
+    for box, score, label, name in zip(boxes, scores, classes, class_names):
         detected_objects.append(
             BoundingBox(
-                class_id=label, confidence=score, bbox=box.tolist(), width=img_w, height=img_h
+                class_id=label,
+                class_name=name,
+                confidence=score,
+                bbox=box.tolist(),
+                width=img_w,
+                height=img_h,
             )
         )
     return detected_objects

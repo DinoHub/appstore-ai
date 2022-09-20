@@ -1,15 +1,14 @@
 # Inference code referenced from: https://github.com/isarsoft/yolov4-triton-tensorrt/blob/543fde846b2751d6ab394339e005e2754de22972/clients/python/client.py
 import tempfile
-from typing import Optional
 
-from processing import postprocess, preprocess
-from schema import InferenceOutput
 import cv2
 import numpy as np
 import tritonclient.grpc as grpcclient
 from fastapi import File, UploadFile, status
 from fastapi.exceptions import HTTPException
-from tritonclient.utils import InferenceServerException, triton_to_np_dtype
+from processing import postprocess, preprocess
+from schema import InferenceOutput
+from tritonclient.utils import InferenceServerException
 
 MODEL_NAME = "yolov4"
 TRITON_URL = "localhost:8001"
@@ -44,11 +43,11 @@ async def predict(media: UploadFile = File()):
         )
     # Download file (currently assume that file size has been validated)
     try:
-        with tempfile.NamedTemporaryFile(delete=False) as f:
+        with tempfile.NamedTemporaryFile() as f:
             while content := media.file.read(CHUNK_SIZE):
                 f.write(content)
             # Assume that its an image (for now anyways)
-        input_image = cv2.imread(f.name)
+            input_image = cv2.imread(f.name)
         if input_image is None:
             raise IOError
     except IOError:
@@ -80,6 +79,5 @@ async def predict(media: UploadFile = File()):
         [WIDTH, HEIGHT],
     )
     return InferenceOutput(
-        outputs=output
+        outputs=[output]
     )
-    # return {"inputs": [input_image], "outputs": output}
