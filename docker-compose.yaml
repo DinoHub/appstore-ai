@@ -8,6 +8,10 @@ services:
       - "8080:8080"
     depends_on:
       - mongodb
+    secrets:
+      - clearml_conf
+    environment:
+      - CLEARML_CONFIG_FILE=/run/secrets/clearml_conf
   mongodb:
     image: mongo
     restart: always
@@ -15,3 +19,7 @@ services:
       - "27017:27017"
     volumes:
       - "./mongodb_data:/data/db"
+
+secrets:
+  clearml_conf:
+    file: ${HOME}/clearml.conf
