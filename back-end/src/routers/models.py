@@ -1,15 +1,24 @@
 import json
 import re
-from typing import List, Mapping, Union
+import tempfile
+from typing import List, Mapping, Optional, Union
+
+import filetype
+import httpx
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 
 from ..internal.clearml_client import clearml_client
 from ..internal.db import db, mongo_client
+from ..internal.file_validator import (
+    MaxFileSizeException,
+    MaxFileSizeValidator,
+    ValidateFileUpload,
+)
 
 # from internal.inference import is_triton_inference, triton_client
 from ..models.model import (
@@ -18,6 +27,26 @@ from ..models.model import (
     ModelCardModelIn,
     UpdateModelCardModel,
 )
+
+CHUNK_SIZE = 1024
+BytesPerGB = 1024 * 1024 * 1024
+MAX_UPLOAD_SIZE_GB = 1
+
+ACCEPTED_CONTENT_TYPES = [
+    "image/jpeg",
+    "image/png",
+    "video/mp4",
+    "video/x-m4v",
+    "video/x-matroska",
+    "video/webm",
+    "video/mpeg" "audio/x-wav",
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/midi",
+    "audio/aac",
+]
+
+file_validator = ValidateFileUpload(max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB)
 
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -195,27 +224,74 @@ async def delete_model_card_by_id(model_id: str):
     # TODO: Should actual model be deleted as well?
 
 
-# @router.post("/{model_id}/inference")
-# async def submit_test_inference(model_id, input_data: UploadFile = File(description="Test samples for inference")):
-#     # Obtain Inference Engine from model
-#     model = await db["models"].find_one({"_id": model_id}, projection=["inference_url", "output_generator_url"])
-#     inference_url = model.inference_url
-#     output_generator_url = model.output_generator_url
+@router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
+async def make_test_inference(
+    model_id: str, media: Optional[UploadFile] = File(), text: Optional[str] = None
+):
+    # Get metadata of inference engine url and visualisation engine url
+    model = await db["models"].find_one(
+        {
+            "_id": model_id,
+        },
+        projection=["inference_url", "output_generator_url"],
+    )
+    inference_url = model["inference_url"]
+    visualization_url = model["output_generator_url"]
 
-#     # TODO: send file to inference engine to get output
-#     # Check if Triton Inference Server
-#     if is_triton_inference(inference_url): # NOTE: this is a fake function
-#         # NOTE: Current method is to use inferred input.
-#         # this has a few flaws. It assumes that there
-#         # is only a single input.
+    # Get file
+    # Validate File Size
+    file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
+    if media is not None:
+        with tempfile.NamedTemporaryFile() as f:
+            try:
+                while content := media.file.read(CHUNK_SIZE):
+                    file_size_validator(content)
+                    f.write(content)
+                content_type = filetype.guess_mime(f.name)
+                if content_type not in ACCEPTED_CONTENT_TYPES:
+                    raise ValueError
+            except MaxFileSizeException:
+                raise HTTPException(
+                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                    detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
+                )
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                    detail=f"File type {content_type} not supported",
+                )
+        media.file.seek(0)
 
-#         model_metadata = triton_client.get_model_metadata(
-#             model_name= "test_model" # TODO: Where to get it?
-#         )
-#         model_config = triton_client.get_model_config(
-#             model_name="test_model"
-#         )
-#     # TODO: raise HTTP error if sample input invalid (let model handle)
-#     # TODO: then pipe output to HTML visualization engine
+        # Send media file to inference
+        async def get_prediction():
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "http://" + inference_url + "/predict", files={"media": media.file}
+                )
+                try:
+                    outputs = response.json()
+                    # Encode as str to send as form-data to viz engine
+                    outputs = json.dumps(outputs)
+                except json.JSONDecodeError:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Failed to decode response from model",
+                    )
+                # Feed response and file to visualization engine
+                media.file.seek(0)
+                
+                async with client.stream(
+                    "POST",
+                    "http://" + visualization_url + "/visualize",
+                    files={"inputs": media.file},
+                    data={"outputs": outputs},
+                ) as response:
+                    async for chunk in response.aiter_bytes():
+                        yield chunk
+        return StreamingResponse(
+            content=get_prediction(),
+            media_type=content_type
+        )
 
-#     # Finally, return the HTML
+    elif text is not None:
+        raise NotImplementedError
