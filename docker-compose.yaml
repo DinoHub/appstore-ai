@@ -1,3 +1,17 @@
 services:
   back-end:
-    image: appstoreai:latest
+    build:
+      context: "./back-end"
+      args:
+        - ENV_STATE=dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+  mongodb:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - "./mongodb_data:/data/db"
