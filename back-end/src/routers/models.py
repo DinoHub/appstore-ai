@@ -286,6 +286,8 @@ async def make_test_inference(
                     files={"inputs": media.file},
                     data={"outputs": outputs},
                 ) as response:
+                    global content_type
+                    content_type = response.headers["Content-Type"]
                     async for chunk in response.aiter_bytes():
                         yield chunk
         return StreamingResponse(
