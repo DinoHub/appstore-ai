@@ -12,7 +12,8 @@ class GlobalConfig(BaseSettings):
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
 
     class Config:
-        env_file: str = "./config/.env"
+        env_file: str = "./src/config/.env"
+
 
 class DevConfig(GlobalConfig):
     class Config:
@@ -46,12 +47,14 @@ class FactoryConfig:
         elif self.env_state == "prod":
             return ProductionConfig()
 
+
 class AdminHashing(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
 
     class Config:
-        env_file: str = "./config/.env"
+        env_file: str = "./src/config/.env"
+
 
 config = FactoryConfig(GlobalConfig().ENV_STATE)()
 print(config.__repr__())

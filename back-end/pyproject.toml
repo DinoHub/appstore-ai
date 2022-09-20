@@ -1,10 +1,9 @@
 [tool.poetry]
-name = "appstore-ai"
+name = "appstore-back-end"
 version = "0.1.0"
 description = ""
 authors = ["Mathias and Tien Cheng"]
 readme = "README.md"
-packages = [{include = "appstore_ai"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -17,7 +16,6 @@ motor = "^3.0.0"
 python-jose = {extras = ["cryptography"], version = "^3.3.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 click = "^8.1.3"
-streaming-form-data = "^1.10.2"
 python-dotenv = "^0.21.0"
 filetype = "^1.1.0"
 
@@ -31,7 +29,7 @@ mtools = "^1.7.0"
 poethepoet = "^0.16.2"
 
 [tool.poe.tasks.boot]
-  help = "Boot applciation"
+  help = "Boot application"
   cmd  = "uvicorn main:app --reload --host 0.0.0.0 --port 7070"
 
 

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
-from routers import datasets, experiments, models,iam
+from .routers import datasets, experiments, models, iam
+
 with open("README.md", "r") as f:
     description = f.read()
 

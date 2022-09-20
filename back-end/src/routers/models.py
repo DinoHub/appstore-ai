@@ -8,11 +8,16 @@ from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from internal.clearml_client import clearml_client
-from internal.db import db, mongo_client
-#from internal.inference import is_triton_inference, triton_client
-from models.model import (FindModelCardModel, ModelCardModelDB,
-                          ModelCardModelIn, UpdateModelCardModel)
+from ..internal.clearml_client import clearml_client
+from ..internal.db import db, mongo_client
+
+# from internal.inference import is_triton_inference, triton_client
+from ..models.model import (
+    FindModelCardModel,
+    ModelCardModelDB,
+    ModelCardModelIn,
+    UpdateModelCardModel,
+)
 
 router = APIRouter(prefix="/models", tags=["Models"])
 

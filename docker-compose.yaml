@@ -1,0 +1,25 @@
+services:
+  back-end:
+    build:
+      context: "./back-end"
+      args:
+        - ENV_STATE=dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongodb
+    secrets:
+      - clearml_conf
+    environment:
+      - CLEARML_CONFIG_FILE=/run/secrets/clearml_conf
+  mongodb:
+    image: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - "./mongodb_data:/data/db"
+
+secrets:
+  clearml_conf:
+    file: ${HOME}/clearml.conf
