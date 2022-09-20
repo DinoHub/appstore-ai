@@ -13,10 +13,11 @@ from scipy.special import softmax
 R_tokenizer = XLMRobertaTokenizer.from_pretrained('joeddav/xlm-roberta-large-xnli')
 VERBOSE = False
 # hypothesis for topic classification
-topic = 'This text is about space and cosmos'
+
 input_name = ['input__0', 'input__1']
 output_name = 'output__0'
-def run_inference(premise, model_name='zst', url='127.0.0.1:8000', model_version='1'):
+def run_inference(premise,topic, model_name='zst', url='127.0.0.1:8000', model_version='1'):
+    topic = topic
     triton_client = tritonhttp.InferenceServerClient(
         url=url, verbose=VERBOSE)
     model_metadata = triton_client.get_model_metadata(
@@ -50,4 +51,5 @@ def run_inference(premise, model_name='zst', url='127.0.0.1:8000', model_version
     print(f'Probability that the label is true: {true_prob:0.2f}%')
 # topic classification premises
 if __name__ == '__main__':
-    run_inference("Somewhere something incredible is waiting to be known",'xlm_roberta_zsl')
+    run_inference("Somewhere something incredible is waiting to be known"
+    ,'This text is about space and cosmos','xlm_roberta_zsl')
