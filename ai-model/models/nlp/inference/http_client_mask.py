@@ -18,7 +18,7 @@ VERBOSE = False
 input_name = ['input__0', 'input__1']
 output_name = 'output__0'
 
-def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001', model_version='1'):
+def run_inference(premise = '', model_name='xlm_rob_large_mask', url='127.0.0.1:8001', model_version='1'):
 
     print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREMISE: {premise}')
 
