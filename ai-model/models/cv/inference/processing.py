@@ -103,6 +103,7 @@ def postprocess(
         boxes = np.zeros((0, 4), dtype=np.int)
         scores = np.zeros((0,), dtype=np.float32)
         classes = np.zeros((0,), dtype=np.float32)
+        class_names = [None]
     else:
 
         # Scale x, y, w, h from [0, 1] to pixel values
