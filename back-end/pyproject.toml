@@ -30,7 +30,7 @@ poethepoet = "^0.16.2"
 
 [tool.poe.tasks.boot]
   help = "Boot application"
-  cmd  = "uvicorn main:app --reload --host 0.0.0.0 --port 7070"
+  cmd  = "uvicorn src.main:app --reload --host 0.0.0.0 --port 7070"
 
 
 [build-system]
