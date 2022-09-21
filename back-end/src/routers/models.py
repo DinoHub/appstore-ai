@@ -323,3 +323,8 @@ async def make_test_inference(
 
     elif text is not None:
         raise NotImplementedError
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No input provided to inference endpoint"
+        )
