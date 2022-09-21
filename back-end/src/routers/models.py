@@ -318,6 +318,7 @@ async def make_test_inference(
                 url="http://" + visualization_url + "/visualize",
             )  # NOTE: rely on side effect of function to change content_type to output of visualization url
             # this is probably a bad way to do it
+            # TODO: consider including this info in some metadata of the model card?
             return StreamingResponse(
                 content=stream,
                 media_type=content_type,
