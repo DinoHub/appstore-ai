@@ -12,14 +12,18 @@ services:
       - clearml_conf
     environment:
       - CLEARML_CONFIG_FILE=/run/secrets/clearml_conf
+      - SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+      - ALGORITHM=HS256
+      - DEV_MONGODB_URL=mongodb:27017
+      - DEV_MAX_UPLOAD_SIZE_GB=10
   mongodb:
     image: mongo
     restart: always
     ports:
-      - "27017:27017"
+      - "27016:27017"
     volumes:
       - "./mongodb_data:/data/db"
 
 secrets:
   clearml_conf:
-    file: ${HOME}/clearml.conf
+    file: USERPROFILE/clearml.conf
