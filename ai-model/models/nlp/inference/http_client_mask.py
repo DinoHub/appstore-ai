@@ -18,7 +18,7 @@ VERBOSE = False
 input_name = ['input__0', 'input__1']
 output_name = 'output__0'
 
-def run_inference(premise = '', model_name='xlm_rob_large_mask', url='127.0.0.1:8001', model_version='1'):
+def run_inference(premise = '', model_name='xlm_rob_large_mask',top_k = 5, url='127.0.0.1:8001', model_version='1'):
 
     print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREMISE: {premise}')
 
@@ -61,26 +61,28 @@ def run_inference(premise = '', model_name='xlm_rob_large_mask', url='127.0.0.1:
     model_version = model_version, inputs=[input0, input1], outputs=[output])
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inference')
 
-    # format output(s)
+     # format output(s)
     logits = response.as_numpy('output__0')
-    logits = torch.Tensor(logits)
+    result = np.copy(logits)
+    logits = torch.Tensor(result) 
     mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
     mask_token_logits = logits[0, mask_token_index,:]
-    top_5_tokens = torch.topk(mask_token_logits, 5, dim=1).indices[0].tolist()
-    print(torch.topk(mask_token_logits, 5, dim=1))
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Masks Filled')
-
-    # display outputs
-    for token in top_5_tokens:
-        print(f">>>\t {premise.replace(tokenizer.mask_token, tokenizer.decode([token]))}")
-
+    probs = softmax(mask_token_logits)
+    top_k_probs = torch.topk(torch.Tensor(probs), top_k).values[0].tolist()
+    top_k_tokens = torch.topk(torch.Tensor(probs), top_k).indices[0].tolist()
+    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Masks Filled\n')
+    
+    # display output
+    for x in range(len(top_k_tokens)):
+        print(f"[{(datetime.now()).strftime('%d-%m-%Y %H:%M:%S')}] SEQUENCE: {premise.replace(tokenizer.mask_token, tokenizer.decode([top_k_tokens[x]]))}\n\t\t      SCORE: {round(top_k_probs[x]*100,2)}%")
+    
     # unload model from client
     triton_client.unload_model(model_name)
     if triton_client.is_model_ready(model_name):
-        print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Unload Model')
+        print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Unload Model')
         sys.exit(1)
     else:
-        print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Unload Model')
+        print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Unload Model')
 
 if __name__ == '__main__':
     run_inference("The dog ran <mask>.",'xlm_rob_large_mask')

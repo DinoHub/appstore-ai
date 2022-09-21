@@ -75,18 +75,20 @@ def run_inference(premise = '',topic = '', model_name='zst', url='127.0.0.1:8001
     entail_contradiction_logits = logits[:,[0,2]]
     probs = softmax(entail_contradiction_logits)
     true_prob = probs[:,1].item() * 100
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Probability')
+    false_prob = probs[:,0].item() * 100
+    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Probability\n')
 
     # display outputs
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] LABEL IS TRUE: {true_prob:0.2f}%')
+    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREDICTION: Label has {true_prob:0.2f}% of being true')
+    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREDICTION: Label has {false_prob:0.2f}% of being false')
     
     # unload model from triton server
     triton_client.unload_model(model_name)
     if triton_client.is_model_ready(model_name):
-        print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Unload Model')
+        print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Unload Model')
         sys.exit(1)
     else:
-        print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED : Unload Model')
+        print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED : Unload Model')
     
 
 
