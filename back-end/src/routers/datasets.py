@@ -18,6 +18,7 @@ from ..internal.file_validator import (
     clean_filename,
     determine_safe_file_size,
 )
+from ..internal.data_connector import ClearMLDataset
 
 ACCEPTED_CONTENT_TYPES = [
     "application/zip",
@@ -131,7 +132,9 @@ async def create_dataset(
         finally:
             # this will still run even if HTTPException is raised
             remove(path)  # remove zipfile so it is not uploaded
+        dataset = ClearMLDataset.from_scratch(
 
+        )
         dataset = Dataset.create(  # only when writing is finished then create data
             dataset_name=dataset_name, dataset_project=project_name
         )

@@ -8,7 +8,7 @@ import httpx
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -227,7 +227,9 @@ async def delete_model_card_by_id(model_id: str):
 
 @router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
 async def make_test_inference(
-    model_id: str, media: Optional[UploadFile] = File(None), text: Optional[str] = None
+    model_id: str,
+    media: Optional[UploadFile] = File(None),
+    text: Optional[str] = Form(None),
 ):
     # Get metadata of inference engine url and visualisation engine url
     if media is None and text is None:
@@ -284,16 +286,18 @@ async def make_test_inference(
         if media is None
         else {"media": (media.filename, media.file, media.content_type)}
     )
-    if visualization_url is None: # stream output of inference engine
-        stream = stream_response(
-            media=media,
-            text=text,
-            url="http://" + inference_url + "/predict",
-        )  # NOTE: rely on side effect of function to change content_type to output of visualization url
-        # this is probably a bad way to do it
-        # TODO: consider including this info in some metadata of the model card?
+    with httpx.Client() as client:
+        content_type = client.get(
+            "http://" + inference_url + "/content-type"
+        ).text 
+    if visualization_url is None:  # stream output of inference engine
+        # content_type = "image/jpeg"
         return StreamingResponse(
-            content=stream,
+            content=stream_response(
+                media=media,
+                text=text,
+                url="http://" + inference_url + "/predict",
+            ),
             media_type=content_type,
         )
     else:

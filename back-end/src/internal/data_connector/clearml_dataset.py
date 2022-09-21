@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Optional, Sequence, Union
 from clearml import Dataset
-from connector import DatasetConnector
+from .connector import DatasetConnector
 
 
 class ClearMLDataset(DatasetConnector):
