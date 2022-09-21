@@ -15,6 +15,10 @@ TRITON_URL = "triton_inference_server:8001"
 HEIGHT, WIDTH = 608, 608
 
 CHUNK_SIZE = 1024
+ACCEPTED_CONTENT_TYPES = [
+    "image/jpeg",
+    "image/png",
+]
 
 client = grpcclient.InferenceServerClient(url=TRITON_URL)
 
@@ -33,6 +37,11 @@ def health_check(
 
 async def predict(media: UploadFile = File()) -> InferenceOutput:
     # Check health of model
+    if media.content_type not in ACCEPTED_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail=f"Model does not support file type: {media.content_type}"
+        )
     try:
         if not health_check(client, MODEL_NAME):
             raise InferenceServerException

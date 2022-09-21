@@ -19,6 +19,7 @@ from ..internal.file_validator import (
     MaxFileSizeValidator,
     ValidateFileUpload,
 )
+from ..internal.inference import stream_response
 
 # from internal.inference import is_triton_inference, triton_client
 from ..models.model import (
@@ -238,7 +239,7 @@ async def make_test_inference(
     if model is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with ID {model_id} not found."
+            detail=f"Model with ID {model_id} not found.",
         )
     inference_url = model["inference_url"]
     visualization_url = model["output_generator_url"]
@@ -255,6 +256,11 @@ async def make_test_inference(
                 content_type = filetype.guess_mime(f.name)
                 if content_type not in ACCEPTED_CONTENT_TYPES:
                     raise ValueError
+                if content_type != media.content_type:  # MIME type mismatch
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail=f"MIME Type Mismatch. Content type reported was {media.content_type}, but file was {content_type}",
+                    )
             except MaxFileSizeException:
                 raise HTTPException(
                     status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
@@ -265,66 +271,50 @@ async def make_test_inference(
                     status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                     detail=f"File type {content_type} not supported",
                 )
-        media.file.seek(0) # unsure how necessary, but set pointer to start of file
+        media.file.seek(0)  # unsure how necessary, but set pointer to start of file
+        # TODO: Support non media upload
 
-        # Send media file to inference
-        async def get_prediction():
-            # TODO: Support non media upload
-            async with httpx.AsyncClient() as client:
-                try:
-                    response = await client.post(
-                        "http://" + inference_url + "/predict", files={"media": media.file}
-                    )
-                    response.raise_for_status()
-                    outputs = response.json()
-                    # Encode as str to send as form-data to viz engine
-                    outputs = json.dumps(outputs)
-                except httpx.RequestError:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Error when attempting to request inference from model."
-                    )
-                except httpx.HTTPStatusError as e:
-                    raise HTTPException(
-                        status_code=e.response.status_code,
-                        detail="Error when attempting to request inference from model."
-                    )
-                except json.JSONDecodeError:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Failed to decode response from model",
-                    )
-                # Feed response and file to visualization engine
-                media.file.seek(0)
-                try:
-                    # TODO: Potentially skip this if no visualization url? (ie. just return output)
-                    async with client.stream(
-                        "POST",
-                        "http://" + visualization_url + "/visualize",
-                        files={"inputs": media.file},
-                        data={"outputs": outputs},
-                    ) as response:
-                        response.raise_for_status()
-                        global content_type
-                        content_type = response.headers["Content-Type"]
-                        async for chunk in response.aiter_bytes():
-                            yield chunk
-                except httpx.RequestError:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Error when trying to call visualization engine to visualize output"
-                    )
-                except httpx.HTTPStatusError as e:
-                    raise HTTPException(
-                        status_code=e.response.status_code,
-                        detail="Error when trying to call visualization engine to visualize output"
-                    )
-        return StreamingResponse(content=get_prediction(), media_type=content_type)
-
+        async with httpx.AsyncClient() as client:
+            try:
+                print(content_type)
+                files = {"media": (media.filename, media.file, media.content_type)}
+                response = await client.post(
+                    "http://" + inference_url + "/predict", files=files
+                )
+                response.raise_for_status()
+                outputs = response.json()
+                # Encode as str to send as form-data to viz engine
+                outputs = json.dumps(outputs)
+            except httpx.RequestError:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Error when attempting to request inference from model.",
+                )
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(
+                    status_code=e.response.status_code,
+                    detail=f"Error when attempting to request inference from model. Error: {e.response.text}",
+                )
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to decode response from model",
+                )
+            # Send media file to inference
+            # Feed response and file to visualization engine
+            # TODO: Potentially skip this if no visualization url? (ie. just return output)
+            return StreamingResponse(
+                content=stream_response(
+                    media=media,
+                    outputs=outputs,
+                    url="http://" + visualization_url + "/visualize",
+                ),
+                media_type=content_type,
+            )
     elif text is not None:
         raise NotImplementedError
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No input provided to inference endpoint"
+            detail="No input provided to inference endpoint",
         )
