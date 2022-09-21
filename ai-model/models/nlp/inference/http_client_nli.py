@@ -58,10 +58,10 @@ def run_inference(premise,topic, model_name='zst', url='127.0.0.1:8000', model_v
 
     # insert inputs and output(s)
     input0 = tritonhttp.InferInput(input_name[0], (1,  256), 'INT32')
-    input0.set_data_from_numpy(input_ids, binary_data=False)
+    input0.set_data_from_numpy(input_ids,binary_data= False)
     input1 = tritonhttp.InferInput(input_name[1], (1, 256), 'INT32')
-    input1.set_data_from_numpy(mask, binary_data=False)
-    output = tritonhttp.InferRequestedOutput(output_name,  binary_data=False)
+    input1.set_data_from_numpy(mask,binary_data= False)
+    output = tritonhttp.InferRequestedOutput(output_name,binary_data= False)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inputs/Outputs')
 
     # send inputs for inference and recieve output(s)

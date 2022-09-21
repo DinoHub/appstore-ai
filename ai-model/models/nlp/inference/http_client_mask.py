@@ -1,8 +1,7 @@
 from importlib.metadata import version
 import numpy as np
 import sys
-import tritonclient.grpc.model_config_pb2 as mc
-import tritonclient.grpc as tritongrpc
+import tritonclient.http as tritonhttp
 from tritonclient.utils import triton_to_np_dtype
 from tritonclient.utils import InferenceServerException
 from transformers import XLMRobertaTokenizer
@@ -24,7 +23,7 @@ def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001'
     print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREMISE: {premise}')
 
     # establish connection to triton
-    triton_client = tritongrpc.InferenceServerClient(
+    triton_client = tritonhttp.InferenceServerClient(
         url=url, verbose=VERBOSE)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Connection')
 
@@ -50,11 +49,11 @@ def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001'
 
     # insert inputs and output(s)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Tokenize')
-    input0 = tritongrpc.InferInput(input_name[0], (1,  512), 'INT32')
-    input0.set_data_from_numpy(input_ids)
-    input1 = tritongrpc.InferInput(input_name[1], (1, 512), 'INT32')
-    input1.set_data_from_numpy(attention_mask)
-    output = tritongrpc.InferRequestedOutput(output_name)
+    input0 = tritonhttp.InferInput(input_name[0], (1,  512), 'INT32')
+    input0.set_data_from_numpy(input_ids,binary_data= False)
+    input1 = tritonhttp.InferInput(input_name[1], (1, 512), 'INT32')
+    input1.set_data_from_numpy(attention_mask,binary_data= False)
+    output = tritonhttp.InferRequestedOutput(output_name,binary_data= False)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inputs/Outputs')
 
     # send inputs for inference and recieve output(s)
@@ -64,8 +63,7 @@ def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001'
 
     # format output(s)
     logits = response.as_numpy('output__0')
-    result = np.copy(logits)
-    logits = torch.Tensor(result)
+    logits = torch.Tensor(logits)
     mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
     mask_token_logits = logits[0, mask_token_index,:]
     top_5_tokens = torch.topk(mask_token_logits, 5, dim=1).indices[0].tolist()
