@@ -19,7 +19,7 @@ VERBOSE = False
 input_name = ['input__0', 'input__1']
 output_name = 'output__0'
 
-def run_inference(premise,topic, model_name='zst', url='127.0.0.1:8000', model_version='1'):
+def run_inference(premise,topic, model_name='zst', url='127.0.0.1:8001', model_version='1'):
     topic = topic
     print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREMISE: {premise}')
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] TOPIC: {topic}')
@@ -91,5 +91,5 @@ def run_inference(premise,topic, model_name='zst', url='127.0.0.1:8000', model_v
 
 
 if __name__ == '__main__':
-    run_inference("The nebulas dance divinely in our heavenly skies"
+    run_inference("The nebulas dance divinely over our heavenly skies"
     ,'This text is about space and cosmos','xlm_roberta_zsl')

@@ -69,7 +69,6 @@ def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001'
     mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
     mask_token_logits = logits[0, mask_token_index,:]
     top_5_tokens = torch.topk(mask_token_logits, 5, dim=1).indices[0].tolist()
-    print(torch.topk(mask_token_logits, 5, dim=1))
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Masks Filled')
 
     # display outputs
@@ -85,4 +84,4 @@ def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001'
         print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Unload Model')
 
 if __name__ == '__main__':
-    run_inference("The dog ran <mask>.",'xlm_rob_large_mask')
+    run_inference("The professor knew she <mask> on the exam.",'xlm_rob_large_mask')
