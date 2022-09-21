@@ -13,7 +13,7 @@ from datetime import datetime
 
 # load tokeniser
 tokenizer = AutoTokenizer.from_pretrained('xlm-roberta-large')
-VERBOSE = False
+VERBOSE = False 
 
 # set up inputs for triton server
 input_name = ['input__0', 'input__1']
