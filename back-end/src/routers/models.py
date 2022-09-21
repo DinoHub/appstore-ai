@@ -284,33 +284,45 @@ async def make_test_inference(
         if media is None
         else {"media": (media.filename, media.file, media.content_type)}
     )
-    async with httpx.AsyncClient() as client:
-        try:
-            response = await client.post(
-                "http://" + inference_url + "/predict", files=files, data=data
-            )
-            response.raise_for_status()
-            outputs = response.json()
-            # Encode as str to send as form-data to viz engine
-            outputs = json.dumps(outputs)
-        except httpx.RequestError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error when attempting to request inference from model.",
-            )
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(
-                status_code=e.response.status_code,
-                detail=f"Error when attempting to request inference from model. Error: {e.response.text}",
-            )
-        except json.JSONDecodeError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to decode response from model",
-            )
-        # Send media file to inference
-        # Feed response and file to visualization engine
-        if visualization_url is not None:
+    if visualization_url is None: # stream output of inference engine
+        stream = stream_response(
+            media=media,
+            text=text,
+            url="http://" + inference_url + "/predict",
+        )  # NOTE: rely on side effect of function to change content_type to output of visualization url
+        # this is probably a bad way to do it
+        # TODO: consider including this info in some metadata of the model card?
+        return StreamingResponse(
+            content=stream,
+            media_type=content_type,
+        )
+    else:
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(
+                    "http://" + inference_url + "/predict", files=files, data=data
+                )
+                response.raise_for_status()
+                outputs = response.json()
+                # Encode as str to send as form-data to viz engine
+                outputs = json.dumps(outputs)
+            except httpx.RequestError:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Error when attempting to request inference from model.",
+                )
+            except httpx.HTTPStatusError as e:
+                raise HTTPException(
+                    status_code=e.response.status_code,
+                    detail=f"Error when attempting to request inference from model. Error: {e.response.text}",
+                )
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Failed to decode response from model",
+                )
+            # Send media file to inference
+            # Feed response and file to visualization engine
             stream = stream_response(
                 media=media,
                 text=text,
@@ -323,5 +335,3 @@ async def make_test_inference(
                 content=stream,
                 media_type=content_type,
             )
-        else:
-            return outputs

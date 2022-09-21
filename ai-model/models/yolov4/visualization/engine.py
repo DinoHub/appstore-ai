@@ -14,7 +14,7 @@ from schema import BoundingBox
 CHUNK_SIZE = 1024
 
 
-async def visualize(inputs: UploadFile = File(), outputs: str = Form()) -> StreamingResponse:
+async def visualize(media: UploadFile = File(), outputs: str = Form()) -> StreamingResponse:
     # Attempt to decode output of model
     try:
         outputs: List[BoundingBox] = json.loads(outputs)
@@ -25,7 +25,7 @@ async def visualize(inputs: UploadFile = File(), outputs: str = Form()) -> Strea
         )
     try:
         with tempfile.NamedTemporaryFile() as f:
-            while content := inputs.file.read(CHUNK_SIZE):
+            while content := media.file.read(CHUNK_SIZE):
                 f.write(content)
             # Assume that its an image (for now anyways)
             input_image = cv2.imread(f.name)
