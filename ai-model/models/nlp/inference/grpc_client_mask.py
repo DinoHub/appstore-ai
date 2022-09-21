@@ -84,4 +84,4 @@ def run_inference(premise, model_name='xlm_rob_large_mask', url='127.0.0.1:8001'
         print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Unload Model')
 
 if __name__ == '__main__':
-    run_inference("The professor knew she <mask> on the exam.",'xlm_rob_large_mask')
+    run_inference("He <mask> home.",'xlm_rob_large_mask')
