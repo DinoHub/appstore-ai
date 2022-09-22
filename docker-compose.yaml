@@ -14,16 +14,18 @@ services:
       - CLEARML_CONFIG_FILE=/run/secrets/clearml_conf
       - SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
       - ALGORITHM=HS256
-      - DEV_MONGODB_URL=mongodb:27017
+      - DEV_MONGODB_URL=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10
   mongodb:
     image: mongo
     restart: always
     ports:
       - "27016:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=app_store
     volumes:
-      - "./mongodb_data:/data/db"
+      - "./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js"
 
 secrets:
   clearml_conf:
-    file: USERPROFILE/clearml.conf
+    file: clearml.conf
