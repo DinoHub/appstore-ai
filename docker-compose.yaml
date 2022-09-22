@@ -16,6 +16,8 @@ services:
       - ALGORITHM=HS256
       - DEV_MONGODB_URL=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10
+    networks:
+      - appstore
   mongodb:
     image: mongo
     restart: always
@@ -25,7 +27,14 @@ services:
       - MONGO_INITDB_DATABASE=app_store
     volumes:
       - "./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js"
+    networks:
+      - appstore
 
 secrets:
   clearml_conf:
     file: clearml.conf
+      - "./mongodb_data:/data/db"
+networks:
+  appstore:
+    driver: bridge
+    name: appstore
