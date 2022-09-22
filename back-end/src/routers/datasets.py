@@ -52,7 +52,7 @@ async def get_datasets_by_project(project_name: str):
 @router.get("/{dataset_id}")
 async def get_dataset_by_id(dataset_id: str):
     try:
-        dataset = Dataset(connector_type=DATA_CONNECTOR).get(dataset_id=dataset_id)
+        dataset = Dataset(connector_type=DATA_CONNECTOR).get(id=dataset_id)
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
