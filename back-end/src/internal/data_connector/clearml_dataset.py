@@ -16,7 +16,7 @@ class ClearMLDataset(DatasetConnector):
     def file_entries(self) -> Dict:
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
-        return self.dataset.file_entries_dict()
+        return self.dataset.file_entries_dict
 
     @classmethod
     def get(
