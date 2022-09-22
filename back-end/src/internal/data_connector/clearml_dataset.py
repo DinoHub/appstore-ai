@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Dict, Optional, Sequence, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 from clearml import Dataset
 
@@ -13,7 +13,7 @@ class ClearMLDataset(DatasetConnector):
         self.dataset: Optional[Dataset] = None
 
     @property
-    def file_entries_dict(self) -> Dict:
+    def file_entries(self) -> Dict:
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
         return self.dataset.file_entries_dict()
@@ -60,17 +60,28 @@ class ClearMLDataset(DatasetConnector):
         dataset.default_remote = default_remote
         return dataset
 
+    @staticmethod
+    def list_datasets(
+        project: Optional[str] = None,
+        partial_name: Optional[str] = None,
+        tags: Optional[Sequence[str]] = None,
+        ids: Optional[Sequence[str]] = None,
+    ) -> List[Dict]:
+        return Dataset.list_datasets(
+            partial_name=partial_name, dataset_project=project, ids=ids, tags=tags
+        )
+
     def add_files(self, path: Union[str, Path], recursive: bool = True) -> None:
         if self.dataset is None:
             raise AttributeError("Dataset has not been created.")
-        self.dataset.add_files(dataset_path=path, recursive=recursive)
+        self.dataset.add_files(path=path, recursive=recursive)
 
     def remove_files(self, path: Union[str, Path], recursive: bool = True) -> None:
         if self.dataset is None:
             raise AttributeError("Dataset has not been created.")
-        self.dataset.remove_files(dataset_path=path, recursive=recursive)
+        self.dataset.remove_files(path=path, recursive=recursive)
 
-    def upload(self, remote: Optional[str] = None) -> None
+    def upload(self, remote: Optional[str] = None) -> None:
         if self.dataset is None:
             raise AttributeError("Dataset has not been created.")
         if remote is None:
@@ -81,18 +92,15 @@ class ClearMLDataset(DatasetConnector):
                     f"No remote url specified, using default remote of {self.default_remote}"
                 )
                 remote = self.default_remote
-        self.dataset.upload(
-            output_url=remote
-        )
+        self.dataset.upload(output_url=remote)
         # NOTE: no idea if the below one is necessary
         self.dataset.finalize()
 
     def download(self, path: Union[str, Path], overwrite: bool = True) -> str:
         if self.dataset is None:
-            raise AttributeError("Dataset has not been created.") 
+            raise AttributeError("Dataset has not been created.")
         self.output_path = self.dataset.get_mutable_local_copy(
-            target_folder=path,
-            overwrite=overwrite
+            target_folder=path, overwrite=overwrite
         )
         return self.output_path
 
@@ -101,5 +109,3 @@ class ClearMLDataset(DatasetConnector):
         # no need to do anything
         if self.dataset is not None:
             self.dataset.delete()
-
-        

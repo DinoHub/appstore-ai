@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
-from typing import Dict, Optional, Union
 from logging import Logger
+from pathlib import Path
+from typing import Dict, List, Optional, Union
+
 
 class DatasetConnector(ABC):
     def __init__(self):
@@ -15,9 +16,7 @@ class DatasetConnector(ABC):
         self.dataset = None
         self.default_remote: Optional[str] = None
         self.id: Optional[str] = None
-        self.logger: Logger = Logger(
-            __name__
-        )
+        self.logger: Logger = Logger(__name__)
 
     @property
     @abstractmethod
@@ -118,4 +117,14 @@ class DatasetConnector(ABC):
     @abstractmethod
     def delete(self) -> None:
         """Deletes the entire dataset."""
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def list_datasets(cls) -> List[Dict]:
+        """Query list of datasets.
+
+        Returns:
+            List[Dict]: List of dictionaries with dataset metadata.
+        """
         raise NotImplementedError
