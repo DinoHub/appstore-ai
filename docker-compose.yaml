@@ -27,13 +27,14 @@ services:
       - MONGO_INITDB_DATABASE=app_store
     volumes:
       - "./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js"
+      - "./mongodb_data:/data/db"
     networks:
       - appstore
 
 secrets:
   clearml_conf:
     file: clearml.conf
-      - "./mongodb_data:/data/db"
+      
 networks:
   appstore:
     driver: bridge

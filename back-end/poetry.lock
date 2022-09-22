@@ -1256,11 +1256,7 @@ testing = ["coverage (>=6.2)", "coverage-enable-subprocess (>=1)", "flaky (>=3.7
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-<<<<<<< HEAD
-content-hash = "50b8131883f4e404af1200ea14e13266fb5c7bc739845629828d0408150788ce"
-=======
-content-hash = "0d8531ec8b7d3189cba066662e1b686145103f27744379fc76edaecd259cea4c"
->>>>>>> main
+content-hash = "c9416120c03bf3747143210a141d8d13801389d0a446d74b42350f4a52b234da"
 
 [metadata.files]
 aiosqlite = [
