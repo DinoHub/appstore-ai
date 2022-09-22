@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Dict, Optional, Union
-
+from logging import Logger
 
 class DatasetConnector(ABC):
     def __init__(self):
@@ -13,15 +13,11 @@ class DatasetConnector(ABC):
         connector.
         """
         self.dataset = None
-        self.default_remote = None
-
-    @property
-    @abstractmethod
-    def id(self) -> str:
-        if hasattr(self, "id"):
-            return self.id
-        else:
-            raise NotImplementedError("Connector does not have ID attribute defined.")
+        self.default_remote: Optional[str] = None
+        self.id: Optional[str] = None
+        self.logger: Logger = Logger(
+            __name__
+        )
 
     @property
     @abstractmethod
