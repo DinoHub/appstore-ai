@@ -5,16 +5,17 @@ from xmlrpc.client import ResponseError
 
 from bson import json_util
 from clearml import Model, Task
-from fastapi import APIRouter, HTTPException, Query, status, Depends
+from fastapi import APIRouter, HTTPException, Query, status, Depends, Path
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi_pagination import Page, add_pagination, paginate
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from ..config.config import admin
 from ..internal.clearml_client import clearml_client
 from ..internal.db import db, mongo_client
-from ..models.iam import UserInsert, UserInsertDB, UserEdit, Token, TokenData, User
+from ..models.iam import UserInsert, UserInsertDB, UserEdit, Token, TokenData, User 
 from pymongo import errors as pyerrs
 
 
@@ -90,9 +91,7 @@ async def add_user(item: UserInsert, current_user: User = Depends(get_current_us
 @router.delete(
     "/delete",
 )
-async def delete_user(
-    userid: List[str], current_user: User = Depends(get_current_user)
-):
+async def delete_user(userid: List[str], current_user: User = Depends(get_current_user)):
     try:
         delete_result = await db["users"].delete_many({"userid": {"$in": userid}})
         return Response(status_code=204)
@@ -101,9 +100,7 @@ async def delete_user(
 
 
 @router.put("/edit")
-async def update_user(
-    user: List[UserInsert], current_user: User = Depends(get_current_user)
-):
+async def update_user(user: List[UserInsert], current_user: User = Depends(get_current_user)):
     id_list = []
     for x in user:
         try:
@@ -157,3 +154,25 @@ async def check_user_admin(current_user: User = Depends(get_current_user)):
         detail=f"User is not admin",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+@router.get("/{page_size}/{page_num}")
+async def get_users(page_size: int  = Path(ge = 1), page_num: int = Path(ge = 1),current_user: User = Depends(get_current_user)):
+        if current_user["admin_priv"] is True:
+            # check number of documents to skip past
+            skips = page_size * (page_num - 1)
+
+            # dont skip if 1st page
+            if skips <= 0: 
+                # find from users in MongodDB exclude ObjectID
+                cursor =  db['users'].find({}, {'_id': False}).limit(page_size)
+            # else call cursor with skips
+            else:
+                # find from users in MongodDB exclude ObjectID
+                cursor =  db['users'].find({}, {'_id': False}).skip(skips).limit(page_size)
+            # get from MongoDB and convert to list
+            cursor =  await cursor.to_list(length = page_size)
+            # return documents
+            return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
+        else:
+            # ensure when loading this endpoint that user is authenticated
+            raise HTTPException(status_code = 401,detail=f"User is not admin",headers={"WWW-Authenticate": "Bearer"})
