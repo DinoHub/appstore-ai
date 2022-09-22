@@ -35,7 +35,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     # TODO: Figure out model source stuff
     clearml_exp_id: Optional[str]
     inference_url: str
-    output_generator_url: str
+    output_generator_url: Optional[str]
 
 
 class ModelCardModelDB(ModelCardModelIn):

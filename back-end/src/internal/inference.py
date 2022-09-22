@@ -1,17 +1,27 @@
-# import tritonclient.http as httpclient
+from typing import Optional
 
-# from config.config import config
+import httpx
+from fastapi import UploadFile
 
-# triton_client = httpclient.InferenceServerClient(url=config.TRITON_URL)
 
-
-# def is_triton_inference(url: str) -> bool:
-#     """
-#     This is just a tmp function to simulate the logic of
-#     figuring out which inference engine to use.
-#     Possible ways to tell
-#     1. User states somewhere in model card metadata
-#     2. Distinct clue from the inference URL provided
-#     Easiest way is if its just set by user.
-#     """
-#     return True  # See docstring
+async def stream_response(
+    url: str,
+    outputs: Optional[str] = None,
+    media: Optional[UploadFile] = None,
+    text: Optional[str] = None,
+):
+    if media is not None:
+        media.file.seek(0)
+    # NOTE: cannot do error handling here due to how fastapi handles exceptions
+    # therefore, just have to hope that stream is successful
+    files = {"media": media.file} if media is not None else None
+    data = { "text" : text, "outputs" : outputs }
+    async with httpx.AsyncClient(timeout=3600).stream(
+        "POST",
+        url,
+        files=files,
+        data=data,
+    ) as response:
+        response.raise_for_status()
+        async for chunk in response.aiter_bytes():
+            yield chunk

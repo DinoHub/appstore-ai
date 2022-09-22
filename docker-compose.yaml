@@ -12,6 +12,8 @@ services:
       - clearml_conf
     environment:
       - CLEARML_CONFIG_FILE=/run/secrets/clearml_conf
+    networks:
+      - appstore
   mongodb:
     image: mongo
     restart: always
@@ -19,7 +21,15 @@ services:
       - "27017:27017"
     volumes:
       - "./mongodb_data:/data/db"
+    networks:
+      - appstore
 
 secrets:
   clearml_conf:
     file: ${HOME}/clearml.conf
+  
+
+networks:
+  appstore:
+    driver: bridge
+    name: appstore
