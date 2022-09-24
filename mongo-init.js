@@ -1,7 +1,7 @@
 db = db.getSiblingDB('app_store');
 
 db.createCollection('users');
-
+db.users.createIndex({userid:'text'}, {unique:true})
 db.users.insertMany([
  {
     userid: 'sysadmin1',
@@ -17,3 +17,5 @@ db.users.insertMany([
   },
 
 ]);
+
+
