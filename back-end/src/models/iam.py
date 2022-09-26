@@ -23,7 +23,7 @@ class UserInsert(BaseModel):
 
     @validator('password_confirm')
     def match_passwords(cls, v, values, **kwargs):
-        if 'password_confirm' in values and v != values['password']:
+        if v != values['password']:
             raise ValueError('Passwords do not match')
         strength = policy.test(values['password'])
         if not strength:
