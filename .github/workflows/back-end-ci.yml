@@ -23,6 +23,13 @@ jobs:
         image: mongo
         ports:
           - 4051:4051
+        env:
+          MONGO_INITDB_DATABASE: test
+        options: >-
+          --health-cmd mongo
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python 3.9
