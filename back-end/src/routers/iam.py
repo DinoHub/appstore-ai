@@ -79,7 +79,7 @@ async def add_user(item: UserInsert, current_user: User = Depends(get_current_us
     except pyerrs.DuplicateKeyError:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            content=f"Userid of {item.userid} already exists",
+            content=f"User with ID of {item.userid} already exists",
         )
     except Error as e:
         print(e)
@@ -110,7 +110,6 @@ async def update_user(user: UserInsert, current_user: User = Depends(get_current
             )
     except ValueError as e:
         raise HTTPException(status_code= 422, detail=f'')
-
     except:
         raise HTTPException(status_code=404, detail=f"Not found")
     return Response(status_code=204)

@@ -5,8 +5,8 @@ db.users.createIndex({userid: 'text'}, {unique:true})
 
 db.users.insertMany([
  {
-    userid: 'admin1',
-    name: 'Tan Kee Chong',
+    userid: 'master',
+    name: 'Master',
     password: '$2b$12$X86gHxJpDZEc4YHy2oLqU.pwNvvcJP16L5C292q39KuxXmCBW.xdG',
     admin_priv: true
   },
