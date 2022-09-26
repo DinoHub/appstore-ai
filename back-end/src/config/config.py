@@ -9,6 +9,7 @@ from pydantic import BaseModel, BaseSettings, Field
 class GlobalConfig(BaseSettings):
     ENV_STATE: Optional[str] = Field(None, env="ENV_STATE")
     MONGODB_URL: Optional[str] = None
+    MAIN_COLLECTION_NAME: Optional[str] = None
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
 
     class Config:
@@ -32,6 +33,9 @@ class ProductionConfig(GlobalConfig):
         env_prefix: str = "PROD_"
         # TODO: add secrets_dir to support loading secrets
 
+class TestingConfig(GlobalConfig):
+    class Config:
+        env_prefix: str = "TEST_"
 
 class FactoryConfig:
     """Return config instance based on `ENV_STATE` variable"""
@@ -46,6 +50,8 @@ class FactoryConfig:
             return StagingConfig()
         elif self.env_state == "prod":
             return ProductionConfig()
+        elif self.env_state == "test":
+            return TestingConfig()
 
 
 class AdminHashing(BaseSettings):
@@ -55,7 +61,7 @@ class AdminHashing(BaseSettings):
     class Config:
         env_file: str = "./src/config/.env"
 
-
-config = FactoryConfig(GlobalConfig().ENV_STATE)()
+ENV_STATE = GlobalConfig().ENV_STATE
+config = FactoryConfig(ENV_STATE)()
 print(config.__repr__())
 admin = AdminHashing()
