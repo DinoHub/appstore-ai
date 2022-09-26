@@ -1,0 +1,42 @@
+name: Back End CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  testing:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ./back-end
+    env:
+      ENV_STATE: test
+      MONGODB_URL: mongodb:4051
+      MAIN_COLLECTION_NAME: app_store_ci
+      MAX_UPLOAD_SIZE_GB: 10
+      CLEARML_OFFLINE_MODE: true
+    services:
+      mongodb:
+        image: mongo
+        ports:
+          - 4051:4051
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+      - name: Set up dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install poetry
+          poetry install
+      - name: Set up environment file
+        run: |
+          python scripts/generate-ci-env.py
+      - name: Test with pytest
+        run: |
+          pytest
