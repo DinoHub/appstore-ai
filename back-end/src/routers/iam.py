@@ -15,7 +15,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from ..config.config import admin
 from ..internal.clearml_client import clearml_client
-from ..internal.db import db, mongo_client
+from ..internal.db import get_db
 from ..models.iam import UserInsert, UserInsertDB, Token, TokenData, User ,UserPage
 from pymongo import errors as pyerrs
 
@@ -27,7 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 45
 router = APIRouter(prefix="/iam", tags=["IAM"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/iam/auth")
-
+db, mongo_client = get_db()
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)

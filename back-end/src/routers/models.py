@@ -13,7 +13,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from ..internal.clearml_client import clearml_client
-from ..internal.db import db, mongo_client
+from ..internal.db import get_db
 from ..internal.file_validator import (
     MaxFileSizeException,
     MaxFileSizeValidator,
@@ -48,17 +48,17 @@ ACCEPTED_CONTENT_TYPES = [
 ]
 
 file_validator = ValidateFileUpload(max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB)
-
 router = APIRouter(prefix="/models", tags=["Models"])
 
 
 @router.post("/search", response_model=ModelCardModelIn)
-async def get_model_cards(query: FindModelCardModel):
+async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     # Search model cards
     # TODO: Pagination support
     # NOTE: if nothing provided, return all
     # TODO: if possible, consider an option like elasticsearch or
     # mongodb atlas search to allow for fuzzy matching
+    db, _ = db
     db_query = {
         "task": query.task,
         "owner": query.owner,
@@ -104,7 +104,8 @@ async def get_model_cards(query: FindModelCardModel):
 
 
 @router.get("/{model_id}")
-async def get_model_card_by_id(model_id: str):
+async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
+    db, _ = db
     # Get model card by database id (NOT clearml id)
     model = await db["models"].find_one({"_id": model_id})
     if model is None:
@@ -114,10 +115,11 @@ async def get_model_card_by_id(model_id: str):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_model_card_metadata(card: ModelCardModelIn):
+async def create_model_card_metadata(card: ModelCardModelIn, db=Depends(get_db)):
     # NOTE: After this, still need to submit inference engine
     # TODO: Endpoint for submit inference engine
     # If exp id is provided, some metadata can be obtained from ClearML
+    db, mongo_client = db
     if card.clearml_exp_id:
         # Retrieve metadata from ClearML experiment
         # Get Scalars if present
@@ -182,7 +184,10 @@ async def create_model_card_metadata(card: ModelCardModelIn):
 
 
 @router.put("/{model_id}", response_model=ModelCardModelDB)
-async def update_model_card_metadata_by_id(model_id: str, card: UpdateModelCardModel):
+async def update_model_card_metadata_by_id(
+    model_id: str, card: UpdateModelCardModel, db=Depends(get_db)
+):
+    db, mongo_client = db
     # TODO: Check that user is the model owner
     card = {k: v for k, v in card.dict().items() if v is not None}
 
@@ -216,8 +221,9 @@ async def update_model_card_metadata_by_id(model_id: str, card: UpdateModelCardM
 
 
 @router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_model_card_by_id(model_id: str):
+async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
     # TODO: Check that user is the owner of the model card
+    db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             await db["models"].delete_one({"_id": model_id})
@@ -230,8 +236,10 @@ async def make_test_inference(
     model_id: str,
     media: Optional[UploadFile] = File(None),
     text: Optional[str] = Form(None),
+    db=Depends(get_db),
 ):
     # Get metadata of inference engine url and visualisation engine url
+    db, _ = db
     if media is None and text is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -287,9 +295,7 @@ async def make_test_inference(
         else {"media": (media.filename, media.file, media.content_type)}
     )
     with httpx.Client() as client:
-        content_type = client.get(
-            "http://" + inference_url + "/content-type"
-        ).text 
+        content_type = client.get("http://" + inference_url + "/content-type").text
     if visualization_url is None:  # stream output of inference engine
         # content_type = "image/jpeg"
         return StreamingResponse(
