@@ -32,11 +32,12 @@ jobs:
           --health-retries 5
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python 3.9
+      - name: Install poetry
+        run: pipx install poetry
         uses: actions/setup-python@v4
         with:
           python-version: 3.9
-          cache: "poetry"
+          cache: poetry
       - name: Set up dependencies
         run: |
           poetry install
