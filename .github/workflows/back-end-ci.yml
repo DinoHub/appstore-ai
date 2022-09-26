@@ -40,6 +40,7 @@ jobs:
           cache: poetry
       - name: Set up dependencies
         run: |
+          pip install poetry
           poetry install
       - name: Set up environment file
         run: |
