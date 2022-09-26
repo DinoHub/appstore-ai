@@ -79,7 +79,7 @@ async def add_user(item: UserInsert, current_user: User = Depends(get_current_us
     except pyerrs.DuplicateKeyError:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            content=f"Userid of {item.userid} already exists",
+            content=f"User with ID of {item.userid} already exists",
         )
     except Error as e:
         print(e)
@@ -110,7 +110,6 @@ async def update_user(user: UserInsert, current_user: User = Depends(get_current
             )
     except ValueError as e:
         raise HTTPException(status_code= 422, detail=f'')
-
     except:
         raise HTTPException(status_code=404, detail=f"Not found")
     return Response(status_code=204)
@@ -163,16 +162,16 @@ async def get_users(pages_user : UserPage, page_num: int = Path(ge = 1),current_
             try:
                 # check number of documents to skip past
                 skips = pages_user.user_num * (page_num - 1)
-                # lookups for username and admin priv matching
+                # lookups for name and admin priv matching
                 lookup = {}
                 if pages_user.name != None:
-                    lookup['username'] = '/.*'+pages_user.name+'.*/i'
+                    lookup['name'] = { '$regex' : pages_user.name, '$options' : 'i' }
                 if pages_user.admin_priv != None:
-                    lookup['admin_priv'] = pages_user.admin_priv 
+                    lookup['admin_priv'] = pages_user.admin_priv
                 # dont skip if 1st page
                 if skips <= 0: 
                     # find from users in MongodDB exclude ObjectID
-                    cursor =  db['users'].find({}, {'_id': False, 'password' : False}).limit(pages_user.user_num)
+                    cursor =  db['users'].find(lookup, {'_id': False, 'password' : False}).limit(pages_user.user_num)
                 # else call cursor with skips
                 else:
                     # find from users in MongodDB exclude ObjectID

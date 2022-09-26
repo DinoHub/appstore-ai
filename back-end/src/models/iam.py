@@ -7,9 +7,9 @@ from .common import PyObjectId
 
 policy = PasswordPolicy.from_names(
     length=8,  # min length: 8
-    uppercase=1,  # need min. 2 uppercase letters
-    numbers=1,  # need min. 2 digits
-    special=1,  # need min. 2 special characters
+    uppercase=1,  # need min. 1 uppercase letters
+    numbers=1,  # need min. 1 digits
+    special=1,  # need min. 1 special characters
     )
 
 
@@ -23,7 +23,7 @@ class UserInsert(BaseModel):
 
     @validator('password_confirm')
     def match_passwords(cls, v, values, **kwargs):
-        if 'password_confirm' in values and v != values['password']:
+        if v != values['password']:
             raise ValueError('Passwords do not match')
         strength = policy.test(values['password'])
         if not strength:
@@ -63,7 +63,7 @@ class UserInDB(User):
 class UserPage(BaseModel):
     user_num: int
     name: str = ''
-    admin_priv: int = 0
+    admin_priv: int = 2
 
     @validator('user_num')
     def num_of_user_more_than_one(cls, v):
@@ -79,9 +79,9 @@ class UserPage(BaseModel):
     
     @validator('admin_priv')
     def admin_priv_check(cls, v):
-        if v is 1:
-            return True 
-        elif v is 2:
-            return False
+        if v == 0:
+            return False 
+        elif v == 1:
+            return True
         else:
             return None
