@@ -36,7 +36,7 @@ jobs:
           poetry install
       - name: Set up environment file
         run: |
-          python scripts/generate-ci-env.py
+          poetry run python scripts/generate-ci-env.py
       - name: Test with pytest
         run: |
-          pytest
+          poetry run pytest
