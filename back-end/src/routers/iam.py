@@ -163,16 +163,16 @@ async def get_users(pages_user : UserPage, page_num: int = Path(ge = 1),current_
             try:
                 # check number of documents to skip past
                 skips = pages_user.user_num * (page_num - 1)
-                # lookups for username and admin priv matching
+                # lookups for name and admin priv matching
                 lookup = {}
                 if pages_user.name != None:
-                    lookup['username'] = '/.*'+pages_user.name+'.*/i'
+                    lookup['name'] = { '$regex' : pages_user.name, '$options' : 'i' }
                 if pages_user.admin_priv != None:
-                    lookup['admin_priv'] = pages_user.admin_priv 
+                    lookup['admin_priv'] = pages_user.admin_priv
                 # dont skip if 1st page
                 if skips <= 0: 
                     # find from users in MongodDB exclude ObjectID
-                    cursor =  db['users'].find({}, {'_id': False, 'password' : False}).limit(pages_user.user_num)
+                    cursor =  db['users'].find(lookup, {'_id': False, 'password' : False}).limit(pages_user.user_num)
                 # else call cursor with skips
                 else:
                     # find from users in MongodDB exclude ObjectID

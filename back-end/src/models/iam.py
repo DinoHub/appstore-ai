@@ -63,7 +63,7 @@ class UserInDB(User):
 class UserPage(BaseModel):
     user_num: int
     name: str = ''
-    admin_priv: int = 0
+    admin_priv: int = 2
 
     @validator('user_num')
     def num_of_user_more_than_one(cls, v):
@@ -79,9 +79,9 @@ class UserPage(BaseModel):
     
     @validator('admin_priv')
     def admin_priv_check(cls, v):
-        if v is 1:
-            return True 
-        elif v is 2:
-            return False
+        if v == 0:
+            return False 
+        elif v == 1:
+            return True
         else:
             return None
