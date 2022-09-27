@@ -7,20 +7,34 @@ import filetype
 import httpx
 from bson import ObjectId, json_util
 from clearml import Model, Task
-from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
-                     status)
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from ..internal.clearml_client import clearml_client
 from ..internal.db import get_db
-from ..internal.file_validator import (MaxFileSizeException,
-                                       MaxFileSizeValidator,
-                                       ValidateFileUpload)
+from ..internal.file_validator import (
+    MaxFileSizeException,
+    MaxFileSizeValidator,
+    ValidateFileUpload,
+)
 from ..internal.inference import stream_response
+
 # from internal.inference import is_triton_inference, triton_client
-from ..models.model import (FindModelCardModel, ModelCardModelDB,
-                            ModelCardModelIn, UpdateModelCardModel)
+from ..models.model import (
+    FindModelCardModel,
+    ModelCardModelDB,
+    ModelCardModelIn,
+    UpdateModelCardModel,
+)
 
 CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
@@ -40,7 +54,9 @@ ACCEPTED_CONTENT_TYPES = [
     "audio/aac",
 ]
 
-file_validator = ValidateFileUpload(max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB)
+file_validator = ValidateFileUpload(
+    max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB
+)
 router = APIRouter(prefix="/models", tags=["Models"])
 
 
@@ -63,25 +79,24 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
         "frameworks": {"$in": query.frameworks},
     }
     if query.title:
-        db_query["title"] = (
-            {
-                # NOTE: not sure if security risk
-                # escape so that chars like / are accepted in title
-                "$regex": re.escape(query.title),
-                "$options": "i",
-            },
-        )
+        db_query["title"] = {
+            # NOTE: not sure if security risk
+            # escape so that chars like / are accepted in title
+            "$regex": re.escape(query.title),
+            "$options": "i",
+        }
+
     if query.sort:
         # TODO: refactor this to be more intuitive
         query.sort = [
-            (col_name, 1 if order == "ASC" else -1) for col_name, order in query.sort
+            (col_name, 1 if order == "ASC" else -1)
+            for col_name, order in query.sort
         ]
     # Remove empty attributes
     if not query.tags:
         del db_query["tags"]
     if not query.frameworks:
         del db_query["frameworks"]
-
     # If user only wants some attrs to be returned (e.g. summary card only needs some attributes)
     db_projection = query.return_attrs
     db_query = {k: v for k, v in db_query.items() if v is not None}
@@ -108,7 +123,9 @@ async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-async def create_model_card_metadata(card: ModelCardModelIn, db=Depends(get_db)):
+async def create_model_card_metadata(
+    card: ModelCardModelIn, db=Depends(get_db)
+):
     # NOTE: After this, still need to submit inference engine
     # TODO: Endpoint for submit inference engine
     # If exp id is provided, some metadata can be obtained from ClearML
@@ -128,15 +145,19 @@ async def create_model_card_metadata(card: ModelCardModelIn, db=Depends(get_db))
                 detail=f"ClearML experiment with id {card.clearml_exp_id} not found.",
             )
         if card.performance is None:
-            card.performance = {"title": "Performance", "text": "", "media": []}
+            card.performance = {
+                "title": "Performance",
+                "text": "",
+                "media": [],
+            }
         card.performance.media.append(
             task.get_reported_scalars()
         )  # do not override existing plots
         # NOTE: switch to backend rest api as only that let's me get info on user
         # NOTE: we can only obtain attributes using "." notation from the data below
-        task_data: Mapping[str, Union[str, Mapping]] = clearml_client.tasks.get_by_id(
-            task=card.clearml_exp_id
-        ).data
+        task_data: Mapping[
+            str, Union[str, Mapping]
+        ] = clearml_client.tasks.get_by_id(task=card.clearml_exp_id).data
         # NOTE: I can only get user id, not the name
         # NOTE: consider using userid to form a url to the user account
         card.creator = task_data.user
@@ -198,11 +219,15 @@ async def update_model_card_metadata_by_id(
                 ):  # NOTE: how pythonic is this? (seems to violate DRY)
                     # TODO: consider just removing the lines below
                     if (
-                        updated_card := await db["models"].find_one({"_id": ObjectId(model_id)})
+                        updated_card := await db["models"].find_one(
+                            {"_id": ObjectId(model_id)}
+                        )
                     ) is not None:
                         return updated_card
     # If no changes, try to return existing card
-    if (existing_card := await db["models"].find_one({"_id": model_id})) is not None:
+    if (
+        existing_card := await db["models"].find_one({"_id": model_id})
+    ) is not None:
         return existing_card
 
     # TODO: Might need to update inference engine
@@ -281,7 +306,9 @@ async def make_test_inference(
                     status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                     detail=f"File type {content_type} not supported",
                 )
-        media.file.seek(0)  # unsure how necessary, but set pointer to start of file
+        media.file.seek(
+            0
+        )  # unsure how necessary, but set pointer to start of file
     data = None if text is None else {"text": text}
     files = (
         None
@@ -289,7 +316,9 @@ async def make_test_inference(
         else {"media": (media.filename, media.file, media.content_type)}
     )
     with httpx.Client() as client:
-        content_type = client.get("http://" + inference_url + "/content-type").text
+        content_type = client.get(
+            "http://" + inference_url + "/content-type"
+        ).text
     if visualization_url is None:  # stream output of inference engine
         # content_type = "image/jpeg"
         return StreamingResponse(
@@ -304,7 +333,9 @@ async def make_test_inference(
         async with httpx.AsyncClient() as client:
             try:
                 response = await client.post(
-                    "http://" + inference_url + "/predict", files=files, data=data
+                    "http://" + inference_url + "/predict",
+                    files=files,
+                    data=data,
                 )
                 response.raise_for_status()
                 outputs = response.json()
