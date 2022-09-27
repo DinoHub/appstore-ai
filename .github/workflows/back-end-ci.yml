@@ -17,7 +17,13 @@ jobs:
       MONGODB_URL: localhost:27017
       MAIN_COLLECTION_NAME: app_store_ci
       MAX_UPLOAD_SIZE_GB: 10
-      CLEARML_OFFLINE_MODE: true
+      CLEARML_CONFIG_FILE: tests/test_clearml.conf
+      CLEARML_NO_DEFAULT_SERVER: 0
+      CLEARML_API_HOST: https://demoapi.trains.allegro.ai/
+      CLEARML_WEB_HOST: https://demoapp.trains.allegro.ai/
+      CLEARML_FILES_HOST: https://demofiles.trains.allegro.ai/
+      CLEARML_API_ACCESS_KEY: ROBE8ZJIDGA1BS126MO8
+      CLEARML_API_SECRET_KEY: efXa3I1LRnDBCQra7AeaEvv19oJjTozigz90Rtm7upecb5YUOe
     services:
       mongodb:
         image: mongo
@@ -30,7 +36,7 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: 3.9
-          cache: poetry
+          # cache: poetry
       - run: |
           poetry install
       - name: Set up environment file

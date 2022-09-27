@@ -27,6 +27,36 @@ async def test_get_all_models(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
+@pytest.mark.parametrize(
+    "query,expected_title",
+    [
+        ({"title": "Test Model 1"}, "Test Model 1"),
+        ({"tags": ["Test Tag", "Tag 2"]}, "Test Model 2"),
+        ({"owner": "Santa Claus 4"}, "Test Model 4"),
+        ({"frameworks": ["Framework 1"]}, "Test Model 1"),
+    ],
+)
+async def test_search_models(
+    query: Dict,
+    expected_title: str,
+    client: TestClient,
+    model_metadata: List[Dict],
+    get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+):
+    db, _ = get_fake_db
+    for obj in model_metadata:
+        await db["models"].insert_one(obj)
+
+    # Send request
+    response = client.post("/models/search", json=query)
+    response_json = response.json()
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response_json) != 0
+    assert response_json[0]["title"] == expected_title, "Wrong card retrieved"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("flush_db")
 async def test_get_model_card_by_id(
     client: TestClient,
     model_metadata: List[Dict],
@@ -36,7 +66,9 @@ async def test_get_model_card_by_id(
     db, _ = get_fake_db
     await db["models"].insert_one(model_metadata[0])
     # Get id
-    model_card_id = str((await db["models"].find().to_list(length=1))[0]["_id"])
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["_id"]
+    )
     response = client.get(f"/models/{model_card_id}")
     assert response.status_code == status.HTTP_200_OK
 
@@ -65,7 +97,9 @@ async def test_update_model_card_metadata(
     assert len((await db["models"].find().to_list(length=None))) == 1
 
     # Get model ID
-    model_card_id = str((await db["models"].find().to_list(length=1))[0]["_id"])
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["_id"]
+    )
 
     # Updated Sections
     update = {
@@ -101,7 +135,9 @@ async def test_delete_model_card_metadata(
     assert len((await db["models"].find().to_list(length=None))) == 1
 
     # Get model ID
-    model_card_id = str((await db["models"].find().to_list(length=1))[0]["_id"])
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["_id"]
+    )
 
     # Send delete request
     response = client.delete(

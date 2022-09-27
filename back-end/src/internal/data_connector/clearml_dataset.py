@@ -18,6 +18,24 @@ class ClearMLDataset(DatasetConnector):
             raise AttributeError("Dataset has not been initialized")
         return self.dataset.file_entries_dict
 
+    @property
+    def name(self) -> str:
+        if self.dataset is None:
+            raise AttributeError("Dataset has not been initialized")
+        return self.dataset.name
+
+    @property
+    def project(self) -> str:
+        if self.dataset is None:
+            raise AttributeError("Dataset has not been initialized")
+        return self.dataset.project
+
+    @property
+    def tags(self) -> List[str]:
+        if self.dataset is None:
+            raise AttributeError("Dataset has not been initialized")
+        return self.dataset.tags
+
     @classmethod
     def get(
         cls,
@@ -68,15 +86,22 @@ class ClearMLDataset(DatasetConnector):
         ids: Optional[Sequence[str]] = None,
     ) -> List[Dict]:
         return Dataset.list_datasets(
-            partial_name=partial_name, dataset_project=project, ids=ids, tags=tags
+            partial_name=partial_name,
+            dataset_project=project,
+            ids=ids,
+            tags=tags,
         )
 
-    def add_files(self, path: Union[str, Path], recursive: bool = True) -> None:
+    def add_files(
+        self, path: Union[str, Path], recursive: bool = True
+    ) -> None:
         if self.dataset is None:
             raise AttributeError("Dataset has not been created.")
         self.dataset.add_files(path=path, recursive=recursive)
 
-    def remove_files(self, path: Union[str, Path], recursive: bool = True) -> None:
+    def remove_files(
+        self, path: Union[str, Path], recursive: bool = True
+    ) -> None:
         if self.dataset is None:
             raise AttributeError("Dataset has not been created.")
         self.dataset.remove_files(path=path, recursive=recursive)
@@ -86,12 +111,11 @@ class ClearMLDataset(DatasetConnector):
             raise AttributeError("Dataset has not been created.")
         if remote is None:
             if self.default_remote is None:
-                raise ValueError("No output value specified")
+                warning_msg = "No remote url specified, using default file server specified in clearml_conf"
             else:
-                self.logger.warning(
-                    f"No remote url specified, using default remote of {self.default_remote}"
-                )
-                remote = self.default_remote
+                warning_msg = f"No remote url specified, using default remote of {self.default_remote}"
+            self.logger.warning(warning_msg)
+            remote = self.default_remote
         self.dataset.upload(output_url=remote)
         # NOTE: no idea if the below one is necessary
         self.dataset.finalize()

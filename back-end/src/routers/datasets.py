@@ -2,19 +2,22 @@ import tempfile
 from os import remove
 from pathlib import Path
 from shutil import unpack_archive
-from typing import Optional
+from typing import List, Optional
 
 import filetype
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse
 
 from ..config.config import config
 from ..internal.data_connector import Dataset
-from ..internal.file_validator import (MaxFileSizeException,
-                                       MaxFileSizeValidator,
-                                       ValidateFileUpload, clean_filename,
-                                       determine_safe_file_size)
+from ..internal.file_validator import (
+    MaxFileSizeException,
+    MaxFileSizeValidator,
+    ValidateFileUpload,
+    clean_filename,
+    determine_safe_file_size,
+)
+from ..models.dataset import DatasetModel, FindDatasetModel
 
 DATA_CONNECTOR = "clearml"
 ACCEPTED_CONTENT_TYPES = [
@@ -34,22 +37,22 @@ file_validator = ValidateFileUpload(
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
 
-@router.get("/")
-async def get_all_datasets():
-    datasets = Dataset(connector_type=DATA_CONNECTOR).list_datasets()
-    return datasets
-
-
-@router.get("/projects/{project_name}")
-async def get_datasets_by_project(project_name: str):
-    # TODO: Check that project exists, else return 404
+@router.post(
+    "/search",
+    response_model=List[DatasetModel],
+    response_model_exclude=["files", "default_remote"],
+)
+async def search_datasets(query: FindDatasetModel):
     datasets = Dataset(connector_type=DATA_CONNECTOR).list_datasets(
-        project=project_name
+        project=query.project,
+        partial_name=query.name,
+        tags=query.tags,
+        ids=query.id,
     )
     return datasets
 
 
-@router.get("/{dataset_id}")
+@router.get("/{dataset_id}", response_model=DatasetModel)
 async def get_dataset_by_id(dataset_id: str):
     try:
         dataset = Dataset(connector_type=DATA_CONNECTOR).get(id=dataset_id)
@@ -58,13 +61,21 @@ async def get_dataset_by_id(dataset_id: str):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Dataset with ID {dataset_id} not found.",
         )
-    return dataset.file_entries
+    return DatasetModel(
+        id=dataset.id,
+        name=dataset.name,
+        project=dataset.project,
+        tags=dataset.tags,
+        files=dataset.file_entries,
+        default_remote=dataset.default_remote,
+    )
 
 
 @router.post(
     "/",
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(file_validator)],
+    response_model=DatasetModel,
 )
 async def create_dataset(
     file: UploadFile = File(...),
@@ -79,7 +90,9 @@ async def create_dataset(
     max_file_size = determine_safe_file_size("/", clearance=5)
     file_size_validator = MaxFileSizeValidator(max_size=max_file_size)
     # TODO: Refactor code to make it more readable
-    with tempfile.TemporaryDirectory(dataset_name, "clearml-dataset") as dirpath:
+    with tempfile.TemporaryDirectory(
+        dataset_name, "clearml-dataset"
+    ) as dirpath:
         # write file to fs
         try:
             path = Path(dirpath, clean_filename(file.filename))
@@ -139,10 +152,10 @@ async def create_dataset(
         # NOTE: this process takes quite long
         # TODO: see if I can make this non-blocking
         dataset.upload(remote=output_url)
-
-    return JSONResponse(
-        content={
-            "id": dataset.id,
-        },
-        status_code=status.HTTP_201_CREATED,
+    return DatasetModel(
+        id=dataset.id,
+        name=dataset.name,
+        tags=dataset.tags,
+        project=dataset.project,
+        files=dataset.file_entries,
     )

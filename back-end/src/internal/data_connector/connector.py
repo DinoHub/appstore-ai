@@ -25,6 +25,20 @@ class DatasetConnector(ABC):
             "Connector does not have file entries attribute defined."
         )
 
+    @property
+    @abstractmethod
+    def name(self) -> str:
+        raise NotImplementedError(
+            "Connector does not have file entries attribute defined."
+        )
+
+    @property
+    @abstractmethod
+    def project(self) -> str:
+        raise NotImplementedError(
+            "Connector does not have file entries attribute defined."
+        )
+
     @classmethod
     @abstractmethod
     def get(cls) -> "DatasetConnector":
@@ -61,7 +75,9 @@ class DatasetConnector(ABC):
         return ds
 
     @abstractmethod
-    def add_files(self, path: Union[str, Path], recursive: bool = True) -> None:
+    def add_files(
+        self, path: Union[str, Path], recursive: bool = True
+    ) -> None:
         """Add files to a dataset.
 
         Note that this will not upload the dataset yet, just stage it.
@@ -73,7 +89,9 @@ class DatasetConnector(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def remove_files(self, path: Union[str, Path], recursive: bool = True) -> None:
+    def remove_files(
+        self, path: Union[str, Path], recursive: bool = True
+    ) -> None:
         """Remove files from a dataset.
 
         Args:
