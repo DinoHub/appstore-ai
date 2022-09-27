@@ -17,7 +17,8 @@ jobs:
       MONGODB_URL: localhost:27017
       MAIN_COLLECTION_NAME: app_store_ci
       MAX_UPLOAD_SIZE_GB: 10
-      CLEARML_OFFLINE_MODE: true
+      CLEARML_CONFIG_FILE: tests/test_clearml.conf
+      CLEARML_NO_DEFAULT_SERVER: 0
     services:
       mongodb:
         image: mongo
