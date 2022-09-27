@@ -22,8 +22,14 @@ class GlobalConfig(BaseSettings):
         env_file: str = "./src/config/.env"
 
     def set_envvar(self):
+        """Temporarily set environment variables.
+        This change will not be permanent, so no
+        need to worry about overriding system
+        envvars.
+        """
         for key, value in self.dict(exclude_none=True).items():
             # Save config to environment
+            print(f"Setting {key} to {value}")
             os.environ[key] = str(value)
 
 
