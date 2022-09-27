@@ -23,8 +23,6 @@ jobs:
         image: mongo
         ports:
           - 27017:27017
-        env:
-          MONGO_INITDB_DATABASE: app_store_ci
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
