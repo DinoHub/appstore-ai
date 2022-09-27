@@ -5,29 +5,22 @@ from typing import List, Mapping, Optional, Union
 
 import filetype
 import httpx
-
-from bson import json_util
+from bson import ObjectId, json_util
 from clearml import Model, Task
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form
+from fastapi import (APIRouter, Depends, File, Form, HTTPException, UploadFile,
+                     status)
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 
 from ..internal.clearml_client import clearml_client
 from ..internal.db import get_db
-from ..internal.file_validator import (
-    MaxFileSizeException,
-    MaxFileSizeValidator,
-    ValidateFileUpload,
-)
+from ..internal.file_validator import (MaxFileSizeException,
+                                       MaxFileSizeValidator,
+                                       ValidateFileUpload)
 from ..internal.inference import stream_response
-
 # from internal.inference import is_triton_inference, triton_client
-from ..models.model import (
-    FindModelCardModel,
-    ModelCardModelDB,
-    ModelCardModelIn,
-    UpdateModelCardModel,
-)
+from ..models.model import (FindModelCardModel, ModelCardModelDB,
+                            ModelCardModelIn, UpdateModelCardModel)
 
 CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
@@ -107,7 +100,7 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
 async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
     db, _ = db
     # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one({"_id": model_id})
+    model = await db["models"].find_one({"_id": ObjectId(model_id)})
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     model = json.loads(json_util.dumps(model))
@@ -190,13 +183,14 @@ async def update_model_card_metadata_by_id(
     db, mongo_client = db
     # TODO: Check that user is the model owner
     card = {k: v for k, v in card.dict().items() if v is not None}
+    # TODO: should we consider updating datetime to current datetime??
 
     if len(card) > 0:
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 result = await db["models"].update_one(
-                    {"_id": model_id}, {"$set": card}
+                    {"_id": ObjectId(model_id)}, {"$set": card}
                 )
 
                 if (
@@ -204,7 +198,7 @@ async def update_model_card_metadata_by_id(
                 ):  # NOTE: how pythonic is this? (seems to violate DRY)
                     # TODO: consider just removing the lines below
                     if (
-                        updated_card := await db["models"].find_one({"_id": model_id})
+                        updated_card := await db["models"].find_one({"_id": ObjectId(model_id)})
                     ) is not None:
                         return updated_card
     # If no changes, try to return existing card
@@ -226,7 +220,7 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            await db["models"].delete_one({"_id": model_id})
+            await db["models"].delete_one({"_id": ObjectId(model_id)})
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     # TODO: Should actual model be deleted as well?
 
@@ -248,7 +242,7 @@ async def make_test_inference(
 
     model = await db["models"].find_one(
         {
-            "_id": model_id,
+            "_id": ObjectId(model_id),
         },
         projection=["inference_url", "output_generator_url"],
     )
