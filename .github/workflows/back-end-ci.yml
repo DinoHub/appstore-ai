@@ -14,7 +14,7 @@ jobs:
         working-directory: ./back-end
     env:
       ENV_STATE: test
-      MONGODB_URL: localhost:27017
+      MONGODB_URL: localhost:${{ job.services.mongodb.ports[27017] }}
       MAIN_COLLECTION_NAME: app_store_ci
       MAX_UPLOAD_SIZE_GB: 10
       CLEARML_OFFLINE_MODE: true
@@ -22,14 +22,9 @@ jobs:
       mongodb:
         image: mongo
         ports:
-          - 27017:27017
+          - 27017/tcp
         env:
           MONGO_INITDB_DATABASE: app_store_ci
-        options: >-
-          --health-cmd mongo
-          --health-interval 20s
-          --health-timeout 5s
-          --health-retries 6
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
