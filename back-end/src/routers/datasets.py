@@ -17,7 +17,7 @@ from ..internal.file_validator import (
     clean_filename,
     determine_safe_file_size,
 )
-from ..models.dataset import DatasetModel
+from ..models.dataset import DatasetModel, FindDatasetModel
 
 DATA_CONNECTOR = "clearml"
 ACCEPTED_CONTENT_TYPES = [
@@ -37,25 +37,17 @@ file_validator = ValidateFileUpload(
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
 
-@router.get(
-    "/",
+@router.post(
+    "/search",
     response_model=List[DatasetModel],
     response_model_exclude=["files", "default_remote"],
 )
-async def get_all_datasets():
-    datasets = Dataset(connector_type=DATA_CONNECTOR).list_datasets()
-    return datasets
-
-
-@router.get(
-    "/projects/{project_name}",
-    response_model=List[DatasetModel],
-    response_model_exclude=["files", "default_remote"],
-)
-async def get_datasets_by_project(project_name: str):
-    # TODO: Check that project exists, else return 404
+async def search_datasets(query: FindDatasetModel):
     datasets = Dataset(connector_type=DATA_CONNECTOR).list_datasets(
-        project=project_name
+        project=query.project,
+        partial_name=query.name,
+        tags=query.tags,
+        ids=query.id,
     )
     return datasets
 

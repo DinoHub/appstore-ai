@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -12,3 +12,10 @@ class DatasetModel(BaseModel):
     project: Optional[str]
     files: Optional[Dict]
     default_remote: Optional[str]
+
+
+class FindDatasetModel(BaseModel):
+    id: Optional[Union[str, List[str]]]
+    name: Optional[str]
+    tags: Optional[List[str]]
+    project: Optional[str]
