@@ -48,7 +48,6 @@ async def test_search_models(
         await db["models"].insert_one(obj)
 
     # Send request
-    print(f"query: {query}")
     response = client.post("/models/search", json=query)
     response_json = response.json()
     assert response.status_code == status.HTTP_200_OK
