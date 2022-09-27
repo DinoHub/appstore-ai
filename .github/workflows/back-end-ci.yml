@@ -19,7 +19,7 @@ jobs:
       MAX_UPLOAD_SIZE_GB: 10
       CLEARML_CONFIG_FILE: tests/test_clearml.conf
       CLEARML_NO_DEFAULT_SERVER: 0
-      CLEARML_API_HOST: https://demoapp.trains.allegro.ai/
+      CLEARML_API_HOST: https://demoapi.trains.allegro.ai/
       CLEARML_WEB_HOST: https://demoapp.trains.allegro.ai/
       CLEARML_FILES_HOST: https://demofiles.trains.allegro.ai/
       CLEARML_API_ACCESS_KEY: ROBE8ZJIDGA1BS126MO8
