@@ -111,12 +111,11 @@ class ClearMLDataset(DatasetConnector):
             raise AttributeError("Dataset has not been created.")
         if remote is None:
             if self.default_remote is None:
-                raise ValueError("No output value specified")
+                warning_msg = "No remote url specified, using default file server specified in clearml_conf"
             else:
-                self.logger.warning(
-                    f"No remote url specified, using default remote of {self.default_remote}"
-                )
-                remote = self.default_remote
+                warning_msg = f"No remote url specified, using default remote of {self.default_remote}"
+            self.logger.warning(warning_msg)
+            remote = self.default_remote
         self.dataset.upload(output_url=remote)
         # NOTE: no idea if the below one is necessary
         self.dataset.finalize()
