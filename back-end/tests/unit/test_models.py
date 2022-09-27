@@ -27,6 +27,37 @@ async def test_get_all_models(
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
+@pytest.mark.parametrize(
+    "query,expected_title",
+    [
+        ({"title": "Test Model 1"}, "Test Model 1"),
+        ({"tags": ["Test Tag", "Tag 2"]}, "Test Model 2"),
+        ({"owner": "Santa Claus 4"}, "Test Model 4"),
+        ({"frameworks": ["Framework 1"]}, "Test Model 1"),
+    ],
+)
+async def test_search_models(
+    query: Dict,
+    expected_title: str,
+    client: TestClient,
+    model_metadata: List[Dict],
+    get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+):
+    db, _ = get_fake_db
+    for obj in model_metadata:
+        await db["models"].insert_one(obj)
+
+    # Send request
+    print(f"query: {query}")
+    response = client.post("/models/search", json=query)
+    response_json = response.json()
+    assert response.status_code == status.HTTP_200_OK
+    assert len(response_json) != 0
+    assert response_json[0]["title"] == expected_title, "Wrong card retrieved"
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("flush_db")
 async def test_get_model_card_by_id(
     client: TestClient,
     model_metadata: List[Dict],
