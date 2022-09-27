@@ -53,10 +53,19 @@ class FactoryConfig:
         elif self.env_state == "test":
             return TestingConfig()
 
+class ClearMLConfig(BaseSettings):
+    CLEARML_WEB_HOST: str = None
+    CLEARML_API_HOST: str = None
+    CLEARML_FILES_HOST: str = None
+    CLEARML_API_ACCESS_KEY: str = None
+    CLEARML_API_SECRET_KEY: str = None
+
+    class Config:
+        env_file: str = "./src/config/.env"
 
 class AdminHashing(BaseSettings):
     SECRET_KEY: str
-    ALGORITHM: str
+    ALGORITHM: str = 'HS256'
 
     class Config:
         env_file: str = "./src/config/.env"
@@ -65,3 +74,4 @@ ENV_STATE = GlobalConfig().ENV_STATE
 config = FactoryConfig(ENV_STATE)()
 print(config.__repr__())
 admin = AdminHashing()
+clear_conf = ClearMLConfig()
