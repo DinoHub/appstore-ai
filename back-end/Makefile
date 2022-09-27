@@ -15,8 +15,12 @@ install: poetry.lock
 	@echo "Installing dependencies"
 	source ./venv/bin/activate
 	poetry install
+install_precommit:
+	@echo "Installing precommit hook"
+	source ./venv/bin/activate
+	cd .. & pre-commit install
 
-setup: create_venv install
+setup: create_venv install install_precommit
 
 init_server: 
 	. venv/bin/activate && mlaunch init --single --port 27017 --name "app_store";\
