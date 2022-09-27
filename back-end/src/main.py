@@ -1,6 +1,7 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import datasets, experiments, models, iam
+from .routers import datasets, experiments, iam, models
 
 with open("README.md", "r") as f:
     description = f.read()
@@ -23,8 +24,16 @@ tags_metadata = [
         "description": "APIs for system admins to manage users in database in IAM system",
     },
 ]
-app = FastAPI(title="Model Zoo", description=description, openapi_tags=tags_metadata)
-
+app = FastAPI(
+    title="Model Zoo", description=description, openapi_tags=tags_metadata
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost"],
+    allow_methods=["*"],
+    allow_credentials=True,
+    allow_headers=["*"],
+)
 
 app.include_router(models.router)
 app.include_router(experiments.router)
