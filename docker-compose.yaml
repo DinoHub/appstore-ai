@@ -8,14 +8,16 @@ services:
       - "8080:8080"
     depends_on:
       - mongodb
-    secrets:
-      - clearml_conf
     environment:
-      - CLEARML_CONFIG_FILE=/run/secrets/clearml_conf
       - SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
       - ALGORITHM=HS256
       - DEV_MONGODB_URL=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10
+      - CLEARML_WEB_HOST=https://app.clear.ml
+      - CLEARML_API_HOST=https://api.clear.ml
+      - CLEARML_FILES_HOST=https://files.clear.ml
+      - CLEARML_API_ACCESS_KEY=WT9BPSIZML1TMQZMC0XM
+      - CLEARML_API_SECRET_KEY=6vjSQME0FpOYFBsqSvaRjTPaAyWF1NKNHHXlLkrk1mbepcRud0
     networks:
       - appstore
   mongodb:
@@ -30,10 +32,6 @@ services:
       - "./mongodb_data:/data/db"
     networks:
       - appstore
-
-secrets:
-  clearml_conf:
-    file: clearml.conf
       
 networks:
   appstore:
