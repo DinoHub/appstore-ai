@@ -1,4 +1,5 @@
 # https://rednafi.github.io/digressions/python/2020/06/03/python-configs.html
+import os
 from typing import Optional, Union
 
 from pydantic import BaseModel, BaseSettings, Field
@@ -11,9 +12,19 @@ class GlobalConfig(BaseSettings):
     MONGODB_URL: Optional[str] = None
     MAIN_COLLECTION_NAME: Optional[str] = None
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
+    CLEARML_CONFIG_FILE: Optional[str] = None
+    # CLEARML_API_HOST: Optional[str] = None
+    # CLEARML_WEB_HOST: Optional[str] = None
+    # CLEARML_FILES_HOST: Optional[str] = None
+    # CLEARML_NO_DEFAULT_SERVER: Optional[int] = None
 
     class Config:
         env_file: str = "./src/config/.env"
+
+    def set_envvar(self):
+        for key, value in self.dict(exclude_none=True).items():
+            # Save config to environment
+            os.environ[key] = str(value)
 
 
 class DevConfig(GlobalConfig):
@@ -33,9 +44,11 @@ class ProductionConfig(GlobalConfig):
         env_prefix: str = "PROD_"
         # TODO: add secrets_dir to support loading secrets
 
+
 class TestingConfig(GlobalConfig):
     class Config:
         env_prefix: str = "TEST_"
+
 
 class FactoryConfig:
     """Return config instance based on `ENV_STATE` variable"""
@@ -52,6 +65,10 @@ class FactoryConfig:
             return ProductionConfig()
         elif self.env_state == "test":
             return TestingConfig()
+        elif self.env_state is None:
+            return None
+        else:
+            raise ValueError(f"Unsupported config: {self.env_state}")
 
 
 class AdminHashing(BaseSettings):
@@ -61,7 +78,10 @@ class AdminHashing(BaseSettings):
     class Config:
         env_file: str = "./src/config/.env"
 
+
 ENV_STATE = GlobalConfig().ENV_STATE
 config = FactoryConfig(ENV_STATE)()
+if config is not None:
+    config.set_envvar()
 print(config.__repr__())
 admin = AdminHashing()

@@ -6,6 +6,8 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
+from src.models.dataset import DatasetModel
+
 from .utils.fake_db import generate_section_model
 
 
@@ -16,8 +18,8 @@ def client() -> TestClient:
     config.ENV_STATE = "test"
     assert config.ENV_STATE == "test"
     config.config = config.TestingConfig()
+    config.config.set_envvar()
     assert isinstance(config.config, config.TestingConfig)
-    from src.internal.db import get_db
     from src.main import app
 
     client = TestClient(app)
@@ -41,7 +43,7 @@ async def flush_db(
         await db.drop_collection(collection)
 
 
-@pytest.fixture()
+@pytest.fixture
 def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
