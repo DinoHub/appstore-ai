@@ -22,6 +22,8 @@ jobs:
       CLEARML_API_HOST: https://demoapp.trains.allegro.ai/
       CLEARML_WEB_HOST: https://demoapp.trains.allegro.ai/
       CLEARML_FILES_HOST: https://demofiles.trains.allegro.ai/
+      CLEARML_API_ACCESS_KEY: ROBE8ZJIDGA1BS126MO8
+      CLEARML_API_SECRET_KEY: efXa3I1LRnDBCQra7AeaEvv19oJjTozigz90Rtm7upecb5YUOe
     services:
       mongodb:
         image: mongo
