@@ -67,7 +67,9 @@ async def test_get_model_card_by_id(
     db, _ = get_fake_db
     await db["models"].insert_one(model_metadata[0])
     # Get id
-    model_card_id = str((await db["models"].find().to_list(length=1))[0]["_id"])
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["_id"]
+    )
     response = client.get(f"/models/{model_card_id}")
     assert response.status_code == status.HTTP_200_OK
 
@@ -96,7 +98,9 @@ async def test_update_model_card_metadata(
     assert len((await db["models"].find().to_list(length=None))) == 1
 
     # Get model ID
-    model_card_id = str((await db["models"].find().to_list(length=1))[0]["_id"])
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["_id"]
+    )
 
     # Updated Sections
     update = {
@@ -132,7 +136,9 @@ async def test_delete_model_card_metadata(
     assert len((await db["models"].find().to_list(length=None))) == 1
 
     # Get model ID
-    model_card_id = str((await db["models"].find().to_list(length=1))[0]["_id"])
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["_id"]
+    )
 
     # Send delete request
     response = client.delete(
