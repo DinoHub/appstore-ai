@@ -3,7 +3,9 @@ from typing import Dict, List, Optional
 
 from fastapi.responses import JSONResponse
 from pydantic import validator
+from starlette.background import BackgroundTask
 
+from ...utils.io import remove_unused_files
 from .IOSchema import IOSchema
 from .validators import check_files_exist
 

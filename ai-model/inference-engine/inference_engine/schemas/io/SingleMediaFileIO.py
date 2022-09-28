@@ -1,5 +1,4 @@
-import base64
-from typing import List, Optional
+from typing import List
 
 from fastapi.responses import FileResponse
 from pydantic import validator

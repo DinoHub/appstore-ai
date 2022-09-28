@@ -3,12 +3,12 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import yaml
 from fastapi import FastAPI, File, Form, UploadFile, status
+from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
-from fastapi.responses import StreamingResponse
 
 from ..schemas.io import IOSchema
 from ..schemas.metadata import Metadata
-from ..utils.io import download_file
+from ..utils.io import download_file, remove_unused_files
 
 
 class InferenceEngine:
@@ -93,6 +93,7 @@ class InferenceEngine:
 
     def _predict(
         self,
+        background_tasks: BackgroundTasks,
         endpoint: str,
         media: Optional[List[UploadFile]] = File(None),
         text: Optional[str] = Form(None),
@@ -135,7 +136,16 @@ class InferenceEngine:
         # Pass to user defined func
         outputs = executor(inputs)
 
+        # Clean up input temp files (if any)
         # Return response
+        if media is not None:
+            # it is impt that the user function does not return
+            # input file as response.
+            background_tasks.add_task(remove_unused_files, media)
+        # NOTE: if a custom schema does not confirm to using `media`,
+        # as a reference to the filenames then this will not work.
+        if "media" in outputs and outputs.media is not None:
+            background_tasks.add_task(remove_unused_files, outputs.media)
         return outputs.response()
 
     def entrypoint(
