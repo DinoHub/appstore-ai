@@ -211,7 +211,7 @@ six = ">=1.4.0"
 name = "PyYAML"
 version = "6.0"
 description = "YAML parser and emitter for Python"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.6"
 
@@ -299,7 +299,7 @@ standard = ["colorama (>=0.4)", "httptools (>=0.4.0)", "python-dotenv (>=0.13)",
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "f23dcd1c72c2dcc87a0d0af190af16410090e79a8dcae051a414b50d51c409d4"
+content-hash = "a9976f2e7f02bbddae5712e51374c39d52bf077846c23f71541bb48c0d23b597"
 
 [metadata.files]
 anyio = [
