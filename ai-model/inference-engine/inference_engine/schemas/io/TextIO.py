@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi.responses import JSONResponse
 
@@ -16,8 +16,8 @@ class TextIO(IOSchema):
     :rtype: _type_
     """
 
-    media = Optional[List[str]]
-    text = Optional[Dict]
+    media: Optional[List[str]]
+    text: Optional[Any]
 
     def response(self) -> JSONResponse:
         """Send back JSON response.

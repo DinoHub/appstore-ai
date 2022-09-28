@@ -1,11 +1,9 @@
 import base64
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from fastapi.responses import JSONResponse
 from pydantic import validator
-from starlette.background import BackgroundTask
 
-from ...utils.io import remove_unused_files
 from .IOSchema import IOSchema
 from .validators import check_files_exist
 
@@ -18,8 +16,10 @@ class GenericIO(IOSchema):
     :rtype: _type_
     """
 
-    media = Optional[List[str]]
-    text = Optional[Dict]
+    media: Optional[List[str]]
+    text: Optional[
+        Any
+    ]  # currently a pydantic bug where dict will always fail to validate
 
     _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
         check_files_exist

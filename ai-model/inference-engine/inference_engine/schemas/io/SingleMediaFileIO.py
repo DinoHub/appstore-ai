@@ -8,7 +8,7 @@ from .validators import check_files_exist, check_single_file
 
 
 class SingleMediaFileIO(IOSchema):
-    media = List[str]
+    media: List[str]
 
     _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
         check_files_exist
