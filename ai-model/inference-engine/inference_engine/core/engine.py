@@ -1,6 +1,9 @@
 import json
+import logging
+from os import environ
 from typing import Callable, Dict, List, Optional, Tuple
 
+import uvicorn
 import yaml
 from fastapi import FastAPI, File, Form, UploadFile, status
 from fastapi.background import BackgroundTasks
@@ -18,6 +21,7 @@ class InferenceEngine:
         version: str = "v1",
         description: str = "Inference Engine for AI App Store",
         author: str = "Anonymous User",
+        endpoint_metas: Optional[Dict[str, Dict[str, str]]] = None,
     ) -> None:
         """Create an inference engine.
 
@@ -29,10 +33,16 @@ class InferenceEngine:
         :param description: _description_, defaults to "Inference Engine for AI App Store"
         :type description: str, optional
         """
+        if endpoint_metas is None:
+            endpoint_metas = {}  # TODO: Figure out what to do with metas
+        self.logger = logging.Logger(name)
         self.name = name
         self.version = version
         self.description = description
         self.author = author
+        self.endpoint_metas: Optional[
+            Dict[str, Dict[str, str]]
+        ] = endpoint_metas
         self.engine = FastAPI(
             title=self.name, version=self.version, description=self.description
         )
@@ -42,17 +52,26 @@ class InferenceEngine:
             methods=["POST"],
         )
         self.engine.add_api_route(
-            path="/",
+            path="/{endpoint}",
             endpoint=self._get_metadata,
             methods=["GET"],
             response_model=Metadata,
+        )
+        self.engine.add_api_route(
+            path="/", endpoint=self._status, methods=["GET"]
         )
         self.endpoints: Dict[
             str, Tuple[Callable[[IOSchema], IOSchema], IOSchema, IOSchema]
         ] = {}
 
     def _get_metadata(self, endpoint: str) -> Metadata:
-        _, input_schema, output_schema = self.endpoints[endpoint]
+        try:
+            _, input_schema, output_schema = self.endpoints[endpoint]
+        except KeyError:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Metadata for {endpoint} not found.",
+            )
         return Metadata(
             name=self.name,
             version=self.version,
@@ -61,6 +80,17 @@ class InferenceEngine:
             input_schema=input_schema,
             output_schema=output_schema,
         )
+
+    def _status(self):
+        return {
+            "message": "Hello World!",
+            "metadata": {
+                "name": self.name,
+                "version": self.version,
+                "description": self.description,
+                "author": self.author,
+            },
+        }
 
     @classmethod
     def from_dict(cls, config: Dict) -> "InferenceEngine":
@@ -125,13 +155,18 @@ class InferenceEngine:
             # Add form data to input
             # Convert first to JSON
             try:
-                text = json.loads(text)
+                self.logger.info("Converting text to JSON")
+                text: Dict = json.loads(text)
+                self.logger.warning(text)
+                assert type(text) is dict
             except json.JSONDecodeError as e:
                 raise HTTPException(
                     status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                     detail=f"Failed to process text input as JSON: {e}",
                 )
-        inputs = input_schema(media, text)  # pydantic ignores undefined fields
+        inputs = input_schema(
+            media=media, text=text
+        )  # pydantic ignores undefined fields
 
         # Pass to user defined func
         outputs = executor(inputs)
@@ -157,3 +192,15 @@ class InferenceEngine:
             input_schema=input_schema,
             output_schema=output_schema,
         )
+
+    def serve(
+        self,
+        host: Optional[str] = None,
+        port: Optional[int] = None,
+        workers: Optional[int] = None,
+    ):
+        host = host or environ.get("HOST", default="0.0.0.0")
+        port = port or int(environ.get("PORT", default=4001))
+        workers = workers or int(environ.get("WORKERS", default=1))
+        self.logger.info("Starting server")
+        uvicorn.run(self.engine, host=host, port=port, workers=workers)
