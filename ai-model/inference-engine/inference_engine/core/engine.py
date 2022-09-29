@@ -114,16 +114,9 @@ class InferenceEngine:
         # Since we want similar processing of each registered,
         # endpoint, we use the same process function, but
         # dynamically get the user function.
-        try:
-            endpoint = req.url.path.strip("/")
-            print(f"Endpoint: {endpoint}")
-            executor, input_schema, _ = self.endpoints[endpoint]
-            media_type = self.endpoint_metas[endpoint]["media_type"]
-        except KeyError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Endpoint {endpoint} does not exist.",
-            )
+        endpoint = req.url.path.strip("/")
+        executor, input_schema, _ = self.endpoints[endpoint]
+        media_type = self.endpoint_metas[endpoint]["media_type"]
         if media is not None:
             try:
                 # Add files to input
