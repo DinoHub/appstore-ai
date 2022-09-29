@@ -47,34 +47,11 @@ class InferenceEngine:
             title=self.name, version=self.version, description=self.description
         )
         self.engine.add_api_route(
-            path="/{endpoint}",
-            endpoint=self._get_metadata,
-            methods=["GET"],
-            response_model=Metadata,
-        )
-        self.engine.add_api_route(
             path="/", endpoint=self._status, methods=["GET"]
         )
         self.endpoints: Dict[
             str, Tuple[Callable[[IOSchema], IOSchema], IOSchema, IOSchema]
         ] = {}
-
-    def _get_metadata(self, endpoint: str) -> Metadata:
-        try:
-            _, input_schema, output_schema = self.endpoints[endpoint]
-        except KeyError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Metadata for {endpoint} not found.",
-            )
-        return Metadata(
-            name=self.name,
-            version=self.version,
-            description=self.description,
-            author=self.author,
-            input_schema=input_schema,
-            output_schema=output_schema,
-        )
 
     def _status(self):
         return {
@@ -84,6 +61,7 @@ class InferenceEngine:
                 "version": self.version,
                 "description": self.description,
                 "author": self.author,
+                "endpoints": self.endpoint_metas,
             },
         }
 
@@ -111,15 +89,18 @@ class InferenceEngine:
         func: Callable,
         input_schema: IOSchema,
         output_schema: IOSchema,
+        media_type: Optional[str] = None,
     ):
         # Create function
         # We register the user function so our endpoint can access them
         self.endpoints[route] = (func, input_schema, output_schema)
+        self.endpoint_metas[route] = {
+            "media_type": media_type,
+        }
         self.engine.add_api_route(
             path=f"/{route}",
             endpoint=self._predict,
             methods=["POST"],
-            # response_model=output_schema,
         )
 
     def _predict(
@@ -137,6 +118,7 @@ class InferenceEngine:
             endpoint = req.url.path.strip("/")
             print(f"Endpoint: {endpoint}")
             executor, input_schema, _ = self.endpoints[endpoint]
+            media_type = self.endpoint_metas[endpoint]["media_type"]
         except KeyError:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -183,16 +165,21 @@ class InferenceEngine:
         # as a reference to the filenames then this will not work.
         if "media" in outputs and outputs.media is not None:
             background_tasks.add_task(remove_unused_files, outputs.media)
-        return outputs.response()
+        return outputs.response(media_type=media_type)
 
     def entrypoint(
-        self, func: Callable, input_schema: IOSchema, output_schema: IOSchema
+        self,
+        func: Callable,
+        input_schema: IOSchema,
+        output_schema: IOSchema,
+        media_type: Optional[str] = None,
     ):
         return self._register(
             "predict",
             func=func,
             input_schema=input_schema,
             output_schema=output_schema,
+            media_type=media_type,
         )
 
     def serve(
