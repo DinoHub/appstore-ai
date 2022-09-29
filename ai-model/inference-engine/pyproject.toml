@@ -7,7 +7,7 @@ readme = "README.md"
 packages = [{include = "inference_engine"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 fastapi = "^0.85.0"
 python-multipart = "^0.0.5"
 uvicorn = "^0.18.3"
