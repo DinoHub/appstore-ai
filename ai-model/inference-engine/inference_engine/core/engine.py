@@ -5,7 +5,7 @@ from typing import Callable, Dict, List, Optional, Tuple
 
 import uvicorn
 import yaml
-from fastapi import FastAPI, File, Form, UploadFile, status
+from fastapi import FastAPI, File, Form, Request, UploadFile, status
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 
@@ -119,13 +119,13 @@ class InferenceEngine:
             path=f"/{route}",
             endpoint=self._predict,
             methods=["POST"],
-            response_model=output_schema,
+            # response_model=output_schema,
         )
 
     def _predict(
         self,
         background_tasks: BackgroundTasks,
-        endpoint: str,
+        req: Request,
         media: Optional[List[UploadFile]] = File(None),
         text: Optional[str] = Form(None),
     ):
@@ -134,6 +134,8 @@ class InferenceEngine:
         # endpoint, we use the same process function, but
         # dynamically get the user function.
         try:
+            endpoint = req.url.path.strip("/")
+            print(f"Endpoint: {endpoint}")
             executor, input_schema, _ = self.endpoints[endpoint]
         except KeyError:
             raise HTTPException(
