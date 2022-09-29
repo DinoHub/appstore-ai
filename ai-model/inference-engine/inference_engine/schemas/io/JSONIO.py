@@ -4,15 +4,12 @@ from fastapi.responses import JSONResponse
 from pydantic import validator
 
 from .IOSchema import IOSchema
-from .processors import process_text
+from .processors import check_valid_dict
 
 
-class TextIO(IOSchema):
-    """Text IO which simplifies the input
-    of plain text to just using the `.text`
-    method to get the text. For storing more,
-    use the JSONIO schema.
-
+class JSONIO(IOSchema):
+    """JSON IO for generic text inputs and outputs.
+    Converts any text to a JSON Dictionary
     :param IOSchema: _description_
     :type IOSchema: _type_
     :return: _description_
@@ -22,7 +19,7 @@ class TextIO(IOSchema):
     # media: Optional[List[str]]
     text: Any
 
-    _process_text = validator("text", allow_reuse=True)(process_text)
+    _check_valid_dict = validator("text", allow_reuse=True)(check_valid_dict)
 
     def response(self) -> JSONResponse:
         """Send back JSON response.
@@ -30,5 +27,5 @@ class TextIO(IOSchema):
         :return: JSONResponse
         :rtype: Response
         """
-        response = dict(text=self.text)
+        response = self.text
         return JSONResponse(response)
