@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from pydantic import validator
 
 from .IOSchema import IOSchema
-from .validators import check_files_exist
+from .processors import check_files_exist
 
 
 class MultipleMediaFileIO(IOSchema):
@@ -26,5 +26,7 @@ class MultipleMediaFileIO(IOSchema):
         for file_path in self.media:
             # assume media is list of filenames
             with open(file_path, "rb") as f:
-                response["media"].append(base64.b64encode(f.read()))
+                response["media"].append(
+                    base64.b64encode(f.read()).decode("ascii")
+                )
         return JSONResponse(response)
