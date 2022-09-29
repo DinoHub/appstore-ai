@@ -13,6 +13,7 @@ services:
       - ALGORITHM=HS256
       - DEV_MONGODB_URL=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10
+      - DEV_MAIN_COLLECTION_NAME='app_store'
       - CLEARML_WEB_HOST=https://app.clear.ml
       - CLEARML_API_HOST=https://api.clear.ml
       - CLEARML_FILES_HOST=https://files.clear.ml

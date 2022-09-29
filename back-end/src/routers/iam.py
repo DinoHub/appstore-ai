@@ -27,7 +27,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 45
 router = APIRouter(prefix="/iam", tags=["IAM"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/iam/auth")
-db, mongo_client = get_db()
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
@@ -48,7 +47,8 @@ def create_access_token(data: dict, expires_delta: Union[timedelta, None] = None
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+async def get_current_user(token: str = Depends(oauth2_scheme), db=Depends(get_db)):
+    db, mongo_client = db
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -69,7 +69,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 @router.post("/add")
-async def add_user(item: UserInsert, current_user: User = Depends(get_current_user)):
+async def add_user(item: UserInsert, current_user: User = Depends(get_current_user), db=Depends(get_db)):
+    db, mongo_client = db
     try:
         item.password = get_password_hash(item.password)
         user = await db["users"].insert_one({"userid": item.userid,"name": item.name,"password": item.password,"admin_priv":item.admin_priv})
@@ -92,7 +93,8 @@ async def add_user(item: UserInsert, current_user: User = Depends(get_current_us
 @router.delete(
     "/delete",
 )
-async def delete_user(userid: List[str], current_user: User = Depends(get_current_user)):
+async def delete_user(userid: List[str], current_user: User = Depends(get_current_user), db=Depends(get_db)):
+    db, mongo_client = db
     try:
         delete_result = await db["users"].delete_many({"userid": {"$in": userid}})
         return Response(status_code=204)
@@ -101,7 +103,8 @@ async def delete_user(userid: List[str], current_user: User = Depends(get_curren
 
 
 @router.put("/edit")
-async def update_user(user: UserInsert, current_user: User = Depends(get_current_user)):
+async def update_user(user: UserInsert, current_user: User = Depends(get_current_user), db=Depends(get_db)):
+    db, mongo_client = db
     try:
         user.password = get_password_hash(user.password)
         update_result = await db["users"].update_one(
@@ -116,7 +119,8 @@ async def update_user(user: UserInsert, current_user: User = Depends(get_current
 
 
 @router.post("/auth", response_model=Token)
-async def auth_user_admin(form_data: OAuth2PasswordRequestForm = Depends()):
+async def auth_user_admin(form_data: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)):
+    db, mongo_client = db
     if (user := await db["users"].find_one({"userid": form_data.username})) is not None:
         if verify_password(form_data.password, user["password"]) is True:
             if user["admin_priv"] is True:
@@ -157,7 +161,8 @@ async def check_user_admin(current_user: User = Depends(get_current_user)):
 
 # list users with pagination
 @router.post("/{page_num}")
-async def get_users(pages_user : UserPage, page_num: int = Path(ge = 1),current_user: User = Depends(get_current_user), ):
+async def get_users(pages_user : UserPage, page_num: int = Path(ge = 1),current_user: User = Depends(get_current_user), db=Depends(get_db) ):
+        db, mongo_client = db
         if current_user["admin_priv"] is True:
             try:
                 # check number of documents to skip past
