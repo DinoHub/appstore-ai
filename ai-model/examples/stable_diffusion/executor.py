@@ -9,7 +9,7 @@ from tritonclient.utils import InferenceServerException
 
 MODEL_NAME = "stable_diffusion"
 MODEL_VERSION = "1"
-TRITON_URL = "0.0.0.0:8001"
+TRITON_URL = "triton_inference_server:8001"
 
 BATCH_SIZE = 1
 SAMPLES = 1
@@ -81,4 +81,4 @@ def predict(text: TextIO) -> SingleMediaFileIO:
     images = image_grid(images, rows=1, cols=1)
     images.save("image.jpg", format="JPEG")
 
-    return SingleMediaFileIO(media=["image.png"])
+    return SingleMediaFileIO(media=["image.jpg"])

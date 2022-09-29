@@ -32,6 +32,12 @@ services:
       - "./mongodb_data:/data/db"
     networks:
       - appstore
+  stable_diffusion:
+    image: ie_stable_diffusion
+    ports:
+      - "4001:4001"
+    networks:
+      - appstore
       
 networks:
   appstore:
