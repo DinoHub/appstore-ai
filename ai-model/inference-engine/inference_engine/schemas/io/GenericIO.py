@@ -10,6 +10,7 @@ from .processors import check_files_exist, check_valid_dict
 
 class GenericIO(IOSchema):
     """Generic input schema that accepts both files and json data.
+    Can also be used in cases where nothing is provided to a model.
     :param IOSchema: _description_
     :type IOSchema: _type_
     :return: _description_
@@ -27,7 +28,7 @@ class GenericIO(IOSchema):
 
     _check_valid_dict = validator("text", allow_reuse=True)(check_valid_dict)
 
-    def response(self) -> JSONResponse:
+    def response(self, media_type: Optional[str] = None) -> JSONResponse:
         """Generic response. Since this could be both text or media,
         our response will be a json response, with any media encoded
         as a base64 string.
@@ -49,7 +50,7 @@ class GenericIO(IOSchema):
                     response["media"].append(
                         base64.b64encode(f.read()).decode("ascii")
                     )
+            response["media_type"] = media_type
         if self.text:
             response.update(self.text)
-
         return JSONResponse(response)

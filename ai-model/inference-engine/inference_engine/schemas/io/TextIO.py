@@ -24,7 +24,7 @@ class TextIO(IOSchema):
 
     _process_text = validator("text", allow_reuse=True)(process_text)
 
-    def response(self) -> JSONResponse:
+    def response(self, **kwargs) -> JSONResponse:
         """Send back JSON response.
 
         :return: JSONResponse

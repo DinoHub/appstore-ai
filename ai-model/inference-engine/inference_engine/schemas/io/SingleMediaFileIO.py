@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional
 
 from fastapi.responses import FileResponse
 from pydantic import validator
@@ -18,7 +18,7 @@ class SingleMediaFileIO(IOSchema):
         check_single_file
     )
 
-    def response(self) -> FileResponse:
+    def response(self, media_type: Optional[str] = None) -> FileResponse:
         """Stream back media file.
         This and MultipleMediaFileIO are separate as
         there is no way to send back multiple media files
@@ -29,4 +29,4 @@ class SingleMediaFileIO(IOSchema):
         :rtype: Response
         """
 
-        return FileResponse(self.media[0])
+        return FileResponse(self.media[0], media_type=media_type)

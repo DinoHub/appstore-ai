@@ -21,7 +21,7 @@ class JSONIO(IOSchema):
 
     _check_valid_dict = validator("text", allow_reuse=True)(check_valid_dict)
 
-    def response(self) -> JSONResponse:
+    def response(self, **kwargs) -> JSONResponse:
         """Send back JSON response.
 
         :return: JSONResponse
