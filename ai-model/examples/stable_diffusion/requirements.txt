@@ -15,7 +15,6 @@ greenlet==1.1.3
 grpcio==1.41.0
 h11==0.14.0
 idna==3.4
-inference-engine @ file:///home/tiencheng/Projects/appstore-ai/ai-model/inference-engine/dist/inference_engine-0.1.0-py3-none-any.whl
 multidict==6.0.2
 numpy==1.23.3
 Pillow==9.2.0
