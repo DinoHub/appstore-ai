@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -20,6 +20,3 @@ class IOSchema(BaseModel, ABC):
         :rtype: Response
         """
         raise NotImplementedError
-
-    class Config:
-        arbitrary_types_allowed = True
