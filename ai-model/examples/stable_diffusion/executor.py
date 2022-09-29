@@ -32,7 +32,7 @@ def image_grid(imgs: List[Image.Image], rows: int, cols: int) -> Image.Image:
 def predict(text: TextIO) -> SingleMediaFileIO:
 
     # Check health of model
-    text = text.text["prompt"]
+    text = text.text
     if not health_check(client, MODEL_NAME, MODEL_VERSION):
         raise InferenceServerException
 
