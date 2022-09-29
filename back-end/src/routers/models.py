@@ -253,11 +253,11 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
 @router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
 async def make_test_inference(
     model_id: str,
-    media: Optional[UploadFile] = File(None),
+    media: Optional[List[UploadFile]] = File(None),
     text: Optional[str] = Form(None),
     db=Depends(get_db),
 ):
-    # Get metadata of inference engine url and visualisation engine url
+    # Get metadata of inference engine url
     db, _ = db
     if media is None and text is None:
         raise HTTPException(
@@ -267,9 +267,9 @@ async def make_test_inference(
 
     model = await db["models"].find_one(
         {
-            "_id": ObjectId(model_id),
+            "_id": model_id,
         },
-        projection=["inference_url", "output_generator_url"],
+        projection=["inference_url"],
     )
     if model is None:
         raise HTTPException(
@@ -277,96 +277,46 @@ async def make_test_inference(
             detail=f"Model with ID {model_id} not found.",
         )
     inference_url = model["inference_url"]
-    visualization_url = model["output_generator_url"]
 
     # Get file
     # Validate File Size
     file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
     if media is not None:
-        with tempfile.NamedTemporaryFile() as f:
-            try:
-                while content := media.file.read(CHUNK_SIZE):
-                    file_size_validator(content)
-                    f.write(content)
-                content_type = filetype.guess_mime(f.name)
-                if content_type not in ACCEPTED_CONTENT_TYPES:
-                    raise ValueError
-                if content_type != media.content_type:  # MIME type mismatch
+        for file in media:
+            with tempfile.NamedTemporaryFile() as f:
+                try:
+                    while content := file.file.read(CHUNK_SIZE):
+                        file_size_validator(content)
+                        f.write(content)
+                    content_type = filetype.guess_mime(f.name)
+                    if content_type not in ACCEPTED_CONTENT_TYPES:
+                        raise ValueError
+                    if content_type != file.content_type:  # MIME type mismatch
+                        raise HTTPException(
+                            status_code=status.HTTP_400_BAD_REQUEST,
+                            detail=f"MIME Type Mismatch. Content type reported was {media.content_type}, but file was {content_type}",
+                        )
+                except MaxFileSizeException:
                     raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"MIME Type Mismatch. Content type reported was {media.content_type}, but file was {content_type}",
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
                     )
-            except MaxFileSizeException:
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
-                )
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                    detail=f"File type {content_type} not supported",
-                )
-        media.file.seek(
-            0
-        )  # unsure how necessary, but set pointer to start of file
-    data = None if text is None else {"text": text}
-    files = (
-        None
-        if media is None
-        else {"media": (media.filename, media.file, media.content_type)}
-    )
+                except ValueError:
+                    raise HTTPException(
+                        status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                        detail=f"File type {content_type} not supported",
+                    )
+            file.file.seek(
+                0
+            )  # unsure how necessary, but set pointer to start of file
     with httpx.Client() as client:
-        content_type = client.get(
-            "http://" + inference_url + "/content-type"
-        ).text
-    if visualization_url is None:  # stream output of inference engine
-        # content_type = "image/jpeg"
+        metadata = client.get(inference_url).json()["metadata"]
         return StreamingResponse(
             content=stream_response(
                 media=media,
                 text=text,
-                url="http://" + inference_url + "/predict",
+                url=inference_url + "/predict",
             ),
-            media_type=content_type,
+            media_type=metadata["endpoints"]["predict"]["media_type"]
+            or "application/json",
         )
-    else:
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(
-                    "http://" + inference_url + "/predict",
-                    files=files,
-                    data=data,
-                )
-                response.raise_for_status()
-                outputs = response.json()
-                # Encode as str to send as form-data to viz engine
-                outputs = json.dumps(outputs)
-            except httpx.RequestError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Error when attempting to request inference from model.",
-                )
-            except httpx.HTTPStatusError as e:
-                raise HTTPException(
-                    status_code=e.response.status_code,
-                    detail=f"Error when attempting to request inference from model. Error: {e.response.text}",
-                )
-            except json.JSONDecodeError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to decode response from model",
-                )
-            # Send media file to inference
-            # Feed response and file to visualization engine
-            stream = stream_response(
-                media=media,
-                text=text,
-                outputs=outputs,
-                url="http://" + visualization_url + "/visualize",
-            )  # NOTE: rely on side effect of function to change content_type to output of visualization url
-            # this is probably a bad way to do it
-            # TODO: consider including this info in some metadata of the model card?
-            return StreamingResponse(
-                content=stream,
-                media_type=content_type,
-            )
