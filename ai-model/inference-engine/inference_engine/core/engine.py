@@ -47,11 +47,6 @@ class InferenceEngine:
             title=self.name, version=self.version, description=self.description
         )
         self.engine.add_api_route(
-            path="/engine/{endpoint}",
-            endpoint=self._predict,
-            methods=["POST"],
-        )
-        self.engine.add_api_route(
             path="/{endpoint}",
             endpoint=self._get_metadata,
             methods=["GET"],
@@ -120,6 +115,12 @@ class InferenceEngine:
         # Create function
         # We register the user function so our endpoint can access them
         self.endpoints[route] = (func, input_schema, output_schema)
+        self.engine.add_api_route(
+            path=f"/{route}",
+            endpoint=self._predict,
+            methods=["POST"],
+            response_model=output_schema,
+        )
 
     def _predict(
         self,
@@ -129,10 +130,9 @@ class InferenceEngine:
         text: Optional[str] = Form(None),
     ):
         # Process Inputs
-        # We register a single endpoint, but this single endpoint,
-        # can handle different possible subendpoints
-        # which the user registers, so long as the endpoints follow the
-        # set schema
+        # Since we want similar processing of each registered,
+        # endpoint, we use the same process function, but
+        # dynamically get the user function.
         try:
             executor, input_schema, _ = self.endpoints[endpoint]
         except KeyError:
@@ -199,7 +199,7 @@ class InferenceEngine:
         port: Optional[int] = None,
         workers: Optional[int] = None,
     ):
-        host = host or environ.get("HOST", default="0.0.0.0")
+        host = host or environ.get("HOSTNAME", default="0.0.0.0")
         port = port or int(environ.get("PORT", default=4001))
         workers = workers or int(environ.get("WORKERS", default=1))
         self.logger.info("Starting server")
