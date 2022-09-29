@@ -4,7 +4,7 @@ from fastapi.responses import FileResponse
 from pydantic import validator
 
 from .IOSchema import IOSchema
-from .validators import check_files_exist, check_single_file
+from .processors import check_files_exist, check_single_file
 
 
 class SingleMediaFileIO(IOSchema):
