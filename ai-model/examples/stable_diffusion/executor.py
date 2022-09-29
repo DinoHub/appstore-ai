@@ -3,6 +3,7 @@ from typing import Any, List, Tuple
 import numpy as np
 import tritonclient.grpc as grpcclient
 from inference_engine import SingleMediaFileIO, TextIO
+from inference_engine.utils.triton import health_check
 from PIL import Image
 from tritonclient.utils import InferenceServerException
 
@@ -32,8 +33,8 @@ def predict(text: TextIO) -> SingleMediaFileIO:
 
     # Check health of model
     text = text.text["prompt"]
-    # if not health_check(client, MODEL_NAME, MODEL_VERSION):
-    #     raise InferenceServerException
+    if not health_check(client, MODEL_NAME, MODEL_VERSION):
+        raise InferenceServerException
 
     inputs = [
         grpcclient.InferInput("PROMPT", shape=(BATCH_SIZE,), datatype="BYTES"),
