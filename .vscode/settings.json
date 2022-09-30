@@ -1,5 +1,4 @@
 {
-    "python.analysis.extraPaths": [
-        "./ai-model/inference-engine"
-    ]
+  "python.analysis.extraPaths": ["./ai-model/inference-engine"],
+  "autoDocstring.docstringFormat": "sphinx"
 }
