@@ -13,10 +13,8 @@ class TextIO(IOSchema):
     method to get the text. For storing more,
     use the JSONIO schema.
 
-    :param IOSchema: _description_
-    :type IOSchema: _type_
-    :return: _description_
-    :rtype: _type_
+    :param text: JSON object containing `text` key
+    :type text: Dict[str, str]
     """
 
     # media: Optional[List[str]]

@@ -6,6 +6,11 @@ from pydantic import BaseModel
 
 
 class IOSchema(BaseModel, ABC):
+    """Abstract Class for Input and Output Schemas
+
+    An IOSchema is used to determine how to process
+    either the input or output of to the user executor.
+    """
 
     media: Optional[List[str]]
     text: Optional[

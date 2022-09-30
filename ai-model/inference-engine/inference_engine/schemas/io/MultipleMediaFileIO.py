@@ -9,6 +9,15 @@ from .processors import check_files_exist
 
 
 class MultipleMediaFileIO(IOSchema):
+    """Input schema when input or output is multiple media files.
+
+    Representation of the media files is a list of strings,
+    where each string is the local file path to the media file.
+
+    :param media: List of local file paths to media files
+    :type media: List[str]
+    """
+
     media: List[str]
 
     _check_file_exists = validator("media", allow_reuse=True, each_item=True)(

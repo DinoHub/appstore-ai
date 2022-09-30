@@ -1,4 +1,6 @@
 class media_type:
+    """Helper class to define media types."""
+
     plain_text = "text/plain"
     jpeg = "image/jepg"
     png = "image/png"

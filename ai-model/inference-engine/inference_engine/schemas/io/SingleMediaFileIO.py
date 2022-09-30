@@ -8,6 +8,14 @@ from .processors import check_files_exist, check_single_file
 
 
 class SingleMediaFileIO(IOSchema):
+    """Input schema when input or output is just a single media file.
+    Representation of the media file is a list containing a single
+    string, which is the local file path to the media file.
+
+    :param media: List with single string path to media file
+    :type media: List[str]
+    """
+
     media: List[str]
 
     _check_file_exists = validator("media", allow_reuse=True, each_item=True)(

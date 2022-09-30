@@ -26,11 +26,11 @@ class InferenceEngine:
         """Create an inference engine.
 
 
-        :param name: _description_, defaults to "Inference Engine"
+        :param name: Name of Inference Engine, defaults to "Inference Engine"
         :type name: str, optional
-        :param version: _description_, defaults to "v1"
+        :param version: Version, defaults to "v1"
         :type version: str, optional
-        :param description: _description_, defaults to "Inference Engine for AI App Store"
+        :param description: Description of Inference Engine, defaults to "Inference Engine for AI App Store"
         :type description: str, optional
         """
         if endpoint_metas is None:
@@ -53,7 +53,12 @@ class InferenceEngine:
             str, Tuple[Callable[[IOSchema], IOSchema], IOSchema, IOSchema]
         ] = {}
 
-    def _status(self):
+    def _status(self) -> Dict:
+        """Status endpoint for inference engine.
+
+        :return: Metadata of inference engine
+        :rtype: Dict
+        """
         return {
             "message": "Hello World!",
             "metadata": {
@@ -67,6 +72,13 @@ class InferenceEngine:
 
     @classmethod
     def from_dict(cls, config: Dict) -> "InferenceEngine":
+        """Generate an inference engine from a dictionary.
+
+        :param config: Configuration dictionary
+        :type config: Dict
+        :return: Inference Engine
+        :rtype: InferenceEngine
+        """
         executor = cls(**config)
         return executor
 
@@ -74,9 +86,9 @@ class InferenceEngine:
     def from_yaml(cls, yaml_path: str) -> "InferenceEngine":
         """From user specification, create inference engine
 
-        :param yaml_path: _description_
+        :param yaml_path: Path to yml config
         :type yaml_path: str
-        :return: _description_
+        :return: Inference Engine
         :rtype: InferenceEngine
         """
         with open(yaml_path, "r") as f:
@@ -90,7 +102,21 @@ class InferenceEngine:
         input_schema: IOSchema,
         output_schema: IOSchema,
         media_type: Optional[str] = None,
-    ):
+    ) -> None:
+        """Register a function to be called when a request is made to the
+        route of the inference engine.
+
+        :param route: Route to register function to
+        :type route: str
+        :param func: Function to register
+        :type func: Callable
+        :param input_schema: IOSchema used to process request input
+        :type input_schema: IOSchema
+        :param output_schema: IOSchema used to process and send back response
+        :type output_schema: IOSchema
+        :param media_type: If any media (e.g images) are returned, their MIME type, defaults to None
+        :type media_type: Optional[str], optional
+        """
         # Create function
         # We register the user function so our endpoint can access them
         self.endpoints[route] = (func, input_schema, output_schema)
@@ -110,6 +136,21 @@ class InferenceEngine:
         media: Optional[List[UploadFile]] = File(None),
         text: Optional[str] = Form(None),
     ):
+        """Wrapper function around user function to process request and
+        response.
+
+        :param background_tasks: Perform cleanup task to remove tmp files
+        :type background_tasks: BackgroundTasks
+        :param req: User request to get the endpoint name
+        :type req: Request
+        :param media: Any files sent in request, defaults to File(None)
+        :type media: Optional[List[UploadFile]], optional
+        :param text: Stringified JSON sent as input, defaults to Form(None)
+        :type text: Optional[str], optional
+        :raises HTTPException: 422 if failed to process input
+        :return: Response, as decided by output IOSchema
+        :rtype: Response
+        """
         # Process Inputs
         # Since we want similar processing of each registered,
         # endpoint, we use the same process function, but
@@ -166,7 +207,20 @@ class InferenceEngine:
         input_schema: IOSchema,
         output_schema: IOSchema,
         media_type: Optional[str] = None,
-    ):
+    ) -> None:
+        """Default entrypoint for inference engine.
+        Is just a wrapper around _register with
+        pre-defined route (`predict`)
+
+        :param func: User function to register
+        :type func: Callable
+        :param input_schema: IOSchema used to process request input
+        :type input_schema: IOSchema
+        :param output_schema: IOSchema used to process and send back response
+        :type output_schema: IOSchema
+        :param media_type: If any media (e.g images) are returned, their MIME type, defaults to None
+        :type media_type: Optional[str], optional
+        """
         return self._register(
             "predict",
             func=func,
@@ -180,7 +234,16 @@ class InferenceEngine:
         host: Optional[str] = None,
         port: Optional[int] = None,
         workers: Optional[int] = None,
-    ):
+    ) -> None:
+        """Serve the inference engine.
+
+        :param host: Hostname, if none provided will use either environment variable or 0.0.0.0, defaults to None
+        :type host: Optional[str], optional
+        :param port: Port, if none provided will use either environent variable or 4001, defaults to None
+        :type port: Optional[int], optional
+        :param workers: Number of workers to serve concurrent requests, if none provided uses environment variable or 1, defaults to None
+        :type workers: Optional[int], optional
+        """
         host = host or environ.get("HOSTNAME", default="0.0.0.0")
         port = port or int(environ.get("PORT", default=4001))
         workers = workers or int(environ.get("WORKERS", default=1))

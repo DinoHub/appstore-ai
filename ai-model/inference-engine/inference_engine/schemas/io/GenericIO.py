@@ -11,10 +11,11 @@ from .processors import check_files_exist, check_valid_dict
 class GenericIO(IOSchema):
     """Generic input schema that accepts both files and json data.
     Can also be used in cases where nothing is provided to a model.
-    :param IOSchema: _description_
-    :type IOSchema: _type_
-    :return: _description_
-    :rtype: _type_
+
+    :param media: List of local file paths to media files
+    :type media: List[str]
+    :param text: JSON object containing form data
+    :type text: Dict[str, Any]
     """
 
     media: Optional[List[str]]

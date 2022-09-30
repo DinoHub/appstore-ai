@@ -10,10 +10,9 @@ from .processors import check_valid_dict
 class JSONIO(IOSchema):
     """JSON IO for generic text inputs and outputs.
     Converts any text to a JSON Dictionary
-    :param IOSchema: _description_
-    :type IOSchema: _type_
-    :return: _description_
-    :rtype: _type_
+
+    :param text: JSON object containing form data
+    :type text: Dict[str, Any]
     """
 
     # media: Optional[List[str]]
