@@ -1,15 +1,43 @@
+from enum import Enum
 from typing import Dict, List, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from .common import PyObjectId
+
+
+class IOTypes(Enum, str):
+    JSON = "JSONIO"
+    Text = "TextIO"
+    SingleMedia = "SingleMediaFileIO"
+    MultipleMedia = "MultipleMediaFileIO"
+    Generic = "GenericIO"
+
+
+class IOSchema(BaseModel):
+    io_type: IOTypes
+    json_schema: Optional[str] = Field(None)  # JSON Schema
+
+    @validator("json_schema", always=True)
+    def check_json_schema(cls, json_schema, values):
+        if values["io_type"] == IOTypes.JSON:
+            if json_schema is None:
+                raise ValueError("Expect schema for JSON")
+        else:
+            return None
 
 
 class SectionModel(BaseModel):
     text: str
     title: str
     media: Optional[List[Dict]]
+
+
+class InferenceEngineConfig(BaseModel):
+    url: str
+    input_schema: IOSchema
+    output_schema: IOSchema
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
@@ -36,7 +64,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     creator: Optional[str]
     # TODO: Figure out model source stuff
     clearml_exp_id: Optional[str]
-    inference_url: Optional[str]
+    inference_engine: Optional[InferenceEngineConfig]
 
 
 class ModelCardModelDB(ModelCardModelIn):
@@ -79,7 +107,7 @@ class UpdateModelCardModel(BaseModel):
     owner: Optional[str]
     creator: Optional[str]
     clearml_exp_id: Optional[str]
-    inference_url: Optional[str]
+    inference_engine: Optional[InferenceEngineConfig]
 
     class Config:
         arbitrary_types_allowed = True
