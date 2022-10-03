@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import click
+import questionary
 from inference_engine.schemas.media_types import media_type
 
 from ..schemas.io import HAS_MEDIA
@@ -11,6 +12,7 @@ from ..utils.generate_engine import (
     generate_metadata_yml,
     generate_user_function,
 )
+from ..utils.prompt import QuestionaryOption
 
 
 @click.group()
@@ -24,11 +26,11 @@ def new():
     "-p",
     type=click.Path(file_okay=False, dir_okay=True, path_type=Path),
     prompt="Enter directory to make new engine in:",
-    default=Path.cwd(),
+    default=Path.cwd().joinpath("new_engine"),
 )
 @click.option("--name", "-n", prompt="Enter name of engine:")
 @click.option("--version", "-v", prompt=True, default="v1")
-@click.option("--description", "-d", prompt=True)
+@click.option("--description", "-d", prompt=True, default="")
 @click.option("--author", "-a", prompt=True)
 @click.option(
     "--input_schema",
@@ -37,6 +39,7 @@ def new():
         AVAILABLE_IO_TYPES,
     ),
     prompt=True,
+    cls=QuestionaryOption,
 )
 @click.option(
     "--output_schema",
@@ -45,6 +48,7 @@ def new():
         AVAILABLE_IO_TYPES,
     ),
     prompt=True,
+    cls=QuestionaryOption,
 )
 def engine(
     path: Path,
@@ -58,19 +62,28 @@ def engine(
     # Get additional info
     # If output has media, ask for MIME type
     if output_schema in HAS_MEDIA:
-        output_mime = click.prompt(
+        output_mime = questionary.select(
             "Select MIME Type of Output Media:",
-            type=click.Choice(
-                [
-                    media_type.attr
-                    for attr in media_type.__dict__.keys()
-                    if not attr.startswith("_")
-                ]
-            ),
-        )
+            choices=[
+                getattr(media_type, attr)
+                for attr in media_type.__dict__.keys()
+                if not attr.startswith("_")
+            ],
+        ).ask()
     else:
         output_mime = None
     # Generate metadata file
+    try:
+        path.mkdir()
+    except FileExistsError:
+        if click.confirm(
+            "Directory already exists, do you want to write to the directory anyways?"
+        ):
+            path.mkdir(exist_ok=True)
+        else:
+            click.echo("Ending generator")
+            exit(1)
+
     click.echo("Generating metadata")
     generate_metadata_yml(
         base_dir=path,
