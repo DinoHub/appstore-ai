@@ -5,4 +5,6 @@ from .MultipleMediaFileIO import MultipleMediaFileIO
 from .SingleMediaFileIO import SingleMediaFileIO
 from .TextIO import TextIO
 
+HAS_MEDIA = ["GenericIO", "MultipleMediaFileIO", "SingleMediaFileIO"]
+
 __all__ = ["GenericIO", "MultipleMediaFileIO", "SingleMediaFileIO", "TextIO"]
