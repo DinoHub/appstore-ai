@@ -1,16 +1,14 @@
 from .GenericIO import GenericIO
 from .IOSchema import IOSchema
 from .JSONIO import JSONIO
-from .MultipleMediaFileIO import MultipleMediaFileIO
-from .SingleMediaFileIO import SingleMediaFileIO
+from .MediaFileIO import MediaFileIO
 from .TextIO import TextIO
 
-HAS_MEDIA = ["GenericIO", "MultipleMediaFileIO", "SingleMediaFileIO"]
+HAS_MEDIA = ["GenericIO", "MediaFileIO"]
 
 __all__ = [
     "GenericIO",
-    "MultipleMediaFileIO",
-    "SingleMediaFileIO",
+    "MediaFileIO",
     "TextIO",
     "JSONIO",
 ]
