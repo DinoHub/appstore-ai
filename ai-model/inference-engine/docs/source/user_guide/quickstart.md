@@ -19,6 +19,10 @@ This section will guide you through creating your own inference engine for use w
 
 
 ## Submitting the Inference Engine
-```{todo}
+
+```{warning}
 This part is currently still WIP
 ```
+
+---
+{ref}`genindex` | {ref}`modindex`
