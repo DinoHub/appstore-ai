@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Union
 
 from fastapi import UploadFile
-from pydantic import ValidationError
 
 from ...utils.io import download_file
 
@@ -18,7 +17,7 @@ def check_files_exist(file: str) -> str:
     :rtype: str
     """
     if not Path(file).exists():
-        raise ValidationError(f"Media file not found: {file}")
+        raise FileNotFoundError(f"Media file not found: {file}")
     return file
 
 
@@ -32,7 +31,7 @@ def check_single_file(media: List[str]) -> List[str]:
     :rtype: List[str]
     """
     if len(media) != 1:
-        raise ValidationError("Expect only a single file")
+        raise ValueError("Expect only a single file")
     return media
 
 
@@ -48,7 +47,7 @@ def check_valid_dict(text: Any) -> Dict:
     """
     if isinstance(text, dict):
         return text
-    raise ValidationError("Not a valid dictionary!")
+    raise TypeError("Not a valid dictionary!")
 
 
 def process_text(text: Union[str, Dict]) -> str:
@@ -66,14 +65,12 @@ def process_text(text: Union[str, Dict]) -> str:
     :rtype: str
     """
     if text is None:
-        raise ValidationError("No input provided")
+        raise ValueError("No input provided")
     if isinstance(text, Mapping):
         try:
             text = str(text["text"])
         except KeyError:
-            raise ValidationError(
-                "Text not found in the 'text' field of the JSON"
-            )
+            raise KeyError("Text not found in the 'text' field of the JSON")
     if not isinstance(text, str):
-        raise ValidationError(f"Invalid input type: {type(text)}")
+        raise TypeError(f"Invalid input type: {type(text)}")
     return text
