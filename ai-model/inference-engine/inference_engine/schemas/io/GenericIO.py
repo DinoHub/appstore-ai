@@ -1,11 +1,11 @@
 import base64
-from typing import Any, Dict, List, Optional
+from typing import Optional
 
 from fastapi.responses import JSONResponse
 from pydantic import validator
 
 from .IOSchema import IOSchema
-from .processors import check_files_exist, check_valid_dict
+from .processors import check_valid_dict
 
 
 class GenericIO(IOSchema):
@@ -17,15 +17,6 @@ class GenericIO(IOSchema):
     :param text: JSON object containing form data
     :type text: Dict[str, Any]
     """
-
-    media: Optional[List[str]]
-    text: Optional[
-        Any
-    ]  # currently a pydantic bug where dict will always fail to validate
-
-    _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
-        check_files_exist
-    )
 
     _check_valid_dict = validator("text", allow_reuse=True)(check_valid_dict)
 

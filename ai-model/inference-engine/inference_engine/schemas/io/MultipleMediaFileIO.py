@@ -2,10 +2,8 @@ import base64
 from typing import List, Optional
 
 from fastapi.responses import JSONResponse
-from pydantic import validator
 
 from .IOSchema import IOSchema
-from .processors import check_files_exist
 
 
 class MultipleMediaFileIO(IOSchema):
@@ -19,10 +17,6 @@ class MultipleMediaFileIO(IOSchema):
     """
 
     media: List[str]
-
-    _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
-        check_files_exist
-    )
 
     def response(self, media_type: Optional[str] = None) -> JSONResponse:
         """Stream back media files.

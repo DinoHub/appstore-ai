@@ -2,7 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 from fastapi.responses import Response
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
+
+from .processors import check_files_exist, check_valid_dict
 
 
 class IOSchema(BaseModel, ABC):
@@ -17,7 +19,9 @@ class IOSchema(BaseModel, ABC):
         Any
     ]  # currently a pydantic bug where dict will always fail to validate
 
-    _response: str
+    _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
+        check_files_exist
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

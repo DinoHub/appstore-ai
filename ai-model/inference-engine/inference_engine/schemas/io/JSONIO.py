@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 from fastapi.responses import JSONResponse
 from pydantic import validator
@@ -15,7 +15,6 @@ class JSONIO(IOSchema):
     :type text: Dict[str, Any]
     """
 
-    # media: Optional[List[str]]
     text: Any
 
     _check_valid_dict = validator("text", allow_reuse=True)(check_valid_dict)
