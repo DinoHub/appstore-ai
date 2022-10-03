@@ -10,6 +10,8 @@ Welcome to AAS Inference Engine's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   user_guide/quickstart
+
 
 
 Indices and tables

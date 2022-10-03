@@ -36,6 +36,12 @@ extensions = [
 templates_path = ["_templates"]
 exclude_patterns = []
 
+source_suffix = {
+    ".rst": "restructuredtext",
+    ".txt": "markdown",
+    ".md": "markdown",
+}
+
 # Set up automated doc generation
 apidoc_module_dir = "../../inference_engine"
 apidoc_output_dir = "api"
