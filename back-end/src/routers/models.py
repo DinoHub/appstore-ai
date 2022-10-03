@@ -31,6 +31,7 @@ from ..internal.inference import stream_response
 # from internal.inference import is_triton_inference, triton_client
 from ..models.model import (
     FindModelCardModel,
+    InferenceEngineConfig,
     IOTypes,
     ModelCardModelDB,
     ModelCardModelIn,
@@ -274,14 +275,14 @@ async def make_test_inference(
         {
             "_id": model_id,
         },
-        projection=["inference_url"],
+        projection=["inference_engine"],
     )
     if model is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with ID {model_id} not found.",
         )
-    inference_engine_config = model["inference_engine"]
+    inference_engine_config: InferenceEngineConfig = model["inference_engine"]
     inference_url = inference_engine_config.url
     input_type = inference_engine_config["input_schema"]
 
