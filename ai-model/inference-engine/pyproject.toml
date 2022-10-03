@@ -30,6 +30,10 @@ sphinxcontrib-apidoc = "^0.3.0"
 sphinx_design = "^0.3.0"
 MarkupSafe = "^2.1.1"
 
+
+[tool.poetry.group.triton.dependencies]
+tritonclient = {extras = ["grpc"], version = "^2.25.0"}
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
