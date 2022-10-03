@@ -2,7 +2,7 @@ from typing import Any, List, Tuple
 
 import numpy as np
 import tritonclient.grpc as grpcclient
-from inference_engine import SingleMediaFileIO, TextIO
+from inference_engine import MediaFileIO, TextIO
 from inference_engine.utils.triton import health_check
 from PIL import Image
 from tritonclient.utils import InferenceServerException
@@ -29,7 +29,7 @@ def image_grid(imgs: List[Image.Image], rows: int, cols: int) -> Image.Image:
     return grid
 
 
-def predict(text: TextIO) -> SingleMediaFileIO:
+def predict(text: TextIO) -> MediaFileIO:
 
     # Check health of model
     text = text.text
@@ -81,4 +81,4 @@ def predict(text: TextIO) -> SingleMediaFileIO:
     images = image_grid(images, rows=1, cols=1)
     images.save("image.jpg", format="JPEG")
 
-    return SingleMediaFileIO(media=["image.jpg"])
+    return MediaFileIO(media=["image.jpg"])
