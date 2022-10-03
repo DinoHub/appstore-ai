@@ -13,6 +13,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   inference_engine.commands
    inference_engine.core
    inference_engine.schemas
    inference_engine.utils
@@ -23,4 +24,4 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
-   inference_engine.main
+   inference_engine.__main__
