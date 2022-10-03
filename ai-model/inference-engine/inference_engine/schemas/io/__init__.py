@@ -7,4 +7,10 @@ from .TextIO import TextIO
 
 HAS_MEDIA = ["GenericIO", "MultipleMediaFileIO", "SingleMediaFileIO"]
 
-__all__ = ["GenericIO", "MultipleMediaFileIO", "SingleMediaFileIO", "TextIO"]
+__all__ = [
+    "GenericIO",
+    "MultipleMediaFileIO",
+    "SingleMediaFileIO",
+    "TextIO",
+    "JSONIO",
+]
