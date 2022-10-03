@@ -79,3 +79,5 @@ EXPOSE ${{PORT}}
 COPY . .
             """
         )
+    with open(base_dir.joinpath("requirements.txt"), "w") as f:
+        f.write("")
