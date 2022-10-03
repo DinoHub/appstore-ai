@@ -59,6 +59,23 @@ def engine(
     input_schema: str,
     output_schema: str,
 ):
+    """Interactive generator to create a new Inference Engine.
+
+    :param path: Directory to create new inference engine in
+    :type path: Path
+    :param name: Name of inference engine
+    :type name: str
+    :param version: Version number of inference engine
+    :type version: str
+    :param description: Metadata to describe inference engine
+    :type description: str
+    :param author: Author for inference engine
+    :type author: str
+    :param input_schema: Input type for inference engine
+    :type input_schema: str
+    :param output_schema: Output type for inference engine
+    :type output_schema: str
+    """
     # Get additional info
     # If output has media, ask for MIME type
     if output_schema in HAS_MEDIA:
