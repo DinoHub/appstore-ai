@@ -29,13 +29,14 @@ def generate_user_function(
     with open(base_dir.joinpath("process.py"), "w") as f:
         f.write(
             f"""
-            from inference_engine import {input_schema}, {output_schema}
+from inference_engine import {input_schema}, {output_schema}
 
-            def predict(data: {input_schema}) -> {output_schema}:
-                # TODO: Process inputs
-                
-                return {output_schema
-                }() # TODO: Return data here
+
+def predict(data: {input_schema}) -> {output_schema}:
+    # TODO: Process inputs
+    
+    return {output_schema
+    }() # TODO: Return data here
             """
         )
 
@@ -50,34 +51,31 @@ def generate_engine(
     with open(base_dir.joinpath("main.py"), "w") as f:
         f.write(
             f"""
-            from process import predict
-            from inference_engine import (
-                InferenceEngine,
-                {input_schema},
-                {output_schema}
-            )
+from inference_engine import InferenceEngine, {input_schema}, {output_schema}
+from process import predict
 
-            engine = InferenceEngine.from_yaml({metadata_path})
-            engine.entrypoint(
-                predict, {input_schema}, {output_schema}, media_type={media_type}
-            )
-            if __name__ == "__main__":
-                engine.serve()
+
+engine = InferenceEngine.from_yaml("{metadata_path.relative_to(base_dir)}")
+engine.entrypoint(
+    predict, {input_schema}, {output_schema}, media_type="{media_type}"
+)
+if __name__ == "__main__":
+    engine.serve()
             """
         )
     with open(base_dir.joinpath("Dockerfile"), "w") as f:
         f.write(
             f"""
-            FROM inference_engine:latest
-            
-            COPY requirements.txt .
-            RUN venv/bin/pip install -r requirements.txt
-            ARG PORT=4001
-            ARG HOSTNAME=0.0.0.0
-            ENV PORT=${{PORT}}
-            ENV HOSTNAME=${{HOSTNAME}}
+FROM inference_engine:latest
 
-            EXPOSE ${{PORT}}
-            COPY . .
+COPY requirements.txt .
+RUN venv/bin/pip install -r requirements.txt
+ARG PORT=4001
+ARG HOSTNAME=0.0.0.0
+ENV PORT=${{PORT}}
+ENV HOSTNAME=${{HOSTNAME}}
+
+EXPOSE ${{PORT}}
+COPY . .
             """
         )
