@@ -57,7 +57,7 @@ from process import predict
 
 engine = InferenceEngine.from_yaml("{metadata_path.relative_to(base_dir)}")
 engine.entrypoint(
-    predict, {input_schema}, {output_schema}, media_type="{media_type}"
+    predict, {input_schema}, {output_schema}, media_type="{media_type or 'application/json'}"
 )
 if __name__ == "__main__":
     engine.serve()
