@@ -10,7 +10,6 @@ from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 
 from ..schemas.io import IOSchema
-from ..schemas.metadata import Metadata
 from ..utils.io import download_file, remove_unused_files
 
 

@@ -50,6 +50,7 @@ autodoc_mock_imports = [
     "uvicorn",
     "json",
     "base64",
+    "tritonclient",
 ]
 
 
