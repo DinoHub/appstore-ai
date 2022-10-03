@@ -31,6 +31,7 @@ from ..internal.inference import stream_response
 # from internal.inference import is_triton_inference, triton_client
 from ..models.model import (
     FindModelCardModel,
+    IOTypes,
     ModelCardModelDB,
     ModelCardModelIn,
     UpdateModelCardModel,
@@ -40,7 +41,11 @@ CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
 MAX_UPLOAD_SIZE_GB = 1
 
-ACCEPTED_CONTENT_TYPES = [
+MEDIA_IO_TYPES = {IOTypes.SingleMedia, IOTypes.MultipleMedia, IOTypes.Generic}
+
+TEXT_IO_TYPES = {IOTypes.Generic, IOTypes.JSON, IOTypes.Text}
+
+ACCEPTED_CONTENT_TYPES = {
     "image/jpeg",
     "image/png",
     "video/mp4",
@@ -52,7 +57,7 @@ ACCEPTED_CONTENT_TYPES = [
     "audio/mpeg",
     "audio/midi",
     "audio/aac",
-]
+}
 
 file_validator = ValidateFileUpload(
     max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB
@@ -276,12 +281,14 @@ async def make_test_inference(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with ID {model_id} not found.",
         )
-    inference_url = model["inference_url"]
+    inference_engine_config = model["inference_engine"]
+    inference_url = inference_engine_config.url
+    input_type = inference_engine_config["input_schema"]
 
     # Get file
     # Validate File Size
     file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
-    if media is not None:
+    if media is not None and input_type in MEDIA_IO_TYPES:
         for file in media:
             with tempfile.NamedTemporaryFile() as f:
                 try:
@@ -309,6 +316,12 @@ async def make_test_inference(
             file.file.seek(
                 0
             )  # unsure how necessary, but set pointer to start of file
+
+    if text is not None and input_type["io_type"] in TEXT_IO_TYPES:
+        if input_type["json_schema"] is not None:
+            # TODO: Perform validation of json schema
+            raise NotImplementedError
+
     with httpx.Client() as client:
         metadata = client.get(inference_url).json()["metadata"]
         return StreamingResponse(
