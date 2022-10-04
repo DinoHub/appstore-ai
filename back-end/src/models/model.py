@@ -7,25 +7,44 @@ from pydantic import BaseModel, Field, validator
 from .common import PyObjectId
 
 
-class IOTypes(Enum, str):
+class IOTypes(str, Enum):
     JSON = "JSONIO"
     Text = "TextIO"
-    SingleMedia = "SingleMediaFileIO"
-    MultipleMedia = "MultipleMediaFileIO"
+    Media = "MediaFileIO"
     Generic = "GenericIO"
 
 
 class IOSchema(BaseModel):
     io_type: IOTypes
-    json_schema: Optional[str] = Field(None)  # JSON Schema
+    json_schema: Optional[Dict] = Field(None)  # JSON Schema
 
-    @validator("json_schema", always=True)
-    def check_json_schema(cls, json_schema, values):
-        if values["io_type"] == IOTypes.JSON:
-            if json_schema is None:
-                raise ValueError("Expect schema for JSON")
-        else:
-            return None
+    """
+    NOTE: when submitting an IE, a user
+    may choose to add different form fields,
+    with different names. Therefore,
+    we need to autogenerate a schema,
+    so that when presenting inference page
+    to end user, we can create the 
+    appropriate form. We could also use this
+    to show an appropriate output (?)
+    E.g.
+    
+    For example, consider a Guided Diffusion model
+    ```
+    json_schema = {
+        "prompt" : { "type" : "text" },
+        "parameters": { "type" : "json", "required" : false},
+        "files: { "type" : "media" }
+    }
+    ```
+    This refers to a form with three fields:
+    - Text prompt (prompt): shows up as text form field
+    - Initial image (files): shows up as file upload box
+    - Parameters as JSON (parameters): shows up as textarea
+
+    Note that for certain IO types such as Media, Text,
+    we use a preset schema. 
+    """
 
 
 class SectionModel(BaseModel):
