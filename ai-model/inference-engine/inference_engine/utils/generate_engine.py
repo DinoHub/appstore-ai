@@ -66,7 +66,7 @@ if __name__ == "__main__":
     with open(base_dir.joinpath("Dockerfile"), "w") as f:
         f.write(
             f"""
-FROM inference_engine:latest
+FROM tiencheng/inference-engine:latest
 
 COPY requirements.txt .
 RUN venv/bin/pip install -r requirements.txt
