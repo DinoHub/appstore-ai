@@ -62,7 +62,17 @@ def model_metadata() -> List[Dict]:
             "point_of_contact": "Santa Claus",
             "owner": f"Santa Claus {idx}",
             "creator": "Rudolph",
-            "inference_url": "localhost:42",
+            "inference_engine": {
+                "url": "inference_image:latest",
+                "input_schema": {
+                    "io_type": "GenericIO",
+                    "json_schema": {
+                        "media": {"type": "media"},
+                        "parameters": {"type": "json", "required": False},
+                    },
+                },
+                "output_schema": {"io_type": "TextIO"},
+            },
         }
         for idx in range(1, 11)
     ]
