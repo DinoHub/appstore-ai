@@ -42,7 +42,7 @@ CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
 MAX_UPLOAD_SIZE_GB = 1
 
-MEDIA_IO_TYPES = {IOTypes.SingleMedia, IOTypes.MultipleMedia, IOTypes.Generic}
+MEDIA_IO_TYPES = {IOTypes.Media, IOTypes.Generic}
 
 TEXT_IO_TYPES = {IOTypes.Generic, IOTypes.JSON, IOTypes.Text}
 
