@@ -8,18 +8,6 @@ from fastapi.testclient import TestClient
 def test_get_all_datasets(
     client: TestClient,
 ):
-    # fake_dataset = [
-    #         {
-    #             "id" : 1
-    #         },
-    #         {
-    #             "id" : 2
-    #         }
-    #     ]
-    # mocker.patch(
-    #     "clearml.Dataset.list_datasets",
-    #     return_value=fake_dataset
-    # )
     response = client.post("/datasets/search", json={})
     response_json = response.json()
     assert response.status_code == status.HTTP_200_OK
