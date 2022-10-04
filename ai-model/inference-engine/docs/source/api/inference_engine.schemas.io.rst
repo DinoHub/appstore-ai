@@ -16,7 +16,6 @@ Submodules
    inference_engine.schemas.io.GenericIO
    inference_engine.schemas.io.IOSchema
    inference_engine.schemas.io.JSONIO
-   inference_engine.schemas.io.MultipleMediaFileIO
-   inference_engine.schemas.io.SingleMediaFileIO
+   inference_engine.schemas.io.MediaFileIO
    inference_engine.schemas.io.TextIO
    inference_engine.schemas.io.processors
