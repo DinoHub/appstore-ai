@@ -4,7 +4,7 @@ This section will guide you through creating your own inference engine for use w
 ## TL;DR
 Install this package as follows
 ```bash
-pip install inference-engine
+pip install -i https://test.pypi.org/simple/ inference-engine
 ```
 
 Then, use the generator to create a template Inference Engine
