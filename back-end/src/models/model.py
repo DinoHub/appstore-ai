@@ -25,8 +25,9 @@ class IOSchema(BaseModel):
     we need to autogenerate a schema,
     so that when presenting inference page
     to end user, we can create the 
-    appropriate form. We could also use this
-    to show an appropriate output (?)
+    appropriate form. We also use this
+    to show an appropriate output (e.g. showing two
+    types of media files in output)
     E.g.
     
     For example, consider a Guided Diffusion model
