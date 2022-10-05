@@ -9,7 +9,9 @@ from ..schemas.io import __all__ as AVAILABLE_IO_TYPES
 from ..schemas.media_types import media_type
 from ..utils.generate_engine import (
     generate_engine,
+    generate_makefile,
     generate_metadata_yml,
+    generate_readme,
     generate_user_function,
 )
 from ..utils.prompt import QuestionaryOption
@@ -84,7 +86,9 @@ def engine(
             choices=[
                 getattr(media_type, attr)
                 for attr in media_type.__dict__.keys()
-                if not attr.startswith("_")
+                if not attr.startswith(
+                    "_"
+                )  # ignore python default attributes (e.g __dict__)
             ],
         ).ask()
     else:
@@ -108,6 +112,9 @@ def engine(
         version=version,
         description=description,
         author=author,
+        input_schema=input_schema,
+        output_schema=output_schema,
+        media_type=output_mime,
     )
 
     # Create engine.py
@@ -122,6 +129,21 @@ def engine(
         input_schema=input_schema,
         output_schema=output_schema,
         metadata_path=path.joinpath("meta.yaml"),
+        media_type=output_mime,
+    )
+
+    # Create Makefile
+    generate_makefile(base_dir=path, name=name, version=version)
+
+    # Create Readme
+    generate_readme(
+        base_dir=path,
+        name=name,
+        version=version,
+        description=description,
+        author=author,
+        input_schema=input_schema,
+        output_schema=output_schema,
         media_type=output_mime,
     )
     click.echo(f"Successfully generated template at {str(path.absolute())}")

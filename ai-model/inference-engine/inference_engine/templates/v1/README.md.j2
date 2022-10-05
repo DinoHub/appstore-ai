@@ -80,8 +80,8 @@ This will build the image and tag it as ie-{{ name }}:{{ version }}`
 #### Publishing the Image
 This image can then be pushed to a container registry.
 ```bash
-docker image tag ie-{{name}}:{{version}} registry-host:registry-port/my-name/ie-{{ name }}:{{ version }}
-docker image push registry-host:registry-port/my-name/ie-{{ name }}:{{ version }}
+docker image tag {{ tag_name }} registry-host:registry-port/my-name/{{ tag_name }}
+docker image push registry-host:registry-port/my-name/{{ tag_name }}
 ```
 
 ## FAQ
