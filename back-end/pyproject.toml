@@ -23,6 +23,7 @@ httpx = "^0.23.0"
 password-strength = "^0.0.3.post2"
 pytest-mock = "^3.8.2"
 kubernetes = "^24.2.0"
+Jinja2 = "^3.1.2"
 
 [tool.poetry.scripts]
 boot = "main:start"
