@@ -1,3 +1,4 @@
+import os
 from typing import Any, List, Tuple
 
 import numpy as np
@@ -9,7 +10,9 @@ from tritonclient.utils import InferenceServerException
 
 MODEL_NAME = "stable_diffusion"
 MODEL_VERSION = "1"
-TRITON_URL = "172.20.0.3:8001"
+TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "172.20.0.3")
+TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
+TRITON_URL = TRITON_HOSTNAME + TRITON_PORT
 
 BATCH_SIZE = 1
 SAMPLES = 1
