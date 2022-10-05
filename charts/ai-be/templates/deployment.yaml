@@ -1,0 +1,141 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ai-be.fullname" . }}
+  labels:
+    {{- include "ai-be.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "ai-be.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "ai-be.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ai-be.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: ENV_STATE
+              value: {{ .Values.environment }}
+            - name: PROD_MAX_UPLOAD_SIZE_GB
+              valueFrom: 
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: prod_upload
+                  optional: true
+            - name: PROD_MONGODB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: prod_db_url
+                  optional: true
+            - name: PROD_MAIN_COLLECTION_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: prod_db_col
+                  optional: true
+            - name: PROD_MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: prod_db_username
+                  optional: true
+            - name: PROD_MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: prod_db_password
+                  optional: true
+            - name: CLEARML_WEB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: clear_web_host
+                  optional: true
+            - name: CLEARML_API_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: clear_api_host
+                  optional: true
+            - name: CLEARML_FILES_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: clear_file
+                  optional: true
+            - name: CLEARML_API_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: clear_access
+                  optional: true
+            - name: CLEARML_API_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: clear_secret
+                  optional: true
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: hash_key
+                  optional: true
+            - name: ALGORITHM
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: hash_algo
+                  optional: true
+          ports:
+            - name: http
+              containerPort: {{ .Values.probe.containerPort }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+          readinessProbe:
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+            successThreshold: {{ .Values.readinessProbe.successThreshold }}
+            httpGet:
+              path: /
+              port: 8080
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
