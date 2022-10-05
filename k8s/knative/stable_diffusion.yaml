@@ -1,0 +1,13 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: ie-stable-diffusion
+  namespace: ie
+spec:
+  template:
+    spec:
+      containers:
+        - image: dev.local/ie-stable-diffusion:1.2
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 4001

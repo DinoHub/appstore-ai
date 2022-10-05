@@ -22,6 +22,5 @@ repos:
     -   id: check-executables-have-shebangs
     -   id: check-json
     -   id: check-toml
-    -   id: check-yaml
     -   id: debug-statements
     -   id: end-of-file-fixer
