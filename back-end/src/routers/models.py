@@ -2,7 +2,6 @@ import json
 import re
 import tempfile
 from typing import List, Mapping, Optional, Union
-from urllib.error import HTTPError
 
 import filetype
 import httpx
@@ -19,10 +18,6 @@ from fastapi import (
 )
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
-from jinja2 import Template
-from kubernetes.client import CustomObjectsApi
-from kubernetes.client.rest import ApiException as K8sAPIException
-from yaml import safe_load
 
 from ..internal.clearml_client import clearml_client
 from ..internal.db import get_db
@@ -32,9 +27,6 @@ from ..internal.file_validator import (
     ValidateFileUpload,
 )
 from ..internal.inference import stream_response
-from ..internal.k8s_client import get_k8s_client
-
-# from internal.inference import is_triton_inference, triton_client
 from ..models.model import (
     FindModelCardModel,
     InferenceEngineConfig,
@@ -340,38 +332,3 @@ async def make_test_inference(
             media_type=metadata["endpoints"]["predict"]["media_type"]
             or "application/json",
         )
-
-
-@router.post("/engine")
-async def submit_inference_engine(
-    model_id: str, image_uri: str, k8s_client=Depends(get_k8s_client)
-):
-    # Create Deployment Template
-    with open("TODO", "r") as f:
-        template = f.read()
-
-    deployment_template = Template(template)
-
-    deployment_template = safe_load(
-        deployment_template.render(
-            {"engine_name": model_id, "image_name": image_uri}
-        )
-    )
-
-    # Deploy Service on K8S
-    with k8s_client as client:
-        # Create instance of API class
-        api = CustomObjectsApi(client)
-        try:
-            res = await api.create_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                plural="services",
-                namespace="IE",
-                body=deployment_template,  # TODO
-                async_req=True,
-            )
-        except (K8sAPIException, HTTPError):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
