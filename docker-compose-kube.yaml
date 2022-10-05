@@ -1,0 +1,8 @@
+services:
+  back-end:
+    build:
+      context: "./back-end"
+      args:
+        - ENV_STATE=prod
+    ports:
+      - "8080:8080"
