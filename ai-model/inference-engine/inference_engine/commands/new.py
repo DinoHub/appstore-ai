@@ -128,7 +128,7 @@ def engine(
         base_dir=path,
         input_schema=input_schema,
         output_schema=output_schema,
-        metadata_path=path.joinpath("meta.yaml"),
+        metadata_path=path.joinpath("config.yaml"),
         media_type=output_mime,
     )
 
