@@ -10,6 +10,8 @@ from pydantic import BaseModel, BaseSettings, Field
 class GlobalConfig(BaseSettings):
     ENV_STATE: Optional[str] = Field(None, env="ENV_STATE")
     MONGODB_URL: Optional[str] = None
+    MONGO_USERNAME: Optional[str] = None
+    MONGO_PASSWORD: Optional[str] = None
     MAIN_COLLECTION_NAME: Optional[str] = None
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
     CLEARML_CONFIG_FILE: Optional[str] = None
