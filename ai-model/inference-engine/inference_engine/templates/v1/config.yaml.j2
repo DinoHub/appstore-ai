@@ -1,0 +1,12 @@
+schema_version: 2
+metadata:
+    name: {{ name }}
+    description: {{ description }}
+    author: {{ author }}
+    version: {{ version }}
+endpoints:
+    predict:
+        type: POST
+        input_schema: {{ input_schema }}
+        output_schema: {{ output_schema }}
+        media_type: {{ media_type }}
