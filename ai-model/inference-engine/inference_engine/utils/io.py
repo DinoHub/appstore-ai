@@ -1,6 +1,7 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import List, Union
+from uuid import uuid4
 
 from fastapi import File, UploadFile
 
@@ -10,16 +11,22 @@ CHUNK_SIZE = 4096
 def download_file(file: UploadFile = File()) -> str:
     """Download file that has been sent by the request.
 
+    We generate a unique filename for each file, that still contains
+    the original filename. This is useful in cases where,
+    the filename contains information (e.g a category, formfield).
+
     :param file: File to be written locally, defaults to File()
     :type file: UploadFile, optional
     :return: File path to the downloaded file
     :rtype: str
     """
-    with NamedTemporaryFile(delete=False) as f:
-        filename = f.name
+    # Generate a filename
+    filename, ext = file.filename.rsplit(".", maxsplit=1)
+    unique_filename = f"{str(uuid4())}-{filename}.{ext}"
+    with open(unique_filename, "w") as f:
         while content := file.file.read(CHUNK_SIZE):
             f.write(content)
-    return filename
+    return unique_filename
 
 
 def remove_unused_files(files: Union[List[str], str]) -> None:
