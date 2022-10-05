@@ -13,6 +13,8 @@ class GlobalConfig(BaseSettings):
     MAIN_COLLECTION_NAME: Optional[str] = None
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
     CLEARML_CONFIG_FILE: Optional[str] = None
+    K8S_HOST: Optional[str] = None
+    K8S_API_KEY: Optional[str] = None
     # CLEARML_API_HOST: Optional[str] = None
     # CLEARML_WEB_HOST: Optional[str] = None
     # CLEARML_FILES_HOST: Optional[str] = None
@@ -76,6 +78,7 @@ class FactoryConfig:
         else:
             raise ValueError(f"Unsupported config: {self.env_state}")
 
+
 class ClearMLConfig(BaseSettings):
     CLEARML_WEB_HOST: str = None
     CLEARML_API_HOST: str = None
@@ -86,9 +89,10 @@ class ClearMLConfig(BaseSettings):
     class Config:
         env_file: str = "./src/config/.env"
 
+
 class AdminHashing(BaseSettings):
     SECRET_KEY: str
-    ALGORITHM: str = 'HS256'
+    ALGORITHM: str = "HS256"
 
     class Config:
         env_file: str = "./src/config/.env"
