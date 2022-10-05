@@ -78,7 +78,25 @@ class InferenceEngine:
         :return: Inference Engine
         :rtype: InferenceEngine
         """
-        executor = cls(**config)
+        if "metadata" not in config:
+            config["metadata"] = {
+                "name": "Inference Engine",
+                "version": "v1",
+                "author": "Unknown",
+                "description": "",
+            }
+        if "endpoints" not in config:
+            config["endpoints"] = None
+        try:
+            executor = cls(
+                name=config["metadata"]["name"],
+                version=config["metadata"]["version"],
+                author=config["metadata"]["author"],
+                description=config["metadata"]["description"],
+                endpoint_metas=config["endpoints"],
+            )
+        except KeyError as e:
+            raise ValueError(f"Field not supplied: {e}")
         return executor
 
     @classmethod
@@ -119,9 +137,26 @@ class InferenceEngine:
         # Create function
         # We register the user function so our endpoint can access them
         self.endpoints[route] = (func, input_schema, output_schema)
-        self.endpoint_metas[route] = {
-            "media_type": media_type,
-        }
+
+        # Check if already defined in schema
+        if route in self.endpoint_metas:
+            self.logger.warning("Found existing config with same route")
+            existing_data = self.endpoint_metas[route]
+            if (
+                media_type != existing_data["media_type"]
+                or input_schema.__name__ != existing_data["input_schema"]
+                or output_schema.__name__ != existing_data["output_schema"]
+            ):
+                # If so, check if any changes and override
+                self.logger.warning(
+                    "Existing config is different, overriding it with new function."
+                )
+                self.endpoint_metas[route] = {
+                    "type": "POST",
+                    "input_schema": input_schema.__name__,
+                    "output_schema": output_schema.__name__,
+                    "media_type": media_type,
+                }
         self.engine.add_api_route(
             path=f"/{route}",
             endpoint=self._predict,
