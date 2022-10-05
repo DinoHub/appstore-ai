@@ -17,12 +17,12 @@ publish:
 
 # Documentation
 clean_docs:
-	rm docs/source/api -rf
-	rm docs/build
+	rm ./docs/source/api -rf
+	rm ./docs/build -rf
 
 make_docs:
 	source ./venv/bin/activate
-	cd docs
+	cd ./docs
 	make html
 
 update_docs:
