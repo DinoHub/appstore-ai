@@ -9,7 +9,7 @@ from tritonclient.utils import InferenceServerException
 
 MODEL_NAME = "stable_diffusion"
 MODEL_VERSION = "1"
-TRITON_URL = "triton_inference_server:8001"
+TRITON_URL = "172.20.0.3:8001"
 
 BATCH_SIZE = 1
 SAMPLES = 1
