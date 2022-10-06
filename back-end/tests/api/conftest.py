@@ -47,6 +47,7 @@ async def flush_db(
 def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
+            "model_id": f"test-model-card-{idx}",
             "title": f"Test Model {idx}",
             "description": generate_section_model(),
             "limitations": generate_section_model(),

@@ -18,6 +18,7 @@ from fastapi import (
 )
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
+from pymongo.errors import DuplicateKeyError
 
 from ..internal.clearml_client import clearml_client
 from ..internal.db import get_db
@@ -73,6 +74,7 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     # mongodb atlas search to allow for fuzzy matching
     db, _ = db
     db_query = {
+        "model_id": query.model_id,
         "task": query.task,
         "owner": query.owner,
         "creator": query.creator,
@@ -119,7 +121,7 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
 async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
     db, _ = db
     # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one({"_id": ObjectId(model_id)})
+    model = await db["models"].find_one({"model_id": model_id})
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     model = json.loads(json_util.dumps(model))
@@ -194,8 +196,14 @@ async def create_model_card_metadata(
     )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
     card = jsonable_encoder(ModelCardModelDB(**card.dict()))
     async with await mongo_client.start_session() as session:
-        async with session.start_transaction():
-            new_card = await db["models"].insert_one(card)
+        try:
+            async with session.start_transaction():
+                new_card = await db["models"].insert_one(card)
+        except DuplicateKeyError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Unable to add model with ID {card.model_id} as the ID already exists.",
+            )
     return JSONResponse(
         status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
     )
@@ -215,7 +223,7 @@ async def update_model_card_metadata_by_id(
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 result = await db["models"].update_one(
-                    {"_id": ObjectId(model_id)}, {"$set": card}
+                    {"model_id": model_id}, {"$set": card}
                 )
 
                 if (
@@ -224,14 +232,15 @@ async def update_model_card_metadata_by_id(
                     # TODO: consider just removing the lines below
                     if (
                         updated_card := await db["models"].find_one(
-                            {"_id": ObjectId(model_id)}
+                            {"model_id": model_id}
                         )
                     ) is not None:
                         return updated_card
     # If no changes, try to return existing card
     if (
-        existing_card := await db["models"].find_one({"_id": model_id})
+        existing_card := await db["models"].find_one({"model_id": model_id})
     ) is not None:
+        print("Nothing modified")
         return existing_card
 
     # TODO: Might need to update inference engine
@@ -249,7 +258,7 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            await db["models"].delete_one({"_id": ObjectId(model_id)})
+            await db["models"].delete_one({"model_id": model_id})
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     # TODO: Should actual model be deleted as well?
 
@@ -271,7 +280,7 @@ async def make_test_inference(
 
     model = await db["models"].find_one(
         {
-            "_id": model_id,
+            "model_id": model_id,
         },
         projection=["inference_engine"],
     )

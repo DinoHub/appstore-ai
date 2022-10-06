@@ -61,6 +61,7 @@ class InferenceEngineConfig(BaseModel):
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
+    model_id: str  # unique id
     title: str
     # NOTE: flattened sections to make schema easier
     # description: Dict[SectionTypes, Section]
@@ -97,6 +98,7 @@ class ModelCardModelDB(ModelCardModelIn):
 
 
 class FindModelCardModel(BaseModel):
+    model_id: Optional[str]
     title: Optional[str]
     tags: Optional[List[str]]
     task: Optional[str]

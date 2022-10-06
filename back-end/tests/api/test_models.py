@@ -67,7 +67,7 @@ async def test_get_model_card_by_id(
     await db["models"].insert_one(model_metadata[0])
     # Get id
     model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["_id"]
+        (await db["models"].find().to_list(length=1))[0]["model_id"]
     )
     response = client.get(f"/models/{model_card_id}")
     assert response.status_code == status.HTTP_200_OK
@@ -98,7 +98,7 @@ async def test_update_model_card_metadata(
 
     # Get model ID
     model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["_id"]
+        (await db["models"].find().to_list(length=1))[0]["model_id"]
     )
 
     # Updated Sections
@@ -116,7 +116,7 @@ async def test_update_model_card_metadata(
     assert response.status_code == status.HTTP_200_OK
 
     # Check that updates took place
-    model = await db["models"].find_one({"_id": ObjectId(model_card_id)})
+    model = await db["models"].find_one({"model_id": model_card_id})
     assert model is not None
     assert model["title"] == update["title"]
     assert model["description"] == update["description"]
@@ -136,7 +136,7 @@ async def test_delete_model_card_metadata(
 
     # Get model ID
     model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["_id"]
+        (await db["models"].find().to_list(length=1))[0]["model_id"]
     )
 
     # Send delete request
