@@ -202,7 +202,7 @@ async def create_model_card_metadata(
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to add model with ID {card.model_id} as the ID already exists.",
+                detail=f"Unable to add model with ID {card['model_id']} as the ID already exists.",
             )
     return JSONResponse(
         status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
