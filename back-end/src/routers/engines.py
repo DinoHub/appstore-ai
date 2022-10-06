@@ -1,6 +1,6 @@
 from urllib.error import HTTPError
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from kubernetes.client import CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from yaml import safe_load
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 
 @router.post("/")
 async def create_inference_engine_service(
-    inference_engine: InferenceEngineService,
+    service: InferenceEngineService,
     k8s_client=Depends(get_k8s_client),
 ):
     # First check that model actually exists in DB
@@ -24,8 +24,8 @@ async def create_inference_engine_service(
     deployment_template = safe_load(
         template.render(
             {
-                "engine_name": inference_engine.name,
-                "image_name": inference_engine.image_uri,
+                "engine_name": service.service_name,
+                "image_name": service.image_uri,
             }
         )
     )
@@ -49,9 +49,9 @@ async def create_inference_engine_service(
             )
 
 
-@router.delete("/")
+@router.delete("/{service_name}")
 async def delete_inference_engine_service(
-    inference_engine: InferenceEngineService,
+    service_name: str = Path(description="Name of KService to Delete"),
     k8s_client=Depends(get_k8s_client),
 ):
     # Delete Service on K8S
@@ -65,7 +65,7 @@ async def delete_inference_engine_service(
                 plural="services",
                 namespace="IE",
                 async_req=True,
-                name=inference_engine.name,
+                name=service_name,
             )
         except (K8sAPIException, HTTPError):
             raise HTTPException(
@@ -75,7 +75,7 @@ async def delete_inference_engine_service(
 
 @router.patch("/")
 async def update_inference_engine_service(
-    inference_engine: InferenceEngineService,
+    service: InferenceEngineService,
     k8s_client=Depends(get_k8s_client),
 ):
     # Create Deployment Template
@@ -84,8 +84,8 @@ async def update_inference_engine_service(
     deployment_template = safe_load(
         template.render(
             {
-                "engine_name": inference_engine.name,
-                "image_name": inference_engine.image_uri,
+                "engine_name": service.service_name,
+                "image_name": service.image_uri,
             }
         )
     )
@@ -100,7 +100,7 @@ async def update_inference_engine_service(
                 version="v1",
                 plural="services",
                 namespace="IE",
-                name=inference_engine.name,
+                name=service.service_name,
                 body=deployment_template,
                 async_req=True,
             )

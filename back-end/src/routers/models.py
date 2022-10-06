@@ -28,10 +28,10 @@ from ..internal.file_validator import (
     ValidateFileUpload,
 )
 from ..internal.inference import stream_response
+from ..models.engine import IOTypes
 from ..models.model import (
     FindModelCardModel,
-    InferenceEngineConfig,
-    IOTypes,
+    InferenceEngine,
     ModelCardModelDB,
     ModelCardModelIn,
     UpdateModelCardModel,
@@ -294,10 +294,9 @@ async def make_test_inference(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with ID {model_id} does not have known inference engine.",
         )
-    inference_engine_config: InferenceEngineConfig = model["inference_engine"]
-    name = inference_engine_config.name
-    inference_url = f"http://{name}.IE.svc.cluster.local"
-    input_type = inference_engine_config["input_schema"]
+    engine: InferenceEngine = model["inference_engine"]
+    inference_url = engine["service_url"]
+    input_type = engine["input_schema"]
 
     # Get file
     # Validate File Size

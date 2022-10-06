@@ -46,12 +46,11 @@ class IOSchema(BaseModel):
 
 
 class InferenceEngine(BaseModel):
-    name: str
-    image_uri: str
     input_schema: IOSchema
     output_schema: IOSchema
+    service_url: str
 
 
 class InferenceEngineService(BaseModel):
-    name: str
+    service_name: str  # use this to generate
     image_uri: str

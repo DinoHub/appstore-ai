@@ -64,8 +64,7 @@ def model_metadata() -> List[Dict]:
             "owner": f"Santa Claus {idx}",
             "creator": "Rudolph",
             "inference_engine": {
-                "image_uri": "hub/inference_image:latest",
-                "name": "ie-inference-engine",
+                "service_url": "http://service_name.namespace.svc.cluster.local",
                 "input_schema": {
                     "io_type": "GenericIO",
                     "json_schema": {
