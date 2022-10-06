@@ -1,0 +1,12 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: {{ engine_name }}
+spec:
+  template:
+    spec:
+      containers:
+        - image: {{ image_name }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4001
