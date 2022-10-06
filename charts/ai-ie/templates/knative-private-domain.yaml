@@ -1,6 +1,7 @@
 # Depending on Values, either make all services private
 # or use Magic DNS to allow them to be accessed using the
 # cluster IP
+{{ if .Values.privateService }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -13,8 +14,7 @@ metadata:
   annotations:
     knative.dev/example-checksum: "81552d0b"
 data:
-  {{ if .Values.private-service }}
 
   svc.cluster.local: |
 
-  {{ end }}
+{{ end }}

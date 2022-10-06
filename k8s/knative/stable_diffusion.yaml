@@ -2,7 +2,7 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: ie-stable-diffusion
-  namespace: ie
+  namespace: inference-engine
 spec:
   template:
     spec:
