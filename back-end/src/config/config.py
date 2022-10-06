@@ -14,6 +14,7 @@ class GlobalConfig(BaseSettings):
     MONGO_PASSWORD: Optional[str] = None
     MAIN_COLLECTION_NAME: Optional[str] = None
     MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
+    IE_NAMESPACE: Optional[str] = None
     CLEARML_CONFIG_FILE: Optional[str] = None
     K8S_HOST: Optional[str] = None
     K8S_API_KEY: Optional[str] = None
