@@ -13,6 +13,7 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Request,
     UploadFile,
     status,
 )
@@ -27,7 +28,7 @@ from ..internal.file_validator import (
     MaxFileSizeValidator,
     ValidateFileUpload,
 )
-from ..internal.inference import stream_response
+from ..internal.inference import process_inference_data, stream_response
 from ..models.engine import IOTypes
 from ..models.model import (
     FindModelCardModel,
@@ -266,11 +267,13 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
 @router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
 async def make_test_inference(
     model_id: str,
-    media: Optional[List[UploadFile]] = File(None),
-    text: Optional[str] = Form(None),
+    # media: Optional[List[UploadFile]] = File(None),
+    # text: Optional[str] = Form(None),
+    request: Request,
     db=Depends(get_db),
 ):
     # Get metadata of inference engine url
+    media, text = await process_inference_data(request)
     db, _ = db
     if media is None and text is None:
         raise HTTPException(

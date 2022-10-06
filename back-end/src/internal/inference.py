@@ -1,7 +1,7 @@
-from typing import List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import httpx
-from fastapi import UploadFile
+from fastapi import Request, UploadFile
 
 
 async def stream_response(
@@ -24,3 +24,24 @@ async def stream_response(
         response.raise_for_status()
         async for chunk in response.aiter_bytes():
             yield chunk
+
+
+async def process_inference_data(request: Request) -> Tuple[Dict, Dict]:
+    """Take in user data for inference, identify all files and forms,
+    putting all file data into a file dict, and ditto for form data into a
+    text object
+
+    :param request: _description_
+    :type request: Request
+    :return: files and text
+    :rtype: Tuple[Dict, Dict]
+    """
+    files = {}
+    texts = {}
+    form = await request.form()
+    async for fieldname, value in form.items():
+        if isinstance(value, UploadFile):
+            files[fieldname] = value
+        else:
+            texts[fieldname] = value
+    return files, texts
