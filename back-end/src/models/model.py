@@ -1,63 +1,16 @@
-from enum import Enum
 from typing import Dict, List, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 
 from .common import PyObjectId
-
-
-class IOTypes(str, Enum):
-    JSON = "JSONIO"
-    Text = "TextIO"
-    Media = "MediaFileIO"
-    Generic = "GenericIO"
-
-
-class IOSchema(BaseModel):
-    io_type: IOTypes
-    json_schema: Optional[Dict] = Field(None)  # JSON Schema
-
-    """
-    NOTE: when submitting an IE, a user
-    may choose to add different form fields,
-    with different names. Therefore,
-    we need to autogenerate a schema,
-    so that when presenting inference page
-    to end user, we can create the 
-    appropriate form. We also use this
-    to show an appropriate output (e.g. showing two
-    types of media files in output)
-    E.g.
-    
-    For example, consider a Guided Diffusion model
-    ```
-    json_schema = {
-        "prompt" : { "type" : "text" },
-        "parameters": { "type" : "json", "required" : false},
-        "files: { "type" : "media" }
-    }
-    ```
-    This refers to a form with three fields:
-    - Text prompt (prompt): shows up as text form field
-    - Initial image (files): shows up as file upload box
-    - Parameters as JSON (parameters): shows up as textarea
-
-    Note that for certain IO types such as Media, Text,
-    we use a preset schema. 
-    """
+from .engine import InferenceEngine
 
 
 class SectionModel(BaseModel):
     text: str
     title: str
     media: Optional[List[Dict]]
-
-
-class InferenceEngineConfig(BaseModel):
-    url: str
-    input_schema: IOSchema
-    output_schema: IOSchema
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
@@ -85,7 +38,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     creator: Optional[str]
     # TODO: Figure out model source stuff
     clearml_exp_id: Optional[str]
-    inference_engine: Optional[InferenceEngineConfig]
+    inference_engine: Optional[InferenceEngine]
 
 
 class ModelCardModelDB(ModelCardModelIn):
@@ -129,7 +82,7 @@ class UpdateModelCardModel(BaseModel):
     owner: Optional[str]
     creator: Optional[str]
     clearml_exp_id: Optional[str]
-    inference_engine: Optional[InferenceEngineConfig]
+    inference_engine: Optional[InferenceEngine]
 
     class Config:
         arbitrary_types_allowed = True
