@@ -289,8 +289,14 @@ async def make_test_inference(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with ID {model_id} not found.",
         )
+    if "inference_engine" not in model:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with ID {model_id} does not have known inference engine.",
+        )
     inference_engine_config: InferenceEngineConfig = model["inference_engine"]
-    inference_url = inference_engine_config.url
+    name = inference_engine_config.name
+    inference_url = f"http://{name}.IE.svc.cluster.local"
     input_type = inference_engine_config["input_schema"]
 
     # Get file
@@ -325,10 +331,10 @@ async def make_test_inference(
                 0
             )  # unsure how necessary, but set pointer to start of file
 
-    if text is not None and input_type["io_type"] in TEXT_IO_TYPES:
-        if input_type["json_schema"] is not None:
-            # TODO: Perform validation of json schema
-            raise NotImplementedError
+    # if text is not None and input_type["io_type"] in TEXT_IO_TYPES:
+    #     if input_type["json_schema"] is not None:
+    #         # TODO: Perform validation of json schema
+    #         raise NotImplementedError
 
     with httpx.Client() as client:
         metadata = client.get(inference_url).json()["metadata"]
