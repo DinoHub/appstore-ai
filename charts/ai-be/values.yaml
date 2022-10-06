@@ -26,7 +26,7 @@ serviceAccount:
 env: 
   SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
   ALGORITHM: HS256
-  PROD_MONGODB_URL: mongodb://ai-mongodb.testbuild
+  PROD_MONGODB_URL: mongodb://ai-mongodb
   PROD_MAIN_COLLECTION_NAME: app_store
   PROD_MAX_UPLOAD_SIZE_GB: "10"
   PROD_MONGO_USERNAME: RootingUser
