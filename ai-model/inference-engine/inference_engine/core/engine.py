@@ -1,16 +1,16 @@
-import json
 import logging
+from inspect import iscoroutinefunction
 from os import environ
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, Optional, Tuple
 
 import uvicorn
 import yaml
-from fastapi import FastAPI, File, Form, Request, UploadFile, status
+from fastapi import FastAPI, Request, status
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 
 from ..schemas.io import IOSchema
-from ..utils.io import download_file, remove_unused_files
+from ..utils.io import process_inference_data, remove_unused_files
 
 
 class InferenceEngine:
@@ -118,7 +118,6 @@ class InferenceEngine:
         func: Callable,
         input_schema: IOSchema,
         output_schema: IOSchema,
-        media_type: Optional[str] = None,
     ) -> None:
         """Register a function to be called when a request is made to the
         route of the inference engine.
@@ -143,8 +142,7 @@ class InferenceEngine:
             self.logger.warning("Found existing config with same route")
             existing_data = self.endpoint_metas[route]
             if (
-                media_type != existing_data["media_type"]
-                or input_schema.__name__ != existing_data["input_schema"]
+                input_schema.__name__ != existing_data["input_schema"]
                 or output_schema.__name__ != existing_data["output_schema"]
             ):
                 # If so, check if any changes and override
@@ -155,7 +153,6 @@ class InferenceEngine:
                     "type": "POST",
                     "input_schema": input_schema.__name__,
                     "output_schema": output_schema.__name__,
-                    "media_type": media_type,
                 }
         self.engine.add_api_route(
             path=f"/{route}",
@@ -163,12 +160,10 @@ class InferenceEngine:
             methods=["POST"],
         )
 
-    def _predict(
+    async def _predict(
         self,
         background_tasks: BackgroundTasks,
         req: Request,
-        media: Optional[List[UploadFile]] = File(None),
-        text: Optional[str] = Form(None),
     ):
         """Wrapper function around user function to process request and
         response.
@@ -191,37 +186,27 @@ class InferenceEngine:
         # dynamically get the user function.
         endpoint = req.url.path.strip("/")
         executor, input_schema, _ = self.endpoints[endpoint]
-        media_type = self.endpoint_metas[endpoint]["media_type"]
-        if media is not None:
-            try:
-                # Add files to input
-                media = [download_file(file) for file in media]
-                # Return just the file directory (since infer function runs on same pod)
-                # so no need to store all in memory
-            except IOError as e:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Unable to download media file due to error: {e}",
-                )
-        if text is not None:
-            # Add form data to input
-            # Convert first to JSON
-            try:
-                self.logger.info("Converting text to JSON")
-                text: Dict = json.loads(text)
-                self.logger.warning(text)
-                assert type(text) is dict
-            except json.JSONDecodeError as e:
-                raise HTTPException(
-                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    detail=f"Failed to process text input as JSON: {e}",
-                )
+        try:
+            media, text = await process_inference_data(req)
+            if len(media) == 0:
+                media = None
+            if len(text) == 0:
+                text = None
+        except IOError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Unable to process input data: {e}",
+            )
         inputs = input_schema(
             media=media, text=text
         )  # pydantic ignores undefined fields
 
         # Pass to user defined func
-        outputs = executor(inputs)
+        # use async if user function is async
+        if iscoroutinefunction(executor):
+            outputs = await executor(inputs)
+        else:
+            outputs = executor(inputs)
 
         # Clean up input temp files (if any)
         # Return response
@@ -233,7 +218,7 @@ class InferenceEngine:
         # as a reference to the filenames then this will not work.
         if "media" in outputs and outputs.media is not None:
             background_tasks.add_task(remove_unused_files, outputs.media)
-        return outputs.response(media_type=media_type)
+        return outputs.response()
 
     def entrypoint(
         self,
@@ -268,6 +253,7 @@ class InferenceEngine:
         host: Optional[str] = None,
         port: Optional[int] = None,
         workers: Optional[int] = None,
+        module_import_str: Optional[str] = None,
     ) -> None:
         """Serve the inference engine.
 
@@ -277,9 +263,20 @@ class InferenceEngine:
         :type port: Optional[int], optional
         :param workers: Number of workers to serve concurrent requests, if none provided uses environment variable or 1, defaults to None
         :type workers: Optional[int], optional
+        :param module_import_str: If workers > 1, Uvicorn needs module import string to know where the app is
+        :type module_import_str: Optional[str], optional
         """
         host = host or environ.get("HOSTNAME", default="0.0.0.0")
         port = port or int(environ.get("PORT", default=4001))
         workers = workers or int(environ.get("WORKERS", default=1))
+        if workers > 1 and module_import_str is None:
+            raise ValueError(
+                "In order to start Uvicorn with more than one worker, an import string must be provided. e.g. `main:engine.engine"
+            )
         self.logger.info("Starting server")
-        uvicorn.run(self.engine, host=host, port=port, workers=workers)
+        uvicorn.run(
+            module_import_str or self.engine,
+            host=host,
+            port=port,
+            workers=workers,
+        )
