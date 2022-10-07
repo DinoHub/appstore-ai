@@ -1,7 +1,7 @@
 import json
 import re
 import tempfile
-from typing import List, Mapping, Optional, Union
+from typing import BinaryIO, List, Mapping, Optional, Union
 
 import filetype
 import httpx
@@ -274,13 +274,11 @@ async def make_test_inference(
 ):
     # Get metadata of inference engine url
     media, text = await process_inference_data(request)
-    db, _ = db
-    if media is None and text is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No input provided to inference endpoint",
-        )
+    # NOTE: we do not give error for empty input as some models
+    # may not require any inputs
 
+    # Get metadata about the inference engine of the model
+    db, _ = db
     model = await db["models"].find_one(
         {
             "model_id": model_id,
@@ -301,51 +299,44 @@ async def make_test_inference(
     inference_url = engine["service_url"]
     input_type = engine["input_schema"]
 
-    # Get file
     # Validate File Size
     file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
-    if media is not None and input_type in MEDIA_IO_TYPES:
-        for file in media:
-            with tempfile.NamedTemporaryFile() as f:
-                try:
-                    while content := file.file.read(CHUNK_SIZE):
-                        file_size_validator(content)
-                        f.write(content)
-                    content_type = filetype.guess_mime(f.name)
-                    if content_type not in ACCEPTED_CONTENT_TYPES:
-                        raise ValueError
-                    if content_type != file.content_type:  # MIME type mismatch
+    if input_type in MEDIA_IO_TYPES:
+        for files in media:
+            file: BinaryIO
+            content_type: str
+            for (_, (_, file, content_type)) in files:
+                with tempfile.NamedTemporaryFile() as f:
+                    try:
+                        while content := file.read(CHUNK_SIZE):
+                            file_size_validator(content)
+                            f.write(content)
+                        guessed_content_type = filetype.guess_mime(f.name)
+                        if guessed_content_type not in ACCEPTED_CONTENT_TYPES:
+                            raise ValueError
+                        if content_type != content_type:  # MIME type mismatch
+                            raise HTTPException(
+                                status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"MIME Type Mismatch. Content type reported was {content_type}, but file was {guessed_content_type}",
+                            )
+                    except MaxFileSizeException:
                         raise HTTPException(
-                            status_code=status.HTTP_400_BAD_REQUEST,
-                            detail=f"MIME Type Mismatch. Content type reported was {media.content_type}, but file was {content_type}",
+                            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
                         )
-                except MaxFileSizeException:
-                    raise HTTPException(
-                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                        detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
-                    )
-                except ValueError:
-                    raise HTTPException(
-                        status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                        detail=f"File type {content_type} not supported",
-                    )
-            file.file.seek(
-                0
-            )  # unsure how necessary, but set pointer to start of file
+                    except ValueError:
+                        raise HTTPException(
+                            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                            detail=f"File type {content_type} not supported",
+                        )
+                file.seek(
+                    0
+                )  # Set pointer to start of file to ensure file can be re-read
 
-    # if text is not None and input_type["io_type"] in TEXT_IO_TYPES:
-    #     if input_type["json_schema"] is not None:
-    #         # TODO: Perform validation of json schema
-    #         raise NotImplementedError
-
-    with httpx.Client() as client:
-        metadata = client.get(inference_url).json()["metadata"]
-        return StreamingResponse(
-            content=stream_response(
-                media=media,
-                text=text,
-                url=inference_url + "/predict",
-            ),
-            media_type=metadata["endpoints"]["predict"]["media_type"]
-            or "application/json",
-        )
+    return StreamingResponse(
+        content=stream_response(
+            media=media,
+            text=text,
+            url=inference_url + "/predict",
+        ),
+    )
