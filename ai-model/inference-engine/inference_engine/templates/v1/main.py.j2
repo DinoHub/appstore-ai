@@ -6,7 +6,7 @@ engine = InferenceEngine.from_yaml(
 )
 
 engine.entrypoint(
-    predict, {{ input_schema }}, {{ output_schema }}, media_type="{{ media_type }}"
+    predict, {{ input_schema }}, {{ output_schema }}
 )
 
 if __name__ == "__main__":

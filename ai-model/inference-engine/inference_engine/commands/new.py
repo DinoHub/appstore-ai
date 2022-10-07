@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import click
-import questionary
 from inference_engine.schemas.media_types import media_type
 
-from ..schemas.io import HAS_MEDIA
 from ..schemas.io import __all__ as AVAILABLE_IO_TYPES
 from ..schemas.media_types import media_type
 from ..utils.generate_engine import (
@@ -78,21 +76,6 @@ def engine(
     :param output_schema: Output type for inference engine
     :type output_schema: str
     """
-    # Get additional info
-    # If output has media, ask for MIME type
-    if output_schema in HAS_MEDIA:
-        output_mime = questionary.select(
-            "Select MIME Type of Output Media:",
-            choices=[
-                getattr(media_type, attr)
-                for attr in media_type.__dict__.keys()
-                if not attr.startswith(
-                    "_"
-                )  # ignore python default attributes (e.g __dict__)
-            ],
-        ).ask()
-    else:
-        output_mime = None
     # Generate metadata file
     try:
         path.mkdir()
@@ -114,7 +97,6 @@ def engine(
         author=author,
         input_schema=input_schema,
         output_schema=output_schema,
-        media_type=output_mime,
     )
 
     # Create engine.py
@@ -129,7 +111,6 @@ def engine(
         input_schema=input_schema,
         output_schema=output_schema,
         metadata_path=path.joinpath("config.yaml"),
-        media_type=output_mime,
     )
 
     # Create Makefile
@@ -144,6 +125,5 @@ def engine(
         author=author,
         input_schema=input_schema,
         output_schema=output_schema,
-        media_type=output_mime,
     )
     click.echo(f"Successfully generated template at {str(path.absolute())}")
