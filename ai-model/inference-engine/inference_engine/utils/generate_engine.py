@@ -18,7 +18,6 @@ def generate_metadata_yml(
     author: str,
     input_schema: str,
     output_schema: str,
-    media_type: str,
 ):
     template = template_env.get_template("config.yaml.j2")
     template = template.render(
@@ -28,7 +27,6 @@ def generate_metadata_yml(
         version=version,
         input_schema=input_schema,
         output_schema=output_schema,
-        media_type=media_type,
         tag_name=generate_tag_name(name, version),
     )
     with open(base_dir.joinpath("config.yaml"), "w") as f:
@@ -43,7 +41,6 @@ def generate_readme(
     author: str,
     input_schema: str,
     output_schema: str,
-    media_type: str,
 ):
     template = template_env.get_template("README.md.j2")
     template = template.render(
@@ -53,7 +50,6 @@ def generate_readme(
         version=version,
         input_schema=input_schema,
         output_schema=output_schema,
-        media_type=media_type,
         tag_name=generate_tag_name(name, version),
     )
     with open(base_dir.joinpath("README.md"), "w") as f:
@@ -106,14 +102,12 @@ def generate_engine(
     input_schema: str,
     output_schema: str,
     metadata_path: Union[str, Path],
-    media_type: Optional[str],
 ):
     template = template_env.get_template("main.py.j2")
     template = template.render(
         input_schema=input_schema,
         output_schema=output_schema,
         metadata_yaml=metadata_path.relative_to(base_dir),
-        media_type=media_type or "application/json",
     )
     with open(base_dir.joinpath("main.py"), "w") as f:
         f.write(template)

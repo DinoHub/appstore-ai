@@ -1,10 +1,8 @@
 from typing import Any
 
 from fastapi.responses import JSONResponse
-from pydantic import validator
 
 from .IOSchema import IOSchema
-from .processors import check_valid_dict
 
 
 class JSONIO(IOSchema):
@@ -15,9 +13,7 @@ class JSONIO(IOSchema):
     :type text: Dict[str, Any]
     """
 
-    text: Any
-
-    _check_valid_dict = validator("text", allow_reuse=True)(check_valid_dict)
+    text: Any  # Dict[str, Any]
 
     def response(self, **kwargs) -> JSONResponse:
         """Send back JSON response.

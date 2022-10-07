@@ -14,11 +14,13 @@ class IOSchema(BaseModel, ABC):
     either the input or output of to the user executor.
     """
 
-    media: Optional[List[str]]
-    text: Optional[
-        Any
-    ]  # currently a pydantic bug where dict will always fail to validate
+    # currently a pydantic bug where dict will always fail to validate
+    media: Optional[Any]  # Optional[Dict[str, List[str]]]
+    text: Optional[Any]  # Optional[Dict[str, Any]]
 
+    _check_valid_dict = validator("text", "media", allow_reuse=True)(
+        check_valid_dict
+    )
     _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
         check_files_exist
     )
@@ -27,7 +29,7 @@ class IOSchema(BaseModel, ABC):
         super().__init__(**kwargs)
 
     @abstractmethod
-    def response(self, media_type: Optional[str] = None) -> Response:
+    def response(self) -> Response:
         """Return output as response to request
 
         :return: FastAPI Response to return
@@ -36,4 +38,4 @@ class IOSchema(BaseModel, ABC):
         raise NotImplementedError
 
     class Config:
-        underscore_attrs_are_private = True
+        underscore_attrs_are_private = True  # hide validators from schema

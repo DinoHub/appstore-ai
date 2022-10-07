@@ -1,11 +1,33 @@
+import json
+from collections import defaultdict
 from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import List, Union
+from typing import Dict, List, Tuple, Union
 from uuid import uuid4
 
-from fastapi import File, UploadFile
+from fastapi import File, Request, UploadFile
+from starlette.datastructures import UploadFile as StarletteUploadFile
 
 CHUNK_SIZE = 4096
+
+
+async def process_inference_data(
+    request: Request,
+) -> Tuple[Dict[str, List[str]], Dict[str, Union[str, Dict]]]:
+    files = defaultdict(list)
+    texts = {}
+    form = await request.form()
+    for fieldname, value in form.items():
+        if isinstance(value, StarletteUploadFile):
+            # need to use Starlette UploadFile as it will not be
+            # recognized otherwise
+            files[fieldname].append(download_file(value))
+        else:
+            try:
+                value = json.loads(value)
+            except json.JSONDecodeError:
+                pass
+            texts[fieldname] = value
+    return files, texts
 
 
 def download_file(file: UploadFile = File()) -> str:
@@ -29,17 +51,16 @@ def download_file(file: UploadFile = File()) -> str:
     return unique_filename
 
 
-def remove_unused_files(files: Union[List[str], str]) -> None:
+def remove_unused_files(files: Dict[str, List[str]]) -> None:
     """Cleanup function to remove leftover files made
     during a request. This prevents the container from
     being clogged up with old files.
 
-    :param files: A file path or list of file paths
-    :type files: Union[List[str], str]
+    :param files: A dictionary containing fields as key, values as list of file paths
+    :type files: Dict[str, List[str]]
     """
     if files is None:
         return
-    if type(files) is str:
-        files = [files]
-    for file_path in files:
-        file_path = Path(file_path).unlink(missing_ok=True)
+    for field_files in files.values():
+        for file_path in field_files:
+            file_path = Path(file_path).unlink(missing_ok=True)

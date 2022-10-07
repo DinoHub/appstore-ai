@@ -1,38 +1,20 @@
-import json
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Union
 
-from fastapi import UploadFile
 
-from ...utils.io import download_file
-
-
-def check_files_exist(file: str) -> str:
+def check_files_exist(files: List[str]) -> List[str]:
     """Check if file path exists.
 
-    :param file: File path
-    :type file: str
+    :param files: List of File paths
+    :type files: List[str]
     :raises ValidationError: If file path does not exist
-    :return: File path
-    :rtype: str
-    """
-    if not Path(file).exists():
-        raise FileNotFoundError(f"Media file not found: {file}")
-    return file
-
-
-def check_single_file(media: List[str]) -> List[str]:
-    """Check if only a single file path is provided.
-
-    :param media: List that should contain a single file path
-    :type media: List[str]
-    :raises ValidationError: If more than one file path is provided
-    :return: List containing a single file path
+    :return: File paths
     :rtype: List[str]
     """
-    if len(media) != 1:
-        raise ValueError("Expect only a single file")
-    return media
+    for file in files:
+        if not Path(file).exists():
+            raise FileNotFoundError(f"Media file not found: {file}")
+    return files
 
 
 def check_valid_dict(text: Any) -> Dict:

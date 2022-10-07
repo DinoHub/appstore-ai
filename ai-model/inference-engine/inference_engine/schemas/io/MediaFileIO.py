@@ -1,6 +1,8 @@
 import base64
-from typing import List, Optional, Union
+from collections import defaultdict
+from typing import Any, Union
 
+import filetype
 from fastapi.responses import FileResponse, JSONResponse
 
 from .IOSchema import IOSchema
@@ -9,33 +11,32 @@ from .IOSchema import IOSchema
 class MediaFileIO(IOSchema):
     """Input schema when input or output is media files.
 
-    Representation of the media files is a list of strings,
-    where each string is the local file path to the media file.
-
-    :param media: List of local file paths to media files
-    :type media: List[str]
+    :param media: Dict where keys are field names, and values are list of file paths for those fields
+    :type media: Dict[str, List[str]]
     """
 
-    media: List[str]
+    media: Any  # Dict[str, List[str]]
 
-    def response(
-        self, media_type: Optional[str] = None
-    ) -> Union[FileResponse, JSONResponse]:
+    def response(self) -> Union[FileResponse, JSONResponse]:
         """If multiple media files, will encode in b64, else stream bytes back
-        :return: FileResponse
+        :return: Union[FileResponse, JSONResponse]
         :rtype: Response
-
-        TODO: Consider other methods (e.g. zip, streaming response)
         """
-        if len(self.media) > 1:
-            response = {"media": []}
-            for file_path in self.media:
-                # assume media is list of filenames
-                with open(file_path, "rb") as f:
-                    response["media"].append(
-                        base64.b64encode(f.read()).decode("ascii")
-                    )
-            response["media_type"] = media_type
-            return JSONResponse(response)
+        if len(self.media) == 1 and len(list(self.media.values())[0]) == 1:
+            file = list(self.media.values())[0]
+            mime_type = filetype.guess_mime(file)
+            return FileResponse(file, media_type=mime_type)
         else:
-            return FileResponse(self.media[0], media_type=media_type)
+            response = {"media": defaultdict(list), "media_types": {}}
+            for field, file_paths in self.media.items():
+                for file_path in file_paths:
+                    if field not in response["media_types"]:
+                        response["media_types"][field] = filetype.guess_mime(
+                            file_path
+                        )
+                    with open(file_path, "rb") as f:
+                        response["media"][field].append(
+                            base64.b64encode(f.read()).decode("ascii")
+                        )
+
+            return JSONResponse(response)
