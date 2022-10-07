@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Tuple
+from typing import BinaryIO, Dict, List, Optional, Tuple
 
 import httpx
 from fastapi import Request, UploadFile
@@ -7,44 +7,45 @@ from starlette.datastructures import UploadFile as UploadFileType
 
 async def stream_response(
     url: str,
-    media: Optional[List[UploadFile]] = None,
-    text: Optional[str] = None,
+    media: Optional[List[Tuple[str, Tuple[str, BinaryIO, str]]]] = None,
+    text: Optional[Dict[str, str]] = None,
 ):
-    if media is not None:
-        media.file.seek(0)
     # NOTE: cannot do error handling here due to how fastapi handles exceptions
     # therefore, just have to hope that stream is successful
-    files = {"media": [f.file for f in media]} if media is not None else None
-    data = {"text": text} if text is not None else None
     async with httpx.AsyncClient(timeout=3600).stream(
         "POST",
         url,
-        files=files,
-        data=data,
+        files=media,
+        data=text,
     ) as response:
         response.raise_for_status()
         async for chunk in response.aiter_bytes():
             yield chunk
 
 
-async def process_inference_data(request: Request) -> Tuple[Dict, Dict]:
-    """Take in user data for inference, identify all files and forms,
-    putting all file data into a file dict, and ditto for form data into a
-    text object
+async def process_inference_data(
+    request: Request,
+) -> Tuple[List[Tuple[str, Tuple[str, BinaryIO, str]]], Dict]:
+    """Process multipart/form data so that files and form data are
+    ready to be sent to the Inference Engine.
 
-    :param request: _description_
+    :param request: Incoming HTTP request
     :type request: Request
-    :return: files and text
-    :rtype: Tuple[Dict, Dict]
+    :return: A list of files and a file data dict to be passed to the Inference Engine
+    :rtype: Tuple[List, Dict]
     """
-    files = {}
+    # NOTE: This is needed as just trying to pass the request body
+    # to the IE request call does not work
+    files = []
     texts = {}
     form = await request.form()
-    async for fieldname, value in form.items():
+    for fieldname, value in form.items():
         if isinstance(value, UploadFileType):
             # need to use Starlette UploadFile as it will not be
             # recognized otherwise
-            files[fieldname] = value
+            files.append(
+                (fieldname, (value.filename, value.file, value.content_type))
+            )
         else:
             texts[fieldname] = value
     return files, texts
