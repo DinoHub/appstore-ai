@@ -5,22 +5,9 @@ from fastapi import Request, UploadFile
 from starlette.datastructures import UploadFile as UploadFileType
 
 
-async def stream_response(
-    url: str,
-    media: Optional[List[Tuple[str, Tuple[str, BinaryIO, str]]]] = None,
-    text: Optional[Dict[str, str]] = None,
-):
-    # NOTE: cannot do error handling here due to how fastapi handles exceptions
-    # therefore, just have to hope that stream is successful
-    async with httpx.AsyncClient(timeout=3600).stream(
-        "POST",
-        url,
-        files=media,
-        data=text,
-    ) as response:
-        response.raise_for_status()
-        async for chunk in response.aiter_bytes():
-            yield chunk
+async def stream_generator(response: httpx.Response):
+    async for chunk in response.aiter_bytes():
+        yield chunk
 
 
 async def process_inference_data(

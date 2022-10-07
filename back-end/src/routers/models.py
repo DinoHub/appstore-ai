@@ -1,6 +1,7 @@
 import json
 import re
 import tempfile
+from io import BytesIO
 from typing import BinaryIO, List, Mapping, Optional, Union
 
 import filetype
@@ -28,7 +29,11 @@ from ..internal.file_validator import (
     MaxFileSizeValidator,
     ValidateFileUpload,
 )
-from ..internal.inference import process_inference_data, stream_response
+from ..internal.inference import (
+    process_inference_data,
+    stream_generator,
+    stream_response,
+)
 from ..models.engine import IOTypes
 from ..models.model import (
     FindModelCardModel,
@@ -272,6 +277,13 @@ async def make_test_inference(
     request: Request,
     db=Depends(get_db),
 ):
+    # TODO: Consider if we can simply just return
+    # the url to the front end and let the front-
+    # end directly call the service
+    # PRO: faster, more reliable
+    # CON: potential issue if the service not publicly accessible
+    # (e.g private service) as then only the back-end can access
+    # it
     # Get metadata of inference engine url
     media, text = await process_inference_data(request)
     # NOTE: we do not give error for empty input as some models
@@ -332,11 +344,23 @@ async def make_test_inference(
                 file.seek(
                     0
                 )  # Set pointer to start of file to ensure file can be re-read
-
-    return StreamingResponse(
-        content=stream_response(
-            media=media,
-            text=text,
-            url=inference_url + "/predict",
-        ),
-    )
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{inference_url}/predict", files=media, data=text
+        )
+        return StreamingResponse(
+            BytesIO(response.content),
+            media_type=response.headers.get("Content-Type"),
+        )
+    # TODO: Streaming generator that will also attempt
+    # to get a media type
+    # stream = (
+    #     await httpx.AsyncClient()
+    #     .stream("POST", f"{inference_url}/predict", files=media, data=text)
+    #     .__aenter__()
+    # ) # manually open stream context
+    # # this allows us to first get the MIME type of the output
+    # media_type = stream.headers.get("Content-Type")
+    # return StreamingResponse(
+    #     content=stream.aiter_raw(), media_type=media_type
+    # aiter_raw automatically closes the stream when consumed
