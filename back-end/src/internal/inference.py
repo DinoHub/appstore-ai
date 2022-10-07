@@ -2,6 +2,7 @@ from typing import Dict, List, Optional, Tuple
 
 import httpx
 from fastapi import Request, UploadFile
+from starlette.datastructures import UploadFile as UploadFileType
 
 
 async def stream_response(
@@ -40,7 +41,9 @@ async def process_inference_data(request: Request) -> Tuple[Dict, Dict]:
     texts = {}
     form = await request.form()
     async for fieldname, value in form.items():
-        if isinstance(value, UploadFile):
+        if isinstance(value, UploadFileType):
+            # need to use Starlette UploadFile as it will not be
+            # recognized otherwise
             files[fieldname] = value
         else:
             texts[fieldname] = value
