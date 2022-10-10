@@ -16,8 +16,8 @@ def test_process_uris():
         )
         for i in (1, 2)
     ]
-    schema = MediaFileIO(media=files)
-    for file, expected in zip(schema.media, files):
+    schema = MediaFileIO(media={"files": files})
+    for file, expected in zip(schema.media["files"], files):
         assert file == expected
 
 
@@ -30,13 +30,12 @@ def test_response_multi():
         )
         for i in range(1, 3)
     ]
-    print(paths)
-    schema = MediaFileIO(media=paths)
+    schema = MediaFileIO(media={"files": paths})
     response = schema.response()
     assert response.media_type == "application/json"
     response_json = json.loads(response.body)
     assert "media" in response_json
-    for file in response_json["media"]:
+    for file in response_json["media"]["files"]:
         # Check that it is decodable
         base64.b64decode(file, validate=True)
 
@@ -45,7 +44,7 @@ def test_response_single():
     path = str(
         Path(__file__).parent.parent.joinpath("data", "image1.jpg").absolute()
     )
-    schema = MediaFileIO(media=[path])
+    schema = MediaFileIO(media={"files": [path]})
     response = schema.response()
     assert response.media_type == "image/jpeg"
 

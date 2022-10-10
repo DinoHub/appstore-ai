@@ -6,8 +6,6 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from src.models.dataset import DatasetModel
-
 from .utils.fake_db import generate_section_model
 
 

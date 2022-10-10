@@ -1,4 +1,11 @@
-name: Hello World
-version: v1
-description: Example user inference engine
-author: Tien Cheng
+schema_version: 2
+metadata:
+  name: Example YAML 
+  version: v1
+  description: Example user inference engine
+  author: Test
+endpoints:
+  predict:
+    type: POST
+    input_schema: TextIO
+    output_schema: MediaFileIO

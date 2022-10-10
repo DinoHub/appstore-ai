@@ -22,8 +22,8 @@ def test_process_uris():
         )
         for i in (1, 2)
     ]
-    schema = GenericIO(media=files)
-    for file, expected in zip(schema.media, files):
+    schema = GenericIO(media={"files": files})
+    for file, expected in zip(schema.media["files"], files):
         assert file == expected
 
 
@@ -31,13 +31,13 @@ def test_response():
     path = str(
         Path(__file__).parent.parent.joinpath("data", "image1.jpg").absolute()
     )
-    schema = GenericIO(media=[path], text={"text": "hello world"})
+    schema = GenericIO(media={"files": [path]}, text={"text": "hello world"})
     response = schema.response()
     assert response.media_type == "application/json"
     response_json = json.loads(response.body)
     assert response_json["text"] == "hello world"
     assert "media" in response_json
-    for file in response_json["media"]:
+    for file in response_json["media"]["files"]:
         # Check that it is decodable
         base64.b64decode(file, validate=True)
 
