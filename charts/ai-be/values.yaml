@@ -31,6 +31,7 @@ env:
   PROD_MAX_UPLOAD_SIZE_GB: "10"
   PROD_MONGO_USERNAME: RootingUser
   PROD_MONGO_PASSWORD: BlowOver123qq
+  PROD_IE_NAMESPACE: inference-engine
   CLEARML_WEB_HOST: https://app.clear.ml
   CLEARML_API_HOST: https://api.clear.ml
   CLEARML_FILES_HOST: https://files.clear.ml
