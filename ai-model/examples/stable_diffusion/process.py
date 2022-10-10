@@ -12,7 +12,7 @@ MODEL_NAME = "stable_diffusion"
 MODEL_VERSION = "1"
 TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "172.20.0.3")
 TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
-TRITON_URL = TRITON_HOSTNAME + TRITON_PORT
+TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
 
 BATCH_SIZE = 1
 SAMPLES = 1
@@ -84,4 +84,4 @@ def predict(text: TextIO) -> MediaFileIO:
     images = image_grid(images, rows=1, cols=1)
     images.save("image.jpg", format="JPEG")
 
-    return MediaFileIO(media=["image.jpg"])
+    return MediaFileIO(media=dict(output=["image.jpg"]))

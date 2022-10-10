@@ -9,4 +9,3 @@ endpoints:
     type: POST
     input_schema: TextIO
     output_schema: MediaFileIO
-    media_type: image/jpeg

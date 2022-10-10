@@ -23,7 +23,7 @@ class MediaFileIO(IOSchema):
         :rtype: Response
         """
         if len(self.media) == 1 and len(list(self.media.values())[0]) == 1:
-            file = list(self.media.values())[0]
+            file = list(self.media.values())[0][0]
             mime_type = filetype.guess_mime(file)
             return FileResponse(file, media_type=mime_type)
         else:

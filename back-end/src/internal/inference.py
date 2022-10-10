@@ -1,13 +1,24 @@
+from io import BytesIO
 from typing import BinaryIO, Dict, List, Optional, Tuple
 
 import httpx
 from fastapi import Request, UploadFile
+from fastapi.responses import StreamingResponse
 from starlette.datastructures import UploadFile as UploadFileType
 
 
-async def stream_generator(response: httpx.Response):
-    async for chunk in response.aiter_bytes():
-        yield chunk
+async def stream_generator(
+    inference_url: str, media_data: List, form_data: Dict
+):
+    async with httpx.AsyncClient() as client:
+        async with client.stream(
+            "POST",
+            f"{inference_url}/predict",
+            files=media_data,
+            data=form_data,
+        ) as resp:
+            async for chunk in resp.aiter_bytes():
+                yield chunk
 
 
 async def process_inference_data(

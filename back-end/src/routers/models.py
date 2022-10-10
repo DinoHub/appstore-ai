@@ -6,7 +6,7 @@ from typing import BinaryIO, List, Mapping, Optional, Union
 
 import filetype
 import httpx
-from bson import ObjectId, json_util
+from bson import json_util
 from clearml import Model, Task
 from fastapi import (
     APIRouter,
@@ -29,11 +29,7 @@ from ..internal.file_validator import (
     MaxFileSizeValidator,
     ValidateFileUpload,
 )
-from ..internal.inference import (
-    process_inference_data,
-    stream_generator,
-    stream_response,
-)
+from ..internal.inference import process_inference_data, stream_generator
 from ..models.engine import IOTypes
 from ..models.model import (
     FindModelCardModel,
@@ -43,13 +39,15 @@ from ..models.model import (
     UpdateModelCardModel,
 )
 
+MAKE_REQUEST_INFERENCE_TIMEOUT = httpx.Timeout(10, read=60 * 5, write=60 * 5)
+
 CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
 MAX_UPLOAD_SIZE_GB = 1
 
-MEDIA_IO_TYPES = {IOTypes.Media, IOTypes.Generic}
+MEDIA_IO_INTERFACES = {IOTypes.Media, IOTypes.Generic}
 
-TEXT_IO_TYPES = {IOTypes.Generic, IOTypes.JSON, IOTypes.Text}
+TEXT_IO_INTERFACES = {IOTypes.Generic, IOTypes.JSON, IOTypes.Text}
 
 ACCEPTED_CONTENT_TYPES = {
     "image/jpeg",
@@ -272,9 +270,15 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
 @router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
 async def make_test_inference(
     model_id: str,
-    # media: Optional[List[UploadFile]] = File(None),
-    # text: Optional[str] = Form(None),
     request: Request,
+    media: Optional[List[UploadFile]] = File(
+        None,
+        description="Default file field to store media file in. Note that additional media fields can be sent to this endpoint.",
+    ),
+    text: Optional[str] = Form(
+        None,
+        description="Input to this is expected to be formatted as a JSON. Default form field to store text/json in. Note that additional form fields can be sent to this endpoint.",
+    ),
     db=Depends(get_db),
 ):
     # TODO: Consider if we can simply just return
@@ -285,7 +289,7 @@ async def make_test_inference(
     # (e.g private service) as then only the back-end can access
     # it
     # Get metadata of inference engine url
-    media, text = await process_inference_data(request)
+    media_data, json_data = await process_inference_data(request)
     # NOTE: we do not give error for empty input as some models
     # may not require any inputs
 
@@ -309,12 +313,12 @@ async def make_test_inference(
         )
     engine: InferenceEngine = model["inference_engine"]
     inference_url = engine["service_url"]
-    input_type = engine["input_schema"]
+    input_interface = engine["input_schema"]["io_type"]
 
     # Validate File Size
     file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
-    if input_type in MEDIA_IO_TYPES:
-        for files in media:
+    if input_interface in MEDIA_IO_INTERFACES:
+        for files in media_data:
             file: BinaryIO
             content_type: str
             for (_, (_, file, content_type)) in files:
@@ -346,12 +350,23 @@ async def make_test_inference(
                 )  # Set pointer to start of file to ensure file can be re-read
     async with httpx.AsyncClient() as client:
         response = await client.post(
-            f"{inference_url}/predict", files=media, data=text
+            f"{inference_url}/predict",
+            files=media_data,
+            data=json_data,
+            timeout=MAKE_REQUEST_INFERENCE_TIMEOUT,
         )
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when calling inference engine: {e}",
+            )
         return StreamingResponse(
             BytesIO(response.content),
             media_type=response.headers.get("Content-Type"),
         )
+    # return stream_generator(inference_url, media_data, json_data)
     # TODO: Streaming generator that will also attempt
     # to get a media type
     # stream = (

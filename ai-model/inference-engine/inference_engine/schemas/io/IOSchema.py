@@ -18,10 +18,10 @@ class IOSchema(BaseModel, ABC):
     media: Optional[Any]  # Optional[Dict[str, List[str]]]
     text: Optional[Any]  # Optional[Dict[str, Any]]
 
-    _check_valid_dict = validator("text", "media", allow_reuse=True)(
+    _check_valid_dict = validator("text", "media", allow_reuse=True, pre=True)(
         check_valid_dict
     )
-    _check_file_exists = validator("media", allow_reuse=True, each_item=True)(
+    _check_file_exists = validator("media", allow_reuse=True, pre=True)(
         check_files_exist
     )
 

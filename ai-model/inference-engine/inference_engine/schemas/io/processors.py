@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Union
 
 
-def check_files_exist(files: List[str]) -> List[str]:
+def check_files_exist(files: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Check if file path exists.
 
     :param files: List of File paths
@@ -11,9 +11,10 @@ def check_files_exist(files: List[str]) -> List[str]:
     :return: File paths
     :rtype: List[str]
     """
-    for file in files:
-        if not Path(file).exists():
-            raise FileNotFoundError(f"Media file not found: {file}")
+    for field in files.values():
+        for file in field:
+            if not Path(file).exists():
+                raise FileNotFoundError(f"Media file not found: {file}")
     return files
 
 

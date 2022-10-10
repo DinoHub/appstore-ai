@@ -1,11 +1,11 @@
 import logging
 from inspect import iscoroutinefunction
 from os import environ
-from typing import Callable, Dict, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import uvicorn
 import yaml
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, File, Form, Request, UploadFile, status
 from fastapi.background import BackgroundTasks
 from fastapi.exceptions import HTTPException
 
@@ -130,8 +130,6 @@ class InferenceEngine:
         :type input_schema: IOSchema
         :param output_schema: IOSchema used to process and send back response
         :type output_schema: IOSchema
-        :param media_type: If any media (e.g images) are returned, their MIME type, defaults to None
-        :type media_type: Optional[str], optional
         """
         # Create function
         # We register the user function so our endpoint can access them
@@ -164,6 +162,14 @@ class InferenceEngine:
         self,
         background_tasks: BackgroundTasks,
         req: Request,
+        media: Optional[List[UploadFile]] = File(
+            None,
+            description="Default file field to store media file in. Note that additional media fields can be sent to this endpoint.",
+        ),
+        text: Optional[str] = Form(
+            None,
+            description="Input to this is expected to be formatted as a JSON. Default form field to store text/json in. Note that additional form fields can be sent to this endpoint.",
+        ),
     ):
         """Wrapper function around user function to process request and
         response.
@@ -187,10 +193,10 @@ class InferenceEngine:
         endpoint = req.url.path.strip("/")
         executor, input_schema, _ = self.endpoints[endpoint]
         try:
-            media, text = await process_inference_data(req)
-            if len(media) == 0:
+            media_data, text_data = await process_inference_data(req)
+            if len(media_data) == 0:
                 media = None
-            if len(text) == 0:
+            if len(text_data) == 0:
                 text = None
         except IOError as e:
             raise HTTPException(
@@ -198,7 +204,7 @@ class InferenceEngine:
                 detail=f"Unable to process input data: {e}",
             )
         inputs = input_schema(
-            media=media, text=text
+            media=media_data, text=text_data
         )  # pydantic ignores undefined fields
 
         # Pass to user defined func
@@ -210,10 +216,10 @@ class InferenceEngine:
 
         # Clean up input temp files (if any)
         # Return response
-        if media is not None:
+        if media_data is not None:
             # it is impt that the user function does not return
             # input file as response.
-            background_tasks.add_task(remove_unused_files, media)
+            background_tasks.add_task(remove_unused_files, media_data)
         # NOTE: if a custom schema does not confirm to using `media`,
         # as a reference to the filenames then this will not work.
         if "media" in outputs and outputs.media is not None:
@@ -225,7 +231,6 @@ class InferenceEngine:
         func: Callable,
         input_schema: IOSchema,
         output_schema: IOSchema,
-        media_type: Optional[str] = None,
     ) -> None:
         """Default entrypoint for inference engine.
         Is just a wrapper around _register with
@@ -237,15 +242,12 @@ class InferenceEngine:
         :type input_schema: IOSchema
         :param output_schema: IOSchema used to process and send back response
         :type output_schema: IOSchema
-        :param media_type: If any media (e.g images) are returned, their MIME type, defaults to None
-        :type media_type: Optional[str], optional
         """
         return self._register(
             "predict",
             func=func,
             input_schema=input_schema,
             output_schema=output_schema,
-            media_type=media_type,
         )
 
     def serve(
