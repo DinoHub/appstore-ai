@@ -1,7 +1,7 @@
 #!/bin/sh
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
 kubectl apply -f dashboard/admin.yaml
-kubectl -n kubernetes-dashboard create token admin-user > token
+sh dashboard/generate-token.sh
 # Set up MetalLB
 kubectl create namespace metallb-system
 # helm repo add metallb https://metallb.github.io/metallb
