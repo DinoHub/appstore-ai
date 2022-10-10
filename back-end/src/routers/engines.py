@@ -51,7 +51,7 @@ async def create_inference_engine_service(
         return resp
 
 
-@router.delete("/{service_name}")
+@router.delete("/{service_name}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_inference_engine_service(
     service_name: str = Path(description="Name of KService to Delete"),
     k8s_client=Depends(get_k8s_client),
