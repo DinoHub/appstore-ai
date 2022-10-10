@@ -5,6 +5,7 @@ from kubernetes.client import CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from yaml import safe_load
 
+from ..config.config import config
 from ..internal.k8s_client import get_k8s_client
 from ..internal.templates import template_env
 from ..models.engine import InferenceEngineService
@@ -35,18 +36,19 @@ async def create_inference_engine_service(
         # Create instance of API class
         api = CustomObjectsApi(client)
         try:
-            res = await api.create_namespaced_custom_object(
+            resp = api.create_namespaced_custom_object(
                 group="serving.knative.dev",
                 version="v1",
                 plural="services",
-                namespace="IE",
+                namespace=config.IE_NAMESPACE,
                 body=deployment_template,
-                async_req=True,
             )
-        except (K8sAPIException, HTTPError):
+        except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when creating inference engine: {e}",
             )
+        return resp
 
 
 @router.delete("/{service_name}")
@@ -59,17 +61,17 @@ async def delete_inference_engine_service(
         # Create instance of API class
         api = CustomObjectsApi(client)
         try:
-            res = await api.delete_namespaced_custom_object(
+            api.delete_namespaced_custom_object(
                 group="serving.knative.dev",
                 version="v1",
                 plural="services",
-                namespace="IE",
-                async_req=True,
+                namespace=config.IE_NAMESPACE,
                 name=service_name,
             )
-        except (K8sAPIException, HTTPError):
+        except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when deleting inference engine: {e}",
             )
 
 
@@ -95,16 +97,16 @@ async def update_inference_engine_service(
         # Create instance of API class
         api = CustomObjectsApi(client)
         try:
-            res = await api.replace_namespaced_custom_object(
+            api.replace_namespaced_custom_object(
                 group="serving.knative.dev",
                 version="v1",
                 plural="services",
-                namespace="IE",
+                namespace=config.IE_NAMESPACE,
                 name=service.service_name,
                 body=deployment_template,
-                async_req=True,
             )
-        except (K8sAPIException, HTTPError):
+        except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when updating inference engine: {e}",
             )
