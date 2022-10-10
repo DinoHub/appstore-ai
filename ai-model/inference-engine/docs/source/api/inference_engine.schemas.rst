@@ -14,11 +14,3 @@ Subpackages
    :maxdepth: 4
 
    inference_engine.schemas.io
-
-Submodules
-----------
-
-.. toctree::
-   :maxdepth: 4
-
-   inference_engine.schemas.media_types
