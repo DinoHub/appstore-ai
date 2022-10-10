@@ -7,6 +7,7 @@ spec:
     spec:
       containers:
         - image: {{ image_name }}
-          imagePullPolicy: Always
+          # imagePullPolicy: Always # TODO: uncomment when registry is properly set up
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 4001
