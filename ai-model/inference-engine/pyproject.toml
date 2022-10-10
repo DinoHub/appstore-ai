@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "inference-engine"
-version = "0.1.0"
+version = "0.2.0"
 description = "Inference Engine library for AI App Store"
 authors = ["Tien-Cheng <tiencheng@protonmail.com>"]
 readme = "README.md"
