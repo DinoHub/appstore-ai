@@ -22,6 +22,7 @@ from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
 from pymongo.errors import DuplicateKeyError
 
+from ..config.config import config
 from ..internal.clearml_client import clearml_client
 from ..internal.db import get_db
 from ..internal.file_validator import (
@@ -29,7 +30,7 @@ from ..internal.file_validator import (
     MaxFileSizeValidator,
     ValidateFileUpload,
 )
-from ..internal.inference import process_inference_data, stream_generator
+from ..internal.inference import process_inference_data
 from ..models.engine import IOTypes
 from ..models.model import (
     FindModelCardModel,
@@ -43,7 +44,6 @@ MAKE_REQUEST_INFERENCE_TIMEOUT = httpx.Timeout(10, read=60 * 5, write=60 * 5)
 
 CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
-MAX_UPLOAD_SIZE_GB = 1
 
 MEDIA_IO_INTERFACES = {IOTypes.Media, IOTypes.Generic}
 
@@ -64,7 +64,7 @@ ACCEPTED_CONTENT_TYPES = {
 }
 
 file_validator = ValidateFileUpload(
-    max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB
+    max_upload_size=config.MAX_UPLOAD_SIZE_GB * BytesPerGB
 )
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -316,7 +316,9 @@ async def make_test_inference(
     input_interface = engine["input_schema"]["io_type"]
 
     # Validate File Size
-    file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
+    file_size_validator = MaxFileSizeValidator(
+        config.MAX_UPLOAD_SIZE_GB * BytesPerGB
+    )
     if input_interface in MEDIA_IO_INTERFACES:
         for files in media_data:
             file: BinaryIO
@@ -338,7 +340,7 @@ async def make_test_inference(
                     except MaxFileSizeException:
                         raise HTTPException(
                             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
+                            detail=f"File uploaded is too large. Limit is {config.MAX_UPLOAD_SIZE_GB}GB",
                         )
                     except ValueError:
                         raise HTTPException(
