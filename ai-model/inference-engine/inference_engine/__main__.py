@@ -7,6 +7,7 @@ from .commands.new import new
 @click.group()
 @click.version_option()
 def cli():
+    """Command line interface for Inference Engine."""
     pass
 
 

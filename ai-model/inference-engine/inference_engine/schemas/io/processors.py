@@ -5,9 +5,9 @@ from typing import Any, Dict, List, Mapping, Union
 def check_files_exist(files: Dict[str, List[str]]) -> Dict[str, List[str]]:
     """Check if file path exists.
 
-    :param files: List of File paths
-    :type files: List[str]
-    :raises ValidationError: If file path does not exist
+    :param files: Dictionary where keys are fieldnames, values are list of file paths
+    :type files: Dict[str,List[str]]
+    :raises FileNotFoundError: If file path does not exist
     :return: File paths
     :rtype: List[str]
     """
@@ -21,10 +21,11 @@ def check_files_exist(files: Dict[str, List[str]]) -> Dict[str, List[str]]:
 def check_valid_dict(text: Any) -> Dict:
     """Validate that input is valid dictionary.
     This is needed as pydantic will always fail to validate a dictionary.
+    If this bug is fixed then this will no longer be needed.
 
     :param text: input to validate
     :type text: Any
-    :raises ValidationError: If input is not a valid dictionary
+    :raises TypeError: If input is not a valid dictionary
     :return: the input
     :rtype: Dict
     """
@@ -41,9 +42,9 @@ def process_text(text: Union[str, Dict]) -> str:
 
     :param text: Dictionary containing `text` key
     :type text: Union[str, Dict]
-    :raises ValidationError: If no input is provided
-    :raises ValidationError: If input does not have `text` key
-    :raises ValidationError: If input is not a dictionary or a string
+    :raises ValueError: If no input is provided
+    :raises KeyError: If input does not have `text` key
+    :raises TypeError: If input is not a dictionary or a string
     :return: text that was in the dictionary
     :rtype: str
     """

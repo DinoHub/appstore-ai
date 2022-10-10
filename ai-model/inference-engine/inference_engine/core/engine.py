@@ -22,15 +22,18 @@ class InferenceEngine:
         author: str = "Anonymous User",
         endpoint_metas: Optional[Dict[str, Dict[str, str]]] = None,
     ) -> None:
-        """Create an inference engine.
+        """Initialize an inference engine.
 
-
-        :param name: Name of Inference Engine, defaults to "Inference Engine"
+        :param name: Name of inference engine, defaults to "Inference Engine"
         :type name: str, optional
-        :param version: Version, defaults to "v1"
+        :param version: Version number, defaults to "v1"
         :type version: str, optional
-        :param description: Description of Inference Engine, defaults to "Inference Engine for AI App Store"
+        :param description: Description of inference engine, defaults to "Inference Engine for AI App Store"
         :type description: str, optional
+        :param author: Author, defaults to "Anonymous User"
+        :type author: str, optional
+        :param endpoint_metas: A dictionary containing metadata on the input and output schemas of prediction endpoints, defaults to None
+        :type endpoint_metas: Optional[Dict[str, Dict[str, str]]], optional
         """
         if endpoint_metas is None:
             endpoint_metas = {}  # TODO: Figure out what to do with metas

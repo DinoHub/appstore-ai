@@ -13,8 +13,8 @@ class GenericIO(IOSchema):
     """Generic input schema that accepts both files and json data.
     Can also be used in cases where nothing is provided to a model.
 
-    :param media: List of local file paths to media files
-    :type media: List[str]
+    :param media: A dictionary where keys are field names and values are lists of file paths
+    :type media: Dict[str,List[str]]
     :param text: JSON object containing form data
     :type text: Dict[str, Any]
     """
