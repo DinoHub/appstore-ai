@@ -1,10 +1,8 @@
 from pathlib import Path
 
 import click
-from inference_engine.schemas.media_types import media_type
 
 from ..schemas.io import __all__ as AVAILABLE_IO_TYPES
-from ..schemas.media_types import media_type
 from ..utils.generate_engine import (
     generate_engine,
     generate_makefile,
