@@ -152,6 +152,12 @@ class InferenceEngine:
                     "input_schema": input_schema.__name__,
                     "output_schema": output_schema.__name__,
                 }
+        else:
+            self.endpoint_metas[route] = {
+                "type": "POST",
+                "input_schema": input_schema.__name__,
+                "output_schema": output_schema.__name__,
+            }
         self.engine.add_api_route(
             path=f"/{route}",
             endpoint=self._predict,

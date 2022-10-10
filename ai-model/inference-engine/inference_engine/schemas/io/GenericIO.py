@@ -3,8 +3,10 @@ from collections import defaultdict
 
 import filetype
 from fastapi.responses import JSONResponse
+from pydantic import validator
 
 from .IOSchema import IOSchema
+from .processors import check_valid_dict
 
 
 class GenericIO(IOSchema):
@@ -16,6 +18,10 @@ class GenericIO(IOSchema):
     :param text: JSON object containing form data
     :type text: Dict[str, Any]
     """
+
+    _check_valid_dict = validator("text", "media", allow_reuse=True, pre=True)(
+        check_valid_dict
+    )
 
     def response(self) -> JSONResponse:
         """Generic response. Since this could be both text or media,
