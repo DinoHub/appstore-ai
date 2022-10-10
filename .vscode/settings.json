@@ -1,4 +1,6 @@
 {
-  "python.analysis.extraPaths": ["./ai-model/inference-engine"],
-  "autoDocstring.docstringFormat": "sphinx"
+  "autoDocstring.docstringFormat": "sphinx",
+  "yaml.schemas": {
+    "ai-model/inference-engine/inference_engine/schemas/config/v2.json": "config.yaml"
+  }
 }
