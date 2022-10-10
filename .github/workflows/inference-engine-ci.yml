@@ -1,0 +1,27 @@
+name: Inference Engine CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  testing:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: ./ai-model/inference-engine
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install poetry
+        run: pipx install poetry
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+          # cache: poetry
+      - run: |
+          poetry install
+      - name: Test with pytest
+        run: |
+          poetry run pytest
