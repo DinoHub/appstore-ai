@@ -129,7 +129,7 @@ async def create_dataset(
             )
         try:
             unpack_archive(filename=path, extract_dir=dirpath)
-        except ValueError:
+        except ValueError:  # Redundant?
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail=f"File type of compressed file {file.filename} is not supported.",

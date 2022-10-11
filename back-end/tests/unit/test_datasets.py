@@ -1,4 +1,6 @@
 from pathlib import Path
+from typing import Dict, List, Set
+from urllib import response
 
 import pytest
 from fastapi import status
@@ -19,23 +21,47 @@ def test_get_all_datasets(
 
 
 @pytest.mark.parametrize(
-    "project",
+    "query,expected_ids",
     [
-        "ClearML examples/Urbansounds",
+        (
+            dict(project="ClearML examples/Urbansounds"),
+            {
+                "e-f581e44aa3ee42f68206f3ec5d4b1ebc",
+                "e-21b38d1c7d22414aa4c5f5c7bda30d71",
+            },
+        ),
+        (
+            dict(id=["e-f581e44aa3ee42f68206f3ec5d4b1ebc"]),
+            {"e-f581e44aa3ee42f68206f3ec5d4b1ebc"},
+        ),
+        (
+            dict(name="UrbanSounds"),
+            {
+                "e-f581e44aa3ee42f68206f3ec5d4b1ebc",
+                "e-21b38d1c7d22414aa4c5f5c7bda30d71",
+            },
+        ),
+        (
+            dict(tags=["preprocessed"]),
+            {
+                "e-f581e44aa3ee42f68206f3ec5d4b1ebc",
+            },
+        ),
+        (dict(name="invalid"), {}),
     ],
 )
-def test_get_datasets_by_project(
-    project: str,
-    client: TestClient,
+def test_search_datasets(
+    query: Dict, expected_ids: Set[str], client: TestClient
 ):
-
-    response = client.post("/datasets/search", json={"project": project})
-    response_json = response.json()
+    response = client.post("/datasets/search", json=query)
     assert response.status_code == status.HTTP_200_OK
-    assert len(response_json) == 2
-    assert isinstance(response_json, list)
-    for dataset in response_json:
-        assert dataset["project"] == project
+
+    results = response.json()
+    assert len(results) == len(expected_ids)
+    assert isinstance(results, list)
+
+    for dataset in results:
+        assert dataset["id"] in expected_ids
 
 
 @pytest.mark.parametrize("dataset_id", ["e-f581e44aa3ee42f68206f3ec5d4b1ebc"])
@@ -46,6 +72,11 @@ def test_get_dataset_by_id(dataset_id: str, client: TestClient):
 
     for key in ("id", "name", "project", "tags", "files"):
         assert key in response_json
+
+
+def test_get_non_existent_dataset(client: TestClient):
+    response = client.get("/datasets/invalid_dataset")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.parametrize("file_path", ["./test_data/small_dataset.zip"])
@@ -65,3 +96,13 @@ def test_create_dataset(file_path: str, client: TestClient):
     # assert dataset["project"] == "test_create_dataset"
     # Perform cleanup of data
     ClearMLDataset.get(id=dataset["id"]).delete()
+
+
+@pytest.mark.xfail(reason="Invalid file type")
+def test_create_dataset_invalid_filetype():
+    test_create_dataset("./test_data/invalid_dataset_type.bin")
+
+
+@pytest.mark.xfail(reason="Too large dataset")
+def test_create_dataset_filelimit():
+    test_create_dataset("./test_data/large_dataset.zip")
