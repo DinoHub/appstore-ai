@@ -160,7 +160,7 @@ async def create_model_card_metadata(
                 "text": "",
                 "media": [],
             }
-        card.performance.media.append(
+        card.performance["media"].append(
             task.get_reported_scalars()
         )  # do not override existing plots
         # NOTE: switch to backend rest api as only that let's me get info on user
@@ -208,9 +208,7 @@ async def create_model_card_metadata(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Unable to add model with ID {card['model_id']} as the ID already exists.",
             )
-    return JSONResponse(
-        status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
-    )
+    return card
 
 
 @router.put("/{model_id}", response_model=ModelCardModelDB)
