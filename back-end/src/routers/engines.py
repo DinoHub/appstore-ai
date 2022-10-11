@@ -1,8 +1,9 @@
 from urllib.error import HTTPError
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from kubernetes.client import CustomObjectsApi
+from kubernetes.client import ApiClient, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
+from kubernetes.client.rest import RESTResponse
 from yaml import safe_load
 
 from ..config.config import config
@@ -16,8 +17,18 @@ router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 @router.post("/")
 async def create_inference_engine_service(
     service: InferenceEngineService,
-    k8s_client=Depends(get_k8s_client),
+    k8s_client: ApiClient = Depends(get_k8s_client),
 ):
+    """Deploy an Inference Engine as a KNative Service
+
+    :param service: An object containing a service name and an image URI
+    :type service: InferenceEngineService
+    :param k8s_client: K8S Client, defaults to Depends(get_k8s_client)
+    :type k8s_client: ApiClient, optional
+    :raises HTTPException: 500 Internal Server Error if K8S deployment fails
+    :return: Response from the Python K8S Client
+    :rtype: Any # TODO: Find out what the return type is
+    """
     # First check that model actually exists in DB
     # Create Deployment Template
     template = template_env.get_template("inference-engine-service.yaml.j2")
@@ -54,8 +65,16 @@ async def create_inference_engine_service(
 @router.delete("/{service_name}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_inference_engine_service(
     service_name: str = Path(description="Name of KService to Delete"),
-    k8s_client=Depends(get_k8s_client),
+    k8s_client: ApiClient = Depends(get_k8s_client),
 ):
+    """Delete a deployed inference engine from the K8S cluster.
+
+    :param service_name: Name of KNative service, defaults to Path(description="Name of KService to Delete")
+    :type service_name: str, optional
+    :param k8s_client: Python K8S Client, defaults to Depends(get_k8s_client)
+    :type k8s_client: ApiClient, optional
+    :raises HTTPException: 500 Internal Server Error if deletion fails
+    """
     # Delete Service on K8S
     with k8s_client as client:
         # Create instance of API class
@@ -78,8 +97,16 @@ async def delete_inference_engine_service(
 @router.patch("/")
 async def update_inference_engine_service(
     service: InferenceEngineService,
-    k8s_client=Depends(get_k8s_client),
+    k8s_client: ApiClient = Depends(get_k8s_client),
 ):
+    """Update an existing inference engine inside the K8S cluster
+
+    :param service: Configuration (service name and Image URI) of updated Inference Engine
+    :type service: InferenceEngineService
+    :param k8s_client: Python K8S client, defaults to Depends(get_k8s_client)
+    :type k8s_client: ApiClient, optional
+    :raises HTTPException: 500 Internal Server Error if failed to update
+    """
     # Create Deployment Template
     template = template_env.get_template("inference-engine-service.yaml.j2")
 

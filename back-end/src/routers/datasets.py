@@ -2,7 +2,7 @@ import tempfile
 from os import remove
 from pathlib import Path
 from shutil import unpack_archive
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import filetype
 from fastapi import APIRouter, Depends, File, Form, UploadFile, status
@@ -42,7 +42,15 @@ router = APIRouter(prefix="/datasets", tags=["Datasets"])
     response_model=List[DatasetModel],
     response_model_exclude=["files", "default_remote"],
 )
-async def search_datasets(query: FindDatasetModel):
+def search_datasets(query: FindDatasetModel) -> List[Dict]:
+    """Search endpoint for any datasets stored in
+    the current data connector
+
+    :param query: Search query
+    :type query: FindDatasetModel
+    :return: A list of dataset metadata
+    :rtype: List[Dict]
+    """
     datasets = Dataset(connector_type=DATA_CONNECTOR).list_datasets(
         project=query.project,
         partial_name=query.name,
@@ -53,7 +61,15 @@ async def search_datasets(query: FindDatasetModel):
 
 
 @router.get("/{dataset_id}", response_model=DatasetModel)
-async def get_dataset_by_id(dataset_id: str):
+async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
+    """Get a dataset from it's ID
+
+    :param dataset_id: ID of dataset (e.g ClearML Dataset ID)
+    :type dataset_id: str
+    :raises HTTPException: 404 Not Found if dataset not found
+    :return: Dataset with that ID
+    :rtype: DatasetModel
+    """
     try:
         dataset = Dataset(connector_type=DATA_CONNECTOR).get(id=dataset_id)
     except ValueError:
@@ -83,6 +99,22 @@ async def create_dataset(
     project_name: str = Form(...),
     output_url: Optional[str] = Form(default=None),
 ):
+    """Create a new dataset, based on a dataset file uploaded to it
+
+    :param file: Archived dataset (e.g .zip file), defaults to File(...)
+    :type file: UploadFile, optional
+    :param dataset_name: Name of dataset, defaults to Form(...)
+    :type dataset_name: str, optional
+    :param project_name: Name of project to upload to, defaults to Form(...)
+    :type project_name: str, optional
+    :param output_url: Remote URL to upload file to, defaults to Form(default=None)
+    :type output_url: Optional[str], optional
+    :raises HTTPException: 413 Request Entity Too Large if dataset size is too large
+    :raises HTTPException: 415 Unsupported Media Type if wrong file type
+    :raises HTTPException: 500 Internal Server Error if any IOErrors
+    :return: Dataset
+    :rtype: DatasetModel
+    """
     # Write dataset to temp directory
     # NOTE: not using aiofiles for async read and write as performance is slow
     # https://stackoverflow.com/questions/73442335/how-to-upload-a-large-file-%E2%89%A53gb-to-fastapi-backend
