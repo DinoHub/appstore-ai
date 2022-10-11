@@ -7,11 +7,13 @@ Welcome to AAS Inference Engine's documentation!
 ================================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
    user_guide/quickstart
    user_guide/ie_yaml_schema
+
+   api/inference_engine
 
 
 Indices and tables
