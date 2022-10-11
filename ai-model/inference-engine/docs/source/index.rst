@@ -11,7 +11,7 @@ Welcome to AAS Inference Engine's documentation!
    :caption: Contents:
 
    user_guide/quickstart
-
+   user_guide/ie_yaml_schema
 
 
 Indices and tables

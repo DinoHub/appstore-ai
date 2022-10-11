@@ -31,6 +31,7 @@ extensions = [
     "sphinx_design",  # Extension for more supporting components
     "sphinx_inline_tabs",  # Extension for inline tabs
     "myst_parser",  # Extend the usage of Markdowns with Directives
+    "sphinx-jsonschema",
 ]
 
 templates_path = ["_templates"]
