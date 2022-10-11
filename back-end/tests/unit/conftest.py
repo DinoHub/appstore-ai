@@ -76,3 +76,35 @@ def model_metadata() -> List[Dict]:
         for idx in range(1, 11)
     ]
     return fake_model_metadata
+
+
+@pytest.fixture
+def clearml_model_metadata() -> Dict:
+    return {
+        "model_id": f"test-model-card-clearml",
+        "title": f"PyTorch MNIST training",
+        "description": generate_section_model(),
+        "limitations": generate_section_model(),
+        "metrics": generate_section_model(),
+        "explanation": generate_section_model(),
+        "deployment": generate_section_model(),
+        "datetime": str(datetime.datetime.now()),
+        "tags": ["Test Tag"],
+        "task": "Testing Model Card",
+        "frameworks": ["pytest"],
+        "point_of_contact": "Santa Claus",
+        "owner": f"Santa Claus",
+        "creator": "Rudolph",
+        "inference_engine": {
+            "service_url": "http://service_name.namespace.svc.cluster.local",
+            "input_schema": {
+                "io_type": "GenericIO",
+                "json_schema": {
+                    "media": {"type": "media"},
+                    "parameters": {"type": "json", "required": False},
+                },
+            },
+            "output_schema": {"io_type": "TextIO"},
+        },
+        "clearml_exp_id": "e-047f991269004aceaf18a25c3c1def20",
+    }

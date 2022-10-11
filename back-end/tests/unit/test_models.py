@@ -1,7 +1,6 @@
 from typing import Dict, List, Tuple
 
 import pytest
-from bson import ObjectId
 from fastapi import status
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -73,15 +72,45 @@ async def test_get_model_card_by_id(
     assert response.status_code == status.HTTP_200_OK
 
 
-@pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
-async def test_create_model_card_metadata(
+def test_create_model_card_metadata(
     client: TestClient,
     model_metadata: List[Dict],
 ):
     for metadata in model_metadata:
         response = client.post("/models/", json=metadata)
         assert response.status_code == status.HTTP_201_CREATED
+
+        result = response.json()
+        assert result["title"] == metadata["title"]
+
+
+@pytest.mark.usefixtures("flush_db")
+def test_create_model_card_clearml(
+    client: TestClient, clearml_model_metadata: Dict
+):
+    response = client.post("/models/", json=clearml_model_metadata)
+    assert response.status_code == status.HTTP_201_CREATED
+    result = response.json()
+
+    assert result["creator"] != clearml_model_metadata["creator"]
+    assert len(result["performance"]["media"]) > 0
+
+
+@pytest.mark.xfail(reason="Invalid ClearML Exp ID")
+@pytest.mark.usefixtures("flush_db")
+def test_create_model_card_invalid_expid(clearml_model_metadata: Dict):
+    clearml_model_metadata["clearml_exp_id"] = "invalid"
+    test_create_model_card_clearml(
+        clearml_model_metadata=clearml_model_metadata
+    )
+
+
+@pytest.mark.parametrize("card", [{"title": "hello world"}])
+@pytest.mark.xfail(reason="Invalid Input")
+@pytest.mark.usefixtures("flush_db")
+def test_create_model_card_invalid_expid(card: Dict):
+    test_create_model_card_metadata(model_metadata=[card])
 
 
 @pytest.mark.asyncio
@@ -120,6 +149,14 @@ async def test_update_model_card_metadata(
     assert model is not None
     assert model["title"] == update["title"]
     assert model["description"] == update["description"]
+
+
+@pytest.mark.usefixtures("flush_db")
+def test_update_model_card_not_found(
+    client: TestClient,
+):
+    response = client.put(f"/models/invalid_id", json={"title": "Hello"})
+    assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.asyncio
