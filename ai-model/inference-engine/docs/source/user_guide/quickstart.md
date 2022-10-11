@@ -16,7 +16,7 @@ Edit the `predict` function in `process.py` to process the input and then return
 
 ```python
 
-def predict(data: TextIO) -> SingleMediaFileIO:
+def predict(data: TextIO) -> MediaFileIO:
     text = data.text
 
     image = fake_client.predict(text)
@@ -24,9 +24,8 @@ def predict(data: TextIO) -> SingleMediaFileIO:
     path = "tmp.png"
     image.save(path)
 
-    return SingleMediaFileIO(
-        media=[path],
-        media_type="image/png"
+    return MediaFileIO(
+        media=dict(output=[path]),
     )
 
 ```
