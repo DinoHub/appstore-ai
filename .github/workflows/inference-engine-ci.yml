@@ -35,3 +35,5 @@ jobs:
         with:
           recreate: true
           path: code-coverage-results.md
+  build:
+    # TODO: build IE image, push to Docker Hub
