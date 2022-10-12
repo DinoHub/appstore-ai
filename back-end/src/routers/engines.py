@@ -14,6 +14,23 @@ from ..models.engine import InferenceEngineService
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 
 
+@router.get("/")
+async def get_available_inference_engine_services(
+    k8s_client: ApiClient = Depends(get_k8s_client),
+):
+    pass
+    with k8s_client as client:
+        api = CustomObjectsApi(client)
+        results = api.list_namespaced_custom_object(
+            group="knative.serving.dev",
+            version="v1",
+            namespace=config.IE_NAMESPACE,
+            plural="services",
+        )
+
+    return results
+
+
 @router.post("/")
 async def create_inference_engine_service(
     service: InferenceEngineService,
