@@ -14,10 +14,7 @@ def client() -> TestClient:
     from src.config import config
 
     config.ENV_STATE = "test"
-    assert config.ENV_STATE == "test"
     config.config = config.TestingConfig()
-    config.config.set_envvar()
-    assert isinstance(config.config, config.TestingConfig)
     from src.main import app
 
     client = TestClient(app)

@@ -7,7 +7,7 @@ def get_db() -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
     from ..config.config import config
 
     mongo_client = AsyncIOMotorClient(
-        host=config.MONGO_DSN,
+        config.MONGO_DSN,
         username=config.MONGO_USERNAME,
         password=config.MONGO_PASSWORD,
     )
