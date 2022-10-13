@@ -1,19 +1,14 @@
-import os
+from pathlib import Path
+from typing import Optional, Union
 
-from clearml.backend_api.session.client import APIClient
+from clearml.backend_api.session.client import APIClient, StrictSession
 
-from ..config.config import clear_conf
+from ..config.config import config
 
-try:
-    os.environ["CLEARML_WEB_HOST"] = clear_conf.CLEARML_WEB_HOST
-    os.environ["CLEARML_API_HOST"] = clear_conf.CLEARML_API_HOST
-    os.environ["CLEARML_FILES_HOST"] = clear_conf.CLEARML_FILES_HOST
-    os.environ["CLEARML_API_ACCESS_KEY"] = clear_conf.CLEARML_API_ACCESS_KEY
-    os.environ["CLEARML_API_SECRET_KEY"] = clear_conf.CLEARML_API_SECRET_KEY
-    print("ClearML ENV vars set")
-except TypeError as e:
-    print(
-        "Warning: Failed to set ClearML envvars. It will rely on your local configuration"
-    )
 
-clearml_client = APIClient()
+def clearml_api_client(config_path: Optional[Union[str, Path]]) -> APIClient:
+    if not config_path:
+        config_path = config.CLEARML_CONFIG_FILE
+    session = StrictSession(config_file=config_path)
+    client = APIClient(session=session)
+    return client
