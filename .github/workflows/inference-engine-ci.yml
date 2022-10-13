@@ -9,6 +9,7 @@ jobs:
   testing:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    environment: test
     defaults:
       run:
         working-directory: ./ai-model/inference-engine
@@ -35,5 +36,3 @@ jobs:
         with:
           recreate: true
           path: code-coverage-results.md
-  build:
-    # TODO: build IE image, push to Docker Hub

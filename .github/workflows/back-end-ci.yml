@@ -9,26 +9,21 @@ jobs:
   testing:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
+    environment: test
     defaults:
       run:
         working-directory: ./back-end
     env:
-      ENV_STATE: test
-      MONGO_DSN: localhost:27017
-      DB_NAME: app_store_ci
-      MAX_UPLOAD_SIZE_GB: 10
-      CLEARML_CONFIG_FILE: tests/test_clearml.conf
-      CLEARML_NO_DEFAULT_SERVER: 0
-      CLEARML_API_HOST: https://demoapi.trains.allegro.ai/
-      CLEARML_WEB_HOST: https://demoapp.trains.allegro.ai/
-      CLEARML_FILES_HOST: https://demofiles.trains.allegro.ai/
-      CLEARML_API_ACCESS_KEY: ROBE8ZJIDGA1BS126MO8
-      CLEARML_API_SECRET_KEY: efXa3I1LRnDBCQra7AeaEvv19oJjTozigz90Rtm7upecb5YUOe
+      CLEARML_API_HOST: ${{ secrets.CLEARML_API_HOST }}
+      CLEARML_WEB_HOST: ${{ secrets.CLEARML_WEB_HOST }}
+      CLEARML_FILES_HOST: ${{ secrets.CLEARML_FILES_HOST }}
+      CLEARML_API_ACCESS_KEY: ${{ secrets.CLEARML_API_ACCESS_KEY }}
+      CLEARML_API_SECRET_KEY: ${{ secrets.CLEARML_API_SECRET_KEY }}
     services:
       mongodb:
         image: mongo
         ports:
-          - 27017:27017
+          - 4051:27017
     steps:
       - uses: actions/checkout@v3
       - name: Install poetry
@@ -39,9 +34,10 @@ jobs:
           # cache: poetry
       - run: |
           poetry install
-      - name: Set up environment file
-        run: |
-          poetry run python scripts/generate-ci-env.py
+      - name: Decrypt Environment Variables
+        run: ./scripts/decrypt-env.sh
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Test with pytest
         run: |
           poetry run pytest --cov-report xml:cov.xml --cov=back-end tests/
