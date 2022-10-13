@@ -8,6 +8,7 @@ import filetype
 import httpx
 from bson import json_util
 from clearml import Model, Task
+from clearml.backend_api.session.client import APIClient
 from fastapi import (
     APIRouter,
     Depends,
@@ -23,7 +24,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pymongo.errors import DuplicateKeyError
 
 from ..config.config import config
-from ..internal.clearml_client import clearml_client
+from ..internal.clearml_client import clearml_api_client
 from ..internal.db import get_db
 from ..internal.file_validator import (
     MaxFileSizeException,
@@ -134,7 +135,9 @@ async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_model_card_metadata(
-    card: ModelCardModelIn, db=Depends(get_db)
+    card: ModelCardModelIn,
+    db=Depends(get_db),
+    clearml_client: APIClient = Depends(clearml_api_client),
 ):
     # NOTE: After this, still need to submit inference engine
     # TODO: Endpoint for submit inference engine
