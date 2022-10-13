@@ -67,3 +67,8 @@ def model_metadata() -> List[Dict]:
         for idx in range(1, 11)
     ]
     return fake_model_metadata
+
+@pytest.fixture
+def user_data() -> Dict:
+    temp_user = {"userid":"TestUser1","name":"UserUser","password": "Testing1!","admin_priv": True}
+    return temp_user
