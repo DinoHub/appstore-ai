@@ -14,8 +14,8 @@ jobs:
         working-directory: ./back-end
     env:
       ENV_STATE: test
-      MONGODB_URL: localhost:27017
-      MAIN_COLLECTION_NAME: app_store_ci
+      MONGO_DSN: localhost:27017
+      DB_NAME: app_store_ci
       MAX_UPLOAD_SIZE_GB: 10
       CLEARML_CONFIG_FILE: tests/test_clearml.conf
       CLEARML_NO_DEFAULT_SERVER: 0
