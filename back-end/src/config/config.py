@@ -16,10 +16,6 @@ class GlobalConfig(BaseSettings):
     CLEARML_CONFIG_FILE: Optional[str] = None
     K8S_HOST: Optional[str] = None
     K8S_API_KEY: Optional[str] = None
-    # CLEARML_API_HOST: Optional[str] = None
-    # CLEARML_WEB_HOST: Optional[str] = None
-    # CLEARML_FILES_HOST: Optional[str] = None
-    # CLEARML_NO_DEFAULT_SERVER: Optional[int] = None
 
     class Config:
         env_file: str = "./src/config/.env"
