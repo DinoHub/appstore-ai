@@ -1,31 +1,17 @@
-import json
 from aifc import Error
 from datetime import datetime, timedelta
-from typing import List, Mapping, Optional, Union
-from xmlrpc.client import ResponseError
+from typing import List, Union
 
-from bson import json_util
-from clearml import Model, Task
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
-from fastapi.encoders import jsonable_encoder
+from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import JSONResponse, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from fastapi_pagination import Page, add_pagination, paginate
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pymongo import errors as pyerrs
 
 from ..config.config import admin
-from ..internal.clearml_client import clearml_client
 from ..internal.db import get_db
-from ..models.iam import (
-    Token,
-    TokenData,
-    User,
-    UserInsert,
-    UserInsertDB,
-    UserPage,
-)
+from ..models.iam import Token, TokenData, User, UserInsert, UserPage
 
 # use openssl rand -hex 32 to generate secret key
 ACCESS_TOKEN_EXPIRE_MINUTES = 45
