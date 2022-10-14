@@ -26,6 +26,7 @@ jobs:
       run:
         working-directory: ./back-end
     env:
+      ENV_STATE: test
       CLEARML_API_HOST: ${{ secrets.CLEARML_API_HOST }}
       CLEARML_WEB_HOST: ${{ secrets.CLEARML_WEB_HOST }}
       CLEARML_FILES_HOST: ${{ secrets.CLEARML_FILES_HOST }}
@@ -54,7 +55,7 @@ jobs:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Test with pytest
         run: |
-          poetry run pytest --cov-report xml:cov.xml --cov=src tests/
+          poetry run pytest --cov-report xml --cov=./ tests/
   publish-image:
     needs: testing
     runs-on: ubuntu-22.04
