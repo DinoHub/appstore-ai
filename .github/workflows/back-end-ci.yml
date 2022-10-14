@@ -66,6 +66,7 @@ jobs:
           recreate: true
           path: code-coverage-results.md
   publish-image:
+    needs: testing
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     environment: staging

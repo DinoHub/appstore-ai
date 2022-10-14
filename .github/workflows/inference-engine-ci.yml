@@ -48,6 +48,7 @@ jobs:
           recreate: true
           path: code-coverage-results.md
   publish-package:
+    needs: testing
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     environment: staging
@@ -66,6 +67,7 @@ jobs:
             repository_name: ${{ env.PYPI_REPOSITORY_NAME }}
             repository_url: ${{ env.PYPI_REPOSITORY_URL }}
   publish-image:
+    needs: testing
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     environment: staging
