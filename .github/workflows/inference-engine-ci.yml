@@ -26,17 +26,19 @@ jobs:
         working-directory: ./ai-model/inference-engine
     steps:
       - uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
       - uses: actions/setup-python@v4
         with:
           python-version: 3.9
           # cache: poetry
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.2.2
       - run: |
           poetry install
       - name: Test with pytest
         run: |
-          poetry run pytest --cov-report xml:cov.xml --cov=inference-engine tests/
+          poetry run pytest --cov-report xml:cov.xml --cov=inference_engine tests/
       - name: Code Coverage Summary Report
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:

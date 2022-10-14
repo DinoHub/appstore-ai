@@ -38,16 +38,18 @@ jobs:
           - 4051:27017
     steps:
       - uses: actions/checkout@v3
-      - name: Install poetry
-        run: pipx install poetry
       - uses: actions/setup-python@v4
         with:
           python-version: 3.9
           # cache: poetry
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.2.2
       - run: |
           poetry install
       - name: Decrypt Environment Variables
-        run: ./scripts/decrypt-env.sh
+        run: bash ./scripts/decrypt-env.sh
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
       - name: Test with pytest
