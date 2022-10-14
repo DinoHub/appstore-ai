@@ -56,7 +56,9 @@ jobs:
         working-directory: ./ai-model/inference-engine
     steps:
         - uses: actions/checkout@v3
+          if: github.event_name != 'pull_request'
         - name: Build and publish to pypi
+          if: github.event_name != 'pull_request'
           uses: JRubics/poetry-publish@v1.13
           with:
             python_version: "3.9"
