@@ -7,11 +7,11 @@ from pydantic import BaseSettings, Field, MongoDsn
 
 class GlobalConfig(BaseSettings):
     ENV_STATE: str = Field(default="dev", env="ENV_STATE")
+    DB_NAME: str = Field(default="appStoreDB")
+    MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=1)
     MONGO_DSN: Optional[MongoDsn] = None
     MONGO_USERNAME: Optional[str] = None
     MONGO_PASSWORD: Optional[str] = None
-    DB_NAME: Optional[str] = None
-    MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
     IE_NAMESPACE: Optional[str] = None
     CLEARML_CONFIG_FILE: Optional[str] = None
     K8S_HOST: Optional[str] = None
@@ -73,7 +73,9 @@ class FactoryConfig:
 
 
 class AdminHashing(BaseSettings):
-    SECRET_KEY: str
+    SECRET_KEY: Optional[
+        str
+    ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
     ALGORITHM: str = "HS256"
 
     class Config:

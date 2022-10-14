@@ -1,9 +1,11 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .routers import datasets, engines, experiments, iam, models
 
-with open("README.md", "r") as f:
+with open(Path(__file__).parent.parent.joinpath("README.md"), "r") as f:
     description = f.read()
 
 tags_metadata = [
