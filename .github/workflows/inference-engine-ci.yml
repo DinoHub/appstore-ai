@@ -63,9 +63,6 @@ jobs:
     runs-on: ubuntu-22.04
     timeout-minutes: 30
     environment: staging
-    defaults:
-      run:
-        working-directory: ./ai-model/inference-engine
     permissions:
       contents: read
       packages: write
@@ -99,14 +96,13 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
       # Build and push Docker image with Buildx (don't push on PR)
       # https://github.com/docker/build-push-action
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v3
         with:
-          context: .
+          context: ai-model/inference-engine
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
