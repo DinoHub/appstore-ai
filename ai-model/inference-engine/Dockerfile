@@ -29,13 +29,12 @@ ENV PATH="${PATH}:venv/bin"
 
 # Copy Dependencies
 COPY poetry.lock pyproject.toml ./
+
+# Install Dependencies
 RUN poetry export -f requirements.txt | venv/bin/pip install -r /dev/stdin
 
 # [OPTIONAL] Validate the project is properly configured
 RUN poetry check
-
-# Install Dependencies
-# RUN poetry install --no-interaction --no-cache --without dev
 
 # Copy Application
 COPY . /app
