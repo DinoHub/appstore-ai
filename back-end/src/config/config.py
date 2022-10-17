@@ -2,23 +2,20 @@
 import os
 from typing import Optional, Union
 
-from pydantic import BaseModel, BaseSettings, Field
-
-# class AppConfig(BaseModel):
+from pydantic import BaseSettings, Field, MongoDsn
 
 
 class GlobalConfig(BaseSettings):
-    ENV_STATE: Optional[str] = Field(None, env="ENV_STATE")
-    MONGODB_URL: Optional[str] = None
+    ENV_STATE: str = Field(default="dev", env="ENV_STATE")
+    DB_NAME: str = Field(default="appStoreDB")
+    MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=1)
+    MONGO_DSN: Optional[MongoDsn] = None
     MONGO_USERNAME: Optional[str] = None
     MONGO_PASSWORD: Optional[str] = None
-    MAIN_COLLECTION_NAME: Optional[str] = None
-    MAX_UPLOAD_SIZE_GB: Optional[Union[int, float]] = None
+    IE_NAMESPACE: Optional[str] = None
     CLEARML_CONFIG_FILE: Optional[str] = None
-    # CLEARML_API_HOST: Optional[str] = None
-    # CLEARML_WEB_HOST: Optional[str] = None
-    # CLEARML_FILES_HOST: Optional[str] = None
-    # CLEARML_NO_DEFAULT_SERVER: Optional[int] = None
+    K8S_HOST: Optional[str] = None
+    K8S_API_KEY: Optional[str] = None
 
     class Config:
         env_file: str = "./src/config/.env"
@@ -31,26 +28,22 @@ class GlobalConfig(BaseSettings):
         """
         for key, value in self.dict(exclude_none=True).items():
             # Save config to environment
-            print(f"Setting {key} to {value}")
             os.environ[key] = str(value)
 
 
 class DevConfig(GlobalConfig):
     class Config:
         env_prefix: str = "DEV_"
-        # TODO: add secrets_dir to support loading secrets
 
 
 class StagingConfig(GlobalConfig):
     class Config:
         env_prefix: str = "STG_"
-        # TODO: add secrets_dir to support loading secrets
 
 
 class ProductionConfig(GlobalConfig):
     class Config:
         env_prefix: str = "PROD_"
-        # TODO: add secrets_dir to support loading secrets
 
 
 class TestingConfig(GlobalConfig):
@@ -78,19 +71,12 @@ class FactoryConfig:
         else:
             raise ValueError(f"Unsupported config: {self.env_state}")
 
-class ClearMLConfig(BaseSettings):
-    CLEARML_WEB_HOST: str = None
-    CLEARML_API_HOST: str = None
-    CLEARML_FILES_HOST: str = None
-    CLEARML_API_ACCESS_KEY: str = None
-    CLEARML_API_SECRET_KEY: str = None
-
-    class Config:
-        env_file: str = "./src/config/.env"
 
 class AdminHashing(BaseSettings):
-    SECRET_KEY: str
-    ALGORITHM: str = 'HS256'
+    SECRET_KEY: Optional[
+        str
+    ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
+    ALGORITHM: str = "HS256"
 
     class Config:
         env_file: str = "./src/config/.env"
@@ -98,8 +84,8 @@ class AdminHashing(BaseSettings):
 
 ENV_STATE = GlobalConfig().ENV_STATE
 config = FactoryConfig(ENV_STATE)()
+
 if config is not None:
     config.set_envvar()
-print(config.__repr__())
+
 admin = AdminHashing()
-clear_conf = ClearMLConfig()

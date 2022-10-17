@@ -132,4 +132,4 @@ class ClearMLDataset(DatasetConnector):
         # If dataset does not exist, then
         # no need to do anything
         if self.dataset is not None:
-            self.dataset.delete()
+            self.dataset.delete(dataset_id=self.id)

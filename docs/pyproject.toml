@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "aas-docs"
+version = "0.1.0"
+description = "Documentation for AI App Store"
+authors = ["Tien Cheng, Mathias"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+Sphinx = "^5.2.3"
+sphinx-copybutton = "^0.5.0"
+furo = "^2022.9.29"
+sphinx-inline-tabs = "^2022.1.2b11"
+myst-parser = "^0.18.1"
+sphinxcontrib-apidoc = "^0.3.0"
+sphinx_design = "^0.3.0"
+MarkupSafe = "^2.1.1"
+sphinx-jsonschema = "^1.19.1"
+sphinx-autobuild = "^2021.3.14"
+filetype = "^1.1.0"
+
+[tool.poetry.group.dev.dependencies]
+black = "^22.10.0"
+isort = "^5.10.1"
+
+
+[tool.poetry.group.back-end.dependencies]
+fastapi = "^0.85.0"
+clearml = "^1.7.1"
+python-multipart = "^0.0.5"
+motor = "^3.0.0"
+python-jose = "^3.3.0"
+passlib = "^1.7.4"
+httpx = "^0.23.0"
+password-strength = "^0.0.3.post2"
+kubernetes = "^24.2.0"
+Jinja2 = "^3.1.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

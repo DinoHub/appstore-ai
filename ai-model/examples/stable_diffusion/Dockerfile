@@ -1,0 +1,17 @@
+FROM tiencheng/inference-engine:latest
+
+COPY requirements.txt .
+RUN venv/bin/pip install -r requirements.txt
+
+ARG PORT=4001
+ARG TRITON_PORT=8001
+ARG HOSTNAME=0.0.0.0
+ARG TRITON_HOSTNAME=172.20.0.3
+ENV PORT=${PORT}
+ENV TRITON_PORT=${TRITON_PORT}
+ENV HOSTNAME=${HOSTNAME}
+ENV TRITON_HOSTNAME=${TRITON_HOSTNAME}
+
+EXPOSE ${PORT}
+
+COPY . .

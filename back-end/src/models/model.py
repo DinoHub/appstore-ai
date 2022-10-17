@@ -4,6 +4,7 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from .common import PyObjectId
+from .engine import InferenceEngine
 
 
 class SectionModel(BaseModel):
@@ -13,6 +14,7 @@ class SectionModel(BaseModel):
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
+    model_id: str  # unique id
     title: str
     # NOTE: flattened sections to make schema easier
     # description: Dict[SectionTypes, Section]
@@ -22,7 +24,9 @@ class ModelCardModelIn(BaseModel):  # Input spec
     explanation: SectionModel
     deployment: SectionModel
     performance: Optional[SectionModel]
-    model_details: Optional[SectionModel]  # store model genre, format and framework
+    model_details: Optional[
+        SectionModel
+    ]  # store model genre, format and framework
     datetime: str
     tags: List[str]  # for all other tags
     task: str  # a task is a tag
@@ -34,8 +38,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     creator: Optional[str]
     # TODO: Figure out model source stuff
     clearml_exp_id: Optional[str]
-    inference_url: str
-    output_generator_url: Optional[str]
+    inference_engine: Optional[InferenceEngine]
 
 
 class ModelCardModelDB(ModelCardModelIn):
@@ -48,6 +51,7 @@ class ModelCardModelDB(ModelCardModelIn):
 
 
 class FindModelCardModel(BaseModel):
+    model_id: Optional[str]
     title: Optional[str]
     tags: Optional[List[str]]
     task: Optional[str]
@@ -71,13 +75,14 @@ class UpdateModelCardModel(BaseModel):
     datetime: Optional[str]
     tags: Optional[List[str]]
     task: Optional[str]
-    frameworks: Optional[List[str]]  # NOTE: tbd if this should be just 1 string
+    frameworks: Optional[
+        List[str]
+    ]  # NOTE: tbd if this should be just 1 string
     point_of_contact: Optional[str]
     owner: Optional[str]
     creator: Optional[str]
     clearml_exp_id: Optional[str]
-    inference_url: Optional[str]
-    output_generator_url: Optional[str]
+    inference_engine: Optional[InferenceEngine]
 
     class Config:
         arbitrary_types_allowed = True
