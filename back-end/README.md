@@ -1,5 +1,5 @@
 # AI App Store Back-End
-[Documentation](https://ai-app-store.readthedocs.io/en/latest/)
+[Documentation](https://dinohub.github.io/appstore-ai/)
 
 Back-end component of the AI App Store
 
