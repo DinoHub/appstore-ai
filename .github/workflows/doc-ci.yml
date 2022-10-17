@@ -41,7 +41,7 @@ jobs:
           poetry install
       - name: Build documentation
         run: |
-          make html
+          poetry run sphinx-build -M html "source" "build"
       - name: Upload page as artifact
         uses: actions/upload-pages-artifact@v1
         with:
