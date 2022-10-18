@@ -17,5 +17,5 @@ kubectl create namespace knative-serving
 kind load docker-image appstore-ai-back-end:latest
 # Set up helm charts
 helm install ai-mongodb charts/mongodb/ --values charts/mongodb/values.yaml
-helm install back-end charts/ai-be/ --values charts/ai-be/values.yaml
+helm install ai-backend charts/ai-be/ --values charts/ai-be/values.yaml
 helm install inference-engine charts/ai-ie/ --values charts/ai-be/values.yaml  --create-namespace --namespace inference-engine
