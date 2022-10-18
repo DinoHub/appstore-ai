@@ -1,4 +1,6 @@
 #! /bin/bash
+# script for tearing down helm charts individually
+# used mainly for testing and development purposes
 
 echo "Chart Teardown:"
 echo "  be - Backend"
