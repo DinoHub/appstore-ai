@@ -24,8 +24,8 @@ serviceAccount:
   name: "backend-service"
 
 env: 
-  SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
-  ALGORITHM: HS256
+  PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+  PROD_ALGORITHM: HS256
   PROD_MONGO_DSN: mongodb://ai-mongodb
   PROD_DB_NAME: app_store
   PROD_MAX_UPLOAD_SIZE_GB: "10"
