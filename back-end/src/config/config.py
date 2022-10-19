@@ -13,6 +13,7 @@ class GlobalConfig(BaseSettings):
     SECRET_KEY: Optional[
         str
     ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
+    ADMIN_SECRET_KEY: Optional[str] = None
     MONGO_DSN: Optional[MongoDsn] = None
     MONGO_USERNAME: Optional[str] = None
     MONGO_PASSWORD: Optional[str] = None

@@ -10,6 +10,7 @@ services:
       - mongodb
     environment:
       - DEV_SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+      - DEV_ADMIN_SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
       - DEV_ALGORITHM=HS256
       - DEV_MONGO_DSN=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10

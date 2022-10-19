@@ -7,7 +7,6 @@ from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.internal.auth import check_is_admin, get_current_user
-from src.internal.db import get_db
 
 from .utils import fake_login_admin, fake_login_user, generate_section_model
 
@@ -39,6 +38,8 @@ def anonymous_client(client: TestClient) -> TestClient:
 
 @pytest.fixture()
 def get_fake_db(client) -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
+    from src.internal.db import get_db
+
     db, client = get_db()
     return db, client
 

@@ -38,18 +38,26 @@ def create_access_token(
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
-        to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM
+        to_encode,
+        config.SECRET_KEY
+        if to_encode["role"] == UserRoles.user
+        else config.ADMIN_SECRET_KEY,
+        algorithm=config.ALGORITHM,
     )
     return encoded_jwt
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme), db=Depends(get_db)
+    token: str = Depends(oauth2_scheme),
+    db=Depends(get_db),
+    is_admin: bool = False,
 ) -> User:
     db, mongo_client = db
     try:
         payload = jwt.decode(
-            token, config.SECRET_KEY, algorithms=[config.ALGORITHM]
+            token,
+            config.ADMIN_SECRET_KEY if is_admin else config.SECRET_KEY,
+            algorithms=[config.ALGORITHM],
         )
         userid: str = payload.get("sub")
         role: UserRoles = payload.get("role")  # Verify that role is correct
@@ -71,8 +79,10 @@ async def get_current_user(
     return user
 
 
-async def check_is_admin(token: str = Depends(oauth2_scheme)) -> User:
-    user = await get_current_user(token)
+async def check_is_admin(
+    token: str = Depends(oauth2_scheme), db=Depends(get_db)
+) -> User:
+    user = await get_current_user(token, db=db, is_admin=True)
     if not user["admin_priv"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
