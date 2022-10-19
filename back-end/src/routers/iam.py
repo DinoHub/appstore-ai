@@ -252,6 +252,6 @@ async def get_users(
     # ensure when loading this endpoint that user is authenticated as admin",headers={"WWW-Authenticate": "Bearer"})
     raise HTTPException(
         status_code=401,
-        detail=f"User is authenticated",
+        detail=f"User is not admin",
         headers={"WWW-Authenticate": "Bearer"},
     )
