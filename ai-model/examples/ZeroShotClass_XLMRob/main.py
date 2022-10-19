@@ -1,11 +1,10 @@
-from json import load
 import gradio as gr
 import numpy as np
-import sys
 import tritonclient.grpc as tritongrpc
 from transformers import XLMRobertaTokenizer
 from scipy.special import softmax
 from datetime import datetime
+import os
 
 def loadModel(model_name='zst', model_version='1', url='127.0.0.1:8001'):
     # establish connection to triton
@@ -92,8 +91,11 @@ try:
     # set up input for triton
     input_name = ['input__0', 'input__1']
     output_name = 'output__0'
-
-    client = loadModel(model_name,model_version)
+    TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "0.0.0.0")
+    TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
+    TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
+    HOSTNAME = os.environ.get("HOSTNAME", "127.0.0.1")
+    client = loadModel(model_name,model_version,TRITON_URL)
 
     def question_answer(premise, topic):
         splitTopic = list(filter(None, topic.split(",")))
@@ -114,10 +116,10 @@ try:
         comp_btn = gr.Button("Compute")
 
         output = gr.Textbox(label="Probabilities",placeholder="<Label> (<Probability of being true>)")
-        
         comp_btn.click(fn=question_answer,inputs = [premiseBox,topicBox] , outputs= output)
 
-    demo.launch()
+    if __name__ == "__main__":
+        demo.launch(server_name=HOSTNAME)
 except:
     unloadModel(client)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] Exited Application')
