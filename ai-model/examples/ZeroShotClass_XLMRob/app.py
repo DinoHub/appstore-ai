@@ -111,9 +111,10 @@ try:
         premiseBox = gr.Textbox(placeholder="Text to classify...",label="Zero Shot Classification")
         topicBox = gr.Textbox(placeholder="Possible class names...",label= "Possible class names (comma-separated)")
 
-        output = gr.Textbox(label="Probabilities",placeholder="<Label> (<Probability of being true>)")
-
         comp_btn = gr.Button("Compute")
+
+        output = gr.Textbox(label="Probabilities",placeholder="<Label> (<Probability of being true>)")
+        
         comp_btn.click(fn=question_answer,inputs = [premiseBox,topicBox] , outputs= output)
 
     demo.launch()
