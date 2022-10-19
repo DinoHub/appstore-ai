@@ -83,8 +83,18 @@ async def add_user(
         item.password = get_password_hash(item.password)
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                user = await db["users"].insert_one({"userid": item.userid,"name": item.name,"password": item.password,"admin_priv":item.admin_priv})
-                add_user = await db["users"].find_one({"_id": user.inserted_id},{"_id":False,"password":False})
+                user = await db["users"].insert_one(
+                    {
+                        "userid": item.userid,
+                        "name": item.name,
+                        "password": item.password,
+                        "admin_priv": item.admin_priv,
+                    }
+                )
+                add_user = await db["users"].find_one(
+                    {"_id": user.inserted_id},
+                    {"_id": False, "password": False},
+                )
         print(add_user)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
@@ -115,10 +125,14 @@ async def delete_user(
     try:
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                delete_result = await db["users"].delete_many({"userid": {"$in": userid}})
-        return Response(status_code=204)
+                delete_result = await db["users"].delete_many(
+                    {"userid": {"$in": userid}}
+                )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
     except:
-        raise HTTPException(status_code=404, detail=f"Not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
+        )
 
 
 @router.put("/edit")
@@ -132,15 +146,26 @@ async def update_user(
         user.password = get_password_hash(user.password)
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                update_result = await db["users"].update_one(
+                await db["users"].update_one(
                     {"userid": user.userid},
-                    {"$set": {"userid": user.userid,"name": user.name,"password": user.password,"admin_priv":user.admin_priv}},
-                    )
-    except ValueError as e:
-        raise HTTPException(status_code=422, detail=f"")
+                    {
+                        "$set": {
+                            "userid": user.userid,
+                            "name": user.name,
+                            "password": user.password,
+                            "admin_priv": user.admin_priv,
+                        }
+                    },
+                )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
+        )
     except:
-        raise HTTPException(status_code=404, detail=f"Not found")
-    return Response(status_code=204)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
+        )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.post("/auth", response_model=Token)
@@ -150,29 +175,42 @@ async def auth_user_admin(
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            if (user := await db["users"].find_one({"userid": form_data.username})) is not None:
-                if verify_password(form_data.password, user["password"]) is True:
+            if (
+                user := await db["users"].find_one(
+                    {"userid": form_data.username}
+                )
+            ) is not None:
+                if (
+                    verify_password(form_data.password, user["password"])
+                    is True
+                ):
                     if user["admin_priv"] is True:
-                        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-                        access_token = create_access_token(
-                            data={"sub": user["userid"]}, expires_delta=access_token_expires
+                        access_token_expires = timedelta(
+                            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
                         )
-                        return {"access_token": access_token, "token_type": "bearer"}
+                        access_token = create_access_token(
+                            data={"sub": user["userid"]},
+                            expires_delta=access_token_expires,
+                        )
+                        return {
+                            "access_token": access_token,
+                            "token_type": "bearer",
+                        }
                     else:
                         raise HTTPException(
-                            status_code=401,
+                            status_code=status.HTTP_401_UNAUTHORIZED,
                             detail=f"User is not admin",
                             headers={"WWW-Authenticate": "Bearer"},
                         )
                 else:
                     raise HTTPException(
-                        status_code=401,
+                        status_code=status.HTTP_401_UNAUTHORIZED,
                         detail=f"Password is wrong",
                         headers={"WWW-Authenticate": "Bearer"},
                     )
             else:
                 raise HTTPException(
-                    status_code=404,
+                    status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"User ID does not exist",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
@@ -184,7 +222,7 @@ async def check_user_admin(current_user: User = Depends(get_current_user)):
     if current_user["admin_priv"] is True:
         return current_user
     raise HTTPException(
-        status_code=401,
+        status_code=status.HTTP_401_UNAUTHORIZED,
         detail=f"User is not admin",
         headers={"WWW-Authenticate": "Bearer"},
     )
@@ -192,33 +230,53 @@ async def check_user_admin(current_user: User = Depends(get_current_user)):
 
 # list users with pagination
 @router.post("/{page_num}")
-async def get_users(pages_user : UserPage, page_num: int = Path(ge = 1),current_user: User = Depends(get_current_user), db=Depends(get_db) ):
-        db, mongo_client = db
-        if current_user["admin_priv"] is True:
-            try:
-                # check number of documents to skip past
-                skips = pages_user.user_num * (page_num - 1)
-                # lookups for name and admin priv matching
-                lookup = {}
-                if pages_user.name != None:
-                    lookup['name'] = { '$regex' : pages_user.name, '$options' : 'i' }
-                if pages_user.admin_priv != None:
-                    lookup['admin_priv'] = pages_user.admin_priv
-                # dont skip if 1st page
-                async with await mongo_client.start_session() as session:
-                    async with session.start_transaction():
-                        if skips <= 0: 
-                            # find from users in MongodDB exclude ObjectID and convert to list
-                            cursor = await (db['users'].find(lookup, {'_id': False, 'password' : False}).limit(pages_user.user_num)).to_list(length = pages_user.user_num)
-                        # else call cursor with skips
-                        else:
-                            # find from users in MongodDB exclude ObjectID and convert to list
-                            cursor =  await (db['users'].find(lookup, {'_id': False, 'password' : False}).skip(skips).limit(pages_user.user_num)).to_list(length = pages_user.user_num)
-                        # return documents
-                return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
-            except ValueError as e:
-                return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=f"")
-            except:
-                return HTTPException(status_code=404)
-        # ensure when loading this endpoint that user is authenticateds not admin",headers={"WWW-Authenticate": "Bearer"})
-        raise HTTPException(status_code = 401,detail=f"User is not admin",headers={"WWW-Authenticate": "Bearer"})
+async def get_users(
+    pages_user: UserPage,
+    page_num: int = Path(ge=1),
+    current_user: User = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    db, mongo_client = db
+    if current_user["admin_priv"] is True:
+        try:
+            # check number of documents to skip past
+            skips = pages_user.user_num * (page_num - 1)
+            # lookups for name and admin priv matching
+            lookup = {}
+            if pages_user.name != None:
+                lookup["name"] = {"$regex": pages_user.name, "$options": "i"}
+            if pages_user.admin_priv != None:
+                lookup["admin_priv"] = pages_user.admin_priv
+            # dont skip if 1st page
+            async with await mongo_client.start_session() as session:
+                async with session.start_transaction():
+                    if skips <= 0:
+                        # find from users in MongodDB exclude ObjectID and convert to list
+                        cursor = await (
+                            db["users"]
+                            .find(lookup, {"_id": False, "password": False})
+                            .limit(pages_user.user_num)
+                        ).to_list(length=pages_user.user_num)
+                    # else call cursor with skips
+                    else:
+                        # find from users in MongodDB exclude ObjectID and convert to list
+                        cursor = await (
+                            db["users"]
+                            .find(lookup, {"_id": False, "password": False})
+                            .skip(skips)
+                            .limit(pages_user.user_num)
+                        ).to_list(length=pages_user.user_num)
+                    # return documents
+            return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
+        except ValueError as e:
+            return JSONResponse(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=f""
+            )
+        except:
+            return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    # ensure when loading this endpoint that user is authenticateds not admin",headers={"WWW-Authenticate": "Bearer"})
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=f"User is not admin",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
