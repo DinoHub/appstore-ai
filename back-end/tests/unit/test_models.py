@@ -31,7 +31,7 @@ async def test_get_all_models(
     [
         ({"title": "Test Model 1"}, "Test Model 1"),
         ({"tags": ["Test Tag", "Tag 2"]}, "Test Model 2"),
-        ({"owner": "Santa Claus 4"}, "Test Model 4"),
+        ({"owner_id": "test_4"}, "Test Model 4"),
         ({"frameworks": ["Framework 1"]}, "Test Model 1"),
     ],
 )
@@ -78,6 +78,7 @@ def test_create_model_card_metadata(
     model_metadata: List[Dict],
 ):
     for metadata in model_metadata:
+        del metadata["owner_id"]
         response = client.post("/models/", json=metadata)
         assert response.status_code == status.HTTP_201_CREATED
 
