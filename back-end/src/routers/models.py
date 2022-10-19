@@ -24,6 +24,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pymongo.errors import DuplicateKeyError
 
 from ..config.config import config
+from ..internal.auth import get_current_user
 from ..internal.clearml_client import clearml_api_client
 from ..internal.db import get_db
 from ..internal.file_validator import (
@@ -33,6 +34,7 @@ from ..internal.file_validator import (
 )
 from ..internal.inference import process_inference_data
 from ..models.engine import IOTypes
+from ..models.iam import User
 from ..models.model import (
     FindModelCardModel,
     InferenceEngine,
@@ -70,6 +72,7 @@ file_validator = ValidateFileUpload(
 router = APIRouter(prefix="/models", tags=["Models"])
 
 
+# TODO: Convert this to GET
 @router.post("/search", response_model=ModelCardModelIn)
 async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     # Search model cards
@@ -81,7 +84,7 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     db_query = {
         "model_id": query.model_id,
         "task": query.task,
-        "owner": query.owner,
+        "owner_id": query.owner_id,
         "creator": query.creator,
         "tags": {
             # NOTE: assumes AND
@@ -137,10 +140,10 @@ async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
 async def create_model_card_metadata(
     card: ModelCardModelIn,
     db=Depends(get_db),
+    user: User = Depends(get_current_user),
     clearml_client: APIClient = Depends(clearml_api_client),
 ):
     # NOTE: After this, still need to submit inference engine
-    # TODO: Endpoint for submit inference engine
     # If exp id is provided, some metadata can be obtained from ClearML
     db, mongo_client = db
     if card.clearml_exp_id:
@@ -201,11 +204,19 @@ async def create_model_card_metadata(
     card.frameworks = set(
         card.frameworks
     )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
-    card = jsonable_encoder(ModelCardModelDB(**card.dict()))
+
+    if card.inference_engine:  # Dynamically insert
+        card.inference_engine.owner_id = user[
+            "userid"
+        ]  # TODO: Clean up IE code
+
+    card = jsonable_encoder(
+        ModelCardModelDB(**card.dict(), owner_id=user["userid"])
+    )
     async with await mongo_client.start_session() as session:
         try:
             async with session.start_transaction():
-                new_card = await db["models"].insert_one(card)
+                await db["models"].insert_one(card)
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -216,10 +227,12 @@ async def create_model_card_metadata(
 
 @router.put("/{model_id}", response_model=ModelCardModelDB)
 async def update_model_card_metadata_by_id(
-    model_id: str, card: UpdateModelCardModel, db=Depends(get_db)
+    model_id: str,
+    card: UpdateModelCardModel,
+    db=Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     db, mongo_client = db
-    # TODO: Check that user is the model owner
     card = {k: v for k, v in card.dict().items() if v is not None}
     # TODO: should we consider updating datetime to current datetime??
 
@@ -227,42 +240,59 @@ async def update_model_card_metadata_by_id(
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                result = await db["models"].update_one(
-                    {"model_id": model_id}, {"$set": card}
+                # First, check that user actually has access
+                existing_card = await db["models"].find_one(
+                    {"model_id": model_id}
                 )
+                if existing_card is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"Model Card with ID: {model_id} not found",
+                    )
+                if existing_card["owner_id"] != user["userid"]:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="User does not have editor access to this model card",
+                    )
+                else:
+                    result = await db["models"].update_one(
+                        {"model_id": model_id}, {"$set": card}
+                    )
 
-                if (
-                    result.modified_count == 1
-                ):  # NOTE: how pythonic is this? (seems to violate DRY)
-                    # TODO: consider just removing the lines below
                     if (
-                        updated_card := await db["models"].find_one(
-                            {"model_id": model_id}
-                        )
-                    ) is not None:
-                        return updated_card
+                        result.modified_count == 1
+                    ):  # NOTE: how pythonic is this? (seems to violate DRY)
+                        # TODO: consider just removing the lines below
+                        if (
+                            updated_card := await db["models"].find_one(
+                                {"model_id": model_id}
+                            )
+                        ) is not None:
+                            return updated_card
     # If no changes, try to return existing card
-    if (
-        existing_card := await db["models"].find_one({"model_id": model_id})
-    ) is not None:
-        print("Nothing modified")
-        return existing_card
+    return existing_card
 
     # TODO: Might need to update inference engine
 
-    # Else, card never existed
-    raise HTTPException(
-        status_code=status.HTTP_404_NOT_FOUND,
-        detail=f"Model Card with ID: {model_id} not found.",
-    )
-
 
 @router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
+async def delete_model_card_by_id(
+    model_id: str, db=Depends(get_db), user: User = Depends(get_current_user)
+):
     # TODO: Check that user is the owner of the model card
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
+            # First, check that user actually has access
+            existing_card = await db["models"].find_one({"model_id": model_id})
+            if (
+                existing_card is not None
+                and existing_card["owner_id"] != user["userid"]
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have editor access to this model card",
+                )
             await db["models"].delete_one({"model_id": model_id})
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     # TODO: Should actual model be deleted as well?
@@ -282,6 +312,8 @@ async def make_test_inference(
     ),
     db=Depends(get_db),
 ):
+    # NOTE: Deprecated in Favour of Gradio
+    raise DeprecationWarning("Deprecated in favour of Gradio")
     # TODO: Consider if we can simply just return
     # the url to the front end and let the front-
     # end directly call the service

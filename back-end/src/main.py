@@ -1,8 +1,9 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .internal.auth import check_is_admin, get_current_user
 from .routers import datasets, engines, experiments, iam, models
 
 with open(Path(__file__).parent.parent.joinpath("README.md"), "r") as f:
@@ -41,11 +42,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(models.router)
-app.include_router(experiments.router)
-app.include_router(datasets.router)
-app.include_router(iam.router)
-app.include_router(engines.router)
+app.include_router(models.router, dependencies=[Depends(get_current_user)])
+app.include_router(
+    experiments.router, dependencies=[Depends(get_current_user)]
+)
+app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
+app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
+app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 
 @app.get("/")
