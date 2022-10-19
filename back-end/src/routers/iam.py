@@ -245,7 +245,7 @@ async def get_users(
             return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
         except ValueError as e:
             return JSONResponse(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=e
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=f""
             )
         except:
             return HTTPException(status_code=404)
