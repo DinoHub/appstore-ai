@@ -11,7 +11,7 @@ from ..models.iam import TokenData, User, UserRoles
 from .db import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/iam/auth")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth")
 
 CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
