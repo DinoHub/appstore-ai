@@ -12,7 +12,7 @@ from src.internal.db import get_db
 from .utils import fake_login_admin, fake_login_user, generate_section_model
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def client() -> TestClient:
     from src.config import config
 
@@ -25,13 +25,13 @@ def client() -> TestClient:
     return client
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def admin_client(client: TestClient) -> TestClient:
     client.app.dependency_overrides[check_is_admin] = fake_login_admin
     return client
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def anonymous_client(client: TestClient) -> TestClient:
     client.app.dependency_overrides = {}
     return client
