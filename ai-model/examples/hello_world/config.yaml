@@ -1,0 +1,11 @@
+schema_version: 2
+metadata:
+    name: Hello World
+    description: Example executor that does nothing
+    author: Tien Cheng
+    version: v1
+endpoints:
+    predict:
+        type: POST
+        input_schema: TextIO
+        output_schema: TextIO

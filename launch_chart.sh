@@ -1,4 +1,6 @@
 #! /bin/bash
+# script for launching helm charts individually
+# used mainly for testing and development purposes
 
 echo "Chart Deployment Modes:"
 echo "  be - Backend"

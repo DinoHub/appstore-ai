@@ -1,46 +1,56 @@
 import json
 import re
 import tempfile
-from typing import List, Mapping, Optional, Union
+from io import BytesIO
+from typing import BinaryIO, List, Mapping, Optional, Union
 
 import filetype
 import httpx
-from bson import ObjectId, json_util
+from bson import json_util
 from clearml import Model, Task
+from clearml.backend_api.session.client import APIClient
 from fastapi import (
     APIRouter,
     Depends,
     File,
     Form,
     HTTPException,
+    Request,
     UploadFile,
     status,
 )
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, StreamingResponse
+from pymongo.errors import DuplicateKeyError
 
-from ..internal.clearml_client import clearml_client
+from ..config.config import config
+from ..internal.clearml_client import clearml_api_client
 from ..internal.db import get_db
 from ..internal.file_validator import (
     MaxFileSizeException,
     MaxFileSizeValidator,
     ValidateFileUpload,
 )
-from ..internal.inference import stream_response
-
-# from internal.inference import is_triton_inference, triton_client
+from ..internal.inference import process_inference_data
+from ..models.engine import IOTypes
 from ..models.model import (
     FindModelCardModel,
+    InferenceEngine,
     ModelCardModelDB,
     ModelCardModelIn,
     UpdateModelCardModel,
 )
 
+MAKE_REQUEST_INFERENCE_TIMEOUT = httpx.Timeout(10, read=60 * 5, write=60 * 5)
+
 CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
-MAX_UPLOAD_SIZE_GB = 1
 
-ACCEPTED_CONTENT_TYPES = [
+MEDIA_IO_INTERFACES = {IOTypes.Media, IOTypes.Generic}
+
+TEXT_IO_INTERFACES = {IOTypes.Generic, IOTypes.JSON, IOTypes.Text}
+
+ACCEPTED_CONTENT_TYPES = {
     "image/jpeg",
     "image/png",
     "video/mp4",
@@ -52,10 +62,10 @@ ACCEPTED_CONTENT_TYPES = [
     "audio/mpeg",
     "audio/midi",
     "audio/aac",
-]
+}
 
 file_validator = ValidateFileUpload(
-    max_upload_size=MAX_UPLOAD_SIZE_GB * BytesPerGB
+    max_upload_size=config.MAX_UPLOAD_SIZE_GB * BytesPerGB
 )
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -69,6 +79,7 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     # mongodb atlas search to allow for fuzzy matching
     db, _ = db
     db_query = {
+        "model_id": query.model_id,
         "task": query.task,
         "owner": query.owner,
         "creator": query.creator,
@@ -115,7 +126,7 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
 async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
     db, _ = db
     # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one({"_id": ObjectId(model_id)})
+    model = await db["models"].find_one({"model_id": model_id})
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     model = json.loads(json_util.dumps(model))
@@ -124,7 +135,9 @@ async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_model_card_metadata(
-    card: ModelCardModelIn, db=Depends(get_db)
+    card: ModelCardModelIn,
+    db=Depends(get_db),
+    clearml_client: APIClient = Depends(clearml_api_client),
 ):
     # NOTE: After this, still need to submit inference engine
     # TODO: Endpoint for submit inference engine
@@ -150,7 +163,7 @@ async def create_model_card_metadata(
                 "text": "",
                 "media": [],
             }
-        card.performance.media.append(
+        card.performance["media"].append(
             task.get_reported_scalars()
         )  # do not override existing plots
         # NOTE: switch to backend rest api as only that let's me get info on user
@@ -190,11 +203,15 @@ async def create_model_card_metadata(
     )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
     card = jsonable_encoder(ModelCardModelDB(**card.dict()))
     async with await mongo_client.start_session() as session:
-        async with session.start_transaction():
-            new_card = await db["models"].insert_one(card)
-    return JSONResponse(
-        status_code=status.HTTP_201_CREATED, content=new_card.inserted_id
-    )
+        try:
+            async with session.start_transaction():
+                new_card = await db["models"].insert_one(card)
+        except DuplicateKeyError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Unable to add model with ID {card['model_id']} as the ID already exists.",
+            )
+    return card
 
 
 @router.put("/{model_id}", response_model=ModelCardModelDB)
@@ -211,7 +228,7 @@ async def update_model_card_metadata_by_id(
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 result = await db["models"].update_one(
-                    {"_id": ObjectId(model_id)}, {"$set": card}
+                    {"model_id": model_id}, {"$set": card}
                 )
 
                 if (
@@ -220,14 +237,15 @@ async def update_model_card_metadata_by_id(
                     # TODO: consider just removing the lines below
                     if (
                         updated_card := await db["models"].find_one(
-                            {"_id": ObjectId(model_id)}
+                            {"model_id": model_id}
                         )
                     ) is not None:
                         return updated_card
     # If no changes, try to return existing card
     if (
-        existing_card := await db["models"].find_one({"_id": model_id})
+        existing_card := await db["models"].find_one({"model_id": model_id})
     ) is not None:
+        print("Nothing modified")
         return existing_card
 
     # TODO: Might need to update inference engine
@@ -245,7 +263,7 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            await db["models"].delete_one({"_id": ObjectId(model_id)})
+            await db["models"].delete_one({"model_id": model_id})
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     # TODO: Should actual model be deleted as well?
 
@@ -253,120 +271,114 @@ async def delete_model_card_by_id(model_id: str, db=Depends(get_db)):
 @router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
 async def make_test_inference(
     model_id: str,
-    media: Optional[UploadFile] = File(None),
-    text: Optional[str] = Form(None),
+    request: Request,
+    media: Optional[List[UploadFile]] = File(
+        None,
+        description="Default file field to store media file in. Note that additional media fields can be sent to this endpoint.",
+    ),
+    text: Optional[str] = Form(
+        None,
+        description="Input to this is expected to be formatted as a JSON. Default form field to store text/json in. Note that additional form fields can be sent to this endpoint.",
+    ),
     db=Depends(get_db),
 ):
-    # Get metadata of inference engine url and visualisation engine url
-    db, _ = db
-    if media is None and text is None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No input provided to inference endpoint",
-        )
+    # TODO: Consider if we can simply just return
+    # the url to the front end and let the front-
+    # end directly call the service
+    # PRO: faster, more reliable
+    # CON: potential issue if the service not publicly accessible
+    # (e.g private service) as then only the back-end can access
+    # it
+    # Get metadata of inference engine url
+    media_data, json_data = await process_inference_data(request)
+    # NOTE: we do not give error for empty input as some models
+    # may not require any inputs
 
+    # Get metadata about the inference engine of the model
+    db, _ = db
     model = await db["models"].find_one(
         {
-            "_id": ObjectId(model_id),
+            "model_id": model_id,
         },
-        projection=["inference_url", "output_generator_url"],
+        projection=["inference_engine"],
     )
     if model is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Model with ID {model_id} not found.",
         )
-    inference_url = model["inference_url"]
-    visualization_url = model["output_generator_url"]
-
-    # Get file
-    # Validate File Size
-    file_size_validator = MaxFileSizeValidator(MAX_UPLOAD_SIZE_GB * BytesPerGB)
-    if media is not None:
-        with tempfile.NamedTemporaryFile() as f:
-            try:
-                while content := media.file.read(CHUNK_SIZE):
-                    file_size_validator(content)
-                    f.write(content)
-                content_type = filetype.guess_mime(f.name)
-                if content_type not in ACCEPTED_CONTENT_TYPES:
-                    raise ValueError
-                if content_type != media.content_type:  # MIME type mismatch
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail=f"MIME Type Mismatch. Content type reported was {media.content_type}, but file was {content_type}",
-                    )
-            except MaxFileSizeException:
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"File uploaded is too large. Limit is {MAX_UPLOAD_SIZE_GB}GB",
-                )
-            except ValueError:
-                raise HTTPException(
-                    status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                    detail=f"File type {content_type} not supported",
-                )
-        media.file.seek(
-            0
-        )  # unsure how necessary, but set pointer to start of file
-    data = None if text is None else {"text": text}
-    files = (
-        None
-        if media is None
-        else {"media": (media.filename, media.file, media.content_type)}
-    )
-    with httpx.Client() as client:
-        content_type = client.get(
-            "http://" + inference_url + "/content-type"
-        ).text
-    if visualization_url is None:  # stream output of inference engine
-        # content_type = "image/jpeg"
-        return StreamingResponse(
-            content=stream_response(
-                media=media,
-                text=text,
-                url="http://" + inference_url + "/predict",
-            ),
-            media_type=content_type,
+    if "inference_engine" not in model:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Model with ID {model_id} does not have known inference engine.",
         )
-    else:
-        async with httpx.AsyncClient() as client:
-            try:
-                response = await client.post(
-                    "http://" + inference_url + "/predict",
-                    files=files,
-                    data=data,
-                )
-                response.raise_for_status()
-                outputs = response.json()
-                # Encode as str to send as form-data to viz engine
-                outputs = json.dumps(outputs)
-            except httpx.RequestError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Error when attempting to request inference from model.",
-                )
-            except httpx.HTTPStatusError as e:
-                raise HTTPException(
-                    status_code=e.response.status_code,
-                    detail=f"Error when attempting to request inference from model. Error: {e.response.text}",
-                )
-            except json.JSONDecodeError:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail="Failed to decode response from model",
-                )
-            # Send media file to inference
-            # Feed response and file to visualization engine
-            stream = stream_response(
-                media=media,
-                text=text,
-                outputs=outputs,
-                url="http://" + visualization_url + "/visualize",
-            )  # NOTE: rely on side effect of function to change content_type to output of visualization url
-            # this is probably a bad way to do it
-            # TODO: consider including this info in some metadata of the model card?
-            return StreamingResponse(
-                content=stream,
-                media_type=content_type,
+    engine: InferenceEngine = model["inference_engine"]
+    inference_url = engine["service_url"]
+    input_interface = engine["input_schema"]["io_type"]
+
+    # Validate File Size
+    file_size_validator = MaxFileSizeValidator(
+        config.MAX_UPLOAD_SIZE_GB * BytesPerGB
+    )
+    if input_interface in MEDIA_IO_INTERFACES:
+        for files in media_data:
+            file: BinaryIO
+            content_type: str
+            for (_, (_, file, content_type)) in files:
+                with tempfile.NamedTemporaryFile() as f:
+                    try:
+                        while content := file.read(CHUNK_SIZE):
+                            file_size_validator(content)
+                            f.write(content)
+                        guessed_content_type = filetype.guess_mime(f.name)
+                        if guessed_content_type not in ACCEPTED_CONTENT_TYPES:
+                            raise ValueError
+                        if content_type != content_type:  # MIME type mismatch
+                            raise HTTPException(
+                                status_code=status.HTTP_400_BAD_REQUEST,
+                                detail=f"MIME Type Mismatch. Content type reported was {content_type}, but file was {guessed_content_type}",
+                            )
+                    except MaxFileSizeException:
+                        raise HTTPException(
+                            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                            detail=f"File uploaded is too large. Limit is {config.MAX_UPLOAD_SIZE_GB}GB",
+                        )
+                    except ValueError:
+                        raise HTTPException(
+                            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                            detail=f"File type {content_type} not supported",
+                        )
+                file.seek(
+                    0
+                )  # Set pointer to start of file to ensure file can be re-read
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{inference_url}/predict",
+            files=media_data,
+            data=json_data,
+            timeout=MAKE_REQUEST_INFERENCE_TIMEOUT,
+        )
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when calling inference engine: {e}",
             )
+        return StreamingResponse(
+            BytesIO(response.content),
+            media_type=response.headers.get("Content-Type"),
+        )
+    # return stream_generator(inference_url, media_data, json_data)
+    # TODO: Streaming generator that will also attempt
+    # to get a media type
+    # stream = (
+    #     await httpx.AsyncClient()
+    #     .stream("POST", f"{inference_url}/predict", files=media, data=text)
+    #     .__aenter__()
+    # ) # manually open stream context
+    # # this allows us to first get the MIME type of the output
+    # media_type = stream.headers.get("Content-Type")
+    # return StreamingResponse(
+    #     content=stream.aiter_raw(), media_type=media_type
+    # aiter_raw automatically closes the stream when consumed

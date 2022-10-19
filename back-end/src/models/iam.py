@@ -1,7 +1,8 @@
 from typing import Dict, List, Optional, Union
+
 from bson import ObjectId
-from pydantic import BaseModel, Field ,ValidationError , validator
 from password_strength import PasswordPolicy
+from pydantic import BaseModel, Field, ValidationError, validator
 
 from .common import PyObjectId
 
@@ -10,8 +11,7 @@ policy = PasswordPolicy.from_names(
     uppercase=1,  # need min. 1 uppercase letters
     numbers=1,  # need min. 1 digits
     special=1,  # need min. 1 special characters
-    )
-
+)
 
 
 class UserInsert(BaseModel):
@@ -21,14 +21,16 @@ class UserInsert(BaseModel):
     password_confirm: str
     admin_priv: bool = False
 
-    @validator('password_confirm')
+    @validator("password_confirm")
     def match_passwords(cls, v, values, **kwargs):
-        if v != values['password']:
-            raise ValueError('Passwords do not match')
-        strength = policy.test(values['password'])
+        if v != values["password"]:
+            raise ValueError("Passwords do not match")
+        strength = policy.test(values["password"])
         if not strength:
             return v
-        raise ValueError('Password must at least be length of 8, have 1 uppercase letter, 1 number and 1 special character')
+        raise ValueError(
+            "Password must at least be length of 8, have 1 uppercase letter, 1 number and 1 special character"
+        )
 
 
 class UserInsertDB(BaseModel):
@@ -62,25 +64,25 @@ class UserInDB(User):
 
 class UserPage(BaseModel):
     user_num: int
-    name: str = ''
+    name: str = ""
     admin_priv: int = 2
 
-    @validator('user_num')
+    @validator("user_num")
     def num_of_user_more_than_one(cls, v):
         if v <= 0:
-            raise ValueError('Number of users displayed must be more than one')
+            raise ValueError("Number of users displayed must be more than one")
         return v
 
-    @validator('name')
+    @validator("name")
     def name_is_empty(cls, v):
-        if v.strip() == '':
+        if v.strip() == "":
             return None
         return v
-    
-    @validator('admin_priv')
+
+    @validator("admin_priv")
     def admin_priv_check(cls, v):
         if v == 0:
-            return False 
+            return False
         elif v == 1:
             return True
         else:

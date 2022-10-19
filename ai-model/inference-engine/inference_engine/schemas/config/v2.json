@@ -1,0 +1,72 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema",
+    "title": "Inference Engine",
+    "description": "Inference Engine configuration",
+    "type": "object",
+    "properties": {
+        "schema_version": {
+            "description": "Schema version. Currently does nothing for now, but may be used in future should the schema change.",
+            "type": "integer",
+            "maximum": 2,
+            "minimum": 2
+        },
+        "metadata": {
+            "description": "Metadata of Inference Engine",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "author": {
+                    "type": "string"
+                }
+            }
+        },
+        "endpoints": {
+            "description": "Available inference endpoints of the engine",
+            "type": "object",
+            "patternProperties": {
+                "^.*$": {
+                    "type": "object",
+                    "description": "Endpoint name",
+                    "properties": {
+                        "type": {
+                            "type": "string",
+                            "enum": [
+                                "POST"
+                            ]
+                        },
+                        "input_schema": {
+                            "type": "string",
+                            "enum": [
+                                "GenericIO",
+                                "JSONIO",
+                                "TextIO",
+                                "MediaFileIO"
+                            ]
+                        },
+                        "output_schema": {
+                            "type": "string",
+                            "enum": [
+                                "GenericIO",
+                                "JSONIO",
+                                "TextIO",
+                                "MediaFileIO"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "required": [
+        "schema_version",
+        "metadata"
+    ]
+}

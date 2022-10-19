@@ -28,7 +28,9 @@ class MaxFileSizeValidator:
             raise MaxFileSizeException(fs=self.fs)
 
 
-def determine_safe_file_size(path: str = "/", clearance: Union[int, float] = 5) -> int:
+def determine_safe_file_size(
+    path: str = "/", clearance: Union[int, float] = 5
+) -> int:
     # clearance is because we need to give space for decompression
     assert clearance > 0
     (total, used, free) = disk_usage(path)
@@ -61,7 +63,9 @@ def clean_filename(
 
     # keep only valid ascii chars
     cleaned_filename = (
-        unicodedata.normalize("NFKD", filename).encode("ASCII", "ignore").decode()
+        unicodedata.normalize("NFKD", filename)
+        .encode("ASCII", "ignore")
+        .decode()
     )
 
     # keep only whitelisted chars
@@ -93,7 +97,10 @@ class ValidateFileUpload:
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="content-type not found in header",
                     )
-                if request.headers["content-type"] not in self.accepted_content_types:
+                if (
+                    request.headers["content-type"]
+                    not in self.accepted_content_types
+                ):
                     print(request.headers["content-type"])
                     raise HTTPException(
                         status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -101,7 +108,9 @@ class ValidateFileUpload:
                     )
             if self.max_upload_size is not None:
                 if "content-length" not in request.headers:
-                    raise HTTPException(status_code=status.HTTP_411_LENGTH_REQUIRED)
+                    raise HTTPException(
+                        status_code=status.HTTP_411_LENGTH_REQUIRED
+                    )
                 content_length = int(request.headers["content-length"])
                 if content_length > self.max_upload_size:
                     raise HTTPException(

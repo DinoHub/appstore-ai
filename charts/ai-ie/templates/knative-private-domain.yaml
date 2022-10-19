@@ -1,0 +1,20 @@
+# Depending on Values, either make all services private
+# or use Magic DNS to allow them to be accessed using the
+# cluster IP
+{{ if .Values.privateService }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-domain
+  namespace: knative-serving
+  labels:
+    app.kubernetes.io/name: knative-serving
+    app.kubernetes.io/component: controller
+    app.kubernetes.io/version: devel
+  annotations:
+    knative.dev/example-checksum: "81552d0b"
+data:
+
+  svc.cluster.local: |
+
+{{ end }}
