@@ -95,31 +95,40 @@ try:
     TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
     TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
     HOSTNAME = os.environ.get("HOSTNAME", "127.0.0.1")
+    # get Triton client and load model in Triton
     client = loadModel(MODEL_NAME,MODEL_VERSION,TRITON_URL)
 
     def question_answer(premise, topic):
+        # get content from Gradio frontend
         splitTopic = list(filter(None, topic.split(",")))
         list_output = []
         styledOutput = ""
         for x in splitTopic:
+            # run NLI inference in Triton server and return correct output
             output = run_inference(client,premise,x.strip(),MODEL_NAME,MODEL_VERSION)
             list_output.append([x,output])
+        # sort by truth confidence percentage
         list_output = sorted(list_output,key = lambda x: x[1],reverse=True)
         for i in list_output:
             styledOutput += f"{i[0].strip()} ({round(i[1],2)}%)\n"
         return styledOutput.strip()
 
     with gr.Blocks() as demo:
+        # styling for Gradio frontend
         premiseBox = gr.Textbox(placeholder="Text to classify...",label="Zero Shot Classification")
         topicBox = gr.Textbox(placeholder="Possible class names...",label= "Possible class names (comma-separated)")
 
         comp_btn = gr.Button("Compute")
 
         output = gr.Textbox(label="Probabilities",placeholder="<Label> (<Probability of being true>)")
+        # call function that sends inputs for inference and formats outputs for  display
         comp_btn.click(fn=question_answer,inputs = [premiseBox,topicBox] , outputs= output)
 
     if __name__ == "__main__":
+        # launch Gradio frontend
         demo.launch(server_name=HOSTNAME)
 except:
+    # catch for errors and unload model in Triton
+    # NOTE: This doesn't really work very well, some issues with SciPy/other packages causes complete crash when keyboard interrupting
     unloadModel(client,MODEL_NAME)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] Exited Application')
