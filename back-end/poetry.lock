@@ -279,7 +279,7 @@ python-versions = "*"
 
 [[package]]
 name = "Django"
-version = "3.2.15"
+version = "3.2.16"
 description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
