@@ -1,0 +1,23 @@
+FROM python:3.9-slim as python-base
+
+COPY requirements.txt .
+
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN pip install -Ur requirements.txt
+
+ARG PORT=7860
+ARG TRITON_PORT=8001
+ARG HOSTNAME=0.0.0.0
+ARG TRITON_HOSTNAME=172.19.112.1
+ARG MODEL_NAME="xlm_rob_large_mask"
+ARG MODEL_VERSION="1"
+ENV PORT=${PORT}
+ENV TRITON_PORT=${TRITON_PORT}
+ENV HOSTNAME=${HOSTNAME}
+ENV TRITON_HOSTNAME=${TRITON_HOSTNAME}
+
+EXPOSE ${PORT}
+
+COPY . .
+CMD ["python", "main.py"]
