@@ -85,24 +85,24 @@ try:
     # load tokeniser
     R_tokenizer = XLMRobertaTokenizer.from_pretrained('joeddav/xlm-roberta-large-xnli')
     VERBOSE = False
-    # def model name
-    model_name = "xlm_roberta_zsl"
-    model_version = "1"
     # set up input for triton
     input_name = ['input__0', 'input__1']
     output_name = 'output__0'
+    # get variables from env pass in Dockerfile
+    MODEL_NAME = os.environ.get("MODEL_NAME", "xlm_roberta_zsl")
+    MODEL_VERSION = os.environ.get("MODEL_VERSION", "1")
     TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "0.0.0.0")
     TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
     TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
     HOSTNAME = os.environ.get("HOSTNAME", "127.0.0.1")
-    client = loadModel(model_name,model_version,TRITON_URL)
+    client = loadModel(MODEL_NAME,MODEL_VERSION,TRITON_URL)
 
     def question_answer(premise, topic):
         splitTopic = list(filter(None, topic.split(",")))
         list_output = []
         styledOutput = ""
         for x in splitTopic:
-            output = run_inference(client,premise,x.strip(),model_name,model_version)
+            output = run_inference(client,premise,x.strip(),MODEL_NAME,MODEL_VERSION)
             list_output.append([x,output])
         list_output = sorted(list_output,key = lambda x: x[1],reverse=True)
         for i in list_output:
@@ -121,5 +121,5 @@ try:
     if __name__ == "__main__":
         demo.launch(server_name=HOSTNAME)
 except:
-    unloadModel(client)
+    unloadModel(client,MODEL_NAME)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] Exited Application')
