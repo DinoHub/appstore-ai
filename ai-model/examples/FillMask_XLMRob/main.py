@@ -7,14 +7,15 @@ import os
 from transformers import AutoTokenizer
 import torch
 
-def loadModel(model_name='mask_fill', model_version='1', url='127.0.0.1:8001'):
+def loadModel(model_name='mask_fill', model_version='1', url='127.0.0.1:8001',loading = "POLLING"):
     # establish connection to triton
     triton_client = tritongrpc.InferenceServerClient(
         url=url, verbose=VERBOSE)
     print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Connection')
 
     # load model in triton, not needed if mode = 'polling'
-    triton_client.load_model(model_name)
+    if loading == "EXPLICIT":
+        triton_client.load_model(model_name)
     if not triton_client.is_model_ready(model_name):
         print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Load Model')
     else:
@@ -88,10 +89,11 @@ try:
     MODEL_VERSION = os.environ.get("MODEL_VERSION", "1")
     TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "127.0.0.1")
     TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
+    TRITON_MODE = os.environ.get("TRITON_MODE", "EXPLICIT")
     TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
     HOSTNAME = os.environ.get("HOSTNAME", "127.0.0.1")
     # get Triton client and load model in Triton
-    client = loadModel(MODEL_NAME,MODEL_VERSION,TRITON_URL)
+    client = loadModel(MODEL_NAME,MODEL_VERSION,TRITON_URL,TRITON_MODE)
 
     def question_answer(premise,top_k):
         # run Masking inference in Triton server and return correct output
