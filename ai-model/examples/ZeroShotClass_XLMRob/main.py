@@ -109,6 +109,7 @@ try:
             list_output.append([x,output])
         # sort by truth confidence percentage
         list_output = sorted(list_output,key = lambda x: x[1],reverse=True)
+        # format outputs for display
         for i in list_output:
             styledOutput += f"{i[0].strip()} ({round(i[1],2)}%)\n"
         return styledOutput.strip()
