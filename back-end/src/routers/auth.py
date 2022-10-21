@@ -3,7 +3,11 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from ..internal.auth import create_access_token, verify_password
+from ..internal.auth import (
+    check_is_admin,
+    create_access_token,
+    verify_password,
+)
 from ..internal.db import get_db
 from ..models.iam import Token, UserRoles
 
@@ -57,3 +61,13 @@ async def auth_user(
                     detail=f"User ID does not exist",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
+
+
+@router.get(
+    "/is_admin",
+    dependencies=[Depends(check_is_admin)],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def verify_admin():
+    """This endpoint mostly exists just to test that auth code is working"""
+    return
