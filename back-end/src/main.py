@@ -23,12 +23,16 @@ tags_metadata = [
         "description": "APIs mostly used for transfer learning feature to upload dataset used for transfer learning.",
     },
     {
+        "name": "Inference Engines",
+        "description": "APIs to deploy inference engines",
+    },
+    {
         "name": "IAM",
         "description": "APIs for system admins to manage users in database in IAM system",
     },
     {
-        "name": "Inference Engines",
-        "description": "APIs to deploy inference engines",
+        "name": "Auth",
+        "description": "APIs to allow end users to login to the system",
     },
 ]
 app = FastAPI(
