@@ -355,7 +355,7 @@ initdbScripts:
       {
         userid: 'dev1',
         name: 'DeveloperOne',
-        password: '$2b$12$X86gHxJpDZEc4YHy2oLqU.pwNvvcJP16L5C292q39KuxXmCBW.xdG',
+        password: '$2b$12$coDQnalKv3kw8kzuwztyc.l6gfveM/ERMVQioVYN9OQq6KheDG3ae',
         admin_priv: false
       },
     ]);

@@ -96,11 +96,17 @@ spec:
                   name: {{ include "ai-be.fullname" . }}
                   key: clear_secret
                   optional: true
-            - name: SECRET_KEY
+            - name: PROD_SECRET_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "ai-be.fullname" . }}
                   key: hash_key
+                  optional: true
+            - name: PROD_ADMIN_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: hash_key_admin
                   optional: true
             - name: ALGORITHM
               valueFrom:
