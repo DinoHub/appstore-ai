@@ -1,9 +1,10 @@
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import datasets, engines, experiments, iam, models
+from .internal.auth import check_is_admin, get_current_user
+from .routers import auth, datasets, engines, experiments, iam, models
 
 with open(Path(__file__).parent.parent.joinpath("README.md"), "r") as f:
     description = f.read()
@@ -22,12 +23,16 @@ tags_metadata = [
         "description": "APIs mostly used for transfer learning feature to upload dataset used for transfer learning.",
     },
     {
+        "name": "Inference Engines",
+        "description": "APIs to deploy inference engines",
+    },
+    {
         "name": "IAM",
         "description": "APIs for system admins to manage users in database in IAM system",
     },
     {
-        "name": "Inference Engines",
-        "description": "APIs to deploy inference engines",
+        "name": "Authentication",
+        "description": "APIs to allow end users to login to the system",
     },
 ]
 app = FastAPI(
@@ -41,11 +46,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(models.router)
-app.include_router(experiments.router)
-app.include_router(datasets.router)
-app.include_router(iam.router)
-app.include_router(engines.router)
+app.include_router(auth.router)
+app.include_router(models.router, dependencies=[Depends(get_current_user)])
+app.include_router(
+    experiments.router, dependencies=[Depends(get_current_user)]
+)
+app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
+app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
+app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 
 @app.get("/")

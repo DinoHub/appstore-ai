@@ -9,8 +9,9 @@ services:
     depends_on:
       - mongodb
     environment:
-      - SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
-      - ALGORITHM=HS256
+      - DEV_SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+      - DEV_ADMIN_SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+      - DEV_ALGORITHM=HS256
       - DEV_MONGO_DSN=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10
       - DEV_DB_NAME=app_store
@@ -19,6 +20,8 @@ services:
       - CLEARML_FILES_HOST=https://files.clear.ml
       - CLEARML_API_ACCESS_KEY=WT9BPSIZML1TMQZMC0XM
       - CLEARML_API_SECRET_KEY=6vjSQME0FpOYFBsqSvaRjTPaAyWF1NKNHHXlLkrk1mbepcRud0
+
+
     networks:
       - appstore
   mongodb:
@@ -31,12 +34,6 @@ services:
     volumes:
       - "./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js"
       - "./mongodb_data:/data/db"
-    networks:
-      - appstore
-  stable_diffusion:
-    image: ie-stable-diffusion
-    ports:
-      - "4001:4001"
     networks:
       - appstore
       

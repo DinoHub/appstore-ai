@@ -31,7 +31,7 @@ async def test_get_all_models(
     [
         ({"title": "Test Model 1"}, "Test Model 1"),
         ({"tags": ["Test Tag", "Tag 2"]}, "Test Model 2"),
-        ({"owner": "Santa Claus 4"}, "Test Model 4"),
+        ({"owner_id": "test_4"}, "Test Model 4"),
         ({"frameworks": ["Framework 1"]}, "Test Model 1"),
     ],
 )
@@ -78,6 +78,7 @@ def test_create_model_card_metadata(
     model_metadata: List[Dict],
 ):
     for metadata in model_metadata:
+        del metadata["owner_id"]
         response = client.post("/models/", json=metadata)
         assert response.status_code == status.HTTP_201_CREATED
 
@@ -184,3 +185,32 @@ async def test_delete_model_card_metadata(
 
     # Check that database has actually been emptied
     assert len((await db["models"].find().to_list(length=None))) == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("flush_db")
+async def test_delete_model_card_metadata_unauthorized(
+    client: TestClient,
+    model_metadata: List[Dict],
+    get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+):
+    db, _ = get_fake_db
+    card = model_metadata[0]
+    card["owner_id"] = "other_user"
+    await db["models"].insert_one(card)
+    # Check length before anything
+    assert len((await db["models"].find().to_list(length=None))) == 1
+
+    # Get model ID
+    model_card_id = str(
+        (await db["models"].find().to_list(length=1))[0]["model_id"]
+    )
+
+    # Send delete request
+    response = client.delete(
+        f"/models/{model_card_id}",
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+
+    # Check that database is unaffected
+    assert len((await db["models"].find().to_list(length=None))) == 1

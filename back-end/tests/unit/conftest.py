@@ -6,10 +6,12 @@ import pytest_asyncio
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from .utils.fake_db import generate_section_model
+from src.internal.auth import check_is_admin, get_current_user
+
+from .utils import fake_login_admin, fake_login_user, generate_section_model
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def client() -> TestClient:
     from src.config import config
 
@@ -17,6 +19,39 @@ def client() -> TestClient:
     config.config = config.TestingConfig()
     from src.main import app
 
+    app.dependency_overrides[get_current_user] = fake_login_user
+    if check_is_admin in app.dependency_overrides:
+        del app.dependency_overrides[check_is_admin]
+    client = TestClient(app)
+    return client
+
+
+@pytest.fixture
+def admin_client(client: TestClient) -> TestClient:
+    from src.config import config
+
+    config.ENV_STATE = "test"
+    config.config = config.TestingConfig()
+    from src.main import app
+
+    app.dependency_overrides[get_current_user] = fake_login_user
+    app.dependency_overrides[check_is_admin] = fake_login_admin
+    client = TestClient(app)
+    return client
+
+
+@pytest.fixture
+def anonymous_client(client: TestClient) -> TestClient:
+    from src.config import config
+
+    config.ENV_STATE = "test"
+    config.config = config.TestingConfig()
+    from src.main import app
+
+    if check_is_admin in app.dependency_overrides:
+        del app.dependency_overrides[check_is_admin]
+    if get_current_user in app.dependency_overrides:
+        del app.dependency_overrides[get_current_user]
     client = TestClient(app)
     return client
 
@@ -43,6 +78,7 @@ def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
             "model_id": f"test-model-card-{idx}",
+            "owner_id": f"test_{idx}",
             "title": f"Test Model {idx}",
             "description": generate_section_model(),
             "limitations": generate_section_model(),
@@ -56,18 +92,10 @@ def model_metadata() -> List[Dict]:
             "task": "Testing Model Card",
             "frameworks": ["pytest", f"Framework {idx}"],
             "point_of_contact": "Santa Claus",
-            "owner": f"Santa Claus {idx}",
             "creator": "Rudolph",
             "inference_engine": {
                 "service_url": "http://service_name.namespace.svc.cluster.local",
-                "input_schema": {
-                    "io_type": "GenericIO",
-                    "json_schema": {
-                        "media": {"type": "media"},
-                        "parameters": {"type": "json", "required": False},
-                    },
-                },
-                "output_schema": {"io_type": "TextIO"},
+                "owner_id": f"test_{idx}",
             },
         }
         for idx in range(1, 11)
@@ -90,18 +118,10 @@ def clearml_model_metadata() -> Dict:
         "task": "Testing Model Card",
         "frameworks": ["pytest"],
         "point_of_contact": "Santa Claus",
-        "owner": f"Santa Claus",
         "creator": "Rudolph",
         "inference_engine": {
             "service_url": "http://service_name.namespace.svc.cluster.local",
-            "input_schema": {
-                "io_type": "GenericIO",
-                "json_schema": {
-                    "media": {"type": "media"},
-                    "parameters": {"type": "json", "required": False},
-                },
-            },
-            "output_schema": {"io_type": "TextIO"},
+            "owner_id": "test_1",
         },
         "clearml_exp_id": "e-047f991269004aceaf18a25c3c1def20",
     }

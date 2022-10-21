@@ -8,7 +8,8 @@ from fastapi.testclient import TestClient
     [
         ("/igdg", "GET", status.HTTP_404_NOT_FOUND),
         ("/", "GET", status.HTTP_200_OK),
-        ("/iam/add", "POST", status.HTTP_401_UNAUTHORIZED),
+        # NOTE: below test returns 401 instead of 403 as oauth scheme does not receive auth header
+        ("/auth/is_admin", "GET", status.HTTP_401_UNAUTHORIZED),
     ],
 )
 def test_route_response(

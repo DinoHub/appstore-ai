@@ -1,8 +1,9 @@
-from typing import Dict, List, Optional, Union
+from enum import Enum
+from typing import Optional
 
 from bson import ObjectId
 from password_strength import PasswordPolicy
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, Field, validator
 
 from .common import PyObjectId
 
@@ -12,6 +13,11 @@ policy = PasswordPolicy.from_names(
     numbers=1,  # need min. 1 digits
     special=1,  # need min. 1 special characters
 )
+
+
+class UserRoles(str, Enum):
+    user = "user"
+    admin = "admin"
 
 
 class UserInsert(BaseModel):
@@ -51,7 +57,8 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    userid: Union[str, None] = None
+    userid: Optional[str] = None
+    role: Optional[UserRoles] = None
 
 
 class User(BaseModel):

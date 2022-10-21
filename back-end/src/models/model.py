@@ -34,7 +34,6 @@ class ModelCardModelIn(BaseModel):  # Input spec
         str
     ]  # TODO: decide if this should be a singular tag or allow multiple
     point_of_contact: str
-    owner: str
     creator: Optional[str]
     # TODO: Figure out model source stuff
     clearml_exp_id: Optional[str]
@@ -43,6 +42,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
 
 class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    owner_id: str  # to be dynamically put in by FastAPI
 
     class Config:
         allow_population_by_field_name = True
@@ -52,12 +52,12 @@ class ModelCardModelDB(ModelCardModelIn):
 
 class FindModelCardModel(BaseModel):
     model_id: Optional[str]
+    owner_id: Optional[str]
     title: Optional[str]
     tags: Optional[List[str]]
     task: Optional[str]
     frameworks: Optional[List[str]]
     point_of_contact: Optional[str]
-    owner: Optional[str]
     creator: Optional[str]
     sort: Optional[List[List[str]]]  # [(sort col, sort direction)]
     return_attrs: Optional[List[str]]
@@ -79,7 +79,6 @@ class UpdateModelCardModel(BaseModel):
         List[str]
     ]  # NOTE: tbd if this should be just 1 string
     point_of_contact: Optional[str]
-    owner: Optional[str]
     creator: Optional[str]
     clearml_exp_id: Optional[str]
     inference_engine: Optional[InferenceEngine]

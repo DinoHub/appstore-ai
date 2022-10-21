@@ -8,7 +8,12 @@ from pydantic import BaseSettings, Field, MongoDsn
 class GlobalConfig(BaseSettings):
     ENV_STATE: str = Field(default="dev", env="ENV_STATE")
     DB_NAME: str = Field(default="appStoreDB")
+    ALGORITHM: str = Field(default="HS256")
     MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=1)
+    SECRET_KEY: Optional[
+        str
+    ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
+    ADMIN_SECRET_KEY: Optional[str] = None
     MONGO_DSN: Optional[MongoDsn] = None
     MONGO_USERNAME: Optional[str] = None
     MONGO_PASSWORD: Optional[str] = None
@@ -72,20 +77,8 @@ class FactoryConfig:
             raise ValueError(f"Unsupported config: {self.env_state}")
 
 
-class AdminHashing(BaseSettings):
-    SECRET_KEY: Optional[
-        str
-    ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
-    ALGORITHM: str = "HS256"
-
-    class Config:
-        env_file: str = "./src/config/.env"
-
-
 ENV_STATE = GlobalConfig().ENV_STATE
 config = FactoryConfig(ENV_STATE)()
 
 if config is not None:
     config.set_envvar()
-
-admin = AdminHashing()
