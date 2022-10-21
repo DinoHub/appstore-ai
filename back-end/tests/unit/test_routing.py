@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
     [
         ("/igdg", "GET", status.HTTP_404_NOT_FOUND),
         ("/", "GET", status.HTTP_200_OK),
-        ("/iam/add", "POST", status.HTTP_401_UNAUTHORIZED),
+        ("/iam/add", "POST", status.HTTP_403_FORBIDDEN),
     ],
 )
 def test_route_response(
