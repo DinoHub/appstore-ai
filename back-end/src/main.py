@@ -31,7 +31,7 @@ tags_metadata = [
         "description": "APIs for system admins to manage users in database in IAM system",
     },
     {
-        "name": "Auth",
+        "name": "Authentication",
         "description": "APIs to allow end users to login to the system",
     },
 ]
