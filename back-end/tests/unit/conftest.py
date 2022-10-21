@@ -11,7 +11,7 @@ from src.internal.auth import check_is_admin, get_current_user
 from .utils import fake_login_admin, fake_login_user, generate_section_model
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def client() -> TestClient:
     from src.config import config
 
@@ -24,15 +24,29 @@ def client() -> TestClient:
     return client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def admin_client(client: TestClient) -> TestClient:
-    client.app.dependency_overrides[check_is_admin] = fake_login_admin
+    from src.config import config
+
+    config.ENV_STATE = "test"
+    config.config = config.TestingConfig()
+    from src.main import app
+
+    app.dependency_overrides[get_current_user] = fake_login_user
+    app.dependency_overrides[check_is_admin] = fake_login_admin
+    client = TestClient(app)
     return client
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def anonymous_client(client: TestClient) -> TestClient:
-    client.app.dependency_overrides = {}
+    from src.config import config
+
+    config.ENV_STATE = "test"
+    config.config = config.TestingConfig()
+    from src.main import app
+
+    client = TestClient(app)
     return client
 
 
