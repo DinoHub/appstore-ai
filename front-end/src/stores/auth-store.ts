@@ -22,7 +22,7 @@ export const useAuthStore = defineStore('auth', {
   }),
   actions: {
     login() {
-      this.user = {
+      this.user = { // TODO: Replace with actual api call
         userId: 'tmp1',
         name: 'Tmp User',
       };
