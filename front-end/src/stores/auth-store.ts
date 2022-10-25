@@ -1,19 +1,13 @@
 import { defineStore } from 'pinia';
 
-export const useAuthStore = defineStore('counter', {
+export const useAuthStore = defineStore({
+  id : 'auth'
+}, {
   state: () => ({
-    counter: 0
+    user: true, // tmp
+    returnUrl: null
   }),
-
-  getters: {
-    doubleCount (state) {
-      return state.counter * 2;
-    }
-  },
-
   actions: {
-    increment () {
-      this.counter++;
-    }
+    
   }
 });
