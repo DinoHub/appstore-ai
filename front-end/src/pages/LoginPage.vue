@@ -48,9 +48,9 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { defineComponent, Ref, ref } from 'vue';
 const userId: Ref<string | null> = ref(null);
 const password: Ref<string | null> = ref(null);
+const authStore = useAuthStore();
 
 async function onSubmit() {
-  const authStore = useAuthStore();
   if (userId.value && password.value) {
     await authStore.login(userId.value, password.value);
   }
