@@ -12,7 +12,7 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          <q-img src="../assets/aas_logo.png" height="50px" fit="scale-down"></q-img>
         </q-toolbar-title>
 
         <div>Quasar v{{ $q.version }}</div>
