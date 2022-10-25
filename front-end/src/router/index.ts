@@ -36,20 +36,14 @@ export default route(function (/* { store, ssrContext } */) {
   });
 
   // Validate authentication
-  Router.beforeEach(async (to, from, next) => {
+  Router.beforeEach(async (to) => {
     const publicPages = ['/login'];
     const authRequired = !publicPages.includes(to.path);
     const auth = useAuthStore();
 
     if (authRequired && !auth.user?.userId) {
-      next({
-        name: 'login',
-        query: {
-          next: to.fullPath,
-        },
-      });
-    } else {
-      next();
+      auth.returnUrl = to.fullPath;
+      return '/login';
     }
   });
 

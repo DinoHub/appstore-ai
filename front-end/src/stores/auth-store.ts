@@ -19,6 +19,7 @@ export interface User {
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('user') ?? '{}') as User | null,
+    returnUrl: null as string | null
   }),
   actions: {
     login() {
@@ -27,6 +28,7 @@ export const useAuthStore = defineStore('auth', {
         name: 'Tmp User',
       };
       localStorage.setItem('user', JSON.stringify(this.user));
+      this.router.push(this.returnUrl || '/');
     },
     logout() {
       this.user = null;
