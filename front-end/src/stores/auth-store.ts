@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { Ref, ref } from 'vue';
+import { reactive, Ref, ref } from 'vue';
 
 // export const useAuthStore = defineStore({
 //   id: 'auth',
@@ -10,12 +10,17 @@ import { Ref, ref } from 'vue';
 //   actions: {},
 // });
 
+export interface User {
+  userId: string | null;
+  name: string | null;
+}
+
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref(true);
+  const user: User | null = reactive(JSON.parse(localStorage.getItem('user') ?? '{}'));
   const returnUrl: Ref<null | string> = ref(null);
 
   return {
     user,
-    returnUrl
-  }
-})
+    returnUrl,
+  };
+});
