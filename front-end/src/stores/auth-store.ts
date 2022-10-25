@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { reactive, Ref, ref } from 'vue';
+import router from '../router/index';
 
 // export const useAuthStore = defineStore({
 //   id: 'auth',
@@ -15,12 +16,22 @@ export interface User {
   name: string | null;
 }
 
-export const useAuthStore = defineStore('auth', () => {
-  const user: User | null = reactive(JSON.parse(localStorage.getItem('user') ?? '{}'));
-  const returnUrl: Ref<null | string> = ref(null);
-
-  return {
-    user,
-    returnUrl,
-  };
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: JSON.parse(localStorage.getItem('user') ?? '{}') as User | null,
+  }),
+  actions: {
+    login() {
+      this.user = {
+        userId: 'tmp1',
+        name: 'Tmp User',
+      };
+      localStorage.setItem('user', JSON.stringify(this.user));
+    },
+    logout() {
+      this.user = null;
+      localStorage.removeItem('user');
+      this.router.push('/login');
+    },
+  },
 });
