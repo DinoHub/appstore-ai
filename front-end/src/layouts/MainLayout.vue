@@ -12,16 +12,15 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          AI App Store
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div>img placeholder</div>
       </q-toolbar>
     </q-header>
 
     <q-drawer
       v-model="leftDrawerOpen"
-      show-if-above
       bordered
     >
       <q-list>
