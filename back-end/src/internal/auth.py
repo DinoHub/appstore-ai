@@ -3,7 +3,7 @@ from typing import Optional, Union
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 
 from ..config.config import config
@@ -61,16 +61,16 @@ async def get_current_user(
         )
         exp: datetime = datetime.strptime(payload.get("exp"))
         # Check if token has expired
-        if datetime.utcnow() > exp:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access Token Expired",
-            )
         userid: str = payload.get("sub")
         role: UserRoles = payload.get("role")  # Verify that role is correct
         if userid is None or role is None:
             raise CREDENTIALS_EXCEPTION
         token_data = TokenData(userid=userid, role=role)
+    except ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access Token Expired",
+        )
     except JWTError:
         raise CREDENTIALS_EXCEPTION
     async with await mongo_client.start_session() as session:
