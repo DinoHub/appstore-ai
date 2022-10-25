@@ -13,4 +13,9 @@ import { Ref, ref } from 'vue';
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(true);
   const returnUrl: Ref<null | string> = ref(null);
+
+  return {
+    user,
+    returnUrl
+  }
 })
