@@ -342,7 +342,7 @@ existingConfigmap: ""
 ##
 initdbScripts:
   init-db.js: |
-    mongo = db.getSiblingDB('app_store');
+    mongo = db.getSiblingDB('appStoreProdDB');
     mongo.createCollection('users');
     mongo.users.createIndex({userid: 'text'}, {unique:true}) 
     mongo.users.insertMany([
@@ -361,7 +361,7 @@ initdbScripts:
     ]);
   insertUsers.js: |
     use admin
-    db.createUser({user:"SysAdmin",pwd:"SystemAccess2@",roles:[{role:"readWrite",db:"app_store"}]})
+    db.createUser({user:"SysAdmin",pwd:"SystemAccess2@",roles:[{role:"readWrite",db:"appStoreProdDB"}]})
   
 ## @param initdbScriptsConfigMap Existing ConfigMap with custom initdb scripts
 ##
