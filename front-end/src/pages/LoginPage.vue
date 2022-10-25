@@ -43,9 +43,9 @@
   </q-page>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
-import { defineComponent, Ref, ref } from 'vue';
+import { Ref, ref } from 'vue';
 const userId: Ref<string | null> = ref(null);
 const password: Ref<string | null> = ref(null);
 const authStore = useAuthStore();
@@ -55,14 +55,4 @@ async function onSubmit() {
     await authStore.login(userId.value, password.value);
   }
 }
-
-export default defineComponent({
-  setup() {
-    return {
-      userId,
-      password,
-      onSubmit,
-    };
-  },
-});
 </script>
