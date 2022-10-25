@@ -35,7 +35,7 @@ def create_access_token(
     if expires_delta is not None:
         expire = datetime.utcnow() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.utcnow() + timedelta(minutes=360)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode,
@@ -59,6 +59,13 @@ async def get_current_user(
             config.ADMIN_SECRET_KEY if is_admin else config.SECRET_KEY,
             algorithms=[config.ALGORITHM],
         )
+        exp: datetime = datetime.strptime(payload.get("exp"))
+        # Check if token has expired
+        if datetime.utcnow() > exp:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access Token Expired",
+            )
         userid: str = payload.get("sub")
         role: UserRoles = payload.get("role")  # Verify that role is correct
         if userid is None or role is None:
