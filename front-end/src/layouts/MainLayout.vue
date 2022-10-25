@@ -9,21 +9,30 @@
           icon="menu"
           aria-label="Menu"
           @click="toggleLeftDrawer"
+          v-if="loggedIn"
         />
 
         <q-toolbar-title>
-          <q-img src="../assets/aas_logo.png" height="50px" fit="scale-down"></q-img>
+          <q-img
+            src="../assets/aas_logo.png"
+            height="50px"
+            fit="scale-down"
+          ></q-img>
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn
+          flat
+          dense
+          round
+          icon="logout"
+          aria-label="Logout"
+          @click="onLogout"
+          v-if="loggedIn"
+        ></q-btn>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      bordered
-    >
-    </q-drawer>
+    <q-drawer v-model="leftDrawerOpen" bordered> </q-drawer>
 
     <q-page-container>
       <router-view />
@@ -32,11 +41,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { useAuthStore } from 'src/stores/auth-store';
+import { ref, computed } from 'vue';
 
-const leftDrawerOpen = ref(false)
+const authStore = useAuthStore();
+
+const loggedIn = computed(() => {
+  return authStore.user !== undefined && authStore.user?.userId !== null;
+});
+
+const leftDrawerOpen = ref(false);
 
 function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+}
+
+function onLogout() {
+  authStore.logout();
 }
 </script>
