@@ -12,27 +12,42 @@
           v-if="loggedIn"
         />
 
-        <q-toolbar-title>
+        <!-- <q-toolbar-title>
           <q-img
             src="../assets/aas_logo.png"
             height="50px"
             fit="scale-down"
           ></q-img>
-        </q-toolbar-title>
+        </q-toolbar-title> -->
 
-        <q-btn
-          flat
-          dense
-          round
-          icon="logout"
-          aria-label="Logout"
-          @click="onLogout"
-          v-if="loggedIn"
-        ></q-btn>
+        <q-drawer v-model="leftDrawerOpen" bordered> </q-drawer>
+        <q-toolbar-title> AI App Store </q-toolbar-title>
+
+        <div class="q-pl-sm">
+          <q-btn flat round color="white" to="/createModel" icon="add" />
+        </div>
+        <div class="q-pl-sm">
+          <q-btn flat round color="white" icon="search" />
+        </div>
+        <div class="q-pl-sm">
+          <q-btn flat round color="white" icon="chat" />
+        </div>
+        <div class="q-pl-sm">
+          <q-btn flat round color="white" icon="account_box" />
+        </div>
+        <div class="q-pl-sm">
+          <q-btn
+            flat
+            dense
+            round
+            icon="logout"
+            aria-label="Logout"
+            @click="onLogout"
+            v-if="loggedIn"
+          ></q-btn>
+        </div>
       </q-toolbar>
     </q-header>
-
-    <q-drawer v-model="leftDrawerOpen" bordered> </q-drawer>
 
     <q-page-container>
       <router-view />
