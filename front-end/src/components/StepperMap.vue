@@ -50,6 +50,9 @@
                 input-debounce="0"
                 new-value-mode="add-unique"
                 class="q-ml-md q-pr-md q-pb-xl"
+                :rules="[
+                  (val) => val.length >= 1 || 'One or more tags required',
+                ]"
               />
               <q-select
                 hint="Frameworks"
@@ -62,6 +65,9 @@
                 input-debounce="0"
                 new-value-mode="add-unique"
                 class="q-ml-md q-pr-md q-pb-xl"
+                :rules="[
+                  (val) => val.length >= 1 || 'One or more frameworks required',
+                ]"
               ></q-select>
             </div>
             <div class="col-3 q-pl-md q-ml-xl shadow-2 rounded">
@@ -106,12 +112,7 @@
         <q-stepper-navigation>
           <div class="row">
             <div class="text-left col-2">
-              <q-btn
-                color="red"
-                @click="$refs.stepper.previous()"
-                label="Cancel"
-                class="q-mr-md"
-              />
+              <q-btn color="red" to="/" label="Cancel" class="q-mr-md" />
             </div>
             <div class="text-right col-10">
               <q-btn
@@ -146,6 +147,9 @@ export default {
     const step = ref(1);
     const tagAddUnique = ref([]);
     const frameworkAddUnique = ref([]);
+    const model_name = ref('');
+    const owner = ref('');
+    const poc = ref('');
     function simulateSubmit() {
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
@@ -156,11 +160,9 @@ export default {
       tagAddUnique,
       frameworkAddUnique,
       model: ref(null),
-      model_name: ref(''),
-      tags: ref(''),
-      owner: ref(''),
-      poc: ref(''),
-      frameworks: ref(''),
+      model_name,
+      owner,
+      poc,
       tasks: [
         'Computer Vision',
         'Natural Language Processing',
