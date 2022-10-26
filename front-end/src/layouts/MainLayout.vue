@@ -11,10 +11,21 @@
           @click="toggleLeftDrawer"
         />
 
-        <q-toolbar-title> AI App Store </q-toolbar-title>
+        <q-toolbar-title
+          ><router-link to="/" class="text-white" style="text-decoration: none"
+            >AI App Store</router-link
+          ></q-toolbar-title
+        >
 
         <div class="q-pl-sm">
-          <q-btn flat round color="white" to="/createModel" icon="add" />
+          <q-btn
+            v-if="$route.path != '/model/create'"
+            flat
+            round
+            color="white"
+            to="/model/create"
+            icon="add"
+          />
         </div>
         <div class="q-pl-sm">
           <q-btn flat round color="white" icon="search" />
@@ -23,7 +34,7 @@
           <q-btn flat round color="white" icon="chat" />
         </div>
         <div class="q-pl-sm">
-          <q-btn flat round color="white"  icon="account_box" />
+          <q-btn flat round color="white" icon="account_box" />
         </div>
       </q-toolbar>
     </q-header>
@@ -40,12 +51,22 @@
   </q-layout>
 </template>
 
-<script setup lang="ts">
+<script>
 import { ref } from 'vue';
 
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
+export default {
+  setup() {
+    const leftDrawerOpen = ref(false);
+    function toggleLeftDrawer() {
+      leftDrawerOpen.value = !leftDrawerOpen.value;
+    }
+    return {
+      leftDrawerOpen,
+      toggleLeftDrawer,
+    };
+  },
+  created() {
+    console.log(this.$route.path); // path is /post
+  },
+};
 </script>
