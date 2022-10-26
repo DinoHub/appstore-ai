@@ -80,6 +80,8 @@ def test_create_model_card_metadata(
     for metadata in model_metadata:
         del metadata["creator_user_id"]
         del metadata["model_id"]
+        del metadata["created"]
+        del metadata["last_modified"]
         response = client.post("/models/", json=metadata)
         assert response.status_code == status.HTTP_201_CREATED
 

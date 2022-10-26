@@ -183,9 +183,15 @@ async def create_model_card_metadata(
     card.tags = set(card.tags)  # remove duplicates
     card.frameworks = set(card.frameworks)
     model_id = user["userid"] + "/" + to_snake_case(card.title)
+    created = datetime.datetime.now()
+    last_modified = created
     card = jsonable_encoder(
         ModelCardModelDB(
-            **card.dict(), creator_user_id=user["userid"], model_id=model_id
+            **card.dict(),
+            creator_user_id=user["userid"],
+            model_id=model_id,
+            last_modified=last_modified,
+            created=created,
         )
     )
     async with await mongo_client.start_session() as session:

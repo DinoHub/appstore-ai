@@ -11,8 +11,6 @@ class ModelCardModelIn(BaseModel):  # Input spec
     title: str
     description: str
     performance: str
-    created: datetime
-    last_modified: datetime
     tags: List[str]  # for all other tags
     task: str  # a task is a tag
     frameworks: List[str]
@@ -26,6 +24,8 @@ class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     creator_user_id: str  # to be dynamically put in by FastAPI
     model_id: str  # to be generated on back-end
+    created: datetime
+    last_modified: datetime
 
     class Config:
         allow_population_by_field_name = True
