@@ -1,7 +1,15 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    Request,
+    Response,
+    status,
+)
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_csrf_protect import CsrfProtect
 from jose import ExpiredSignatureError, JWTError
 
 from ..internal.auth import (
@@ -23,7 +31,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/", response_model=Token)
 async def auth_user(
-    form_data: OAuth2PasswordRequestForm = Depends(), db=Depends(get_db)
+    response: Response,
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    csrf: CsrfProtect = Depends(),
+    db=Depends(get_db),
 ):
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
@@ -57,6 +68,9 @@ async def auth_user(
                     refresh_token = create_access_token(
                         data=data, expires_delta=refresh_token_expires
                     )
+
+                    # Protect Cookies with CSRF
+                    csrf.set_csrf_cookie(response)
                     return {
                         "access_token": access_token,
                         "refresh_token": refresh_token,
@@ -77,12 +91,18 @@ async def auth_user(
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(request: Request, db=Depends(get_db)):
+async def refresh_token(
+    request: Request,
+    response: Response,
+    csrf: CsrfProtect = Depends(),
+    db=Depends(get_db),
+):
     try:
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
+            rs = form.get("refresh_token")
             token_data = decode_jwt(
-                form.get("refresh_token"),
+                rs,
                 is_admin=form.get("role") == UserRoles.admin,
             )
             db, mongo_client = db
@@ -107,9 +127,10 @@ async def refresh_token(request: Request, db=Depends(get_db)):
                             data=data,
                             expires_delta=access_token_expires,
                         )
+                        csrf.set_csrf_cookie(response)
                         return {
                             "access_token": access_token,
-                            "refresh_token": form.get("refresh_token"),
+                            "refresh_token": rs,
                             "token_type": "bearer",
                         }
                     else:

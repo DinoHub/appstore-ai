@@ -6,6 +6,7 @@ from bson import ObjectId
 from password_strength import PasswordPolicy
 from pydantic import BaseModel, Field, validator
 
+from ..config.config import config
 from .common import PyObjectId
 
 policy = PasswordPolicy.from_names(
@@ -14,6 +15,10 @@ policy = PasswordPolicy.from_names(
     numbers=1,  # need min. 1 digits
     special=1,  # need min. 1 special characters
 )
+
+
+class CsrfSettings(BaseModel):
+    secret_key: str = config.SECRET_KEY
 
 
 class UserRoles(str, Enum):

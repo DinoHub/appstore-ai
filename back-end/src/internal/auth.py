@@ -1,17 +1,24 @@
 from datetime import datetime, timedelta
 from typing import Optional, Union
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordBearer
+from fastapi_csrf_protect import CsrfProtect
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 
 from ..config.config import config
-from ..models.iam import TokenData, User, UserRoles
+from ..models.iam import CsrfSettings, TokenData, User, UserRoles
 from .db import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth")
+
+
+@CsrfProtect.load_config
+def get_csrf_config():
+    return CsrfSettings()
+
 
 CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -62,10 +69,13 @@ def decode_jwt(token: str, is_admin: bool = False) -> TokenData:
 
 
 async def get_current_user(
+    request: Request,
     token: str = Depends(oauth2_scheme),
     db=Depends(get_db),
+    csrf: CsrfProtect = Depends(),
     is_admin: bool = False,
 ) -> User:
+    csrf.validate_csrf_in_cookies(request)
     db, mongo_client = db
     try:
         token_data = decode_jwt(token, is_admin)
@@ -94,9 +104,9 @@ async def get_current_user(
 
 
 async def check_is_admin(
-    token: str = Depends(oauth2_scheme), db=Depends(get_db)
+    request: Request, token: str = Depends(oauth2_scheme), db=Depends(get_db)
 ) -> User:
-    user = await get_current_user(token, db=db, is_admin=True)
+    user = await get_current_user(request, token, db=db, is_admin=True)
     if not user["admin_priv"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
