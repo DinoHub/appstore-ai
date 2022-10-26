@@ -33,10 +33,10 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def auth_user(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    csrf: CsrfProtect = Depends(),
     db=Depends(get_db),
 ):
     db, mongo_client = db
+    csrf = CsrfProtect()
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             if (
@@ -94,7 +94,6 @@ async def auth_user(
 async def refresh_token(
     request: Request,
     response: Response,
-    csrf: CsrfProtect = Depends(),
     db=Depends(get_db),
 ):
     try:
@@ -127,6 +126,7 @@ async def refresh_token(
                             data=data,
                             expires_delta=access_token_expires,
                         )
+                        csrf = CsrfProtect()
                         csrf.set_csrf_cookie(response)
                         return {
                             "access_token": access_token,
