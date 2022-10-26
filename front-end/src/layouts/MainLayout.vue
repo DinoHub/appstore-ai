@@ -24,16 +24,16 @@
         <q-toolbar-title> AI App Store </q-toolbar-title>
 
         <div class="q-pl-sm">
-          <q-btn flat round color="white" to="/createModel" icon="add" />
+          <q-btn flat round color="white" to="/createModel" icon="add" v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
-          <q-btn flat round color="white" icon="search" />
+          <q-btn flat round color="white" icon="search" v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
-          <q-btn flat round color="white" icon="chat" />
+          <q-btn flat round color="white" icon="chat" v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
-          <q-btn flat round color="white" icon="account_box" />
+          <q-btn flat round color="white" icon="account_box"  v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
           <q-btn
@@ -62,7 +62,7 @@ import { ref, computed } from 'vue';
 const authStore = useAuthStore();
 
 const loggedIn = computed(() => {
-  return authStore.user !== undefined && authStore.user?.userId !== null;
+  return authStore.user && authStore.user?.userId !== null;
 });
 
 const leftDrawerOpen = ref(false);
