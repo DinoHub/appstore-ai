@@ -1,6 +1,8 @@
-import { store } from 'quasar/wrappers'
-import { createPinia } from 'pinia'
+import { Cookies } from 'quasar';
 import { Router } from 'vue-router';
+import { createPinia } from 'pinia'
+import { createQuasarCookiesPersistedState } from 'pinia-plugin-persistedstate/quasar'
+import { store } from 'quasar/wrappers'
 
 /*
  * When adding new properties to stores, you should also
@@ -27,6 +29,16 @@ export default store((/* { ssrContext } */) => {
 
   // You can add Pinia plugins here
   // pinia.use(SomePiniaPlugin)
+  const cookies = Cookies;
+  pinia.use(createQuasarCookiesPersistedState(
+    cookies,
+    {
+      cookiesOptions: {
+        sameSite: 'Strict',
+        expires: 3600,
+      }
+    }
+  ))
 
   return pinia
 })

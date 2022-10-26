@@ -1,6 +1,8 @@
-import axios, { AxiosInstance } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
+import { Cookies } from 'quasar';
 import { boot } from 'quasar/wrappers';
+import { useAuthStore } from 'src/stores/auth-store';
 
 declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
@@ -14,7 +16,36 @@ declare module '@vue/runtime-core' {
 // good idea to move this instance creation inside of the
 // "export default () => {}" function below (which runs individually
 // for each client)
-const api = axios.create({ baseURL: 'http://localhost:8080' });
+const api = axios.create({
+  baseURL: 'http://localhost:8080',
+  withCredentials: true,
+});
+
+// Set Interceptor
+api.interceptors.request.use(
+  (config) => {
+    const authStore = useAuthStore();
+    config.headers['Authorization'] = `Bearer ${authStore.access_token}`;
+    return config
+  }
+)
+
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response?.status === 403 && !originalRequest._retry) {
+      alert("Hi")
+      originalRequest._retry = true;
+      // get refresh token
+      const authStore = useAuthStore();
+      await authStore.refresh();
+      return api(originalRequest);
+    }
+  }
+);
 
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
