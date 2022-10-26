@@ -24,7 +24,14 @@
         <q-toolbar-title> AI App Store </q-toolbar-title>
 
         <div class="q-pl-sm">
-          <q-btn flat round color="white" to="/createModel" icon="add" v-if="loggedIn" />
+          <q-btn
+            flat
+            round
+            color="white"
+            to="/createModel"
+            icon="add"
+            v-if="loggedIn"
+          />
         </div>
         <div class="q-pl-sm">
           <q-btn flat round color="white" icon="search" v-if="loggedIn" />
@@ -33,7 +40,7 @@
           <q-btn flat round color="white" icon="chat" v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
-          <q-btn flat round color="white" icon="account_box"  v-if="loggedIn" />
+          <q-btn flat round color="white" icon="account_box" v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
           <q-btn

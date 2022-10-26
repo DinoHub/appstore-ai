@@ -12,7 +12,9 @@
             <q-btn round icon="add"></q-btn>
           </div>
           <div class="col">
-            <q-btn to="/models" flat><span class="underline">See all models</span></q-btn>
+            <q-btn to="/models" flat
+              ><span class="underline">See all models</span></q-btn
+            >
           </div>
         </div>
         <model-card></model-card>
@@ -31,8 +33,10 @@ const authStore = useAuthStore();
 const username = ref(authStore.user?.name);
 
 // Get all user models
-const modelStore = useModelStore()
-modelStore.getAll().then((data) => { console.log(data)} )
+const modelStore = useModelStore();
+modelStore.getAll().then((data) => {
+  console.log(data);
+});
 // Get models owned by the user
 </script>
 

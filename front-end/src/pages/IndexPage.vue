@@ -17,10 +17,10 @@ import { ref } from 'vue';
 const todos = ref<Todo[]>([
   {
     id: 1,
-    content: 'ct1'
-  }
+    content: 'ct1',
+  },
 ]);
 const meta = ref<Meta>({
-  totalCount: 1200
+  totalCount: 1200,
 });
 </script>

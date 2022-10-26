@@ -1,23 +1,24 @@
-import CreateModel from 'pages/CreateModel.vue'
-import DashboardPage from 'pages/DashboardPage.vue'
-import ErrorNotFound from 'pages/ErrorNotFound.vue'
-import LoginPage from 'pages/LoginPage.vue'
+import CreateModel from 'pages/CreateModel.vue';
+import DashboardPage from 'pages/DashboardPage.vue';
+import ErrorNotFound from 'pages/ErrorNotFound.vue';
+import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
 import { RouteRecordRaw } from 'vue-router';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     component: () => MainLayout,
-    children: [{ path: '', component: () => LoginPage}]
+    children: [{ path: '', component: () => LoginPage }],
   },
   {
     path: '/models',
     component: () => MainLayout,
     children: [
       {
-        path: 'create', component: () => CreateModel
-      }
-    ]
+        path: 'create',
+        component: () => CreateModel,
+      },
+    ],
   },
   {
     path: '/',

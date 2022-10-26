@@ -22,7 +22,7 @@ export const useModelStore = defineStore('model', {
     },
     async getAll(): Promise<ModelCard[]> {
       const res = await api.post('models/search', {});
-      return res.data
+      return res.data;
     },
   },
 });

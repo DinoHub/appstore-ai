@@ -56,8 +56,8 @@ export const useAuthStore = defineStore('auth', {
           name: jwt_data.name,
           role: jwt_data.role,
         } as User;
-        this.access_token = access_token
-        this.refresh_token = refresh_token
+        this.access_token = access_token;
+        this.refresh_token = refresh_token;
       } catch (err) {
         console.error(err);
       }
@@ -74,7 +74,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await api.post('/auth/refresh', {
           grant_type: 'refresh_token',
-          refresh_token: this.refresh_token
+          refresh_token: this.refresh_token,
         });
 
         if (response.status !== 200) {
@@ -83,11 +83,11 @@ export const useAuthStore = defineStore('auth', {
         }
         const { access_token }: LoginResponse = response.data;
         // Set tokens
-        this.access_token = access_token
+        this.access_token = access_token;
       } catch (err) {
         console.error(err);
       }
     },
   },
-  persist: true
+  persist: true,
 });

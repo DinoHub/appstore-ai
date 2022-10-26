@@ -40,7 +40,6 @@ export default route(function (/* { store, ssrContext } */) {
     const publicPages = ['/login'];
     const authRequired = !publicPages.includes(to.path);
     const auth = useAuthStore();
-    
 
     if (authRequired && !auth.user?.userId) {
       auth.returnUrl = to.fullPath;
