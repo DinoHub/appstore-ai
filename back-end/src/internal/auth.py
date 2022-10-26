@@ -53,7 +53,12 @@ def decode_jwt(token: str, is_admin: bool = False) -> TokenData:
         config.ADMIN_SECRET_KEY if is_admin else config.SECRET_KEY,
         algorithms=[config.ALGORITHM],
     )
-    return TokenData(**payload)
+    return TokenData(
+        userid=payload.get("sub", None),
+        name=payload.get("name", None),
+        role=payload.get("role", None),
+        exp=payload.get("exp", None),
+    )
 
 
 async def get_current_user(
@@ -82,7 +87,9 @@ async def get_current_user(
                 }
             )
     if user is None:
-        raise CREDENTIALS_EXCEPTION
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
     return user
 
 

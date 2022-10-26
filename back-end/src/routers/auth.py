@@ -15,7 +15,7 @@ from ..internal.db import get_db
 from ..models.iam import Token, UserRoles
 
 # use openssl rand -hex 32 to generate secret key
-ACCESS_TOKEN_EXPIRE_MINUTES = 45
+ACCESS_TOKEN_EXPIRE_MINUTES = 1
 REFRESH_TOKEN_EXPIRE_MINUTES = 43200  # 30 Days
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -109,6 +109,7 @@ async def refresh_token(request: Request, db=Depends(get_db)):
                         )
                         return {
                             "access_token": access_token,
+                            "refresh_token": form.get("refresh_token"),
                             "token_type": "bearer",
                         }
                     else:
