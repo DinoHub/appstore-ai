@@ -1,5 +1,3 @@
-import { route } from 'quasar/wrappers';
-import { useAuthStore } from 'src/stores/auth-store';
 import {
   createMemoryHistory,
   createRouter,
@@ -7,7 +5,9 @@ import {
   createWebHistory,
 } from 'vue-router';
 
+import { route } from 'quasar/wrappers';
 import routes from './routes';
+import { useAuthStore } from 'src/stores/auth-store';
 
 /*
  * If not building with SSR mode, you can
@@ -40,6 +40,7 @@ export default route(function (/* { store, ssrContext } */) {
     const publicPages = ['/login'];
     const authRequired = !publicPages.includes(to.path);
     const auth = useAuthStore();
+    
 
     if (authRequired && !auth.user?.userId) {
       auth.returnUrl = to.fullPath;
