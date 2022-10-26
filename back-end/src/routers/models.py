@@ -1,3 +1,4 @@
+import datetime
 import json
 import re
 
@@ -205,8 +206,7 @@ async def update_model_card_metadata_by_id(
 ):
     db, mongo_client = db
     card = {k: v for k, v in card.dict().items() if v is not None}
-    # TODO: should we consider updating datetime to current datetime??
-
+    card["last_modified"] = datetime.datetime.now().strftime()
     if len(card) > 0:
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
