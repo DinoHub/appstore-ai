@@ -1,6 +1,7 @@
 import datetime
 import json
 import re
+from uuid import uuid4
 
 import httpx
 from bson import json_util
@@ -14,6 +15,7 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
+from ..internal.utils import to_snake_case
 from ..models.iam import User
 from ..models.model import (
     FindModelCardModel,
@@ -179,11 +181,12 @@ async def create_model_card_metadata(
     #                 # NOTE: if they provided the inference url, should still be usable
     #                 continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
-    card.frameworks = set(
-        card.frameworks
-    )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
+    card.frameworks = set(card.frameworks)
+    model_id = user["userid"] + "/" + to_snake_case(card.title)
     card = jsonable_encoder(
-        ModelCardModelDB(**card.dict(), creator_user_id=user["userid"])
+        ModelCardModelDB(
+            **card.dict(), creator_user_id=user["userid"], model_id=model_id
+        )
     )
     async with await mongo_client.start_session() as session:
         try:
@@ -206,7 +209,7 @@ async def update_model_card_metadata_by_id(
 ):
     db, mongo_client = db
     card = {k: v for k, v in card.dict().items() if v is not None}
-    card["last_modified"] = datetime.datetime.now().strftime()
+    card["last_modified"] = str(datetime.datetime.now())
     if len(card) > 0:
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:

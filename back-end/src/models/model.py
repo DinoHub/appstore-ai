@@ -8,7 +8,6 @@ from .common import PyObjectId
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
-    model_id: str  # unique id
     title: str
     description: str
     performance: str
@@ -26,6 +25,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
 class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     creator_user_id: str  # to be dynamically put in by FastAPI
+    model_id: str  # to be generated on back-end
 
     class Config:
         allow_population_by_field_name = True
@@ -47,7 +47,6 @@ class FindModelCardModel(BaseModel):
 
 
 class UpdateModelCardModel(BaseModel):
-    model_id: Optional[str]  # unique id
     title: Optional[str]
     description: Optional[str]
     performance: Optional[str]
