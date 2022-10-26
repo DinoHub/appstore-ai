@@ -28,7 +28,7 @@ export interface JWT {
 // currently have to store accesstoken in Cookie that is not secured (httponly)
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: JSON.parse(localStorage.getItem('user') ?? '{}') as User | null,
+    user: null as User | null,
     returnUrl: null as string | null,
     access_token: null as string | null,
     refresh_token: null as string | null,
@@ -61,12 +61,12 @@ export const useAuthStore = defineStore('auth', {
       } catch (err) {
         console.error(err);
       }
-      localStorage.setItem('user', JSON.stringify(this.user));
       this.router.push(this.returnUrl || '/');
     },
     logout(): void {
       this.user = null;
-      localStorage.removeItem('user');
+      this.access_token = null;
+      this.refresh_token = null;
       this.router.push('/login');
     },
     async refresh(): Promise<void> {
