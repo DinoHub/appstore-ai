@@ -12,8 +12,10 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "@types/markdown-it": "^12.2.3",
     "axios": "^0.21.1",
     "jwt-decode": "^3.1.2",
+    "markdown-it": "^13.0.1",
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^2.3.0",
     "quasar": "^2.6.0",
