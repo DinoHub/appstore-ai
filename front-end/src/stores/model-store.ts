@@ -6,6 +6,7 @@ export interface ModelCard {
   title: string;
   task: string;
   tags: string[];
+  frameworks: string[];
   creator: string;
   owner?: string;
   pointOfContact?: string;
@@ -30,11 +31,12 @@ export const useModelStore = defineStore('model', {
         modelId: data.model_id as string,
         title: data.title as string,
         task: data.task as string,
-        tags: ((data.tags as string[]) + data.frameworks) as string[],
-        creator: data.creator as string,
+        tags: data.tags as string[],
+        frameworks: data.frameworks as string[],
+        creator: data.creator_user_id as string,
         owner: data.owner as string,
         pointOfContact: data.point_of_contact as string,
-        inferenceApi: data.inference_engine.service_url as string,
+        inferenceApi: data.inference_api as string,
         description: data.description as string,
         performance: data.performance as string,
         created: data.created as Date,
