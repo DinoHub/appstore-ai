@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.internal.auth import check_is_admin, get_current_user
 
-from .utils import fake_login_admin, fake_login_user, generate_section_model
+from .utils import fake_login_admin, fake_login_user
 
 
 @pytest.fixture
@@ -78,50 +78,20 @@ def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
             "model_id": f"test-model-card-{idx}",
-            "owner_id": f"test_{idx}",
+            "creator_user_id": f"test_{idx}",
             "title": f"Test Model {idx}",
-            "description": generate_section_model(),
-            "limitations": generate_section_model(),
-            "metrics": generate_section_model(),
-            "explanation": generate_section_model(),
-            "deployment": generate_section_model(),
-            "performance": generate_section_model(),
-            "model_details": generate_section_model(),
-            "datetime": str(datetime.datetime.now()),
+            "description": "# Markdown Text",
+            "performance": "# Markdown Text",
+            "created": str(datetime.datetime.now()),
+            "last_modified": str(datetime.datetime.now()),
             "tags": ["Test Tag", f"Tag {idx}"],
             "task": "Testing Model Card",
             "frameworks": ["pytest", f"Framework {idx}"],
             "point_of_contact": "Santa Claus",
-            "creator": "Rudolph",
-            "inference_engine": {
-                "service_url": "http://service_name.namespace.svc.cluster.local",
-                "owner_id": f"test_{idx}",
-            },
+            "owner": "Rudolph",
+            "inference_api": "https://fake_inference.com",
+            "clearml_exp_id": "e-047f991269004aceaf18a25c3c1def20",
         }
         for idx in range(1, 11)
     ]
     return fake_model_metadata
-
-
-@pytest.fixture
-def clearml_model_metadata() -> Dict:
-    return {
-        "model_id": f"test-model-card-clearml",
-        "title": f"PyTorch MNIST training",
-        "description": generate_section_model(),
-        "limitations": generate_section_model(),
-        "metrics": generate_section_model(),
-        "explanation": generate_section_model(),
-        "deployment": generate_section_model(),
-        "datetime": str(datetime.datetime.now()),
-        "tags": ["Test Tag"],
-        "task": "Testing Model Card",
-        "frameworks": ["pytest"],
-        "point_of_contact": "Santa Claus",
-        "creator": "Rudolph",
-        "inference_engine": {
-            "service_url": "http://service_name.namespace.svc.cluster.local",
-            "owner_id": "test_1",
-        },
-        "clearml_exp_id": "e-047f991269004aceaf18a25c3c1def20",
-    }
