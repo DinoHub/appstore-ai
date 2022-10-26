@@ -23,7 +23,7 @@ from ..internal.db import get_db
 from ..models.iam import Token, UserRoles
 
 # use openssl rand -hex 32 to generate secret key
-ACCESS_TOKEN_EXPIRE_MINUTES = 1
+ACCESS_TOKEN_EXPIRE_MINUTES = 15
 REFRESH_TOKEN_EXPIRE_MINUTES = 43200  # 30 Days
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])

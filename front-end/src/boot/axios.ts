@@ -37,7 +37,6 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (error.response?.status === 403 && !originalRequest._retry) {
-      alert("Hi")
       originalRequest._retry = true;
       // get refresh token
       const authStore = useAuthStore();

@@ -25,7 +25,7 @@ export interface JWT {
 }
 
 // TODO: Fix storing the access token in a secured way that Axios can use for the OAuth
-// currently have to store accesstoken in Cookie that is not secured (httponly) 
+// currently have to store accesstoken in Cookie that is not secured (httponly)
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: JSON.parse(localStorage.getItem('user') ?? '{}') as User | null,
@@ -83,7 +83,6 @@ export const useAuthStore = defineStore('auth', {
         }
         const { access_token }: LoginResponse = response.data;
         // Set tokens
-        console.log('Access token refreshed', access_token);
         this.access_token = access_token
       } catch (err) {
         console.error(err);
