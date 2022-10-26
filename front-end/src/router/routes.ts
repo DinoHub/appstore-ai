@@ -1,30 +1,35 @@
+import CreateModel from 'pages/CreateModel.vue'
+import DashboardPage from 'pages/DashboardPage.vue'
+import ErrorNotFound from 'pages/ErrorNotFound.vue'
+import LoginPage from 'pages/LoginPage.vue'
+import MainLayout from 'layouts/MainLayout.vue';
 import { RouteRecordRaw } from 'vue-router';
-
 const routes: RouteRecordRaw[] = [
   {
-    path: '/',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/DashboardPage.vue') }],
-  },
-  {
     path: '/login',
-    component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/LoginPage.vue')}]
+    component: () => MainLayout,
+    children: [{ path: '', component: () => LoginPage}]
   },
   {
     path: '/models',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => MainLayout,
     children: [
       {
-        path: 'create', component: () => import('pages/CreateModel.vue')
+        path: 'create', component: () => CreateModel
       }
     ]
   },
+  {
+    path: '/',
+    component: () => MainLayout,
+    children: [{ path: '', component: () => DashboardPage }],
+  },
+
   // Always leave this as last one,
   // but you can also remove it
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue'),
+    component: () => ErrorNotFound,
   },
 ];
 
