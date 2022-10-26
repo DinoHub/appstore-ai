@@ -47,6 +47,15 @@ def create_access_token(
     return encoded_jwt
 
 
+def decode_jwt(token: str, is_admin: bool = False) -> TokenData:
+    payload = jwt.decode(
+        token,
+        config.ADMIN_SECRET_KEY if is_admin else config.SECRET_KEY,
+        algorithms=[config.ALGORITHM],
+    )
+    return TokenData(**payload)
+
+
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db=Depends(get_db),
@@ -54,18 +63,9 @@ async def get_current_user(
 ) -> User:
     db, mongo_client = db
     try:
-        payload = jwt.decode(
-            token,
-            config.ADMIN_SECRET_KEY if is_admin else config.SECRET_KEY,
-            algorithms=[config.ALGORITHM],
-        )
-        exp: datetime = datetime.strptime(payload.get("exp"))
-        # Check if token has expired
-        userid: str = payload.get("sub")
-        role: UserRoles = payload.get("role")  # Verify that role is correct
-        if userid is None or role is None:
+        token_data = decode_jwt(token, is_admin)
+        if token_data.userid is None or token_data.role is None:
             raise CREDENTIALS_EXCEPTION
-        token_data = TokenData(userid=userid, role=role)
     except ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

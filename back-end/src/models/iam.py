@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 from typing import Optional
 
@@ -53,12 +54,15 @@ class UserInsertDB(BaseModel):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
 
 
 class TokenData(BaseModel):
     userid: Optional[str] = None
+    name: Optional[str] = None
     role: Optional[UserRoles] = None
+    exp: Optional[datetime] = None
 
 
 class User(BaseModel):
