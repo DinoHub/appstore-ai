@@ -4,11 +4,19 @@ import ErrorNotFound from 'pages/ErrorNotFound.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
 import { RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     component: () => MainLayout,
     children: [{ path: '', component: () => LoginPage }],
+    beforeEnter: (to) => {
+      const auth = useAuthStore();
+      if (auth.access_token) {
+        // Logged in
+        return '/';
+      }
+    },
   },
   {
     path: '/models',
