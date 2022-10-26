@@ -31,7 +31,7 @@
             flat
             round
             color="white"
-            to="/createModel"
+            to="/models/create"
             icon="add"
             v-if="loggedIn"
           />
