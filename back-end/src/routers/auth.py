@@ -109,7 +109,7 @@ async def refresh_token(
                 async with session.start_transaction():
                     if (
                         user := await db["users"].find_one(
-                            {"userId": token_data.userid}
+                            {"userId": token_data.user_id}
                         )
                     ) is not None:
                         data = {
