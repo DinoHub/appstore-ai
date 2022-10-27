@@ -15,13 +15,13 @@
         flat
         label="View"
         text-color="primary"
-        :to="`models/${id}`"
+        :to="`models/${userId}/${modelId}`"
       ></q-btn>
       <q-btn
         flat
         label="Edit"
         text-color="primary"
-        :to="`models/${id}/edit`"
+        :to="`models/${userId}/${modelId}/edit`"
       ></q-btn>
     </q-card-actions>
   </q-card>
@@ -31,12 +31,15 @@
 import { defineProps, withDefaults } from 'vue';
 
 export interface ModelCardProps {
-  id: string;
+  userId: string;
+  modelId: string;
   title: string;
   description: string;
   tags: string[];
 }
 const props = withDefaults(defineProps<ModelCardProps>(), {
+  userId: 'dev1',
+  modelId: 'bert',
   title: 'Card Title',
   description: 'Sample description',
   tags: () => {
