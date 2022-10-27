@@ -20,35 +20,43 @@
         flat
         label="View"
         text-color="primary"
-        :to="`models/${userId}/${modelId}`"
+        :to="`models/${creatorUserId}/${modelId}`"
       ></q-btn>
       <q-btn
         flat
         label="Edit"
         text-color="primary"
-        :to="`models/${userId}/${modelId}/edit`"
+        :to="`models/${creatorUserId}/${modelId}/edit`"
+        v-if="isModelOwner"
       ></q-btn>
     </q-card-actions>
   </q-card>
 </template>
 
 <script setup lang="ts">
-import { defineProps, withDefaults } from 'vue';
+import { useAuthStore } from 'src/stores/auth-store';
+import { computed, defineProps, withDefaults } from 'vue';
 
 export interface ModelCardProps {
-  userId: string;
+  creatorUserId: string;
   modelId: string;
   title: string;
   description: string;
   tags: string[];
 }
+
+const authStore = useAuthStore();
 const props = withDefaults(defineProps<ModelCardProps>(), {
-  userId: 'dev1',
+  creatorUserId: 'dev1',
   modelId: 'bert',
   title: 'Card Title',
   description: 'Sample description',
   tags: () => {
     return ['Example 1', 'Example 2'];
   },
+});
+
+const isModelOwner = computed(() => {
+  return props.creatorUserId == authStore.user?.userId;
 });
 </script>
