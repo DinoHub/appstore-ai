@@ -6,13 +6,18 @@
 <template>
   <q-card class="card q-gutter-sm">
     <q-card-section>
-      <div class="text-h6">{{ title }}</div>
-      <q-chip v-for="tag in tags" :key="tag" color="primary" text-color="white">
+      <div class="text-h6">{{ props.title }}</div>
+      <q-chip
+        v-for="tag in props.tags"
+        :key="tag"
+        color="primary"
+        text-color="white"
+      >
         {{ tag }}
       </q-chip>
     </q-card-section>
     <q-card-section>
-      {{ description }}
+      {{ props.description }}
     </q-card-section>
     <q-separator></q-separator>
     <q-card-actions>
@@ -20,13 +25,13 @@
         flat
         label="View"
         text-color="primary"
-        :to="`models/${creatorUserId}/${modelId}`"
+        :to="`models/${props.creatorUserId}/${props.modelId}`"
       ></q-btn>
       <q-btn
         flat
         label="Edit"
         text-color="primary"
-        :to="`models/${creatorUserId}/${modelId}/edit`"
+        :to="`models/${props.creatorUserId}/${props.modelId}/edit`"
         v-if="isModelOwner"
       ></q-btn>
     </q-card-actions>
@@ -35,7 +40,7 @@
 
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
-import { computed, defineProps, withDefaults } from 'vue';
+import { computed, defineProps } from 'vue';
 
 export interface ModelCardProps {
   creatorUserId: string;
@@ -46,15 +51,7 @@ export interface ModelCardProps {
 }
 
 const authStore = useAuthStore();
-const props = withDefaults(defineProps<ModelCardProps>(), {
-  creatorUserId: 'dev1',
-  modelId: 'bert',
-  title: 'Card Title',
-  description: 'Sample description',
-  tags: () => {
-    return ['Example 1', 'Example 2'];
-  },
-});
+const props = defineProps<ModelCardProps>();
 
 const isModelOwner = computed(() => {
   return props.creatorUserId == authStore.user?.userId;

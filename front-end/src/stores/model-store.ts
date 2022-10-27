@@ -3,20 +3,22 @@ import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 
-export interface ModelCard {
-  modelId: string;
-  title: string;
-  task: string;
-  tags: string[];
-  frameworks: string[];
-  creator: string;
+export interface ModelCard extends ModelCardSummary {
   owner?: string;
   pointOfContact?: string;
   inferenceApi: string;
   description: string;
   performance: string;
-  created: string;
+}
+
+export interface ModelCardSummary {
+  modelId: string;
+  creatorUserId: string;
+  title: string;
+  tags: string[];
+  frameworks: string[];
   lastModified: string;
+  created: string;
 }
 
 export const useModelStore = defineStore('model', {
@@ -26,30 +28,14 @@ export const useModelStore = defineStore('model', {
     async getModelById(userId: string, modelId: string): Promise<ModelCard> {
       try {
         const res = await api.get(`models/${userId}/${modelId}`);
-        const data = res.data;
-        const model = {
-          modelId: data.model_id as string,
-          title: data.title as string,
-          task: data.task as string,
-          tags: data.tags as string[],
-          frameworks: data.frameworks as string[],
-          creator: data.creatorUserId as string,
-          owner: data.owner as string,
-          pointOfContact: data.pointOfContact as string,
-          inferenceApi: data.inferenceApi as string,
-          description: data.description as string,
-          performance: data.performance as string,
-          created: data.created as string,
-          lastModified: data.lastModified as string,
-        } as ModelCard;
-        return model;
+        const data: ModelCard = res.data;
+        return data;
       } catch (error) {
         const errRes = error as AxiosError;
         if (errRes.response?.status === 404) {
           console.error('Model Card Not Found');
           this.router.push('/404');
         }
-
         return Promise.reject('Unable to get model metadata');
       }
     },
@@ -63,6 +49,26 @@ export const useModelStore = defineStore('model', {
         });
       } catch (error) {
         console.error(error);
+      }
+    },
+    async getModelsByUser(userId: string): Promise<ModelCardSummary[]> {
+      try {
+        const res = await api.post('/models/search', {
+          creatorUserId: userId,
+          returnAttrs: [
+            'modelId',
+            'creatorUserId',
+            'title',
+            'tags',
+            'frameworks',
+            'lastModified',
+            'created',
+          ],
+        });
+        const data: ModelCard[] = res.data;
+        return data;
+      } catch (error) {
+        return Promise.reject(error);
       }
     },
   },

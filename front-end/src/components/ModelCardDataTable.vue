@@ -2,7 +2,7 @@
   <q-table
     grid
     title="Your models"
-    :rows="rows"
+    :rows="props.rows"
     :columns="columns"
     :row-key="compositeId"
   >
@@ -20,7 +20,15 @@
 </template>
 
 <script setup lang="ts">
-import ModelCard, { ModelCardProps } from './ModelCard.vue';
+import { ModelCardSummary } from 'src/stores/model-store';
+import ModelCard from './ModelCard.vue';
+
+export interface Props {
+  rows: ModelCardSummary[];
+}
+
+const props = defineProps<Props>();
+
 const columns = [
   {
     name: 'title',
@@ -53,24 +61,7 @@ const columns = [
   },
 ];
 
-const rows = [
-  {
-    title: 'BERT Large',
-    creatorUserId: 'dev1',
-    modelId: 'bert',
-    description: 'Sample description',
-    tags: ['Example Tag'],
-  },
-  {
-    title: 'Superman 2',
-    creatorUserId: 'dev2',
-    modelId: 'bert',
-    description: 'Sample description',
-    tags: ['Example Tag'],
-  },
-];
-
-function compositeId(row: ModelCardProps): string {
+function compositeId(row: ModelCardSummary): string {
   return `${row.creatorUserId}/${row.modelId}`;
 }
 </script>

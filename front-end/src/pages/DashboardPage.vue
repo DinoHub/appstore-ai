@@ -16,7 +16,11 @@
           </div>
         </div>
         <div>
-          <model-card-data-table></model-card-data-table>
+          <suspense>
+            <model-card-data-table
+              :rows="currentUserModels"
+            ></model-card-data-table>
+          </suspense>
         </div>
       </section>
     </main>
@@ -24,11 +28,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { reactive, ref, Ref } from 'vue';
 import ModelCard from 'src/components/ModelCard.vue';
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
-import { useModelStore } from 'src/stores/model-store';
+import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 
 const authStore = useAuthStore();
 const username = ref(authStore.user?.name);
@@ -36,6 +40,12 @@ const username = ref(authStore.user?.name);
 // Get all user models
 const modelStore = useModelStore();
 // Get models owned by the user
+const currentUserModels: Ref<ModelCardSummary[]> = ref([]);
+if (authStore.user?.userId) {
+  modelStore.getModelsByUser(authStore.user.userId).then((result) => {
+    currentUserModels.value = result;
+  });
+}
 </script>
 
 <style>
