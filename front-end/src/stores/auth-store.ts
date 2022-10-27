@@ -76,16 +76,12 @@ export const useAuthStore = defineStore('auth', {
           grant_type: 'refresh_token',
           refresh_token: this.refresh_token,
         });
-
-        if (response.status !== 200) {
-          console.error('Failed to refresh access token');
-          this.logout();
-        }
         const { access_token }: LoginResponse = response.data;
         // Set tokens
         this.access_token = access_token;
       } catch (err) {
         console.error(err);
+        this.logout();
       }
     },
   },

@@ -41,6 +41,7 @@ api.interceptors.response.use(
       await authStore.refresh();
       return api(originalRequest);
     }
+    return Promise.reject(error);
   },
 );
 
