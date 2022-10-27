@@ -1,0 +1,44 @@
+<style scoped>
+iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gradio-container {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio (divide 9 by 16 = 0.5625) */
+}
+</style>
+<template>
+  <div class="gradio-container">
+    <iframe :src="url"></iframe>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { defineProps, Ref, ref, watch } from 'vue';
+
+interface Props {
+  url: string;
+}
+
+const props = defineProps<Props>();
+const url: Ref<string> = ref('https://www.youtube.com/embed/tgbNymZ7tqY');
+
+watch(props, (props) => {
+  try {
+    url.value = props.url;
+    alert(props.url);
+  } catch (error) {
+    alert(error);
+    console.error('Invalid URL');
+  }
+});
+</script>
