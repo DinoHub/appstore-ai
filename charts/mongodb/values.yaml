@@ -956,7 +956,7 @@ persistence:
     - ReadWriteOnce
   ## @param persistence.size PVC Storage Request for MongoDB(&reg;) data volume
   ##
-  size: 4Gi
+  size: 2Gi
   ## @param persistence.annotations PVC annotations
   ##
   annotations: {}
