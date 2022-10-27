@@ -13,15 +13,18 @@
         />
 
         <!-- <q-toolbar-title>
-          <q-img
-            src="../assets/aas_logo.png"
-            height="50px"
-            fit="scale-down"
-          ></q-img>
+
         </q-toolbar-title> -->
 
         <q-drawer v-model="leftDrawerOpen" bordered> </q-drawer>
-        <q-toolbar-title> AI App Store </q-toolbar-title>
+        <q-toolbar-title
+          ><router-link to="/" class="text-h6">
+            <q-img
+              src="../assets/aas_logo.png"
+              height="50px"
+              fit="scale-down"
+            ></q-img></router-link
+        ></q-toolbar-title>
 
         <div class="q-pl-sm">
           <q-btn
@@ -55,7 +58,7 @@
         </div>
       </q-toolbar>
     </q-header>
-
+    <!-- TODO: Add dynamic breadcrumbs -->
     <q-page-container>
       <router-view />
     </q-page-container>
