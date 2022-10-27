@@ -10,6 +10,7 @@ from .common import PyObjectId
 
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str
+    # TODO: summary str that is 1 sentence long
     description: str
     performance: str
     tags: List[str]  # for all other tags
