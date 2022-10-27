@@ -1,11 +1,11 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <header class="row justify-between q-py-md">
+    <header class="row q-py-md">
       <div class="col-12 col-sm-8 text-h3">
         {{ model.title }}
       </div>
-      <div class="col-12 col-sm-4 self-center">
+      <div class="col-12 col-sm-4 self-center text-right">
         <q-btn label="Perform Transfer Learning" color="primary"></q-btn>
       </div>
     </header>
@@ -28,15 +28,19 @@
             indicator-color="primary"
             align="justify"
           >
-            <q-tab name="inference" label="Inference"></q-tab>
+            <q-tab
+              v-if="model.inferenceApi"
+              name="inference"
+              label="Inference"
+            ></q-tab>
             <q-tab name="metadata" label="Metadata"></q-tab>
             <q-tab name="artifacts" label="Artifacts"></q-tab>
             <q-tab v-if="isModelOwner" name="manage" label="Manage"></q-tab>
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel name="inference">
+            <q-tab-panel v-if="model.inferenceApi" name="inference">
               <!-- TODO: Add Gradio iframe here-->
-              <iframe src="www.google.com"></iframe>
+              <gradio-frame :url="model.inferenceApi"></gradio-frame>
             </q-tab-panel>
             <q-tab-panel name="metadata">
               <q-markup-table>
@@ -48,11 +52,11 @@
                 <tbody>
                   <tr>
                     <td>Created</td>
-                    <td><!-- TODO: Get creation and last modified date--></td>
+                    <td>{{ model.created }}</td>
                   </tr>
                   <tr>
                     <td>Last Modified</td>
-                    <td><!-- TODO: Get creation and last modified date--></td>
+                    <td>{{ model.lastModified }}</td>
                   </tr>
                   <tr v-if="model.pointOfContact">
                     <td>Point of Contact</td>
@@ -71,6 +75,7 @@
             </q-tab-panel>
             <q-tab-panel name="artifacts">
               <!-- TODO -->
+              Work in Progress
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
               <!-- TODO: add check that user is model owner-->
@@ -85,22 +90,39 @@
 <script setup lang="ts">
 import { ModelCard } from 'src/stores/model-store';
 import MarkdownDisplay from 'src/components/MarkdownDisplay.vue';
+import GradioFrame from 'src/components/GradioFrame.vue';
 import { computed, reactive, ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
+import { useModelStore } from 'src/stores/model-store';
+import { useRoute } from 'vue-router';
 
+const route = useRoute();
+const modelId = route.params.modelId as string;
+const userId = route.params.userId as string;
 const tab = ref('inference');
 const authStore = useAuthStore();
+const modelStore = useModelStore();
 
 const model = reactive({
-  modelId: 'ModelX',
-  title: 'Title',
-  task: 'Image Classification',
-  tags: ['Tag 1', 'Tag 2', 'tag me'],
-  creator: 'Panda',
-  inferenceApi: 'localhost:5151',
-  description: 'This model does blah blah blah.\n## Model Use\n....',
-  performance: '## Performance\n|Metric|Value|\n|---|---|\n|F1|0.9|',
+  modelId: '',
+  title: '',
+  task: 'Image ',
+  tags: [],
+  frameworks: [],
+  creator: '',
+  inferenceApi: 'https://www.youtube.com/embed/tgbNymZ7vqY',
+  description: '# Default',
+  performance: '',
+  created: Date(),
+  lastModified: Date(),
 }) as ModelCard;
+
+modelStore.getModelById(userId, modelId).then((card) => {
+  Object.assign(model, card);
+  if (!model.inferenceApi) {
+    tab.value = 'metadata'; // if inference not available, hide
+  }
+});
 
 const isModelOwner = computed(() => {
   return model.creator == authStore.user?.userId;
