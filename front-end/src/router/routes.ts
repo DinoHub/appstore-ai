@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
     component: MainLayout,
     children: [
       {
-        path: ':id',
+        path: ':userId/:modelId',
         component: ModelPage,
       },
       {
