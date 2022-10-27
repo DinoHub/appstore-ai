@@ -1,13 +1,11 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <h1>Welcome Back, {{ username ?? 'User' }}</h1>
+    <div class="text-h3">Welcome Back, {{ username ?? 'User' }}</div>
     <main>
       <section>
         <div class="row">
-          <div class="col">
-            <h2>Your models</h2>
-          </div>
+          <div class="col col-sm-3 text-h4">Your models</div>
           <div class="col">
             <q-btn round icon="add" to="/models/create"></q-btn>
           </div>
