@@ -18,7 +18,7 @@ iframe {
 </style>
 <template>
   <div class="gradio-container">
-    <iframe :src="url"></iframe>
+    <iframe :src="props.url"></iframe>
   </div>
 </template>
 
@@ -28,17 +28,5 @@ import { defineProps, Ref, ref, watch } from 'vue';
 interface Props {
   url: string;
 }
-
 const props = defineProps<Props>();
-const url: Ref<string> = ref('https://www.youtube.com/embed/tgbNymZ7tqY');
-
-watch(props, (props) => {
-  try {
-    url.value = props.url;
-    alert(props.url);
-  } catch (error) {
-    alert(error);
-    console.error('Invalid URL');
-  }
-});
 </script>
