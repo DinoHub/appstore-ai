@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import MarkdownIt from 'markdown-it';
-import { defineProps, Ref, ref } from 'vue';
+import { defineProps, Ref, ref, watch } from 'vue';
 interface Props {
   markdown: string;
 }
@@ -14,5 +14,8 @@ const md = new MarkdownIt();
 // Render Markdown
 const convertedMarkdown: Ref<string> = ref('');
 
-convertedMarkdown.value = md.render(props.markdown);
+watch(props, (props) => {
+  // When parent component gets the model card info, then update the markdown to show
+  convertedMarkdown.value = md.render(props.markdown);
+});
 </script>
