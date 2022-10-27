@@ -68,7 +68,7 @@
                   </tr>
                   <tr>
                     <td>Model Creator</td>
-                    <td>{{ model.creator }}</td>
+                    <td>{{ model.creatorUserId }}</td>
                   </tr>
                 </tbody>
               </q-markup-table>
@@ -145,7 +145,7 @@ const model = reactive({
   task: 'Image ',
   tags: [],
   frameworks: [],
-  creator: '',
+  creatorUserId: '',
   inferenceApi: 'https://www.youtube.com/embed/tgbNymZ7vqY',
   description: '# Default',
   performance: '',
@@ -161,7 +161,7 @@ modelStore.getModelById(userId, modelId).then((card) => {
 });
 
 const isModelOwner = computed(() => {
-  return model.creator == authStore.user?.userId;
+  return model.creatorUserId == authStore.user?.userId;
 });
 
 const confirmDeleteLabel = computed(() => {

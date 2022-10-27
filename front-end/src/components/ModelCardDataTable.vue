@@ -12,7 +12,7 @@
         :title="props.row.title"
         :description="props.row.description"
         :model-id="props.row.modelId"
-        :user-id="props.row.userId"
+        :creator-user-id="props.row.creatorUserId"
         :tags="props.row.tags"
       ></model-card>
     </template>
@@ -30,10 +30,10 @@ const columns = [
     field: 'title',
   },
   {
-    name: 'userId',
+    name: 'creatorUserId',
     required: true,
     label: 'Creator',
-    field: 'userId',
+    field: 'creatorUserId',
   },
   {
     name: 'modelId',
@@ -56,14 +56,14 @@ const columns = [
 const rows = [
   {
     title: 'BERT Large',
-    userId: 'dev1',
+    creatorUserId: 'dev1',
     modelId: 'bert',
     description: 'Sample description',
     tags: ['Example Tag'],
   },
   {
-    title: 'Superman',
-    userId: 'dev1',
+    title: 'Superman 2',
+    creatorUserId: 'dev2',
     modelId: 'bert',
     description: 'Sample description',
     tags: ['Example Tag'],
@@ -71,6 +71,6 @@ const rows = [
 ];
 
 function compositeId(row: ModelCardProps): string {
-  return `${row.userId}/${row.modelId}`;
+  return `${row.creatorUserId}/${row.modelId}`;
 }
 </script>
