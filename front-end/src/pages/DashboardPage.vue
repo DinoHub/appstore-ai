@@ -15,7 +15,9 @@
             >
           </div>
         </div>
-        <model-card></model-card>
+        <div>
+          <model-card-data-table></model-card-data-table>
+        </div>
       </section>
     </main>
   </q-page>
@@ -24,6 +26,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ModelCard from 'src/components/ModelCard.vue';
+import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 

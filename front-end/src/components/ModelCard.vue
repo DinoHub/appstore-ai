@@ -1,7 +1,12 @@
+<style scoped>
+.card {
+  width: 25%;
+}
+</style>
 <template>
-  <q-card>
+  <q-card class="card q-gutter-sm">
     <q-card-section>
-      <h6>{{ title }}</h6>
+      <div class="text-h6">{{ title }}</div>
       <q-chip v-for="tag in tags" :key="tag" color="primary" text-color="white">
         {{ tag }}
       </q-chip>
