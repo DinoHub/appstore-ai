@@ -27,10 +27,10 @@ async def add_user(
             async with session.start_transaction():
                 user = await db["users"].insert_one(
                     {
-                        "userid": item.userid,
+                        "userId": item.user_id,
                         "name": item.name,
                         "password": item.password,
-                        "admin_priv": item.admin_priv,
+                        "adminPriv": item.admin_priv,
                     }
                 )
                 add_user = await db["users"].find_one(
@@ -40,12 +40,12 @@ async def add_user(
         print(add_user)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content=f"User of ID: {add_user['userid']} created",
+            content=f"User of ID: {add_user['userId']} created",
         )
     except pyerrs.DuplicateKeyError:
         return JSONResponse(
             status_code=status.HTTP_409_CONFLICT,
-            content=f"User with ID of {item.userid} already exists",
+            content=f"User with ID of {item.user_id} already exists",
         )
     except Exception as e:
         print(e)
@@ -64,7 +64,7 @@ async def delete_user(
     try:
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                await db["users"].delete_many({"userid": {"$in": userid}})
+                await db["users"].delete_many({"userId": {"$in": userid}})
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except:
         raise HTTPException(
@@ -83,13 +83,13 @@ async def update_user(
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 await db["users"].update_one(
-                    {"userid": user.userid},
+                    {"userId": user.user_id},
                     {
                         "$set": {
-                            "userid": user.userid,
+                            "userId": user.user_id,
                             "name": user.name,
                             "password": user.password,
-                            "admin_priv": user.admin_priv,
+                            "adminPriv": user.admin_priv,
                         }
                     },
                 )
@@ -120,7 +120,7 @@ async def get_users(
         if pages_user.name != None:
             lookup["name"] = {"$regex": pages_user.name, "$options": "i"}
         if pages_user.admin_priv != None:
-            lookup["admin_priv"] = pages_user.admin_priv
+            lookup["adminPriv"] = pages_user.admin_priv
         # dont skip if 1st page
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():

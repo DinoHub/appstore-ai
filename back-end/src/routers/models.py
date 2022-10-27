@@ -60,11 +60,11 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     # mongodb atlas search to allow for fuzzy matching
     db, _ = db
     db_query = {
-        "model_id": query.model_id,
+        "modelId": query.model_id,
         "task": query.task,
-        "creator_user_id": query.creator_user_id,
+        "creatorUserId": query.creator_user_id,
         "owner": query.owner,
-        "point_of_contact": query.point_of_contact,
+        "pointOfContact": query.point_of_contact,
         "tags": {
             # NOTE: assumes AND
             "$all": query.tags
@@ -104,11 +104,15 @@ async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
     return JSONResponse(content=results, status_code=status.HTTP_200_OK)
 
 
-@router.get("/{model_id}")
-async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
+@router.get("/{creator_user_id}/{model_id}")
+async def get_model_card_by_id(
+    model_id: str, creator_user_id: str, db=Depends(get_db)
+):
     db, _ = db
     # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one({"model_id": model_id})
+    model = await db["models"].find_one(
+        {"modelId": model_id, "creatorUserId": creator_user_id}
+    )
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     model = json.loads(json_util.dumps(model))
@@ -182,17 +186,15 @@ async def create_model_card_metadata(
     #                 continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
     card.frameworks = set(card.frameworks)
-    model_id = user["userid"] + "/" + to_snake_case(card.title)
-    created = datetime.datetime.now()
-    last_modified = created
     card = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
-            creator_user_id=user["userid"],
-            model_id=model_id,
-            last_modified=last_modified,
-            created=created,
-        )
+            creator_user_id=user["userId"],
+            model_id=to_snake_case(card.title),
+            last_modified=datetime.datetime.now(),
+            created=datetime.datetime.now(),
+        ),
+        by_alias=True,  # Convert snake_case to camelCase
     )
     async with await mongo_client.start_session() as session:
         try:
@@ -201,51 +203,59 @@ async def create_model_card_metadata(
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to add model with ID {card['model_id']} as the ID already exists.",
+                detail=f"Unable to add model with user and ID {card['creatorUserId']}/{card['modelId']} as the ID already exists.",
             )
     return card
 
 
-@router.put("/{model_id}", response_model=ModelCardModelDB)
+@router.put("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB)
 async def update_model_card_metadata_by_id(
     model_id: str,
+    creator_user_id: str,
     card: UpdateModelCardModel,
     db=Depends(get_db),
     user: User = Depends(get_current_user),
 ):
     db, mongo_client = db
-    card = {k: v for k, v in card.dict().items() if v is not None}
-    card["last_modified"] = str(datetime.datetime.now())
+    # by alias => convert snake_case to camelCase
+    card = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
+    card["lastModified"] = str(datetime.datetime.now())
     if len(card) > 0:
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # First, check that user actually has access
                 existing_card = await db["models"].find_one(
-                    {"model_id": model_id}
+                    {"modelId": model_id, "creatorUserId": creator_user_id}
                 )
                 if existing_card is None:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"Model Card with ID: {model_id} not found",
                     )
-                if existing_card["creator_user_id"] != user["userid"]:
+                elif existing_card["creatorUserId"] != user["userId"]:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="User does not have editor access to this model card",
                     )
                 else:
                     result = await db["models"].update_one(
-                        {"model_id": model_id}, {"$set": card}
+                        {
+                            "modelId": model_id,
+                            "creatorUserId": creator_user_id,
+                        },
+                        {"$set": card},
                     )
-
                     if (
                         result.modified_count == 1
                     ):  # NOTE: how pythonic is this? (seems to violate DRY)
                         # TODO: consider just removing the lines below
                         if (
                             updated_card := await db["models"].find_one(
-                                {"model_id": model_id}
+                                {
+                                    "modelId": model_id,
+                                    "creatorUserId": creator_user_id,
+                                }
                             )
                         ) is not None:
                             return updated_card
@@ -255,25 +265,34 @@ async def update_model_card_metadata_by_id(
     # TODO: Might need to update inference engine
 
 
-@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_model_card_by_id(
-    model_id: str, db=Depends(get_db), user: User = Depends(get_current_user)
+    model_id: str,
+    creator_user_id: str,
+    db=Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     # TODO: Check that user is the owner of the model card
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             # First, check that user actually has access
-            existing_card = await db["models"].find_one({"model_id": model_id})
+            existing_card = await db["models"].find_one(
+                {"modelId": model_id, "creatorUserId": creator_user_id}
+            )
             if (
                 existing_card is not None
-                and existing_card["creator_user_id"] != user["userid"]
+                and existing_card["creatorUserId"] != user["userId"]
             ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have editor access to this model card",
                 )
-            await db["models"].delete_one({"model_id": model_id})
+            await db["models"].delete_one(
+                {"modelId": model_id, "creatorUserId": creator_user_id}
+            )
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     # TODO: Should actual model be deleted as well?
 

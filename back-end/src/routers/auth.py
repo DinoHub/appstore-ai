@@ -41,7 +41,7 @@ async def auth_user(
         async with session.start_transaction():
             if (
                 user := await db["users"].find_one(
-                    {"userid": form_data.username}
+                    {"userId": form_data.username}
                 )
             ) is not None:
                 if (
@@ -49,9 +49,9 @@ async def auth_user(
                     is True
                 ):
                     data = {
-                        "sub": user["userid"],
+                        "sub": user["userId"],
                         "role": UserRoles.admin
-                        if user["admin_priv"]
+                        if user["adminPriv"]
                         else UserRoles.user,
                         "name": user["name"],
                     }
@@ -109,13 +109,13 @@ async def refresh_token(
                 async with session.start_transaction():
                     if (
                         user := await db["users"].find_one(
-                            {"userid": token_data.userid}
+                            {"userId": token_data.userid}
                         )
                     ) is not None:
                         data = {
-                            "sub": user["userid"],
+                            "sub": user["userId"],
                             "role": UserRoles.admin
-                            if user["admin_priv"]
+                            if user["adminPriv"]
                             else UserRoles.user,
                             "name": user["name"],
                         }

@@ -1,6 +1,6 @@
 def fake_login_user() -> dict:
-    return dict(userid="test_1", name="Test User", admin_priv=False)
+    return dict(userId="test_1", name="Test User", adminPriv=False)
 
 
 def fake_login_admin() -> dict:
-    return dict(userid="test_1", name="Test User", admin_priv=True)
+    return dict(userId="test_1", name="Test User", adminPriv=True)

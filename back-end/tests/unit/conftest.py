@@ -77,21 +77,37 @@ async def flush_db(
 def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
-            "model_id": f"test-model-card-{idx}",
-            "creator_user_id": f"test_{idx}",
+            "modelId": f"test-model-card-{idx}",
+            "creatorUserId": f"test_{idx}",
             "title": f"Test Model {idx}",
             "description": "# Markdown Text",
             "performance": "# Markdown Text",
             "created": str(datetime.datetime.now()),
-            "last_modified": str(datetime.datetime.now()),
+            "lastModified": str(datetime.datetime.now()),
             "tags": ["Test Tag", f"Tag {idx}"],
             "task": "Testing Model Card",
             "frameworks": ["pytest", f"Framework {idx}"],
-            "point_of_contact": "Santa Claus",
+            "pointOfContact": "Santa Claus",
             "owner": "Rudolph",
-            "inference_api": "https://fake_inference.com",
-            "clearml_exp_id": "e-047f991269004aceaf18a25c3c1def20",
+            "inferenceApi": "https://fake_inference.com",
+            "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
         }
         for idx in range(1, 11)
     ]
     return fake_model_metadata
+
+
+@pytest.fixture
+def create_model_card() -> Dict:
+    return {
+        "title": "Test Model",
+        "description": "# Markdown Text",
+        "performance": "# Markdown Text",
+        "tags": ["Test Tag", "Insert"],
+        "task": "Testing Model Card",
+        "frameworks": ["pytest"],
+        "pointOfContact": "Santa Claus",
+        "owner": "Rudolph",
+        "inferenceApi": "http://fakeinference.com",
+        "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+    }

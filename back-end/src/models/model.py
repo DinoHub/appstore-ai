@@ -4,6 +4,7 @@ from typing import Dict, List, Optional
 from bson import ObjectId
 from pydantic import AnyUrl, BaseModel, Field
 
+from ..internal.utils import to_camel_case
 from .common import PyObjectId
 
 
@@ -19,6 +20,9 @@ class ModelCardModelIn(BaseModel):  # Input spec
     clearml_exp_id: Optional[str]
     inference_api: AnyUrl
 
+    class Config:
+        alias_generator = to_camel_case
+
 
 class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -28,6 +32,7 @@ class ModelCardModelDB(ModelCardModelIn):
     last_modified: datetime
 
     class Config:
+        alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
@@ -45,6 +50,9 @@ class FindModelCardModel(BaseModel):
     sort: Optional[List[List[str]]]  # [(sort col, sort direction)]
     return_attrs: Optional[List[str]]
 
+    class Config:
+        alias_generator = to_camel_case
+
 
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
@@ -59,5 +67,6 @@ class UpdateModelCardModel(BaseModel):
     inference_api: Optional[AnyUrl]
 
     class Config:
+        alias_generator = to_camel_case
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}

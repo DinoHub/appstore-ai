@@ -2,8 +2,17 @@ import re
 
 
 def to_snake_case(string: str) -> str:
+    string = re.sub(r"[\-\.\s]", "_", str(string))
+    if not string:
+        return string
     return (
-        re.sub(r"(?<=[a-z])(?=[A-Z])|[^a-zA-Z]", "_", re.escape(string))
-        .strip("_")
-        .lower()
+        string[0]
+        + re.sub(r"[A-Z]", lambda matched: "_" + matched.group(0), string[1:])
+    ).lower()
+
+
+def to_camel_case(string: str) -> str:
+    string_split = string.split("_")
+    return string_split[0] + "".join(
+        word.capitalize() for word in string_split[1:]
     )
