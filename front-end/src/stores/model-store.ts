@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 
@@ -55,6 +56,11 @@ export const useModelStore = defineStore('model', {
     async deleteModelById(userId: string, modelId: string): Promise<void> {
       try {
         await api.delete(`models/${userId}/${modelId}`);
+        this.router.push('/');
+        Notify.create({
+          message: `Model ${userId}/${modelId} has been deleted!`,
+          type: 'negative',
+        });
       } catch (error) {
         console.error(error);
       }

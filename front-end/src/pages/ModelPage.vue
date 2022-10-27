@@ -79,6 +79,35 @@
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
               <!-- TODO: add check that user is model owner-->
+              <div class="text-h6">Manage your model</div>
+
+              <div class="q-py-md">
+                <q-btn label="Edit Model Card" color="primary"></q-btn>
+              </div>
+              <div>
+                <q-form
+                  @submit="modelStore.deleteModelById(userId, modelId)"
+                  class="q-gutter-md"
+                >
+                  <q-input
+                    v-model="confirmId"
+                    :hint="`Type ${confirmDeleteLabel} to confirm delete`"
+                    lazy-rules
+                    :rules="[
+                      (val) =>
+                        val == confirmDeleteLabel ||
+                        `Type ${confirmDeleteLabel} to confirm delete`,
+                    ]"
+                  >
+                  </q-input>
+                  <q-btn
+                    label="Delete"
+                    type="submit"
+                    color="negative"
+                    :disable="confirmId !== confirmDeleteLabel"
+                  ></q-btn>
+                </q-form>
+              </div>
             </q-tab-panel>
           </q-tab-panels>
         </div>
@@ -91,15 +120,22 @@
 import { ModelCard } from 'src/stores/model-store';
 import MarkdownDisplay from 'src/components/MarkdownDisplay.vue';
 import GradioFrame from 'src/components/GradioFrame.vue';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute } from 'vue-router';
 
+enum Tabs {
+  inference = 'inference',
+  metadata = 'metadata',
+  artifacts = 'artifacts',
+  manage = 'manage',
+}
+
 const route = useRoute();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
-const tab = ref('inference');
+const tab: Ref<Tabs> = ref(Tabs.inference);
 const authStore = useAuthStore();
 const modelStore = useModelStore();
 
@@ -120,11 +156,17 @@ const model = reactive({
 modelStore.getModelById(userId, modelId).then((card) => {
   Object.assign(model, card);
   if (!model.inferenceApi) {
-    tab.value = 'metadata'; // if inference not available, hide
+    tab.value = Tabs.metadata; // if inference not available, hide
   }
 });
 
 const isModelOwner = computed(() => {
   return model.creator == authStore.user?.userId;
 });
+
+const confirmDeleteLabel = computed(() => {
+  return `${userId}/${modelId}`;
+});
+
+const confirmId: Ref<string> = ref('');
 </script>
