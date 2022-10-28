@@ -4,32 +4,16 @@
     <div class="text-h3">Welcome Back, {{ username ?? 'User' }}</div>
     <main>
       <section>
-        <div class="row">
-          <div class="col col-sm-3 text-h4">Your models</div>
-          <div class="col">
-            <q-btn round icon="add" to="/models/create"></q-btn>
-          </div>
-          <div class="col">
-            <q-btn to="/models" flat
-              ><span class="underline">See all models</span></q-btn
-            >
-          </div>
-        </div>
-        <div>
-          <suspense>
-            <model-card-data-table
-              :rows="currentUserModels"
-            ></model-card-data-table>
-          </suspense>
-        </div>
+          <model-card-data-table
+            :rows="currentUserModels"
+          ></model-card-data-table>
       </section>
     </main>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, Ref } from 'vue';
-import ModelCard from 'src/components/ModelCard.vue';
+import { ref, Ref } from 'vue';
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
