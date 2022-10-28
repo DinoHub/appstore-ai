@@ -62,6 +62,12 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <q-footer>
+      <q-toolbar>
+        <q-toolbar-title class="text-center text-caption">2022 - DSTA</q-toolbar-title>
+      </q-toolbar>
+    </q-footer>
   </q-layout>
 </template>
 
