@@ -11,6 +11,7 @@
     </header>
     <aside class="row q-py-sm">
       <q-chip :label="tag" v-for="tag in model.tags" v-bind:key="tag"></q-chip>
+      <q-chip :label="tag" v-for="tag in model.frameworks" v-bind:key="tag"></q-chip>
     </aside>
     <q-separator></q-separator>
     <main class="row">
@@ -149,8 +150,8 @@ const model = reactive({
   inferenceApi: 'https://www.youtube.com/embed/tgbNymZ7vqY',
   description: '# Default',
   performance: '',
-  created: Date(),
-  lastModified: Date(),
+  created: '',
+  lastModified: '',
 }) as ModelCard;
 
 modelStore.getModelById(userId, modelId).then((card) => {
