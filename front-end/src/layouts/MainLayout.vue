@@ -40,11 +40,12 @@
           <q-btn flat round color="white" icon="search" v-if="loggedIn" />
         </div>
         <div class="q-pl-sm">
+          <!-- Notifications -->
           <q-btn flat round color="white" icon="chat" v-if="loggedIn" />
         </div>
-        <div class="q-pl-sm">
+        <!-- <div class="q-pl-sm">
           <q-btn flat round color="white" icon="account_box" v-if="loggedIn" />
-        </div>
+        </div> -->
         <div class="q-pl-sm">
           <q-btn
             flat
