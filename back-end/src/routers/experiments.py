@@ -11,7 +11,7 @@ router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
 
 @router.get("/{exp_id}")
-async def get_experiment(exp_id: str, connector: Connector, return_plots: bool = True):
+async def get_experiment(exp_id: str, connector: Connector, return_plots: bool = True, return_artifacts: bool = True):
     exp = Experiment(connector).get(exp_id=exp_id)
 
     # Extract framework from models
@@ -34,6 +34,19 @@ async def get_experiment(exp_id: str, connector: Connector, return_plots: bool =
         data["scalars"] = exp.metrics
         data["plots"] = exp.plots
 
+    if return_artifacts:
+        data["artifacts"] = {}
+        for name, artifact in exp.artifacts.items():
+            data["artifacts"][name] = {
+                "type": artifact.type,
+                "url": artifact.url,
+            } # TODO: Put this processing code within the logic of the connector
+        for models in exp.models.values():
+            for model in models:
+                data["artifacts"][model.name] = {
+                    "type": "model",
+                    "url": model.url
+                }
     return data
 
 

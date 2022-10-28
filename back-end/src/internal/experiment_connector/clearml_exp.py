@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional
 
 from clearml import Model, Task
+from clearml.task import Artifact
 
 from .connector import ExperimentConnector
 
@@ -66,7 +67,7 @@ class ClearMLExperiment(ExperimentConnector):
         return self.task.get_reported_scalars()
 
     @property
-    def artifacts(self) -> Dict:
+    def artifacts(self) -> Dict[str, Artifact]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         return self.task.artifacts
