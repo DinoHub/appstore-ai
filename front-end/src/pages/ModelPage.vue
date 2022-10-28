@@ -76,7 +76,13 @@
             </q-tab-panel>
             <q-tab-panel name="artifacts">
               <!-- TODO -->
-              Work in Progress
+              <artifact-card
+                v-for="artifact in model.artifacts"
+                v-bind:key="artifact.name"
+                :name="artifact.name"
+                :url="artifact.url"
+              ></artifact-card>
+              
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
               <!-- TODO: add check that user is model owner-->
@@ -121,6 +127,7 @@
 import { ModelCard } from 'src/stores/model-store';
 import MarkdownDisplay from 'src/components/MarkdownDisplay.vue';
 import GradioFrame from 'src/components/GradioFrame.vue';
+import ArtifactCard from 'src/components/ArtifactCard.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
@@ -152,6 +159,8 @@ const model = reactive({
   performance: '',
   created: '',
   lastModified: '',
+  artifacts: [],
+  summary: ''
 }) as ModelCard;
 
 modelStore.getModelById(userId, modelId).then((card) => {

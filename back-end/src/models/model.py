@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Dict, List, Optional
+from enum import Enum
 
 from bson import ObjectId
 from pydantic import AnyUrl, BaseModel, Field
@@ -7,20 +8,28 @@ from pydantic import AnyUrl, BaseModel, Field
 from ..internal.utils import to_camel_case
 from .common import PyObjectId
 
+class ArtifactType(str, Enum):
+    model = "model"
+    dataset = "dataset"
+
+class Artifact(BaseModel):
+    artifact_type: ArtifactType
+    name: str
+    url : AnyUrl
 
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str
-    # TODO: summary str that is 1 sentence long
-    summary: Optional[str]
     description: str
     performance: str
-    tags: List[str]  # for all other tags
     task: str  # a task is a tag
-    frameworks: List[str]
-    point_of_contact: Optional[str]
-    owner: Optional[str]
-    clearml_exp_id: Optional[str]
     inference_api: AnyUrl
+    tags: List[str]  # for all other tags
+    frameworks: List[str]
+    summary: Optional[str]
+    owner: Optional[str]
+    point_of_contact: Optional[str]
+    clearml_exp_id: Optional[str]
+    artifacts: Optional[List[Artifact]] # will need to use GET /experiments/{exp_id} to get this
 
     class Config:
         alias_generator = to_camel_case
@@ -68,6 +77,7 @@ class UpdateModelCardModel(BaseModel):
     owner: Optional[str]
     clearml_exp_id: Optional[str]
     inference_api: Optional[AnyUrl]
+    artifacts: Optional[Dict[str, Artifact]] # will need to use GET /experiments/{exp_id} to get this
 
     class Config:
         alias_generator = to_camel_case

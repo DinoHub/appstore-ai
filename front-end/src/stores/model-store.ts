@@ -3,12 +3,22 @@ import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 
+enum ArtifactTypes {
+  model = 'model',
+  dataset = 'dataset',
+} 
+export interface Artifact {
+  name: string;
+  type: ArtifactTypes;
+  url: string
+}
 export interface ModelCard extends ModelCardSummary {
   owner?: string;
   pointOfContact?: string;
   inferenceApi: string;
   description: string;
   performance: string;
+  artifacts: Artifact[];
 }
 
 export interface ModelCardSummary {
