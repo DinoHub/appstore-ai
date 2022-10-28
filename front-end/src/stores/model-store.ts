@@ -15,6 +15,7 @@ export interface ModelCardSummary {
   modelId: string;
   creatorUserId: string;
   title: string;
+  summary: string;
   tags: string[];
   frameworks: string[];
   lastModified: string;
@@ -59,6 +60,7 @@ export const useModelStore = defineStore('model', {
             'modelId',
             'creatorUserId',
             'title',
+            'summary',
             'tags',
             'frameworks',
             'lastModified',

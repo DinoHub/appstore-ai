@@ -11,6 +11,7 @@ from .common import PyObjectId
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str
     # TODO: summary str that is 1 sentence long
+    summary: Optional[str]
     description: str
     performance: str
     tags: List[str]  # for all other tags
@@ -57,6 +58,7 @@ class FindModelCardModel(BaseModel):
 
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
+    summary: Optional[str]
     description: Optional[str]
     performance: Optional[str]
     tags: Optional[List[str]]  # for all other tags

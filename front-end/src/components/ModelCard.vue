@@ -15,9 +15,17 @@
       >
         {{ tag }}
       </q-chip>
+      <q-chip
+        v-for="tag in props.frameworks"
+        :key="tag"
+        color="primary"
+        text-color="white"
+      >
+        {{ tag }}
+      </q-chip>
     </q-card-section>
     <q-card-section>
-      {{ props.description }}
+      {{ props.summary ?? 'No summary provided' }}
     </q-card-section>
     <q-separator></q-separator>
     <q-card-actions>
@@ -41,17 +49,16 @@
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
 import { computed, defineProps } from 'vue';
-
-export interface ModelCardProps {
+export interface Props {
   creatorUserId: string;
   modelId: string;
   title: string;
-  description: string;
+  summary?: string;
   tags: string[];
+  frameworks: string[];
 }
-
 const authStore = useAuthStore();
-const props = defineProps<ModelCardProps>();
+const props = defineProps<Props>();
 
 const isModelOwner = computed(() => {
   return props.creatorUserId == authStore.user?.userId;

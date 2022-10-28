@@ -1,19 +1,23 @@
 <template>
-  <q-table
-    grid
-    title="Your models"
-    :rows="props.rows"
-    :columns="columns"
-    :row-key="compositeId"
-  >
+  <q-table grid :rows="props.rows" :columns="columns" :row-key="compositeId">
+    <template v-slot:top>
+      <div class="col col-sm-3 text-h4">
+        Your models
+        <q-btn round icon="add" to="/models/create"></q-btn>
+      </div>
+      <div class="col">
+        <router-link to="/models">View all models</router-link>
+      </div>
+    </template>
     <template v-slot:item="props">
       <model-card
         class="q-ma-md"
         :title="props.row.title"
-        :description="props.row.description"
         :model-id="props.row.modelId"
         :creator-user-id="props.row.creatorUserId"
         :tags="props.row.tags"
+        :frameworks="props.row.frameworks"
+        :summary="props.row.summary"
       ></model-card>
     </template>
   </q-table>
@@ -59,6 +63,12 @@ const columns = [
     label: 'Tags',
     field: 'tags',
   },
+  {
+    name: 'summary',
+    required: false,
+    label: 'Summary',
+    field: 'summary',
+  }
 ];
 
 function compositeId(row: ModelCardSummary): string {
