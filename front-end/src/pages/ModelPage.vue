@@ -10,6 +10,7 @@
       </div>
     </header>
     <aside class="row q-py-sm">
+      <q-chip :label="model.task" color="primary" text-color="white"></q-chip>
       <q-chip :label="tag" v-for="tag in model.tags" v-bind:key="tag"></q-chip>
       <q-chip :label="tag" v-for="tag in model.frameworks" v-bind:key="tag"></q-chip>
     </aside>
