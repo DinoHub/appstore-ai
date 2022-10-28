@@ -126,64 +126,7 @@ async def create_model_card_metadata(
     user: User = Depends(get_current_user),
 ):
     # NOTE: After this, still need to submit inference engine
-    # If exp id is provided, some metadata can be obtained from ClearML
     db, mongo_client = db
-    # TODO: Below code should be a separate API for front end to get info and dynamically show in editor first before submit
-    # if card.clearml_exp_id:
-    #     # Retrieve metadata from ClearML experiment
-    #     # Get Scalars if present
-    #     # this data will be passed to front end (Plotly.js)
-    #     # OR we can create plots within here and save the image to db
-    #     # NOTE: I specifically use clearml sdk as it is the only way to get the data points
-    #     # backend rest api does not expose this info (only summary statistics)
-    #     try:
-    #         task = Task.get_task(task_id=card.clearml_exp_id)
-    #     except ValueError:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_404_NOT_FOUND,
-    #             detail=f"ClearML experiment with id {card.clearml_exp_id} not found.",
-    #         )
-    #     # TODO: Look into using Plotly to convert scalar to html?
-    #     # if card.performance is None:
-    #     #     card.performance = {
-    #     #         "title": "Performance",
-    #     #         "text": "",
-    #     #         "media": [],
-    #     #     }
-    #     # card.performance["media"].append(
-    #     #     task.get_reported_scalars()
-    #     # )  # do not override existing plots
-    #     # NOTE: switch to backend rest api as only that let's me get info on user
-    #     # NOTE: we can only obtain attributes using "." notation from the data below
-    #     task_data: Mapping[
-    #         str, Union[str, Mapping]
-    #     ] = clearml_client.tasks.get_by_id(task=card.clearml_exp_id).data
-    #     # NOTE: I can only get user id, not the name
-    #     # NOTE: consider using userid to form a url to the user account
-    #     card.owner = task_data.user
-    #     card.tags.extend(task_data.tags)
-    #     # Start by getting model id so that we can get them
-    #     # NOTE: client api from testing seems to only give id and name if I use th
-    #     # this is why I don't just use the get_all REST api
-    #     output_models: List[Mapping[str, str]] = task_data.models.output
-    #     # Obtain Id
-    #     # Use set as there can be duplicate model ids as some files refer to same model
-    #     model_ids = set(map(lambda model: model.model, output_models))
-    #     if card.model_details is None:
-    #         card.model_details = {"title": "Model Details", "text": ""}
-    #     # For each model,
-    #     if len(model_ids) > 0:
-    #         # potentially a script could output multiple models
-    #         for model_id in model_ids:
-    #             try:
-    #                 # NOTE: get_frameworks REST api will give ALL frameworks in project
-    #                 # therefore, get them using Model object
-    #                 card.frameworks.append(Model(model_id).framework)
-    #             except ValueError as e:
-    #                 # Possibly model has been deleted
-    #                 # TODO: Warn user that model metadata was not found
-    #                 # NOTE: if they provided the inference url, should still be usable
-    #                 continue  # thus, just ignore this
     card.tags = set(card.tags)  # remove duplicates
     card.frameworks = set(card.frameworks)
     card = jsonable_encoder(
