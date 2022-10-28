@@ -23,7 +23,7 @@ iframe {
 </template>
 
 <script setup lang="ts">
-import { defineProps, Ref, ref, watch } from 'vue';
+import { defineProps } from 'vue';
 
 interface Props {
   url: string;
