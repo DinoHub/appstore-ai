@@ -161,10 +161,18 @@
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Description</h6>
-            <q-editor
-              v-model="editor"
-              min-height="25rem"
-              content-class="bg-grey-2"
+            <editor
+              v-model="card_content"
+              tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
+              api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
+              :init="{
+                height: 550,
+                plugins:
+                  'insertdatetime lists link image table help hr anchor code codesample charmap',
+              }"
+              toolbar="undo redo | blocks | bold italic underline 
+              strikethrough | alignleft aligncenter alignright | outdent 
+              indent | charmap anchor hr | bullist numlist | insertdatetime"
             />
           </div>
         </div>
@@ -176,6 +184,26 @@
         icon="leaderboard"
         :done="step > 4"
       >
+        <div class="row justify-center">
+          <div class="q-pa-md q-gutter-sm col-10 shadow-1">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
+              Performance Metrics
+            </h6>
+            <editor
+              v-model="metrics_content"
+              tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
+              api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
+              :init="{
+                height: 600,
+                plugins:
+                  'insertdatetime lists link image table help hr anchor code codesample charmap',
+              }"
+              toolbar="undo redo | blocks | bold italic underline 
+              strikethrough | alignleft aligncenter alignright | outdent 
+              indent | charmap anchor hr | bullist numlist | insertdatetime"
+            />
+          </div>
+        </div>
       </q-step>
 
       <q-step :name="5" title="Inference Engine" icon="code"> </q-step>
@@ -236,8 +264,13 @@
 
 <script>
 import { ref } from 'vue';
+import Editor from '@tinymce/tinymce-vue';
 
 export default {
+  name: 'app',
+  components: {
+    editor: Editor,
+  },
   setup() {
     // step for stepper to paginate
     const step = ref(1);
@@ -259,15 +292,34 @@ export default {
     const dataset_platform = ref('');
     const dataset_id = ref('');
 
+    // variables for model card step 3
+    const card_content = ref(`<h3>Description <a id="description"></a></h3>
+                              <hr>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model. <strong><em>(Example Text to Replace)</em></strong></span></p>
+                              <p>&nbsp;</p>
+                              <h3>Model Use <a id="model_use"></a></h3>
+                              <hr>
+                              <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.<br><br>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
+                              <p>&nbsp;</p>
+                              <h3>Limitations <a id="limitations"></a></h3>
+                              <hr>
+                              <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`);
+
+    // variables for performance metrics in model creation step 4
+    const metrics_content = ref('');
+
     // variables for popup exits
     const cancel = ref(false);
-
-    const editor = ref('What you see is <b>what</b> you get.');
 
     function simulateSubmit() {
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
       console.log(task.value);
+      console.log(card_content.value);
     }
     function next() {
       $refs.stepper.previous();
@@ -298,7 +350,8 @@ export default {
       ],
       exp_platforms: ['', 'ClearML'],
       dataset_platforms: ['', 'ClearML'],
-      editor,
+      card_content,
+      metrics_content,
     };
   },
 };

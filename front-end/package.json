@@ -12,10 +12,15 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "@tinymce/tinymce-vue": "^5.0.0",
+    "@tiptap/extension-highlight": "^2.0.0-beta.199",
+    "@tiptap/extension-typography": "^2.0.0-beta.199",
+    "@tiptap/starter-kit": "^2.0.0-beta.199",
+    "@tiptap/vue-3": "^2.0.0-beta.199",
     "axios": "^0.21.1",
+    "graph-tinymce-plugin": "^0.0.4",
     "pinia": "^2.0.11",
     "quasar": "^2.6.0",
-    "quasar-tiptap": "^1.9.1",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"
   },
