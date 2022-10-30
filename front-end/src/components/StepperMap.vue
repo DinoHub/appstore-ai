@@ -5,6 +5,7 @@
       ref="stepper"
       color="primary"
       animated
+      header-nav
       done-color="secondary"
       error-color="red"
       class="shadow-0 justify-center text-center full-height"
@@ -14,7 +15,12 @@
         :name="1"
         title="Model & Owner Information"
         icon="person"
-        :done="step > 1"
+        :done="
+          task != '' &&
+          model_name != '' &&
+          tagAddUnique.length > 0 &&
+          frameworkAddUnique.length > 0
+        "
         :error="
           task == '' ||
           model_name == '' ||
@@ -32,6 +38,7 @@
               hint="Model Name"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              reactive-rules
             ></q-input>
             <q-select
               v-model="task"
@@ -97,7 +104,11 @@
         :name="2"
         title="Links"
         icon="link"
-        :done="step > 2"
+        :done="
+          model_path != '' &&
+          (exp_id != '' || exp_platform == '') &&
+          (dataset_id != '' || dataset_platform == '')
+        "
         :error="
           model_path == '' ||
           (exp_id == '' && exp_platform != '') ||
@@ -156,23 +167,29 @@
         :name="3"
         title="Card Description"
         icon="description"
-        :done="step > 3"
+        :done="card_content.includes('(Example Text to Replace)') == false"
+        :error="card_content.includes('(Example Text to Replace)') != false"
       >
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Description</h6>
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Description</h6>
+            <div
+              class="text-left q-ml-md q-mb-md text-italic text-negative"
+              v-if="card_content.includes('(Example Text to Replace)') != false"
+            >
+              <q-icon class="" name="error" size="1.5rem" />
+              Please replace the example content with your own content
+            </div>
             <editor
               v-model="card_content"
               tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
               api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
               :init="{
-                height: 550,
+                height: 650,
                 plugins:
-                  'insertdatetime lists link image table help hr anchor code codesample charmap',
+                  'insertdatetime lists link image table help anchor code codesample charmap advlist',
               }"
-              toolbar="undo redo | blocks | bold italic underline 
-              strikethrough | alignleft aligncenter alignright | outdent 
-              indent | charmap anchor hr | bullist numlist | insertdatetime"
+              :toolbar="desc_toolbar"
             />
           </div>
         </div>
@@ -189,6 +206,7 @@
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
               Performance Metrics
             </h6>
+
             <editor
               v-model="metrics_content"
               tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
@@ -196,11 +214,11 @@
               :init="{
                 height: 600,
                 plugins:
-                  'insertdatetime lists link image table help hr anchor code codesample charmap',
+                  'insertdatetime lists link image table help anchor code codesample charmap',
               }"
               toolbar="undo redo | blocks | bold italic underline 
               strikethrough | alignleft aligncenter alignright | outdent 
-              indent | charmap anchor hr | bullist numlist | insertdatetime"
+              indent | charmap anchor hr | bullist numlist | insertdatetime graphTinymcePlugin"
             />
           </div>
         </div>
@@ -292,21 +310,53 @@ export default {
     const dataset_platform = ref('');
     const dataset_id = ref('');
 
+    // toolbar stuff
+    const desc_toolbar = [
+      'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright | outdent indent',
+      'bullist numlist | charmap anchor hr | insertdatetime | link image table',
+    ];
+
     // variables for model card step 3
     const card_content = ref(`<h3>Description <a id="description"></a></h3>
                               <hr>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model. <strong><em>(Example Text to Replace)</em></strong></span></p>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model.&nbsp;</span></p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>Random formula: x<sup>2</sup> + &pi;</p>
+                              <pre class="language-python"><code>for i in new_list:<br>    print(i + "hello")</code></pre>
+                              <p>Items still yet to be done:</p>
+                              <ol>
+                              <li>New experiment with proper hyperparameters</li>
+                              <li><s>Some item</s> <span style="text-decoration: underline;"><em>(Finished on 11/11/2022)</em></span></li>
+                              <li>Some task</li>
+                              </ol>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
                               <p>&nbsp;</p>
                               <h3>Model Use <a id="model_use"></a></h3>
                               <hr>
                               <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
                               <p><strong>EXAMPLE:</strong></p>
-                              <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.<br><br>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
+                              <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.</p>
+                              <table style="border-collapse: collapse; width: 57.1996%; height: 44.7812px; border-width: 1px; margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>
+                              <tbody>
+                              <tr style="height: 22.3906px;">
+                              <td style="height: 22.3906px; border-width: 1px; background-color: rgb(194, 224, 244); border-color: rgb(0, 0, 0);"><strong>Some Table</strong></td>
+                              <td style="height: 22.3906px; border-width: 1px; background-color: rgb(194, 224, 244); border-color: rgb(0, 0, 0);"><strong>Some Values</strong></td>
+                              </tr>
+                              <tr style="height: 22.3906px;">
+                              <td style="height: 22.3906px; border-width: 1px; border-color: rgb(0, 0, 0);">Tables are useful</td>
+                              <td style="height: 22.3906px; border-width: 1px; border-color: rgb(0, 0, 0);">Add some values</td>
+                              </tr>
+                              </tbody>
+                              </table>
+                              <p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.&nbsp;<strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
                               <p>&nbsp;</p>
                               <h3>Limitations <a id="limitations"></a></h3>
                               <hr>
                               <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
                               <p><strong>EXAMPLE:</strong></p>
+                              <blockquote>
+                              <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
+                              </blockquote>
                               <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`);
 
     // variables for performance metrics in model creation step 4
@@ -352,6 +402,7 @@ export default {
       dataset_platforms: ['', 'ClearML'],
       card_content,
       metrics_content,
+      desc_toolbar,
     };
   },
 };
