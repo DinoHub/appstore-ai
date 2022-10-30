@@ -59,7 +59,12 @@
         </div>
       </q-toolbar>
     </q-header>
-    <!-- TODO: Add dynamic breadcrumbs -->
+    <q-drawer v-model="leftDrawerOpen" bordered>
+      <q-list>
+        <q-item-label header> Links </q-item-label>
+      </q-list>
+    </q-drawer>
+
     <q-page-container>
       <router-view />
     </q-page-container>
