@@ -5,6 +5,7 @@ import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
+import SearchModelsPage from 'pages/SearchModelsPage.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
   {
@@ -23,6 +24,10 @@ const routes: RouteRecordRaw[] = [
     path: '/models',
     component: MainLayout,
     children: [
+      {
+        path: '',
+        component: SearchModelsPage,
+      },
       {
         path: ':userId/:modelId',
         component: ModelPage,
