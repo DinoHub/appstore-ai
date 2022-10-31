@@ -16,12 +16,9 @@ async def test_get_all_models(
     db, _ = get_fake_db
     for obj in model_metadata:
         await db["models"].insert_one(obj)
-    response = client.post("/models/search", json={})
+    response = client.get("/models", params={"all": True})
     assert response.status_code == status.HTTP_200_OK
     assert len(response.json()) == len(model_metadata)
-    # for expected, actual in zip(model_metadata, response.json()):
-    #     assert expected == actual
-    # currently will not be exact same due to id having slightly different key
 
 
 @pytest.mark.asyncio
@@ -30,9 +27,9 @@ async def test_get_all_models(
     "query,expected_title",
     [
         ({"title": "Test Model 1"}, "Test Model 1"),
-        ({"tags": ["Test Tag", "Tag 2"]}, "Test Model 2"),
-        ({"creatorUserId": "test_4"}, "Test Model 4"),
-        ({"frameworks": ["Framework 1"]}, "Test Model 1"),
+        ({"tag": ["Test Tag", "Tag 2"]}, "Test Model 2"),
+        ({"creator": "test_4"}, "Test Model 4"),
+        ({"framework": ["Framework 1"]}, "Test Model 1"),
     ],
 )
 async def test_search_models(
@@ -47,7 +44,7 @@ async def test_search_models(
         await db["models"].insert_one(obj)
 
     # Send request
-    response = client.post("/models/search", json=query)
+    response = client.get("/models", params=query)
     response_json = response.json()
     assert response.status_code == status.HTTP_200_OK
     assert len(response_json) != 0
