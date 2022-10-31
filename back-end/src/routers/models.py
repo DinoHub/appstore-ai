@@ -15,7 +15,7 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
-from ..internal.utils import to_snake_case
+from ..internal.utils import uncased_to_snake_case
 from ..models.iam import User
 from ..models.model import (
     FindModelCardModel,
@@ -133,7 +133,7 @@ async def create_model_card_metadata(
         ModelCardModelDB(
             **card.dict(),
             creator_user_id=user["userId"],
-            model_id=to_snake_case(card.title),
+            model_id=uncased_to_snake_case(card.title),
             last_modified=datetime.datetime.now(),
             created=datetime.datetime.now(),
         ),

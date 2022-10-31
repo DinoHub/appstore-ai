@@ -1,7 +1,11 @@
 import re
 
 
-def to_snake_case(string: str) -> str:
+def uncased_to_snake_case(string: str) -> str:
+    return "_".join(string.lower().split(" "))
+
+
+def camel_case_to_snake_case(string: str) -> str:
     string = re.sub(r"[\-\.\s]", "_", str(string))
     if not string:
         return string
