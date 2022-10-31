@@ -344,7 +344,7 @@ initdbScripts:
   init-db.js: |
     mongo = db.getSiblingDB('appStoreProdDB');
     mongo.createCollection('users');
-    mongo.users.createIndex({userId: 1}, {unique:true}) 
+    mongo.users.createIndex({'userId': 1}, {unique:true}) 
     mongo.users.insertMany([
       {
         userId: 'master',
