@@ -1,11 +1,9 @@
 import datetime
 import json
 import re
-from uuid import uuid4
 
 import httpx
 from bson import json_util
-from clearml.backend_api.session.client import APIClient
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
