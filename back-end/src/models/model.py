@@ -56,22 +56,6 @@ class ModelCardModelDB(ModelCardModelIn):
         json_encoders = {ObjectId: str}
 
 
-class FindModelCardModel(BaseModel):
-    model_id: Optional[str]
-    creator_user_id: Optional[str]
-    title: Optional[str]
-    tags: Optional[List[str]]
-    task: Optional[str]
-    frameworks: Optional[List[str]]
-    point_of_contact: Optional[str]
-    owner: Optional[str]
-    sort: Optional[List[List[str]]]  # [(sort col, sort direction)]
-    return_attrs: Optional[List[str]]
-
-    class Config:
-        alias_generator = to_camel_case
-
-
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
     summary: Optional[str]
