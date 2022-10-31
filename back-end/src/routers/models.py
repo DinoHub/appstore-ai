@@ -56,7 +56,7 @@ async def search_cards(
     page: int = Query(default=1, alias="p", gt=0),
     rows_per_page: int = Query(default=10, alias="n", gt=0),
     descending: bool = Query(default=False, alias="desc"),
-    sort_by: str = Query(default="lastModified", alias="sort"),
+    sort_by: str = Query(default="_id", alias="sort"),
     title: Optional[str] = Query(default=None),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
     frameworks: Optional[List[str]] = Query(
@@ -64,7 +64,7 @@ async def search_cards(
     ),
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
     return_attr: Optional[List[str]] = Query(default=None, alias="return[]"),
-    all: Optional[bool] = Query(None),
+    all: Optional[bool] = Query(default=None),
 ):
     db, client = db
     query = {}
@@ -87,6 +87,7 @@ async def search_cards(
     # TODO: Refactor pagination method to be more efficient
     async with await client.start_session() as session:
         async with session.start_transaction():
+            total_rows = await (db["models"].count_documents(query))
             results = await (
                 db["models"]
                 .find(query, projection=return_attr)
@@ -95,7 +96,7 @@ async def search_cards(
                 .limit(rows_per_page)
             ).to_list(length=rows_per_page if rows_per_page != 0 else None)
     results = json.loads(json_util.dumps(results))
-    return results
+    return {"results": results, "total": total_rows}
 
 
 @router.get("/{creator_user_id}")
