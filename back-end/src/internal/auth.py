@@ -105,9 +105,14 @@ async def get_current_user(
 
 
 async def check_is_admin(
-    request: Request, token: str = Depends(oauth2_scheme), db=Depends(get_db)
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+    csrf: CsrfProtect = Depends(),
+    db=Depends(get_db),
 ) -> User:
-    user = await get_current_user(request, token, db=db, is_admin=True)
+    user = await get_current_user(
+        request, token, db=db, csrf=csrf, is_admin=True
+    )
     if not user["adminPriv"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
