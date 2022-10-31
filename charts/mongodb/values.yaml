@@ -344,19 +344,19 @@ initdbScripts:
   init-db.js: |
     mongo = db.getSiblingDB('appStoreProdDB');
     mongo.createCollection('users');
-    mongo.users.createIndex({userid: 1}, {unique:true}) 
+    mongo.users.createIndex({userId: 1}, {unique:true}) 
     mongo.users.insertMany([
       {
-        userid: 'master',
+        userId: 'master',
         name: 'MasterUser',
         password: '$2b$12$dJgAk/YGHoGH203M2H0Fvu.XL3A1BulreQS1NZTRcZ9XHhUHfkU.K',
-        admin_priv: true
+        adminPriv: true
       },
       {
-        userid: 'dev1',
+        userId: 'dev1',
         name: 'DeveloperOne',
         password: '$2b$12$coDQnalKv3kw8kzuwztyc.l6gfveM/ERMVQioVYN9OQq6KheDG3ae',
-        admin_priv: false
+        adminPriv: false
       },
     ]);
   insertUsers.js: |
