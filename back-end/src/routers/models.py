@@ -19,7 +19,6 @@ from ..internal.file_validator import ValidateFileUpload
 from ..internal.utils import uncased_to_snake_case
 from ..models.iam import TokenData
 from ..models.model import (
-    FindModelCardModel,
     ModelCardModelDB,
     ModelCardModelIn,
     UpdateModelCardModel,
@@ -57,7 +56,7 @@ async def search_cards(
     page: int = Query(default=1, alias="p", gt=0),
     rows_per_page: int = Query(default=10, alias="n", gt=0),
     descending: bool = Query(default=False, alias="desc"),
-    sort_by: str = Query(default="last_modified", alias="sort"),
+    sort_by: str = Query(default="lastModified", alias="sort"),
     title: Optional[str] = Query(None),
     tags: Optional[List[str]] = Query(None, alias="tag"),
     frameworks: Optional[List[str]] = Query(None, alias="framework"),
@@ -140,7 +139,7 @@ async def create_model_card_metadata(
     card = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
-            creator_user_id=user["userId"],
+            creator_user_id=user.user_id,
             model_id=uncased_to_snake_case(card.title),
             last_modified=datetime.datetime.now(),
             created=datetime.datetime.now(),
@@ -184,7 +183,7 @@ async def update_model_card_metadata_by_id(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"Model Card with ID: {model_id} not found",
                     )
-                elif existing_card["creatorUserId"] != user["userId"]:
+                elif existing_card["creatorUserId"] != user.user_id:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="User does not have editor access to this model card",
@@ -235,7 +234,7 @@ async def delete_model_card_by_id(
             )
             if (
                 existing_card is not None
-                and existing_card["creatorUserId"] != user["userId"]
+                and existing_card["creatorUserId"] != user.user_id
             ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
