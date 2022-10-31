@@ -57,11 +57,13 @@ async def search_cards(
     rows_per_page: int = Query(default=10, alias="n", gt=0),
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="lastModified", alias="sort"),
-    title: Optional[str] = Query(None),
-    tags: Optional[List[str]] = Query(None, alias="tag"),
-    frameworks: Optional[List[str]] = Query(None, alias="framework"),
-    creator_user_id: Optional[str] = Query(None, alias="creator"),
-    return_attr: Optional[List[str]] = Query(None, alias="return"),
+    title: Optional[str] = Query(default=None),
+    tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
+    frameworks: Optional[List[str]] = Query(
+        default=None, alias="frameworks[]"
+    ),
+    creator_user_id: Optional[str] = Query(default=None, alias="creator"),
+    return_attr: Optional[List[str]] = Query(default=None, alias="return[]"),
     all: Optional[bool] = Query(None),
 ):
     db, client = db
@@ -88,7 +90,7 @@ async def search_cards(
             results = await (
                 db["models"]
                 .find(query, projection=return_attr)
-                .sort(sort_by, DESCENDING if descending else ASCENDING)
+                .sort([(sort_by, DESCENDING if descending else ASCENDING)])
                 .skip(pagination_ptr)
                 .limit(rows_per_page)
             ).to_list(length=rows_per_page if rows_per_page != 0 else None)
@@ -107,6 +109,11 @@ async def get_model_cards_by_user(
         all=True,
         return_attr=return_attr,
         creator_user_id=creator_user_id,
+        title=None,
+        tags=None,
+        frameworks=None,
+        sort_by="_id",
+        descending=True,
     )
     return results
 
