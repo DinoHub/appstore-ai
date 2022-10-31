@@ -1,8 +1,9 @@
 from typing import Dict, List, Optional
 
 from clearml import Model, Task
-from clearml.task import Artifact
+from clearml.task import Artifact as ClearMLArtifact
 
+from ...models.model import Artifact
 from .connector import ExperimentConnector
 
 
@@ -70,13 +71,34 @@ class ClearMLExperiment(ExperimentConnector):
     def artifacts(self) -> Dict[str, Artifact]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return self.task.artifacts
+        artifacts: Dict[str, ClearMLArtifact] = self.task.artifacts
+        output: Dict[str, Artifact] = {}
+        for name, artifact in artifacts.items():
+            output[name] = {
+                "artifact_type": artifact.type,
+                "url": artifact.url,
+                "name": artifact.name,
+                "timestamp": artifact.timestamp,
+            }
+        return output
 
     @property
-    def models(self) -> Dict[str, List[Model]]:
+    def models(self) -> Dict[str, Artifact]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return self.task.get_models()
+
+        models: Dict[str, List[Model]] = self.task.get_models()
+        output: Dict[str, Artifact] = {}
+        for values in models.values():
+            # model_type: "input", "output"
+            for model in values:
+                output[model.name] = {
+                    "artifact_type": "model",
+                    "url": model.url,
+                    "name": model.name,
+                    "framework": model.framework,
+                }
+        return output
 
     @property
     def plots(self) -> Dict:
@@ -95,7 +117,7 @@ class ClearMLExperiment(ExperimentConnector):
             project_name=self.project_name,
             task_name=self.exp_name,
             tags=self.tags,
-            additional_return_fields=["user"]
+            additional_return_fields=["user"],
         )
         if len(tasks) == 0:
             raise ValueError("Unable to find task")
