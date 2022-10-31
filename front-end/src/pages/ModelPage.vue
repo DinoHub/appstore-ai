@@ -12,7 +12,11 @@
     <aside class="row q-py-sm">
       <q-chip :label="model.task" color="primary" text-color="white"></q-chip>
       <q-chip :label="tag" v-for="tag in model.tags" v-bind:key="tag"></q-chip>
-      <q-chip :label="tag" v-for="tag in model.frameworks" v-bind:key="tag"></q-chip>
+      <q-chip
+        :label="tag"
+        v-for="tag in model.frameworks"
+        v-bind:key="tag"
+      ></q-chip>
     </aside>
     <q-separator></q-separator>
     <main class="row">
@@ -36,7 +40,11 @@
               label="Inference"
             ></q-tab>
             <q-tab name="metadata" label="Metadata"></q-tab>
-            <q-tab name="artifacts" label="Artifacts"></q-tab>
+            <q-tab
+              name="artifacts"
+              label="Artifacts"
+              v-if="model.artifacts.length"
+            ></q-tab>
             <q-tab v-if="isModelOwner" name="manage" label="Manage"></q-tab>
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
@@ -75,7 +83,7 @@
                 </tbody>
               </q-markup-table>
             </q-tab-panel>
-            <q-tab-panel name="artifacts">
+            <q-tab-panel name="artifacts" v-if="model.artifacts.length">
               <!-- TODO -->
               <artifact-card
                 v-for="artifact in model.artifacts"
@@ -83,7 +91,6 @@
                 :name="artifact.name"
                 :url="artifact.url"
               ></artifact-card>
-              
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
               <!-- TODO: add check that user is model owner-->
@@ -161,7 +168,7 @@ const model = reactive({
   created: '',
   lastModified: '',
   artifacts: [],
-  summary: ''
+  summary: '',
 }) as ModelCard;
 
 modelStore.getModelById(userId, modelId).then((card) => {
