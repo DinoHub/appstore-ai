@@ -1,10 +1,5 @@
-<style scoped>
-.card {
-  width: 25%;
-}
-</style>
 <template>
-  <q-card class="card q-gutter-sm">
+  <q-card :class="props.cardClass">
     <q-card-section>
       <div class="text-h6">{{ props.title }}</div>
       <q-chip
@@ -56,6 +51,7 @@ export interface Props {
   summary?: string;
   tags: string[];
   frameworks: string[];
+  cardClass: string;
 }
 const authStore = useAuthStore();
 const props = defineProps<Props>();

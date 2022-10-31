@@ -10,6 +10,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
+    name: 'login',
     component: MainLayout,
     children: [{ path: '', component: LoginPage }],
     beforeEnter: (to) => {
@@ -26,6 +27,7 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
+        name: 'search',
         component: SearchModelsPage,
       },
       {
@@ -34,6 +36,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'create',
+        name: 'createModel',
         component: CreateModel,
       },
     ],
@@ -41,6 +44,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: MainLayout,
+    name: 'dashboard',
     children: [{ path: '', component: DashboardPage }],
   },
 

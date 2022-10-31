@@ -6,11 +6,11 @@ import { defineStore } from 'pinia';
 enum ArtifactTypes {
   model = 'model',
   dataset = 'dataset',
-} 
+}
 export interface Artifact {
   name: string;
   type: ArtifactTypes;
-  url: string
+  url: string;
 }
 export interface ModelCard extends ModelCardSummary {
   owner?: string;
@@ -32,10 +32,52 @@ export interface ModelCardSummary {
   created: string;
 }
 
+export interface SearchParams {
+  p?: number; // page
+  n?: number; // rows per page
+  sort?: string;
+  desc?: boolean;
+  all?: boolean;
+  creatorUserId?: string;
+  title?: string;
+  tags?: string[];
+  frameworks?: string[];
+}
+
+export interface SearchResponse {
+  results: ModelCardSummary[];
+  total: number;
+}
+
 export const useModelStore = defineStore('model', {
   state: () => ({}),
   getters: {},
   actions: {
+    async getModels(params: SearchParams): Promise<SearchResponse> {
+      try {
+        const res = await api.get('models/', {
+          params: {
+            ...params,
+            return: [
+              'modelId',
+              'creatorUserId',
+              'title',
+              'summary',
+              'tags',
+              'frameworks',
+              'lastModified',
+              'created',
+            ],
+          },
+        });
+        const { results, total }: SearchResponse = res.data;
+        return { results, total };
+      } catch (error) {
+        const errRes = error as AxiosError;
+        console.error('Error', errRes.message);
+        return Promise.reject(error);
+      }
+    },
     async getModelById(userId: string, modelId: string): Promise<ModelCard> {
       try {
         const res = await api.get(`models/${userId}/${modelId}`);
@@ -50,6 +92,28 @@ export const useModelStore = defineStore('model', {
         return Promise.reject('Unable to get model metadata');
       }
     },
+    async getModelsByUser(userId: string): Promise<SearchResponse> {
+      try {
+        const res = await api.get(`/models/${userId}`, {
+          params: {
+            return: [
+              'modelId',
+              'creatorUserId',
+              'title',
+              'summary',
+              'tags',
+              'frameworks',
+              'lastModified',
+              'created',
+            ],
+          },
+        });
+        const { results, total }: SearchResponse = res.data;
+        return { results, total };
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
     async deleteModelById(userId: string, modelId: string): Promise<void> {
       try {
         await api.delete(`models/${userId}/${modelId}`);
@@ -60,27 +124,6 @@ export const useModelStore = defineStore('model', {
         });
       } catch (error) {
         console.error(error);
-      }
-    },
-    async getModelsByUser(userId: string): Promise<ModelCardSummary[]> {
-      try {
-        const res = await api.post('/models/search', {
-          creatorUserId: userId,
-          returnAttrs: [
-            'modelId',
-            'creatorUserId',
-            'title',
-            'summary',
-            'tags',
-            'frameworks',
-            'lastModified',
-            'created',
-          ],
-        });
-        const data: ModelCard[] = res.data;
-        return data;
-      } catch (error) {
-        return Promise.reject(error);
       }
     },
   },
