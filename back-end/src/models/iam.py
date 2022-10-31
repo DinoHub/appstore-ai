@@ -7,6 +7,7 @@ from password_strength import PasswordPolicy
 from pydantic import BaseModel, Field, validator
 
 from ..config.config import config
+from ..internal.utils import to_camel_case
 from .common import PyObjectId
 
 policy = PasswordPolicy.from_names(
@@ -27,7 +28,7 @@ class UserRoles(str, Enum):
 
 
 class UserInsert(BaseModel):
-    userid: str
+    user_id: str
     name: str
     password: str
     password_confirm: str
@@ -47,11 +48,12 @@ class UserInsert(BaseModel):
 
 class UserInsertDB(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    userid: str
+    user_id: str
     name: str
     admin_priv: bool = False
 
     class Config:
+        alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
@@ -64,7 +66,7 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    userid: Optional[str] = None
+    user_id: Optional[str] = None
     name: Optional[str] = None
     role: Optional[UserRoles] = None
     exp: Optional[datetime] = None

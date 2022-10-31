@@ -31,7 +31,7 @@ async def test_get_all_models(
     [
         ({"title": "Test Model 1"}, "Test Model 1"),
         ({"tags": ["Test Tag", "Tag 2"]}, "Test Model 2"),
-        ({"owner_id": "test_4"}, "Test Model 4"),
+        ({"creatorUserId": "test_4"}, "Test Model 4"),
         ({"frameworks": ["Framework 1"]}, "Test Model 1"),
     ],
 )
@@ -65,46 +65,23 @@ async def test_get_model_card_by_id(
     db, _ = get_fake_db
     await db["models"].insert_one(model_metadata[0])
     # Get id
-    model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["model_id"]
-    )
-    response = client.get(f"/models/{model_card_id}")
+    model_card_id = model_metadata[0]["modelId"]
+    creator_user_id = model_metadata[0]["creatorUserId"]
+    response = client.get(f"/models/{creator_user_id}/{model_card_id}")
     assert response.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.usefixtures("flush_db")
 def test_create_model_card_metadata(
     client: TestClient,
-    model_metadata: List[Dict],
+    create_model_card: Dict,
 ):
-    for metadata in model_metadata:
-        del metadata["owner_id"]
-        response = client.post("/models/", json=metadata)
-        assert response.status_code == status.HTTP_201_CREATED
-
-        result = response.json()
-        assert result["title"] == metadata["title"]
-
-
-@pytest.mark.usefixtures("flush_db")
-def test_create_model_card_clearml(
-    client: TestClient, clearml_model_metadata: Dict
-):
-    response = client.post("/models/", json=clearml_model_metadata)
+    print(create_model_card)
+    response = client.post("/models/", json=create_model_card)
     assert response.status_code == status.HTTP_201_CREATED
+
     result = response.json()
-
-    assert result["creator"] != clearml_model_metadata["creator"]
-    assert len(result["performance"]["media"]) > 0
-
-
-@pytest.mark.xfail(reason="Invalid ClearML Exp ID")
-@pytest.mark.usefixtures("flush_db")
-def test_create_model_card_invalid_expid(clearml_model_metadata: Dict):
-    clearml_model_metadata["clearml_exp_id"] = "invalid"
-    test_create_model_card_clearml(
-        clearml_model_metadata=clearml_model_metadata
-    )
+    assert result["title"] == create_model_card["title"]
 
 
 @pytest.mark.parametrize("card", [{"title": "hello world"}])
@@ -127,36 +104,36 @@ async def test_update_model_card_metadata(
     assert len((await db["models"].find().to_list(length=None))) == 1
 
     # Get model ID
-    model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["model_id"]
-    )
+    card = (await db["models"].find().to_list(length=1))[0]
+    model_card_id = str(card["modelId"])
+    creator_user_id = str(card["creatorUserId"])
 
     # Updated Sections
     update = {
         "title": "Updated Title",
-        "description": {
-            "title": "Updated Description",
-            "text": "Hello world!",
-            "media": None,
-        },
     }
 
-    response = client.put(f"/models/{model_card_id}", json=update)
+    response = client.put(
+        f"/models/{creator_user_id}/{model_card_id}", json=update
+    )
 
     assert response.status_code == status.HTTP_200_OK
 
     # Check that updates took place
-    model = await db["models"].find_one({"model_id": model_card_id})
+    model = await db["models"].find_one(
+        {"modelId": model_card_id, "creatorUserId": creator_user_id}
+    )
     assert model is not None
     assert model["title"] == update["title"]
-    assert model["description"] == update["description"]
 
 
 @pytest.mark.usefixtures("flush_db")
 def test_update_model_card_not_found(
     client: TestClient,
 ):
-    response = client.put(f"/models/invalid_id", json={"title": "Hello"})
+    response = client.put(
+        f"/models/test_1/invalid_id", json={"title": "Hello"}
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -173,13 +150,13 @@ async def test_delete_model_card_metadata(
     assert len((await db["models"].find().to_list(length=None))) == 1
 
     # Get model ID
-    model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["model_id"]
-    )
+    card = (await db["models"].find().to_list(length=1))[0]
+    model_card_id = str(card["modelId"])
+    creator_user_id = str(card["creatorUserId"])
 
     # Send delete request
     response = client.delete(
-        f"/models/{model_card_id}",
+        f"/models/{creator_user_id}/{model_card_id}",
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
@@ -196,19 +173,17 @@ async def test_delete_model_card_metadata_unauthorized(
 ):
     db, _ = get_fake_db
     card = model_metadata[0]
-    card["owner_id"] = "other_user"
+    card["creatorUserId"] = "other_user"
     await db["models"].insert_one(card)
     # Check length before anything
     assert len((await db["models"].find().to_list(length=None))) == 1
-
     # Get model ID
-    model_card_id = str(
-        (await db["models"].find().to_list(length=1))[0]["model_id"]
-    )
-
+    card = (await db["models"].find().to_list(length=1))[0]
+    model_card_id = str(card["modelId"])
+    creator_user_id = str(card["creatorUserId"])
     # Send delete request
     response = client.delete(
-        f"/models/{model_card_id}",
+        f"/models/{creator_user_id}/{model_card_id}",
     )
     assert response.status_code == status.HTTP_403_FORBIDDEN
 

@@ -4,21 +4,46 @@ from clearml.backend_api.session.client import APIClient
 from fastapi import APIRouter, Depends
 
 from ..internal.clearml_client import clearml_api_client
-from ..models.experiment import ClonePackageModel
+from ..internal.experiment_connector import Experiment
+from ..models.experiment import ClonePackageModel, Connector
 
 router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
 
-@router.get("/{id}")
+@router.get("/{exp_id}")
 async def get_experiment(
-    id: str, clearml_client: APIClient = Depends(clearml_api_client)
+    exp_id: str,
+    connector: Connector,
+    return_plots: bool = True,
+    return_artifacts: bool = True,
 ):
-    exp_list = clearml_client.tasks.get_by_id(task=id)
-    return {
-        "id": exp_list.data.id,
-        "name": exp_list.data.name,
-        "rest": exp_list.data,
+    exp = Experiment(connector).get(exp_id=exp_id)
+    # Extract framework from models
+    frameworks = set()
+    for model in exp.models.values():
+        frameworks.add(model.framework)
+
+    data = {
+        "id": exp.id,
+        "name": exp.exp_name,
+        "project_name": exp.project_name,
+        "tags": exp.tags,
+        "frameworks": list(frameworks),
+        "config": exp.config,
+        "owner": exp.user,
     }
+
+    if return_plots:
+        # scalars are raw data logged during exp
+        data["scalars"] = exp.metrics
+        # plots are already plotly compatible
+        data["plots"] = exp.plots
+
+    if return_artifacts:
+        data["artifacts"] = {}
+        data["artifacts"].update(exp.artifacts)
+        data["artifacts"].update(exp.models)
+    return data
 
 
 @router.post("/clone")

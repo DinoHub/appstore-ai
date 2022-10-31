@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.internal.auth import check_is_admin, get_current_user
 
-from .utils import fake_login_admin, fake_login_user, generate_section_model
+from .utils import fake_login_admin, fake_login_user
 
 
 @pytest.fixture
@@ -77,26 +77,29 @@ async def flush_db(
 def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
-            "model_id": f"test-model-card-{idx}",
-            "owner_id": f"test_{idx}",
+            "modelId": f"test-model-card-{idx}",
+            "creatorUserId": f"test_{idx}",
             "title": f"Test Model {idx}",
-            "description": generate_section_model(),
-            "limitations": generate_section_model(),
-            "metrics": generate_section_model(),
-            "explanation": generate_section_model(),
-            "deployment": generate_section_model(),
-            "performance": generate_section_model(),
-            "model_details": generate_section_model(),
-            "datetime": str(datetime.datetime.now()),
+            "description": "# Markdown Text",
+            "performance": "# Markdown Text",
+            "created": str(datetime.datetime.now()),
+            "lastModified": str(datetime.datetime.now()),
             "tags": ["Test Tag", f"Tag {idx}"],
             "task": "Testing Model Card",
             "frameworks": ["pytest", f"Framework {idx}"],
-            "point_of_contact": "Santa Claus",
-            "creator": "Rudolph",
-            "inference_engine": {
-                "service_url": "http://service_name.namespace.svc.cluster.local",
-                "owner_id": f"test_{idx}",
-            },
+            "pointOfContact": "Santa Claus",
+            "owner": "Rudolph",
+            "inferenceApi": "https://fake_inference.com",
+            "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+            "artifacts": [
+                {
+                    "artifact_type": "model",
+                    "name": "Model Weights",
+                    "url": "https://allegro-examples.s3.amazonaws.com/clearml-public-resources/v1.6.4/examples/ClearML%20examples/ML%20%255C%20DL%20Frameworks/Keras/Keras%20with%20TensorBoard%20example.d82abfd682fb4f8cbd12b6bfb5a7c7cf/models/weight.1.hdf5",
+                    "timestamp": "2022-10-31T01:57:47.194Z",
+                    "framework": "Keras",
+                }
+            ],
         }
         for idx in range(1, 11)
     ]
@@ -104,24 +107,25 @@ def model_metadata() -> List[Dict]:
 
 
 @pytest.fixture
-def clearml_model_metadata() -> Dict:
+def create_model_card() -> Dict:
     return {
-        "model_id": f"test-model-card-clearml",
-        "title": f"PyTorch MNIST training",
-        "description": generate_section_model(),
-        "limitations": generate_section_model(),
-        "metrics": generate_section_model(),
-        "explanation": generate_section_model(),
-        "deployment": generate_section_model(),
-        "datetime": str(datetime.datetime.now()),
-        "tags": ["Test Tag"],
+        "title": "Test Model",
+        "description": "# Markdown Text",
+        "performance": "# Markdown Text",
+        "tags": ["Test Tag", "Insert"],
         "task": "Testing Model Card",
         "frameworks": ["pytest"],
-        "point_of_contact": "Santa Claus",
-        "creator": "Rudolph",
-        "inference_engine": {
-            "service_url": "http://service_name.namespace.svc.cluster.local",
-            "owner_id": "test_1",
-        },
-        "clearml_exp_id": "e-047f991269004aceaf18a25c3c1def20",
+        "pointOfContact": "Santa Claus",
+        "owner": "Rudolph",
+        "inferenceApi": "http://fakeinference.com",
+        "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+        "artifacts": [
+            {
+                "artifact_type": "model",
+                "name": "Model Weights",
+                "url": "https://allegro-examples.s3.amazonaws.com/clearml-public-resources/v1.6.4/examples/ClearML%20examples/ML%20%255C%20DL%20Frameworks/Keras/Keras%20with%20TensorBoard%20example.d82abfd682fb4f8cbd12b6bfb5a7c7cf/models/weight.1.hdf5",
+                "timestamp": "2022-10-31T01:57:47.194Z",
+                "framework": "Keras",
+            }
+        ],
     }

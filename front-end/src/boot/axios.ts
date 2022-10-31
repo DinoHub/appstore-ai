@@ -22,13 +22,11 @@ const api = axios.create({
 });
 
 // Set Interceptor
-api.interceptors.request.use(
-  (config) => {
-    const authStore = useAuthStore();
-    config.headers['Authorization'] = `Bearer ${authStore.access_token}`;
-    return config
-  }
-)
+api.interceptors.request.use((config) => {
+  const authStore = useAuthStore();
+  config.headers['Authorization'] = `Bearer ${authStore.access_token}`;
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => {
@@ -36,14 +34,15 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 403 && !originalRequest._retry) {
+    if ((error.response?.status === 403 || error.response?.status === 401) && !originalRequest._retry) {
       originalRequest._retry = true;
       // get refresh token
       const authStore = useAuthStore();
       await authStore.refresh();
       return api(originalRequest);
     }
-  }
+    return Promise.reject(error);
+  },
 );
 
 export default boot(({ app }) => {
