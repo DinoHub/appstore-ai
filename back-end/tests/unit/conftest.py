@@ -91,6 +91,15 @@ def model_metadata() -> List[Dict]:
             "owner": "Rudolph",
             "inferenceApi": "https://fake_inference.com",
             "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+            "artifacts": [
+                {
+                    "artifact_type": "model",
+                    "name": "Model Weights",
+                    "url": "https://allegro-examples.s3.amazonaws.com/clearml-public-resources/v1.6.4/examples/ClearML%20examples/ML%20%255C%20DL%20Frameworks/Keras/Keras%20with%20TensorBoard%20example.d82abfd682fb4f8cbd12b6bfb5a7c7cf/models/weight.1.hdf5",
+                    "timestamp": "2022-10-31T01:57:47.194Z",
+                    "framework": "Keras",
+                }
+            ],
         }
         for idx in range(1, 11)
     ]
@@ -110,4 +119,13 @@ def create_model_card() -> Dict:
         "owner": "Rudolph",
         "inferenceApi": "http://fakeinference.com",
         "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+        "artifacts": [
+            {
+                "artifact_type": "model",
+                "name": "Model Weights",
+                "url": "https://allegro-examples.s3.amazonaws.com/clearml-public-resources/v1.6.4/examples/ClearML%20examples/ML%20%255C%20DL%20Frameworks/Keras/Keras%20with%20TensorBoard%20example.d82abfd682fb4f8cbd12b6bfb5a7c7cf/models/weight.1.hdf5",
+                "timestamp": "2022-10-31T01:57:47.194Z",
+                "framework": "Keras",
+            }
+        ],
     }
