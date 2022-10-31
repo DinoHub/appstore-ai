@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from clearml import Model, Task
 from clearml.task import Artifact as ClearMLArtifact
 
-from ...models.model import Artifact
+from ...models.model import Artifact, ArtifactType
 from .connector import ExperimentConnector
 
 
@@ -74,12 +74,12 @@ class ClearMLExperiment(ExperimentConnector):
         artifacts: Dict[str, ClearMLArtifact] = self.task.artifacts
         output: Dict[str, Artifact] = {}
         for name, artifact in artifacts.items():
-            output[name] = {
-                "artifact_type": artifact.type,
-                "url": artifact.url,
-                "name": artifact.name,
-                "timestamp": artifact.timestamp,
-            }
+            output[name] = Artifact(
+                artifact_type=artifact.type,
+                name=name,
+                url=artifact.url,
+                timestamp=artifact.timestamp,
+            )
         return output
 
     @property
@@ -92,12 +92,12 @@ class ClearMLExperiment(ExperimentConnector):
         for values in models.values():
             # model_type: "input", "output"
             for model in values:
-                output[model.name] = {
-                    "artifact_type": "model",
-                    "url": model.url,
-                    "name": model.name,
-                    "framework": model.framework,
-                }
+                output[model.name] = Artifact(
+                    artifact_type=ArtifactType.model,
+                    name=model.name,
+                    url=model.url,
+                    framework=model.framework,
+                )
         return output
 
     @property
