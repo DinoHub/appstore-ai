@@ -164,7 +164,7 @@
       >
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Description</h6>
+            <h6 class="text-left q-ml-md q-mb-sm">Model Description</h6>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="card_content.includes('(Example Text to Replace)') != false"
