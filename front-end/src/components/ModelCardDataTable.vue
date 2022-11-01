@@ -45,6 +45,7 @@
         :filter="filter"
         :loading="loading"
         @request="onSearchRequest"
+        binary-state-sort
       >
         <template v-slot:top-left>
           <slot name="top-left"></slot>
@@ -84,7 +85,7 @@ import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import ModelCard from './ModelCard.vue';
-import { Pagination, SearchFilter } from './models';
+import { FormOptionValue, Pagination, SearchFilter } from './models';
 
 export interface Props {
   rows?: ModelCardSummary[];
@@ -122,16 +123,42 @@ const tasks = reactive(
     };
   }),
 );
-const frameworks = reactive(
-  modelStore.frameworks.map((framework: string) => {
-    return {
-      label: framework,
-      value: framework,
-    };
-  }),
-);
+const frameworks: FormOptionValue[] = reactive([]);
 
-const tags = reactive(modelStore.tags);
+const tags: string[] = reactive([]);
+
+if (props.showFilter) {
+  // Dynamically get filter options
+  modelStore
+    .getFilterOptions()
+    .then((data) => {
+      tags.splice(0, tags.length, ...data.tags);
+      frameworks.splice(
+        0,
+        frameworks.length,
+        ...data.frameworks.map((framework: string) => {
+          return {
+            label: framework,
+            value: framework,
+          };
+        }),
+      );
+      tasks.splice(
+        0,
+        tasks.length,
+        ...data.tasks.map((task: string) => {
+          return {
+            label: task,
+            value: task,
+          };
+        }),
+      );
+    })
+    .catch(() => {
+      console.error('Failed to get filter options');
+    });
+}
+
 const columns = [
   {
     name: 'title',

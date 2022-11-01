@@ -44,6 +44,12 @@ export interface SearchParams {
   frameworks?: string[];
 }
 
+export interface AvailableFilterResponse {
+  tags: string[];
+  frameworks: string[];
+  tasks: string[];
+}
+
 export interface SearchResponse {
   results: ModelCardSummary[];
   total: number;
@@ -71,6 +77,14 @@ export const useModelStore = defineStore('model', {
   }),
   getters: {},
   actions: {
+    async getFilterOptions(): Promise<AvailableFilterResponse> {
+      try {
+        const res = await api.get('models/_db/options/filters');
+        return res.data as AvailableFilterResponse;
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
     async getModels(params: SearchParams): Promise<SearchResponse> {
       try {
         const res = await api.get('models/', {

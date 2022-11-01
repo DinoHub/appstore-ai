@@ -13,3 +13,8 @@ export interface SearchFilter {
   tags?: string[];
   frameworks?: string[];
 }
+
+export interface FormOptionValue {
+  label: string;
+  value: string;
+}
