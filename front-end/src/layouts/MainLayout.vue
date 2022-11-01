@@ -71,7 +71,9 @@
 
     <q-footer>
       <q-toolbar>
-        <q-toolbar-title class="text-center text-caption">2022 - DSTA</q-toolbar-title>
+        <q-toolbar-title class="text-center text-caption"
+          >2022 - DSTA</q-toolbar-title
+        >
       </q-toolbar>
     </q-footer>
   </q-layout>
