@@ -283,6 +283,8 @@
 </template>
 
 <script>
+import { useAuthStore } from 'src/stores/auth-store';
+import { useExpStore } from 'src/stores/exp-store';
 import { ref } from 'vue';
 import Editor from '@tinymce/tinymce-vue';
 
@@ -367,7 +369,16 @@ export default {
     // variables for popup exits
     const cancel = ref(false);
 
+    // constants for stores
+    const authStore = useAuthStore();
+    const expStore = useExpStore();
+
+    // functions
     function simulateSubmit() {
+      if (exp_id.value != '') {
+        var data = expStore.getExperimentByID(exp_id.value);
+        console.log(data);
+      }
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
       console.log(task.value);
