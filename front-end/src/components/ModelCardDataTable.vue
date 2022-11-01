@@ -51,6 +51,15 @@
           <slot name="top-left"></slot>
         </template>
         <template v-slot:top-right>
+          <q-select
+            label="Sort by"
+            v-model="pagination.sortBy"
+            :options="sortOptions"
+            emit-value
+            map-options
+            @update:model-value="tableRef.requestServerInteraction()"
+          >
+          </q-select>
           <q-input
             borderless
             dense
@@ -91,7 +100,7 @@ export interface Props {
   rows?: ModelCardSummary[];
   cardClass?: string;
   showFilter?: boolean;
-  filter?: SearchFilter;
+  filter: SearchFilter;
 }
 
 const props = defineProps<Props>();
@@ -111,6 +120,21 @@ const pagination: Ref<Pagination> = ref({
 });
 
 const rows: Ref<ModelCardSummary[]> = ref([]);
+
+const sortOptions = Object.freeze([
+  {
+    label: 'ID',
+    value: '_id',
+  },
+  {
+    label: 'Title',
+    value: 'title',
+  },
+  {
+    label: 'Last Updated',
+    value: 'lastUpdated',
+  },
+]);
 
 const tasks = reactive(
   modelStore.tasks.map((task: string) => {
