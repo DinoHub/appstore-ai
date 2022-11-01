@@ -17,7 +17,7 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:7070',
+  baseURL: 'http://127.0.0.1:8080',
   withCredentials: true,
 });
 
@@ -45,7 +45,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default boot(({ app }) => {
