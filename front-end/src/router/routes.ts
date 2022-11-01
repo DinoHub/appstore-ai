@@ -5,12 +5,13 @@ import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
+import SearchModelsPage from 'pages/SearchModelsPage.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     component: MainLayout,
-    children: [{ path: '', component: LoginPage }],
+    children: [{ path: '', name: 'login', component: LoginPage }],
     beforeEnter: (to) => {
       const auth = useAuthStore();
       if (auth.access_token) {
@@ -24,11 +25,17 @@ const routes: RouteRecordRaw[] = [
     component: MainLayout,
     children: [
       {
+        path: '',
+        name: 'search',
+        component: SearchModelsPage,
+      },
+      {
         path: ':userId/:modelId',
         component: ModelPage,
       },
       {
         path: 'create',
+        name: 'createModel',
         component: CreateModel,
       },
     ],
@@ -36,7 +43,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: MainLayout,
-    children: [{ path: '', component: DashboardPage }],
+    children: [{ path: '', name: 'dashboard', component: DashboardPage }],
   },
 
   // Always leave this as last one,

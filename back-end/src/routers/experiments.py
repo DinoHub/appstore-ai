@@ -1,4 +1,3 @@
-from msilib.schema import Error
 from typing import Dict
 
 from clearml.backend_api.session.client import APIClient

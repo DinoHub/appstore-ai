@@ -73,7 +73,8 @@ class TokenData(BaseModel):
 
 
 class User(BaseModel):
-    userid: str
+    userId: str
+    adminPriv: bool
 
 
 class UserInDB(User):

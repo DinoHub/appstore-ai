@@ -26,7 +26,6 @@ export const useExpStore = defineStore('exp', {
             connector: 'clearml',
             return_plots: false,
             return_artifacts: false,
-            is_admin: false,
           },
         });
         const data: Experiment = res.data;
