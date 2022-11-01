@@ -21,9 +21,11 @@ export const useExpStore = defineStore('exp', {
   actions: {
     async getExperimentByID(exp_id: string): Promise<Experiment> {
       try {
-        const res = await api.get(
-          `experiments/${exp_id}?connector=clearml&return_plots=true&return_artifacts=true&is_admin=false`
-        );
+        const res = await api.get(`experiments/${exp_id}`, {
+          params: {
+            connnector: 'clearml',
+          },
+        });
         const data: Experiment = res.data;
         return data;
       } catch (error) {
