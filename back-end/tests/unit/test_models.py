@@ -1,3 +1,4 @@
+from time import sleep
 from typing import Dict, List, Tuple
 
 import pytest
@@ -18,7 +19,7 @@ async def test_get_all_models(
         await db["models"].insert_one(obj)
     response = client.get("/models", params={"all": True})
     assert response.status_code == status.HTTP_200_OK
-    assert len(response.json()) == len(model_metadata)
+    assert len(response.json()["results"]) == len(model_metadata)
 
 
 @pytest.mark.asyncio
@@ -27,9 +28,9 @@ async def test_get_all_models(
     "query,expected_title",
     [
         ({"title": "Test Model 1"}, "Test Model 1"),
-        ({"tag": ["Test Tag", "Tag 2"]}, "Test Model 2"),
+        ({"tags[]": ["Test Tag", "Tag 2"]}, "Test Model 2"),
         ({"creator": "test_4"}, "Test Model 4"),
-        ({"framework": ["Framework 1"]}, "Test Model 1"),
+        ({"frameworks[]": ["Framework 3"]}, "Test Model 3"),
     ],
 )
 async def test_search_models(
@@ -47,8 +48,10 @@ async def test_search_models(
     response = client.get("/models", params=query)
     response_json = response.json()
     assert response.status_code == status.HTTP_200_OK
-    assert len(response_json) != 0
-    assert response_json[0]["title"] == expected_title, "Wrong card retrieved"
+    assert len(response_json["results"]) != 0
+    assert (
+        response_json["results"][0]["title"] == expected_title
+    ), "Wrong card retrieved"
 
 
 @pytest.mark.asyncio
