@@ -50,7 +50,25 @@ export interface SearchResponse {
 }
 
 export const useModelStore = defineStore('model', {
-  state: () => ({}),
+  state: () => ({
+    tasks: [
+      'Computer Vision',
+      'Natural Language Processing',
+      'Audio Processing',
+      'Multimodal',
+      'Reinforcement Learning',
+      'Tabular',
+    ], // TODO: use MongoDB aggregate so only tasks in DB are shown
+    frameworks: [
+      // TODO: Dynamically get frameworks
+      'Keras',
+      'PyTorch',
+    ],
+    tags: [
+      'Example',
+      'Keras', // TODO: dynamically get tags
+    ],
+  }),
   getters: {},
   actions: {
     async getModels(params: SearchParams): Promise<SearchResponse> {

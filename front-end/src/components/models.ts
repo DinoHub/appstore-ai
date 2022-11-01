@@ -9,6 +9,7 @@ export interface Pagination {
 export interface SearchFilter {
   title?: string;
   creator?: string;
+  tasks?: string[];
   tags?: string[];
   frameworks?: string[];
 }

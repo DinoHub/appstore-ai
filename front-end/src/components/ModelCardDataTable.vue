@@ -1,44 +1,82 @@
 <template>
-  <q-table
-    ref="tableRef"
-    grid
-    :rows="rows"
-    :columns="columns"
-    :row-key="compositeId"
-    v-model:pagination="pagination"
-    :filter="filter"
-    :loading="loading"
-    @request="onSearchRequest"
-  >
-    <template v-slot:top-left>
-      <slot name="top-left"></slot>
-    </template>
-    <template v-slot:top-right>
-      <q-input
-        borderless
-        dense
-        debounce="300"
-        v-model="filter.title"
-        placeholder="Search"
+  <div class="row">
+    <aside class="col col-sm-3" v-if="showFilter">
+      <q-form>
+        <div class="text-h6">Query Filters</div>
+        <q-expansion-item default-opened label="Task">
+          <q-option-group
+            v-model="filter.tasks"
+            :options="tasks"
+            color="primary"
+            type="checkbox"
+          ></q-option-group>
+        </q-expansion-item>
+        <q-expansion-item label="Frameworks">
+          <q-option-group
+            v-model="filter.frameworks"
+            :options="frameworks"
+            color="primary"
+            type="checkbox"
+          ></q-option-group>
+        </q-expansion-item>
+        <q-expansion-item default-opened label="Tags">
+          <q-select
+            hint="Type in tags or use dropdown to add available tags"
+            v-model="filter.tags"
+            use-input
+            use-chips
+            multiple
+            autogrow
+            input-debounce="0"
+            new-value-mode="add-unique"
+            :options="tags"
+          ></q-select>
+        </q-expansion-item>
+      </q-form>
+    </aside>
+    <main class="col">
+      <q-table
+        ref="tableRef"
+        grid
+        :rows="rows"
+        :columns="columns"
+        :row-key="compositeId"
+        v-model:pagination="pagination"
+        :filter="filter"
+        :loading="loading"
+        @request="onSearchRequest"
       >
-        <template v-slot:append>
-          <q-icon name="search" />
+        <template v-slot:top-left>
+          <slot name="top-left"></slot>
         </template>
-      </q-input>
-    </template>
-    <template v-slot:item="props">
-      <model-card
-        class="q-ma-md"
-        :card-class="cardClass"
-        :title="props.row.title"
-        :model-id="props.row.modelId"
-        :creator-user-id="props.row.creatorUserId"
-        :tags="props.row.tags"
-        :frameworks="props.row.frameworks"
-        :summary="props.row.summary"
-      ></model-card>
-    </template>
-  </q-table>
+        <template v-slot:top-right>
+          <q-input
+            borderless
+            dense
+            debounce="300"
+            v-model="filter.title"
+            placeholder="Search"
+          >
+            <template v-slot:append>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </template>
+        <template v-slot:item="props">
+          <model-card
+            class="q-ma-md"
+            :card-class="cardClass"
+            :title="props.row.title"
+            :model-id="props.row.modelId"
+            :creator-user-id="props.row.creatorUserId"
+            :tags="props.row.tags"
+            :frameworks="props.row.frameworks"
+            :summary="props.row.summary"
+          ></model-card>
+        </template>
+      </q-table>
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -50,14 +88,18 @@ import { Pagination, SearchFilter } from './models';
 
 export interface Props {
   rows?: ModelCardSummary[];
-  cardClass: string;
+  cardClass?: string;
+  showFilter?: boolean;
 }
 
 const props = defineProps<Props>();
-const route = useRoute();
 
 const tableRef = ref();
-const filter: SearchFilter = reactive({});
+const filter: SearchFilter = reactive({
+  tasks: [],
+  tags: [],
+  frameworks: [],
+});
 const loading = ref(false);
 
 const modelStore = useModelStore();
@@ -72,6 +114,24 @@ const pagination: Ref<Pagination> = ref({
 
 const rows: Ref<ModelCardSummary[]> = ref([]);
 
+const tasks = reactive(
+  modelStore.tasks.map((task: string) => {
+    return {
+      label: task,
+      value: task,
+    };
+  }),
+);
+const frameworks = reactive(
+  modelStore.frameworks.map((framework: string) => {
+    return {
+      label: framework,
+      value: framework,
+    };
+  }),
+);
+
+const tags = reactive(modelStore.tags);
 const columns = [
   {
     name: 'title',
