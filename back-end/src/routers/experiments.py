@@ -43,8 +43,6 @@ async def get_experiment(
             data["plots"] = exp.plots
 
         if return_artifacts:
-            print(exp.artifacts)
-            print(exp.models)
             data["artifacts"] = {}
             data["artifacts"].update(exp.artifacts)
             data["artifacts"].update(exp.models)
