@@ -12,6 +12,7 @@ from .common import PyObjectId
 class ArtifactType(str, Enum):
     model = "model"
     dataset = "dataset"
+    custom = "custom"
 
 
 class Artifact(BaseModel):
