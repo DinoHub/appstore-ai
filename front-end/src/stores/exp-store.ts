@@ -23,7 +23,9 @@ export const useExpStore = defineStore('exp', {
       try {
         const res = await api.get(`experiments/${exp_id}`, {
           params: {
-            connnector: 'clearml',
+            connector: 'clearml',
+            return_plots: false,
+            return_artifacts: false,
           },
         });
         const data: Experiment = res.data;
