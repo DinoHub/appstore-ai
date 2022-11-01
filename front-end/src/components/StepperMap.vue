@@ -1,11 +1,10 @@
 <template>
-  <div class="q-pa-md col-9" :style="vert">
+  <div class="q-pa-md col-9">
     <q-stepper
       v-model="step"
       ref="stepper"
       color="primary"
       animated
-      header-nav
       done-color="secondary"
       error-color="red"
       class="shadow-0 justify-center text-center full-height"
@@ -31,7 +30,6 @@
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Links</h6>
             <q-input
               v-model="model_path"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               hint="Model Path"
               autogrow
@@ -39,7 +37,6 @@
             ></q-input>
             <q-select
               v-model="exp_platform"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               :options="exp_platforms"
               hint="Experiment Platform (Optional)"
@@ -47,7 +44,6 @@
             <q-input
               v-if="exp_platform != ''"
               v-model="exp_id"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               hint="Experiment ID"
               autogrow
@@ -56,7 +52,6 @@
             </q-input>
             <q-select
               v-model="dataset_platform"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               :options="dataset_platforms"
               hint="Dataset Platform (Optional)"
@@ -64,7 +59,6 @@
             <q-input
               v-if="dataset_platform != ''"
               v-model="dataset_id"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               hint="Dataset ID"
               autogrow
@@ -96,7 +90,6 @@
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Information</h6>
             <q-input
               v-model="model_name"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               hint="Model Name"
               autogrow
@@ -105,7 +98,6 @@
             ></q-input>
             <q-select
               v-model="task"
-              :dense="dense"
               class="q-ml-md q-pb-xl"
               :options="tasks"
               hint="Task"
@@ -121,10 +113,10 @@
               use-chips
               multiple
               autogrow
-              :dense="dense"
               hide-dropdown-icon
               input-debounce="0"
               new-value-mode="add-unique"
+              :loading="loading_exp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
             />
@@ -135,28 +127,26 @@
               use-chips
               multiple
               autogrow
-              :dense="dense"
               hide-dropdown-icon
               input-debounce="0"
               new-value-mode="add-unique"
+              :loading="loading_exp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[
                 (val) => val.length >= 1 || 'One or more frameworks required',
               ]"
-            ></q-select>
+            />
           </div>
           <div class="col-3 q-pl-md q-ml-xl shadow-2 rounded">
             <h6 class="text-left q-mt-md q-mb-lg">Owner Information</h6>
             <q-input
               v-model="owner"
-              :dense="dense"
               autogrow
               class="q-mr-md q-pb-xl"
               hint="Model Owner (Optional)"
             ></q-input>
             <q-input
               v-model="poc"
-              :dense="dense"
               autogrow
               class="q-mr-md q-pb-xl"
               hint="Point of Contact (Optional)"
@@ -237,15 +227,20 @@
                 @click="cancel = true"
                 label="Cancel"
                 class="q-mr-md"
+                :disable="button_disable"
               />
             </div>
             <div class="text-right col-9">
               <q-btn
                 v-if="step > 1"
                 color="primary"
-                @click="$refs.stepper.previous()"
+                @click="
+                  $refs.stepper.previous();
+                  simulateSubmit();
+                "
                 label="Back"
                 class="q-mr-md"
+                :disable="button_disable"
               />
               <q-btn
                 v-if="step != 5"
@@ -255,6 +250,7 @@
                 "
                 color="primary"
                 label="Continue"
+                :disable="button_disable"
               />
             </div>
           </div>
@@ -313,6 +309,7 @@ export default {
     const exp_id = ref('');
     const dataset_platform = ref('');
     const dataset_id = ref('');
+    const loading_exp = ref(true);
 
     // toolbar stuff
     const desc_toolbar = [
@@ -368,6 +365,7 @@ export default {
 
     // variables for popup exits
     const cancel = ref(false);
+    const button_disable = ref(false);
 
     // constants for stores
     const authStore = useAuthStore();
@@ -375,18 +373,25 @@ export default {
 
     // functions
     function simulateSubmit() {
-      if (exp_id.value != '') {
+      console.log(step.value);
+      if (
+        exp_id.value != '' &&
+        step.value == 2 &&
+        tagAddUnique.value.length == 0 &&
+        tagAddUnique.value.length == 0
+      ) {
+        loading_exp.value = true;
+        button_disable.value = true;
         expStore.getExperimentByID(exp_id.value).then((value) => {
-          console.log('recieved');
           console.log(value);
           tagAddUnique.value = value.tags;
           frameworkAddUnique.value = value.frameworks;
+          loading_exp.value = false;
+          button_disable.value = false;
         });
       }
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
-      console.log(task.value);
-      console.log(card_content.value);
     }
     function next() {
       $refs.stepper.previous();
@@ -420,6 +425,8 @@ export default {
       card_content,
       metrics_content,
       desc_toolbar,
+      loading_exp,
+      button_disable,
     };
   },
 };
