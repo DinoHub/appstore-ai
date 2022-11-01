@@ -103,7 +103,7 @@ async def search_cards(
     if tags:
         query["tags"] = {"$all": tags}
     if frameworks:
-        query["frameworks"] = {"$all": frameworks}
+        query["frameworks"] = {"$in": frameworks}
     if creator_user_id:
         query["creatorUserId"] = creator_user_id
 
