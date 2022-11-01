@@ -1,3 +1,4 @@
+from turtle import clone
 from typing import Dict, List, Optional
 
 from clearml import Model, Task
@@ -25,9 +26,7 @@ class ClearMLExperiment(ExperimentConnector):
         elif project and exp_name:
             task = Task.get_task(project_name=project, task_name=exp_name)
         else:
-            raise ValueError(
-                "Must specify either exp_id or project and exp_name"
-            )
+            raise ValueError("Must specify either exp_id or project and exp_name")
         exp.id = task.id
         exp.project_name = task.get_project_name()
         exp.exp_name = task.name
@@ -41,7 +40,7 @@ class ClearMLExperiment(ExperimentConnector):
     def clone(
         cls, exp_id: str, clone_name: Optional[str] = None
     ) -> "ClearMLExperiment":
-        task = Task.clone(source_task_id=exp_id, name=clone_name)
+        task = Task.clone(source_task=exp_id, name=clone_name)
         exp = cls()
         exp.id = task.id
         exp.project_name = task.get_project_name()
@@ -126,7 +125,8 @@ class ClearMLExperiment(ExperimentConnector):
     def clone(self, clone_name: Optional[str] = None) -> "ClearMLExperiment":
         if not self.id:
             raise ValueError("Not currently connected to any experiments")
-        return self.clone(self.id, clone_name)
+        task = Task.clone(source_task=self.id, name=clone_name)
+        return task
 
     def execute(
         self,
@@ -137,9 +137,7 @@ class ClearMLExperiment(ExperimentConnector):
             raise ValueError("Not currently connected to any experiments")
         return self.task.enqueue(queue_name=queue_name, queue_id=queue_id)
 
-    def close(
-        self, delete_task: bool = False, delete_artifacts: bool = False
-    ) -> None:
+    def close(self, delete_task: bool = False, delete_artifacts: bool = False) -> None:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         self.task.close()
