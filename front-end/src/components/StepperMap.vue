@@ -376,8 +376,12 @@ export default {
     // functions
     function simulateSubmit() {
       if (exp_id.value != '') {
-        var data = expStore.getExperimentByID(exp_id.value);
-        console.log(data);
+        expStore.getExperimentByID(exp_id.value).then((value) => {
+          console.log('recieved');
+          console.log(value);
+          tagAddUnique.value = value.tags;
+          frameworkAddUnique.value = value.frameworks;
+        });
       }
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
