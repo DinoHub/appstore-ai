@@ -39,7 +39,7 @@ export const useAuthStore = defineStore('auth', {
         const creds = new FormData();
         creds.append('username', userId);
         creds.append('password', password);
-        const response = await api.post('/auth', creds);
+        const response = await api.post('/auth/', creds);
         if (response.status !== 200) {
           console.error('Failed');
         }
