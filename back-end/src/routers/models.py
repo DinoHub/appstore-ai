@@ -99,7 +99,7 @@ async def search_cards(
     if title:
         query["title"] = {"$regex": re.escape(title), "$options": "i"}
     if tasks:
-        query["tasks"] = {"$in": tasks}
+        query["task"] = {"$in": tasks}
     if tags:
         query["tags"] = {"$all": tags}
     if frameworks:
