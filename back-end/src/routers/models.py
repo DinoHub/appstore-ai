@@ -58,6 +58,7 @@ async def search_cards(
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="_id", alias="sort"),
     title: Optional[str] = Query(default=None),
+    tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
     frameworks: Optional[List[str]] = Query(
         default=None, alias="frameworks[]"
@@ -70,6 +71,8 @@ async def search_cards(
     query = {}
     if title:
         query["title"] = {"$regex": re.escape(title), "$options": "i"}
+    if tasks:
+        query["tasks"] = {"$in": tasks}
     if tags:
         query["tags"] = {"$all": tags}
     if frameworks:
