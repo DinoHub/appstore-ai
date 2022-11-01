@@ -174,8 +174,6 @@
             </div>
             <editor
               v-model="card_content"
-              tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
-              api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
               :init="{
                 height: 650,
                 plugins:
@@ -201,8 +199,6 @@
 
             <editor
               v-model="metrics_content"
-              tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
-              api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
               :init="{
                 height: 600,
                 plugins:
@@ -309,7 +305,7 @@ export default {
     const exp_id = ref('');
     const dataset_platform = ref('');
     const dataset_id = ref('');
-    const loading_exp = ref(true);
+    const loading_exp = ref(false);
 
     // toolbar stuff
     const desc_toolbar = [
@@ -373,7 +369,6 @@ export default {
 
     // functions
     function simulateSubmit() {
-      console.log(step.value);
       if (
         exp_id.value != '' &&
         step.value == 2 &&
