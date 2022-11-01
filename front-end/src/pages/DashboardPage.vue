@@ -15,8 +15,10 @@
             <div class="col col-sm-3 text-h4">
               Your Models
               <q-btn round icon="add" to="/models/create"></q-btn>
+              <router-link class="router-link text-body2" to="/models"
+                >View all models</router-link
+              >
             </div>
-            <router-link to="/models">View all models</router-link>
           </template>
         </model-card-data-table>
       </section>

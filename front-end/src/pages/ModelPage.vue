@@ -10,13 +10,31 @@
       </div>
     </header>
     <aside class="row q-py-sm">
-      <q-chip :label="model.task" color="primary" text-color="white"></q-chip>
-      <q-chip :label="tag" v-for="tag in model.tags" v-bind:key="tag"></q-chip>
+      <q-chip color="primary" text-color="white">
+        <router-link class="router-link" :to="`/models/?tasks=${model.task}`">
+          {{ model.task }}</router-link
+        >
+      </q-chip>
       <q-chip
-        :label="tag"
         v-for="tag in model.frameworks"
-        v-bind:key="tag"
-      ></q-chip>
+        :key="tag"
+        color="accent"
+        text-color="white"
+      >
+        <router-link class="router-link" :to="`/models/?frameworks=${tag}`">{{
+          tag
+        }}</router-link>
+      </q-chip>
+      <q-chip
+        v-for="tag in model.tags"
+        :key="tag"
+        color="secondary"
+        text-color="white"
+      >
+        <router-link class="router-link" :to="`/models/?tags=${tag}`">{{
+          tag
+        }}</router-link>
+      </q-chip>
     </aside>
     <q-separator></q-separator>
     <main class="row">

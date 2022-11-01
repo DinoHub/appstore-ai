@@ -1,3 +1,4 @@
+<style scoped></style>
 <template>
   <div class="row">
     <aside class="col col-sm-3" v-if="showFilter">
@@ -51,26 +52,32 @@
           <slot name="top-left"></slot>
         </template>
         <template v-slot:top-right>
-          <q-select
-            label="Sort by"
-            v-model="pagination.sortBy"
-            :options="sortOptions"
-            emit-value
-            map-options
-            @update:model-value="tableRef.requestServerInteraction()"
-          >
-          </q-select>
-          <q-input
-            borderless
-            dense
-            debounce="300"
-            v-model="filter.title"
-            placeholder="Search"
-          >
-            <template v-slot:append>
-              <q-icon name="search" />
-            </template>
-          </q-input>
+          <div class="row items-center q-gutter-x-lg">
+            <div class="col">
+              <q-select
+                label="Sort by"
+                v-model="pagination.sortBy"
+                :options="sortOptions"
+                emit-value
+                map-options
+                @update:model-value="tableRef.requestServerInteraction()"
+              >
+              </q-select>
+            </div>
+            <div class="col">
+              <q-input
+                borderless
+                dense
+                debounce="300"
+                v-model="filter.title"
+                placeholder="Search"
+              >
+                <template v-slot:append>
+                  <q-icon name="search" />
+                </template>
+              </q-input>
+            </div>
+          </div>
         </template>
         <template v-slot:item="props">
           <model-card
@@ -82,6 +89,7 @@
             :tags="props.row.tags"
             :frameworks="props.row.frameworks"
             :summary="props.row.summary"
+            :task="props.row.task"
           ></model-card>
         </template>
       </q-table>
@@ -92,7 +100,8 @@
 <script setup lang="ts">
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { LocationQueryValue } from 'vue-router';
 import ModelCard from './ModelCard.vue';
 import { FormOptionValue, Pagination, SearchFilter } from './models';
 
@@ -103,10 +112,13 @@ export interface Props {
   filter: SearchFilter;
 }
 
+const route = useRoute();
+const router = useRouter();
 const props = defineProps<Props>();
 
 const tableRef = ref();
 const filter: SearchFilter = reactive(props.filter);
+
 const loading = ref(false);
 
 const modelStore = useModelStore();
@@ -131,7 +143,7 @@ const sortOptions = Object.freeze([
     value: 'title',
   },
   {
-    label: 'Last Updated',
+    label: 'Oldest (Last Updated)',
     value: 'lastUpdated',
   },
 ]);
@@ -187,6 +199,12 @@ const columns = [
     label: 'Name',
     align: 'left',
     field: 'title',
+  },
+  {
+    name: 'task',
+    required: false,
+    label: 'Task',
+    field: 'task',
   },
   {
     name: 'creatorUserId',
@@ -246,6 +264,42 @@ function onSearchRequest(props: any) {
 }
 
 onMounted(() => {
+  // If URL contains filter params, auto add
+  if (props.showFilter) {
+    const params = route.query;
+    // Process tags
+    if (params.tags) {
+      if (!filter.tags) {
+        filter.tags = [];
+      }
+      if (typeof params.tags === 'string') {
+        filter.tags.push(params.tags);
+      } else {
+        filter.tags = params.tags;
+      }
+    }
+    if (params.frameworks) {
+      if (!filter.frameworks) {
+        filter.frameworks = [];
+      }
+      if (typeof params.frameworks === 'string') {
+        filter.frameworks.push(params.frameworks);
+      } else {
+        filter.frameworks = params.frameworks;
+      }
+    }
+    if (params.tasks) {
+      if (!filter.tasks) {
+        filter.tasks = [];
+      }
+      if (typeof params.tasks === 'string') {
+        filter.tasks.push(params.tasks);
+      } else {
+        filter.tasks = params.tasks;
+      }
+    }
+    router.replace({ query: undefined });
+  }
   tableRef.value.requestServerInteraction();
 });
 </script>
