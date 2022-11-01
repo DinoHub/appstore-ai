@@ -25,6 +25,7 @@ export interface ModelCardSummary {
   modelId: string;
   creatorUserId: string;
   title: string;
+  task: string;
   summary: string;
   tags: string[];
   frameworks: string[];
@@ -94,6 +95,7 @@ export const useModelStore = defineStore('model', {
               'modelId',
               'creatorUserId',
               'title',
+              'task',
               'summary',
               'tags',
               'frameworks',
@@ -122,28 +124,6 @@ export const useModelStore = defineStore('model', {
           this.router.push('/404');
         }
         return Promise.reject('Unable to get model metadata');
-      }
-    },
-    async getModelsByUser(userId: string): Promise<SearchResponse> {
-      try {
-        const res = await api.get(`/models/${userId}`, {
-          params: {
-            return: [
-              'modelId',
-              'creatorUserId',
-              'title',
-              'summary',
-              'tags',
-              'frameworks',
-              'lastModified',
-              'created',
-            ],
-          },
-        });
-        const { results, total }: SearchResponse = res.data;
-        return { results, total };
-      } catch (error) {
-        return Promise.reject(error);
       }
     },
     async deleteModelById(userId: string, modelId: string): Promise<void> {
