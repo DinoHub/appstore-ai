@@ -43,7 +43,7 @@ export const useAuthStore = defineStore('auth', {
         const creds = new FormData();
         creds.append('username', userId);
         creds.append('password', password);
-        const response = await api.post('/auth', creds);
+        const response = await api.post('/auth/', creds);
         // Decode JWT
         const { access_token, refresh_token }: LoginResponse = response.data;
         const jwt_data = jwt_decode(access_token) as JWT;
