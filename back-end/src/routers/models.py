@@ -50,6 +50,33 @@ file_validator = ValidateFileUpload(
 router = APIRouter(prefix="/models", tags=["Models"])
 
 
+@router.get(
+    "/_db/options/filters/"
+)  # prevent accidently matching with user/model id
+async def get_available_filters(db=Depends(get_db)):
+    db, _ = db
+    models = db["models"]
+    tags = await models.distinct("tags")
+    frameworks = await models.distinct("frameworks")
+    tasks = await models.distinct("task")
+    return {"tags": tags, "frameworks": frameworks, "tasks": tasks}
+
+
+@router.get("/{creator_user_id}/{model_id}")
+async def get_model_card_by_id(
+    model_id: str, creator_user_id: str, db=Depends(get_db)
+):
+    db, _ = db
+    # Get model card by database id (NOT clearml id)
+    model = await db["models"].find_one(
+        {"modelId": model_id, "creatorUserId": creator_user_id}
+    )
+    if model is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    model = json.loads(json_util.dumps(model))
+    return JSONResponse(status_code=status.HTTP_200_OK, content=model)
+
+
 @router.get("/")
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
@@ -120,21 +147,6 @@ async def get_model_cards_by_user(
         descending=True,
     )
     return results
-
-
-@router.get("/{creator_user_id}/{model_id}")
-async def get_model_card_by_id(
-    model_id: str, creator_user_id: str, db=Depends(get_db)
-):
-    db, _ = db
-    # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one(
-        {"modelId": model_id, "creatorUserId": creator_user_id}
-    )
-    if model is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-    model = json.loads(json_util.dumps(model))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=model)
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
