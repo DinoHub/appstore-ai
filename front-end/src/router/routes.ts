@@ -10,9 +10,8 @@ import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
-    name: 'login',
     component: MainLayout,
-    children: [{ path: '', component: LoginPage }],
+    children: [{ path: '', name: 'login', component: LoginPage }],
     beforeEnter: (to) => {
       const auth = useAuthStore();
       if (auth.access_token) {
@@ -44,8 +43,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: MainLayout,
-    name: 'dashboard',
-    children: [{ path: '', component: DashboardPage }],
+    children: [{ path: '', name: 'dashboard', component: DashboardPage }],
   },
 
   // Always leave this as last one,
