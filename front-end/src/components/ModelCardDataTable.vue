@@ -91,16 +91,13 @@ export interface Props {
   rows?: ModelCardSummary[];
   cardClass?: string;
   showFilter?: boolean;
+  filter?: SearchFilter;
 }
 
 const props = defineProps<Props>();
 
 const tableRef = ref();
-const filter: SearchFilter = reactive({
-  tasks: [],
-  tags: [],
-  frameworks: [],
-});
+const filter: SearchFilter = reactive(props.filter);
 const loading = ref(false);
 
 const modelStore = useModelStore();

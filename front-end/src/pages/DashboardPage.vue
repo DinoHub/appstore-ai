@@ -10,7 +10,7 @@
     <main>
       <section>
         <div class="row"></div>
-        <model-card-data-table card-class="dashboard-card">
+        <model-card-data-table :filter="filter" card-class="dashboard-card">
           <template v-slot:top-left>
             <div class="col col-sm-3 text-h4">
               Your Models
@@ -29,13 +29,18 @@ import { ref, Ref } from 'vue';
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
+import { SearchFilter } from '../components/models';
 
 const authStore = useAuthStore();
 const username = ref(authStore.user?.name);
 
 // Get all user models
-const modelStore = useModelStore();
-// Get models owned by the user
+const filter: SearchFilter = {
+  tags: [],
+  tasks: [],
+  frameworks: [],
+  creator: authStore.user?.userId,
+};
 </script>
 
 <style>
