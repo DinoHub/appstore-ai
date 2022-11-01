@@ -35,10 +35,12 @@ tags_metadata = [
         "description": "APIs to allow end users to login to the system",
     },
 ]
-app = FastAPI(title="Model Zoo", description=description, openapi_tags=tags_metadata)
+app = FastAPI(
+    title="Model Zoo", description=description, openapi_tags=tags_metadata
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:9000"],
+    allow_origins=["http://localhost:9000", "http://127.0.0.1:9000"],
     allow_methods=["*"],
     allow_credentials=True,
     allow_headers=["*"],
@@ -46,7 +48,9 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(models.router, dependencies=[Depends(get_current_user)])
-app.include_router(experiments.router, dependencies=[Depends(get_current_user)])
+app.include_router(
+    experiments.router, dependencies=[Depends(get_current_user)]
+)
 app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
 app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
 app.include_router(engines.router, dependencies=[Depends(get_current_user)])
