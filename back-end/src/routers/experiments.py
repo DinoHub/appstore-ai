@@ -50,12 +50,12 @@ async def get_experiment(
             data["artifacts"].update(exp.models)
 
         return data
-    except ValueError as e:
+    except ValueError:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content=e,
+            content=f"Task was not found or values are incorrect",
         )
-    except Exception as e:
+    except Exception:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=f"Error"
         )
@@ -64,19 +64,19 @@ async def get_experiment(
 @router.post("/clone")
 async def clone_experiment(
     item: ClonePackageModel,
-    clearml_client: APIClient = Depends(clearml_api_client),
+    connector: Connector,
 ):
-    exp_list = clearml_client.tasks.get_by_id(task=item.id)
-    if item.clone_name == None:
-        new_exp = exp_list.clone(new_task_name=f"Clone of {exp_list.data.name}")
+    exp = Experiment(connector).get(exp_id=item.id)
+    if item.clone_name == None or item.clone_name == "":
+        new_exp = exp.clone(clone_name=f"Clone of {exp.exp_name}")
     else:
-        new_exp = exp_list.clone(new_task_name=f"{item.clone_name}")
-    cloned = clearml_client.tasks.get_by_id(task=new_exp.id)
+        new_exp = exp.clone(clone_name=f"{item.clone_name}")
+    cloned = Experiment(connector).get(exp_id=new_exp.id)
     return {
-        "id": exp_list.data.id,
-        "name": exp_list.data.name,
-        "clone_id": cloned.data.id,
-        "clone_name": cloned.data.name,
+        "id": exp.id,
+        "name": exp.exp_name,
+        "clone_id": cloned.id,
+        "clone_name": cloned.exp_name,
     }
 
 
