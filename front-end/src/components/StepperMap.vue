@@ -154,23 +154,60 @@
           </div>
         </div>
       </q-step>
-
       <q-step
         :name="3"
-        title="Card Description"
-        icon="description"
+        title="Model Description"
+        icon="person"
+        :done="task != ''"
+        :error="task == ''"
+      >
+        <div class="row justify-center full-height" style="min-height: 9rem">
+          <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Description</h6>
+            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+          </div>
+        </div>
+        <div class="row justify-center full-height" style="min-height: 9rem">
+          <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Explanation</h6>
+            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+          </div>
+        </div>
+        <div class="row justify-center full-height" style="min-height: 9rem">
+          <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Usage</h6>
+            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+          </div>
+        </div>
+        <div class="row justify-center full-height" style="min-height: 9rem">
+          <div class="col-9 q-pr-md shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Limitations</h6>
+            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+          </div>
+        </div>
+      </q-step>
+      <q-step
+        :name="4"
+        title="Card Markdown"
+        icon="assignment"
         :done="card_content.includes('(Example Text to Replace)') == false"
         :error="card_content.includes('(Example Text to Replace)') != false"
       >
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
-            <h6 class="text-left q-ml-md q-mb-sm">Model Description</h6>
+            <h6 class="text-left q-ml-md q-mb-sm">Card Markdown</h6>
+            <p class="text-left q-ml-md q-mb-sm">
+              This is the HTML markdown that will shown in the model page.<br />
+              Style it to your liking and display whatever additional
+              information you would like, such as tables, lists, code samples or
+              images!
+            </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="card_content.includes('(Example Text to Replace)') != false"
             >
               <q-icon class="" name="error" size="1.5rem" />
-              Please replace the example content with your own content
+              Please remove the example content and style your own content
             </div>
             <editor
               v-model="card_content"
@@ -186,7 +223,7 @@
       </q-step>
 
       <q-step
-        :name="4"
+        :name="5"
         title="Performance Metrics"
         icon="leaderboard"
         :done="step > 4"
@@ -212,7 +249,7 @@
         </div>
       </q-step>
 
-      <q-step :name="5" title="Inference Engine" icon="code"> </q-step>
+      <q-step :name="6" title="Inference Engine" icon="code"> </q-step>
 
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -239,7 +276,7 @@
                 :disable="button_disable"
               />
               <q-btn
-                v-if="step != 5"
+                v-if="step != 6"
                 @click="
                   $refs.stepper.next();
                   simulateSubmit();
@@ -316,8 +353,8 @@ export default {
     // variables for model card step 3
     const card_content = ref(`<h3>Description <a id="description"></a></h3>
                               <hr>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model.&nbsp;</span></p>
                               <p><strong>EXAMPLE:</strong></p>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model.&nbsp;</span></p>
                               <p>Random formula: x<sup>2</sup> + &pi;</p>
                               <pre class="language-python"><code>for i in new_list:<br>    print(i + "hello")</code></pre>
                               <p>Items still yet to be done:</p>
@@ -330,8 +367,8 @@ export default {
                               <p>&nbsp;</p>
                               <h3>Model Use <a id="model_use"></a></h3>
                               <hr>
-                              <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
                               <p><strong>EXAMPLE:</strong></p>
+                              <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
                               <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.</p>
                               <table style="border-collapse: collapse; width: 57.1996%; height: 44.7812px; border-width: 1px; margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>
                               <tbody>
@@ -349,8 +386,8 @@ export default {
                               <p>&nbsp;</p>
                               <h3>Limitations <a id="limitations"></a></h3>
                               <hr>
-                              <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
                               <p><strong>EXAMPLE:</strong></p>
+                              <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
                               <blockquote>
                               <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
                               </blockquote>
