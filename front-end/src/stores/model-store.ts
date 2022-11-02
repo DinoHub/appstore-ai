@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import { LocationQueryValue } from 'vue-router';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
@@ -41,8 +42,9 @@ export interface SearchParams {
   all?: boolean;
   creatorUserId?: string;
   title?: string;
-  tags?: string[];
-  frameworks?: string[];
+  tags?: string[] | LocationQueryValue[];
+  frameworks?: string[] | LocationQueryValue[];
+  tasks?: string[] | LocationQueryValue[];
 }
 
 export interface AvailableFilterResponse {

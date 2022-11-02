@@ -1,3 +1,5 @@
+import { LocationQueryValue } from 'vue-router';
+
 export interface Pagination {
   sortBy: string;
   descending: boolean;
@@ -9,9 +11,9 @@ export interface Pagination {
 export interface SearchFilter {
   title?: string;
   creator?: string;
-  tasks?: string[];
-  tags?: string[];
-  frameworks?: string[];
+  tasks?: string[] | LocationQueryValue[];
+  tags?: string[] | LocationQueryValue[];
+  frameworks?: string[] | LocationQueryValue[];
 }
 
 export interface FormOptionValue {

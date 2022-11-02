@@ -98,6 +98,7 @@
 </template>
 
 <script setup lang="ts">
+import { QTableProps } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -112,86 +113,17 @@ export interface Props {
   filter: SearchFilter;
 }
 
+// Router
 const route = useRoute();
 const router = useRouter();
+
+// Stores
+const modelStore = useModelStore();
 const props = defineProps<Props>();
 
+// Data Table
 const tableRef = ref();
-const filter: SearchFilter = reactive(props.filter);
-
-const loading = ref(false);
-
-const modelStore = useModelStore();
-
-const pagination: Ref<Pagination> = ref({
-  sortBy: '_id',
-  descending: false,
-  page: 1,
-  rowsPerPage: 3,
-  rowsNumber: 1,
-});
-
-const rows: Ref<ModelCardSummary[]> = ref([]);
-
-const sortOptions = Object.freeze([
-  {
-    label: 'ID',
-    value: '_id',
-  },
-  {
-    label: 'Title',
-    value: 'title',
-  },
-  {
-    label: 'Oldest (Last Updated)',
-    value: 'lastUpdated',
-  },
-]);
-
-const tasks = reactive(
-  modelStore.tasks.map((task: string) => {
-    return {
-      label: task,
-      value: task,
-    };
-  }),
-);
-const frameworks: FormOptionValue[] = reactive([]);
-
-const tags: string[] = reactive([]);
-
-if (props.showFilter) {
-  // Dynamically get filter options
-  modelStore
-    .getFilterOptions()
-    .then((data) => {
-      tags.splice(0, tags.length, ...data.tags);
-      frameworks.splice(
-        0,
-        frameworks.length,
-        ...data.frameworks.map((framework: string) => {
-          return {
-            label: framework,
-            value: framework,
-          };
-        }),
-      );
-      tasks.splice(
-        0,
-        tasks.length,
-        ...data.tasks.map((task: string) => {
-          return {
-            label: task,
-            value: task,
-          };
-        }),
-      );
-    })
-    .catch(() => {
-      console.error('Failed to get filter options');
-    });
-}
-
+const rows: Ref<ModelCardSummary[]> = ref([]); // store data in table
 const columns = [
   {
     name: 'title',
@@ -235,12 +167,77 @@ const columns = [
     field: 'summary',
   },
 ];
+const loading = ref(false);
+const filter: SearchFilter = reactive(props.filter);
+
+const pagination: Ref<Pagination> = ref({
+  sortBy: '_id',
+  descending: false,
+  page: 1,
+  rowsPerPage: 3,
+  rowsNumber: 1,
+});
+
+const sortOptions = Object.freeze([
+  {
+    label: 'ID',
+    value: '_id',
+  },
+  {
+    label: 'Title',
+    value: 'title',
+  },
+  {
+    label: 'Oldest (Last Updated)',
+    value: 'lastUpdated',
+  },
+]);
+
+const tasks: FormOptionValue[] = reactive([]);
+const frameworks: FormOptionValue[] = reactive([]);
+const tags: string[] = reactive([]);
+
+if (props.showFilter) {
+  // Dynamically get filter options
+  modelStore
+    .getFilterOptions()
+    .then((data) => {
+      tags.splice(0, tags.length, ...data.tags);
+      frameworks.splice(
+        0,
+        frameworks.length,
+        ...data.frameworks.map((framework: string) => {
+          return {
+            label: framework,
+            value: framework,
+          };
+        }),
+      );
+      tasks.splice(
+        0,
+        tasks.length,
+        ...data.tasks.map((task: string) => {
+          return {
+            label: task,
+            value: task,
+          };
+        }),
+      );
+    })
+    .catch(() => {
+      console.error('Failed to get filter options');
+      // TODO: Show notification?
+    });
+}
 
 function compositeId(row: ModelCardSummary): string {
   return `${row.creatorUserId}/${row.modelId}`;
 }
 
-function onSearchRequest(props: any) {
+function onSearchRequest(props: QTableProps): void {
+  if (!props.pagination) {
+    return;
+  }
   const { page, rowsPerPage, sortBy, descending } = props.pagination;
   loading.value = true;
   modelStore
@@ -255,10 +252,10 @@ function onSearchRequest(props: any) {
     .then(({ results, total }) => {
       rows.value.splice(0, rows.value.length, ...results);
       pagination.value.rowsNumber = total;
-      pagination.value.page = page;
-      pagination.value.rowsPerPage = rowsPerPage;
-      pagination.value.sortBy = sortBy;
-      pagination.value.descending = descending;
+      pagination.value.page = page ?? 1;
+      pagination.value.rowsPerPage = rowsPerPage ?? 0;
+      pagination.value.sortBy = sortBy ?? '_id';
+      pagination.value.descending = descending ?? false;
       loading.value = false;
     });
 }
@@ -300,6 +297,7 @@ onMounted(() => {
     }
     router.replace({ query: undefined });
   }
+  // Update table with latest value from Server
   tableRef.value.requestServerInteraction();
 });
 </script>
