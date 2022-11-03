@@ -62,7 +62,7 @@ const md = new MarkdownIt({
     if (m && tokens[idx].nesting === 1) {
       try {
         // Add chart
-        let chartId = `chart-${idx}`;
+        let chartId = `chart-${crypto.randomUUID()}`;
         const data: Chart = JSON.parse(m[1].trim());
         chartData.push({
           id: chartId,
