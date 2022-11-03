@@ -3,10 +3,10 @@
     <q-stepper
       v-model="step"
       ref="stepper"
-      color="primary"
       animated
       done-color="secondary"
       error-color="red"
+      color="primary"
       class="shadow-0 justify-center text-center full-height"
       header-class="no-border q-px-xl"
     >
@@ -164,25 +164,45 @@
         <div class="row justify-center full-height" style="min-height: 9rem">
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Description</h6>
-            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+            <q-input
+              v-model="model_desc"
+              class="q-ml-md q-mb-lg"
+              type="textarea"
+              filled
+            ></q-input>
           </div>
         </div>
         <div class="row justify-center full-height" style="min-height: 9rem">
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Explanation</h6>
-            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+            <q-input
+              v-model="model_explain"
+              class="q-ml-md q-mb-lg"
+              type="textarea"
+              filled
+            ></q-input>
           </div>
         </div>
         <div class="row justify-center full-height" style="min-height: 9rem">
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Usage</h6>
-            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+            <q-input
+              v-model="model_use"
+              class="q-ml-md q-mb-lg"
+              type="textarea"
+              filled
+            ></q-input>
           </div>
         </div>
         <div class="row justify-center full-height" style="min-height: 9rem">
           <div class="col-9 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Limitations</h6>
-            <q-input class="q-ml-md q-mb-lg" type="textarea" filled></q-input>
+            <q-input
+              v-model="model_limit"
+              class="q-ml-md q-mb-lg"
+              type="textarea"
+              filled
+            ></q-input>
           </div>
         </div>
       </q-step>
@@ -200,7 +220,9 @@
               This is the HTML markdown that will shown in the model page.<br />
               Style it to your liking and display whatever additional
               information you would like, such as tables, lists, code samples or
-              images!
+              images. <br />
+              You can follow the example content structure or come up with
+              something else.
             </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
@@ -233,7 +255,6 @@
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
               Performance Metrics
             </h6>
-
             <editor
               v-model="metrics_content"
               :init="{
@@ -309,6 +330,28 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="popupContent">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Markdown</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        Add Model Description text values to markdown?
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="No" color="red" v-close-popup />
+        <q-btn
+          flat
+          label="Yes"
+          color="primary"
+          v-close-popup
+          @click="populateEditor()"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script>
@@ -326,17 +369,35 @@ export default {
     // step for stepper to paginate
     const step = ref(1);
 
+    // variables for lists used for the selects in model creation process
+    const tasks = ref([
+      'Computer Vision',
+      'Natural Language Processing',
+      'Audio Processing',
+      'Multimodal',
+      'Reinforcement Learning',
+      'Tabular',
+    ]);
+    const exp_platforms = ref(['', 'ClearML']);
+    const dataset_platforms = ref(['', 'ClearML']);
+
     // variables for the tags and framework
     const tagAddUnique = ref([]);
     const frameworkAddUnique = ref([]);
 
-    // other model and owner metadata for the 1st page of stepper
+    // other model and owner metadata for the
     const model_name = ref('');
     const task = ref('');
     const owner = ref('');
     const poc = ref('');
 
-    // info about model, experiments and datasets for 2nd page of stepper
+    // textareas for description,usage,limitations of model
+    const model_desc = ref('');
+    const model_explain = ref('');
+    const model_use = ref('');
+    const model_limit = ref('');
+
+    // info about model, experiments and datasets links
     const model_path = ref('');
     const exp_platform = ref('');
     const exp_id = ref('');
@@ -350,18 +411,45 @@ export default {
       ' alignleft aligncenter alignright | outdent indent | bullist numlist | charmap anchor hr | insertdatetime | link image table',
     ];
 
-    // variables for model card step 3
+    // variables for model card
     const card_content = ref(`<h3>Description <a id="description"></a></h3>
                               <hr>
                               <p><strong>EXAMPLE:</strong></p>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model.&nbsp;</span></p>
-                              <p>Random formula: x<sup>2</sup> + &pi;</p>
-                              <pre class="language-python"><code>for i in new_list:<br>    print(i + "hello")</code></pre>
-                              <p>Items still yet to be done:</p>
-                              <ol>
-                              <li>New experiment with proper hyperparameters</li>
-                              <li><s>Some item</s> <span style="text-decoration: underline;"><em>(Finished on 11/11/2022)</em></span></li>
-                              <li>Some task</li>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model. Additionally other things like metrics used/best scores can be posted in tables or other formats too if desired.&nbsp;</span></p>
+                              <table style="border-collapse: collapse; width: 46.8289%; height: 164px; background-color: rgb(194, 224, 244); border: 1px solid rgb(126, 140, 141); margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 65.8868%;"><col style="width: 34.1157%;"></colgroup>
+                              <tbody>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Metrics Used</strong></span></td>
+                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Best Score</strong></span></td>
+                              </tr>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 1</td>
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">24.96</td>
+                              </tr>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 2</td>
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">22.2</td>
+                              </tr>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 3</td>
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">23.2</td>
+                              </tr>
+                              </tbody>
+                              </table>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
+                              <p>&nbsp;</p>
+                              <h3>Explanation <a id="explanation"></a></h3>
+                              <hr>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>This section should explain the model.</p>
+                              <p dir="ltr">Description may include:</p>
+                              <ol style="list-style-type: lower-alpha;">
+                              <li dir="ltr"><em><strong>general logic</strong></em> &ndash; what are the key features that matter and how are they related?</li>
+                              <li dir="ltr"><em><strong>particular inferences </strong></em>&ndash; are specific predictions explained?&nbsp;</li>
+                              <li dir="ltr"><em><strong>nature </strong></em>&ndash; are explanations in the form of associations (e.g., feature importance), contrasts (e.g., counterfactuals), or causal models?</li>
+                              <li dir="ltr"><em><strong>medium </strong></em>&ndash;are they provided as text, visuals or some other format?</li>
+                              <li dir="ltr"><em><strong>audience </strong></em>&ndash; which user personas are they meant for?</li>
+                              <li dir="ltr"><em><strong>motivation</strong></em> &ndash; why were this nature and medium chosen for this audience?</li>
                               </ol>
                               <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
                               <p>&nbsp;</p>
@@ -370,19 +458,10 @@ export default {
                               <p><strong>EXAMPLE:</strong></p>
                               <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
                               <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.</p>
-                              <table style="border-collapse: collapse; width: 57.1996%; height: 44.7812px; border-width: 1px; margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 50%;"><col style="width: 50%;"></colgroup>
-                              <tbody>
-                              <tr style="height: 22.3906px;">
-                              <td style="height: 22.3906px; border-width: 1px; background-color: rgb(194, 224, 244); border-color: rgb(0, 0, 0);"><strong>Some Table</strong></td>
-                              <td style="height: 22.3906px; border-width: 1px; background-color: rgb(194, 224, 244); border-color: rgb(0, 0, 0);"><strong>Some Values</strong></td>
-                              </tr>
-                              <tr style="height: 22.3906px;">
-                              <td style="height: 22.3906px; border-width: 1px; border-color: rgb(0, 0, 0);">Tables are useful</td>
-                              <td style="height: 22.3906px; border-width: 1px; border-color: rgb(0, 0, 0);">Add some values</td>
-                              </tr>
-                              </tbody>
-                              </table>
-                              <p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.&nbsp;<strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
+                              <p>Random formula: x<sup>2</sup> + &pi;</p>
+                              <pre class="language-python"><code>for i in new_list:
+    print(i + "hello")</code></pre>
+                              <p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.&nbsp;</p><p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
                               <p>&nbsp;</p>
                               <h3>Limitations <a id="limitations"></a></h3>
                               <hr>
@@ -391,13 +470,14 @@ export default {
                               <blockquote>
                               <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
                               </blockquote>
-                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`);
+                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`);
 
-    // variables for performance metrics in model creation step 4
+    // variables for performance metrics in model creation
     const metrics_content = ref('');
 
     // variables for popup exits
     const cancel = ref(false);
+    const popupContent = ref(false);
     const button_disable = ref(false);
 
     // constants for stores
@@ -422,15 +502,86 @@ export default {
           button_disable.value = false;
         });
       }
+      if (step.value == 4) {
+        popupContent.value = true;
+      }
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
+      console.log(step.value);
+      console.log(model_desc.value);
     }
     function next() {
       $refs.stepper.previous();
     }
+    function populateEditor() {
+      card_content.value = `<h3>Description <a id="description"></a></h3>
+                              <hr>
+                              <p>${model_desc.value}</p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model. Additionally other things like metrics used/best scores can be posted in tables or other formats too if desired.&nbsp;</span></p>
+                              <table style="border-collapse: collapse; width: 46.8289%; height: 164px; background-color: rgb(194, 224, 244); border: 1px solid rgb(126, 140, 141); margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 65.8868%;"><col style="width: 34.1157%;"></colgroup>
+                              <tbody>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Metrics Used</strong></span></td>
+                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Best Score</strong></span></td>
+                              </tr>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 1</td>
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">24.96</td>
+                              </tr>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 2</td>
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">22.2</td>
+                              </tr>
+                              <tr style="height: 25.2px;">
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 3</td>
+                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">23.2</td>
+                              </tr>
+                              </tbody>
+                              </table>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
+                              <p>&nbsp;</p>
+                              <h3>Explanation <a id="explanation"></a></h3>
+                              <hr>
+                              <p>${model_explain.value}</p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>This section should explain the model.</p>
+                              <p dir="ltr">Description may include:</p>
+                              <ol style="list-style-type: lower-alpha;">
+                              <li dir="ltr"><em><strong>general logic</strong></em> &ndash; what are the key features that matter and how are they related?</li>
+                              <li dir="ltr"><em><strong>particular inferences </strong></em>&ndash; are specific predictions explained?&nbsp;</li>
+                              <li dir="ltr"><em><strong>nature </strong></em>&ndash; are explanations in the form of associations (e.g., feature importance), contrasts (e.g., counterfactuals), or causal models?</li>
+                              <li dir="ltr"><em><strong>medium </strong></em>&ndash;are they provided as text, visuals or some other format?</li>
+                              <li dir="ltr"><em><strong>audience </strong></em>&ndash; which user personas are they meant for?</li>
+                              <li dir="ltr"><em><strong>motivation</strong></em> &ndash; why were this nature and medium chosen for this audience?</li>
+                              </ol>
+                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
+                              <p>&nbsp;</p>
+                              <h3>Model Use <a id="model_use"></a></h3>
+                              <hr>
+                              <p>${model_use.value}</p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
+                              <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.</p>
+                              <p>Random formula: x<sup>2</sup> + &pi;</p>
+                              <pre class="language-python"><code>for i in new_list:
+    print(i + "hello")</code></pre>
+                              <p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.&nbsp;</p><p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
+                              <p>&nbsp;</p>
+                              <h3>Limitations <a id="limitations"></a></h3>
+                              <hr>
+                              <p>${model_limit.value}</p>
+                              <p><strong>EXAMPLE:</strong></p>
+                              <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
+                              <blockquote>
+                              <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
+                              </blockquote>
+                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`;
+    }
     return {
       step,
       simulateSubmit,
+      populateEditor,
       tagAddUnique,
       frameworkAddUnique,
       task,
@@ -444,16 +595,14 @@ export default {
       exp_id,
       dataset_platform,
       dataset_id,
-      tasks: [
-        'Computer Vision',
-        'Natural Language Processing',
-        'Audio Processing',
-        'Multimodal',
-        'Reinforcement Learning',
-        'Tabular',
-      ],
-      exp_platforms: ['', 'ClearML'],
-      dataset_platforms: ['', 'ClearML'],
+      tasks,
+      model_desc,
+      model_explain,
+      model_use,
+      model_limit,
+      popupContent,
+      exp_platforms,
+      dataset_platforms,
       card_content,
       metrics_content,
       desc_toolbar,
