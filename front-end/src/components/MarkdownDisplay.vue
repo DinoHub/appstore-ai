@@ -96,7 +96,9 @@ watch(props, (props) => {
     }
     // let chart = new ApexCharts(selector, data.chartOptions);
     // chart.render();
-    Plotly.newPlot(selector, data.data, data.layout);
+    Plotly.newPlot(selector, data.data, data.layout, {
+      responsive: true,
+    });
   }
 });
 </script>
