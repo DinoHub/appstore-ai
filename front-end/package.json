@@ -12,19 +12,24 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "@tinymce/tinymce-vue": "^5.0.0",
     "@tiptap/core": "^2.0.0-beta.199",
+    "@types/dompurify": "^2.3.4",
     "@types/markdown-it": "^12.2.3",
+    "apexcharts": "^3.36.0",
     "axios": "^0.21.1",
+    "dompurify": "^2.4.0",
+    "graph-tinymce-plugin": "^0.0.4",
     "highlight.js": "^11.6.0",
     "jwt-decode": "^3.1.2",
     "markdown-it": "^13.0.1",
-    "@tinymce/tinymce-vue": "^5.0.0",
-    "graph-tinymce-plugin": "^0.0.4",
+    "markdown-it-container": "^3.0.0",
     "pinia": "^2.0.11",
     "pinia-plugin-persistedstate": "^2.3.0",
     "quasar": "^2.6.0",
     "vue": "^3.0.0",
-    "vue-router": "^4.0.0"
+    "vue-router": "^4.0.0",
+    "vue3-apexcharts": "^1.4.1"
   },
   "devDependencies": {
     "@quasar/app-vite": "^1.0.0",

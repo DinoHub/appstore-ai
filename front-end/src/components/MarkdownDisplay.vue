@@ -25,37 +25,78 @@ h6 {
 </style>
 
 <template>
-  <article v-html="convertedMarkdown"></article>
+  <article ref="mdRef"></article>
 </template>
 
 <script setup lang="ts">
+import ApexCharts, { ApexOptions } from 'apexcharts';
 import MarkdownIt from 'markdown-it';
+import customContainer from 'markdown-it-container';
 import hljs from 'highlight.js';
-import { defineProps, Ref, ref, watch } from 'vue';
+import { defineProps, reactive, Ref, ref, watch } from 'vue';
+import DOMPurify from 'dompurify';
 interface Props {
   markdown: string;
 }
+
 const props = defineProps<Props>();
-const md = new MarkdownIt(
-  {
-    html: true,
-    highlight: (str, lang) => {
-      if (lang && hljs.getLanguage(lang)) {
-        try {
-          return hljs.highlight(str, { language: lang }).value;
-        } catch (__) {}
+
+const chartData: {
+  id: string;
+  chartOptions: ApexOptions;
+}[] = reactive([]);
+const md = new MarkdownIt({
+  html: true,
+  highlight: (str, lang) => {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return hljs.highlight(str, { language: lang }).value;
+      } catch (__) {}
+    }
+    return ''; // use external default escaping
+  },
+  linkify: true,
+  breaks: true,
+}).use(customContainer, 'chart', {
+  render: (tokens: { info: string; nesting: number }[], idx: number) => {
+    const m = tokens[idx].info.trim().match(/^chart\s+(.*)$/);
+    // opening tag, content
+    if (m && tokens[idx].nesting === 1) {
+      try {
+        // Add chart
+        let chartId = `chart-${idx}`;
+        chartData.push({
+          id: chartId,
+          chartOptions: JSON.parse(m[1].trim()), // https://portswigger.net/web-security/dom-based/client-side-json-injection
+        });
+        return `<div id="${chartId}">`; // apexcharts will use chartid and dynamically render
+      } catch (error) {
+        alert(error);
+        return '';
       }
-      return ''; // use external default escaping
-    },
-    linkify: true
-  }
-);
+    } else {
+      return '</div>';
+    }
+  },
+});
 
 // Render Markdown
-const convertedMarkdown: Ref<string> = ref('');
-
+const mdRef: Ref<HTMLElement | undefined> = ref();
+const rawHTML: Ref<string> = ref('');
 watch(props, (props) => {
   // When parent component gets the model card info, then update the markdown to show
-  convertedMarkdown.value = md.render(props.markdown);
+  if (!mdRef.value) {
+    return;
+  }
+  mdRef.value.innerHTML = DOMPurify.sanitize(md.render(props.markdown));
+  // rawHTML.value = md.render(props.markdown);
+  for (const data of chartData) {
+    let selector = document.getElementById(data.id);
+    if (!selector) {
+      continue;
+    }
+    let chart = new ApexCharts(selector, data.chartOptions);
+    chart.render();
+  }
 });
 </script>
