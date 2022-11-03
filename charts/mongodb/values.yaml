@@ -178,8 +178,8 @@ tls:
   ## @param tls.caCert Custom CA certificated (base64 encoded)
   ## @param tls.caKey CA certificate private key (base64 encoded)
   ##
-  caCert: ''
-  caKey: ''
+  caCert: ""
+  caKey: ""
   ## Bitnami Nginx image
   ## @param tls.image.registry Init container TLS certs setup image registry
   ## @param tls.image.repository Init container TLS certs setup image repository
@@ -344,25 +344,25 @@ initdbScripts:
   init-db.js: |
     mongo = db.getSiblingDB('appStoreProdDB');
     mongo.createCollection('users');
-    mongo.users.createIndex({userid: 1}, {unique:true}) 
+    mongo.users.createIndex({'userId': 1}, {unique:true}) 
     mongo.users.insertMany([
       {
-        userid: 'master',
+        userId: 'master',
         name: 'MasterUser',
         password: '$2b$12$dJgAk/YGHoGH203M2H0Fvu.XL3A1BulreQS1NZTRcZ9XHhUHfkU.K',
-        admin_priv: true
+        adminPriv: true
       },
       {
-        userid: 'dev1',
+        userId: 'dev1',
         name: 'DeveloperOne',
         password: '$2b$12$coDQnalKv3kw8kzuwztyc.l6gfveM/ERMVQioVYN9OQq6KheDG3ae',
-        admin_priv: false
+        adminPriv: false
       },
     ]);
   insertUsers.js: |
     use admin
     db.createUser({user:"SysAdmin",pwd:"SystemAccess2@",roles:[{role:"readWrite",db:"appStoreProdDB"}]})
-  
+
 ## @param initdbScriptsConfigMap Existing ConfigMap with custom initdb scripts
 ##
 initdbScriptsConfigMap: ""
@@ -840,7 +840,8 @@ externalAccess:
     extraPorts: []
     ## @param externalAccess.service.annotations Service annotations for external access
     ##
-    annotations: {}
+    annotations:
+      {}
       ## @param externalAccess.service.sessionAffinity Control where client requests go, to the same pod or round-robin
     ## Values: ClientIP or None
     ## ref: https://kubernetes.io/docs/user-guide/services/
@@ -1530,7 +1531,7 @@ hidden:
   ## @param hidden.terminationGracePeriodSeconds Hidden Termination Grace Period
   ##
   terminationGracePeriodSeconds: ""
- ## @param hidden.updateStrategy.type Strategy that will be employed to update Pods in the StatefulSet
+  ## @param hidden.updateStrategy.type Strategy that will be employed to update Pods in the StatefulSet
   ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/statefulset/#update-strategies
   ## updateStrategy:
   ##  type: RollingUpdate

@@ -23,7 +23,7 @@ from ..internal.db import get_db
 from ..models.iam import Token, UserRoles
 
 # use openssl rand -hex 32 to generate secret key
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_MINUTES = 43200  # 30 Days
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -40,14 +40,9 @@ async def auth_user(
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             if (
-                user := await db["users"].find_one(
-                    {"userId": form_data.username}
-                )
+                user := await db["users"].find_one({"userId": form_data.username})
             ) is not None:
-                if (
-                    verify_password(form_data.password, user["password"])
-                    is True
-                ):
+                if verify_password(form_data.password, user["password"]) is True:
                     data = {
                         "sub": user["userId"],
                         "role": UserRoles.admin

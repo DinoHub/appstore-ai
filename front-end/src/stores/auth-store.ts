@@ -1,6 +1,7 @@
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import jwt_decode from 'jwt-decode';
+import { useQuasar } from 'quasar';
 
 export enum Role {
   user = 'user',
@@ -26,6 +27,9 @@ export interface JWT {
 
 // TODO: Fix storing the access token in a secured way that Axios can use for the OAuth
 // currently have to store accesstoken in Cookie that is not secured (httponly)
+
+const $q = useQuasar();
+
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
@@ -39,10 +43,7 @@ export const useAuthStore = defineStore('auth', {
         const creds = new FormData();
         creds.append('username', userId);
         creds.append('password', password);
-        const response = await api.post('/auth', creds);
-        if (response.status !== 200) {
-          console.error('Failed');
-        }
+        const response = await api.post('/auth/', creds);
         // Decode JWT
         const { access_token, refresh_token }: LoginResponse = response.data;
         const jwt_data = jwt_decode(access_token) as JWT;
@@ -59,7 +60,10 @@ export const useAuthStore = defineStore('auth', {
         this.access_token = access_token;
         this.refresh_token = refresh_token;
       } catch (err) {
-        console.error(err);
+        $q.notify({
+          message: 'Failed to login',
+          color: 'failure',
+        });
       }
       this.router.push(this.returnUrl || '/');
     },

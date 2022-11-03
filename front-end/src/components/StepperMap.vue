@@ -13,95 +13,6 @@
     >
       <q-step
         :name="1"
-        title="Model & Owner Information"
-        icon="person"
-        :done="
-          task != '' &&
-          model_name != '' &&
-          tagAddUnique.length > 0 &&
-          frameworkAddUnique.length > 0
-        "
-        :error="
-          task == '' ||
-          model_name == '' ||
-          tagAddUnique.length <= 0 ||
-          frameworkAddUnique.length <= 0
-        "
-      >
-        <div class="row justify-center full-height" style="min-height: 35rem">
-          <div class="col-3 q-pr-md q-mr-xl shadow-2 rounde">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Information</h6>
-            <q-input
-              v-model="model_name"
-              :dense="dense"
-              class="q-ml-md q-pb-xl"
-              hint="Model Name"
-              autogrow
-              :rules="[(val) => !!val || 'Field is required']"
-              reactive-rules
-            ></q-input>
-            <q-select
-              v-model="task"
-              :dense="dense"
-              class="q-ml-md q-pb-xl"
-              :options="tasks"
-              hint="Task"
-              :rules="[(val) => !!val || 'Field is required']"
-            />
-          </div>
-          <div class="col-3 q-mx-md shadow-2 rounded">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Tags</h6>
-            <q-select
-              hint="Tags"
-              v-model="tagAddUnique"
-              use-input
-              use-chips
-              multiple
-              autogrow
-              hide-dropdown-icon
-              input-debounce="0"
-              new-value-mode="add-unique"
-              class="q-ml-md q-pr-md q-pb-xl"
-              :rules="[(val) => val.length >= 1 || 'One or more tags required']"
-            />
-            <q-select
-              hint="Frameworks"
-              v-model="frameworkAddUnique"
-              use-input
-              use-chips
-              multiple
-              autogrow
-              hide-dropdown-icon
-              input-debounce="0"
-              new-value-mode="add-unique"
-              class="q-ml-md q-pr-md q-pb-xl"
-              :rules="[
-                (val) => val.length >= 1 || 'One or more frameworks required',
-              ]"
-            ></q-select>
-          </div>
-          <div class="col-3 q-pl-md q-ml-xl shadow-2 rounded">
-            <h6 class="text-left q-mt-md q-mb-lg">Owner Information</h6>
-            <q-input
-              v-model="owner"
-              :dense="dense"
-              autogrow
-              class="q-mr-md q-pb-xl"
-              hint="Model Owner (Optional)"
-            ></q-input>
-            <q-input
-              v-model="poc"
-              :dense="dense"
-              autogrow
-              class="q-mr-md q-pb-xl"
-              hint="Point of Contact (Optional)"
-            ></q-input>
-          </div>
-        </div>
-      </q-step>
-
-      <q-step
-        :name="2"
         title="Links"
         icon="link"
         :done="
@@ -163,6 +74,97 @@
           </div>
         </div>
       </q-step>
+      <q-step
+        :name="2"
+        title="Model & Owner Information"
+        icon="person"
+        :done="
+          task != '' &&
+          model_name != '' &&
+          tagAddUnique.length > 0 &&
+          frameworkAddUnique.length > 0
+        "
+        :error="
+          task == '' ||
+          model_name == '' ||
+          tagAddUnique.length <= 0 ||
+          frameworkAddUnique.length <= 0
+        "
+      >
+        <div class="row justify-center full-height" style="min-height: 35rem">
+          <div class="col-3 q-pr-md q-mr-xl shadow-2 rounde">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Information</h6>
+            <q-input
+              v-model="model_name"
+              :dense="dense"
+              class="q-ml-md q-pb-xl"
+              hint="Model Name"
+              autogrow
+              :rules="[(val) => !!val || 'Field is required']"
+              reactive-rules
+            ></q-input>
+            <q-select
+              v-model="task"
+              :dense="dense"
+              class="q-ml-md q-pb-xl"
+              :options="tasks"
+              hint="Task"
+              :rules="[(val) => !!val || 'Field is required']"
+            />
+          </div>
+          <div class="col-3 q-mx-md shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Tags</h6>
+            <q-select
+              hint="Tags"
+              v-model="tagAddUnique"
+              use-input
+              use-chips
+              multiple
+              autogrow
+              :dense="dense"
+              hide-dropdown-icon
+              input-debounce="0"
+              new-value-mode="add-unique"
+              class="q-ml-md q-pr-md q-pb-xl"
+              :rules="[(val) => val.length >= 1 || 'One or more tags required']"
+            />
+            <q-select
+              hint="Frameworks"
+              v-model="frameworkAddUnique"
+              use-input
+              use-chips
+              multiple
+              autogrow
+              :dense="dense"
+              hide-dropdown-icon
+              input-debounce="0"
+              new-value-mode="add-unique"
+              class="q-ml-md q-pr-md q-pb-xl"
+              :rules="[
+                (val) => val.length >= 1 || 'One or more frameworks required',
+              ]"
+            ></q-select>
+          </div>
+          <div class="col-3 q-pl-md q-ml-xl shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-mb-lg">Owner Information</h6>
+            <q-input
+              v-model="owner"
+              :dense="dense"
+              autogrow
+              class="q-mr-md q-pb-xl"
+              hint="Model Owner (Optional)"
+            ></q-input>
+            <q-input
+              v-model="poc"
+              :dense="dense"
+              autogrow
+              class="q-mr-md q-pb-xl"
+              hint="Point of Contact (Optional)"
+            ></q-input>
+          </div>
+        </div>
+      </q-step>
+
       <q-step
         :name="3"
         title="Card Description"
@@ -281,6 +283,8 @@
 </template>
 
 <script>
+import { useAuthStore } from 'src/stores/auth-store';
+import { useExpStore } from 'src/stores/exp-store';
 import { ref } from 'vue';
 import Editor from '@tinymce/tinymce-vue';
 
@@ -312,8 +316,8 @@ export default {
 
     // toolbar stuff
     const desc_toolbar = [
-      'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright | outdent indent',
-      'bullist numlist | charmap anchor hr | insertdatetime | link image table',
+      'undo redo | blocks | fontfamily fontsize | forecolor backcolor | bold italic underline strikethrough |',
+      ' alignleft aligncenter alignright | outdent indent | bullist numlist | charmap anchor hr | insertdatetime | link image table',
     ];
 
     // variables for model card step 3
@@ -365,7 +369,20 @@ export default {
     // variables for popup exits
     const cancel = ref(false);
 
+    // constants for stores
+    const authStore = useAuthStore();
+    const expStore = useExpStore();
+
+    // functions
     function simulateSubmit() {
+      if (exp_id.value != '') {
+        expStore.getExperimentByID(exp_id.value).then((value) => {
+          console.log('recieved');
+          console.log(value);
+          tagAddUnique.value = value.tags;
+          frameworkAddUnique.value = value.frameworks;
+        });
+      }
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
       console.log(task.value);

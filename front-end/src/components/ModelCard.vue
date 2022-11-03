@@ -1,27 +1,31 @@
-<style scoped>
-.card {
-  width: 25%;
-}
-</style>
 <template>
-  <q-card class="card q-gutter-sm">
+  <q-card :class="props.cardClass">
     <q-card-section>
       <div class="text-h6">{{ props.title }}</div>
-      <q-chip
-        v-for="tag in props.tags"
-        :key="tag"
-        color="primary"
-        text-color="white"
-      >
-        {{ tag }}
+      <q-chip color="primary" text-color="white">
+        <router-link class="router-link" :to="`/models/?tasks=${props.task}`">
+          {{ props.task }}</router-link
+        >
       </q-chip>
       <q-chip
         v-for="tag in props.frameworks"
         :key="tag"
-        color="primary"
+        color="accent"
         text-color="white"
       >
-        {{ tag }}
+        <router-link class="router-link" :to="`/models/?frameworks=${tag}`">{{
+          tag
+        }}</router-link>
+      </q-chip>
+      <q-chip
+        v-for="tag in props.tags"
+        :key="tag"
+        color="secondary"
+        text-color="white"
+      >
+        <router-link class="router-link" :to="`/models/?tags=${tag}`">{{
+          tag
+        }}</router-link>
       </q-chip>
     </q-card-section>
     <q-card-section>
@@ -33,7 +37,7 @@
         flat
         label="View"
         text-color="primary"
-        :to="`models/${props.creatorUserId}/${props.modelId}`"
+        :to="`/models/${props.creatorUserId}/${props.modelId}`"
       ></q-btn>
       <q-btn
         flat
@@ -54,8 +58,10 @@ export interface Props {
   modelId: string;
   title: string;
   summary?: string;
+  task: string;
   tags: string[];
   frameworks: string[];
+  cardClass: string;
 }
 const authStore = useAuthStore();
 const props = defineProps<Props>();

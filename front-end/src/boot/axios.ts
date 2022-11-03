@@ -17,7 +17,7 @@ declare module '@vue/runtime-core' {
 // "export default () => {}" function below (which runs individually
 // for each client)
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: 'http://127.0.0.1:7070',
   withCredentials: true,
 });
 
@@ -34,7 +34,10 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    if ((error.response?.status === 403 || error.response?.status === 401) && !originalRequest._retry) {
+    if (
+      (error.response?.status === 403 || error.response?.status === 401) &&
+      !originalRequest._retry
+    ) {
       originalRequest._retry = true;
       // get refresh token
       const authStore = useAuthStore();

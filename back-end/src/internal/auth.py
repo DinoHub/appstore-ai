@@ -13,7 +13,7 @@ from ..models.iam import CsrfSettings, TokenData, User, UserRoles
 from .db import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/")
 
 
 @CsrfProtect.load_config
@@ -75,7 +75,7 @@ async def get_current_user(
     db=Depends(get_db),
     csrf: CsrfProtect = Depends(),
     is_admin: bool = False,
-) -> User:
+) -> TokenData:
     db, mongo_client = db
     try:
         csrf.validate_csrf_in_cookies(request)
@@ -91,7 +91,7 @@ async def get_current_user(
         raise CREDENTIALS_EXCEPTION
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            user: Optional[User] = await db["users"].find_one(
+            user = await db["users"].find_one(
                 {
                     "userId": token_data.user_id,
                     "adminPriv": token_data.role == UserRoles.admin,
@@ -101,13 +101,18 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
-    return user
+    return token_data
 
 
 async def check_is_admin(
-    request: Request, token: str = Depends(oauth2_scheme), db=Depends(get_db)
+    request: Request,
+    token: str = Depends(oauth2_scheme),
+    csrf: CsrfProtect = Depends(),
+    db=Depends(get_db),
 ) -> User:
-    user = await get_current_user(request, token, db=db, is_admin=True)
+    user = await get_current_user(
+        request, token, db=db, csrf=csrf, is_admin=True
+    )
     if not user["adminPriv"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

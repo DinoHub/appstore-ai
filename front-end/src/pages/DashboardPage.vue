@@ -1,12 +1,26 @@
+<style>
+.dashboard-card {
+  width: 30%;
+}
+</style>
 <template>
   <q-page padding>
     <!-- content -->
     <div class="text-h3">Welcome Back, {{ username ?? 'User' }}</div>
     <main>
       <section>
-          <model-card-data-table
-            :rows="currentUserModels"
-          ></model-card-data-table>
+        <div class="row"></div>
+        <model-card-data-table :filter="filter" card-class="dashboard-card">
+          <template v-slot:top-left>
+            <div class="col col-sm-3 text-h4">
+              Your Models
+              <q-btn round icon="add" to="/models/create"></q-btn>
+              <router-link class="router-link text-body2" to="/models"
+                >View all models</router-link
+              >
+            </div>
+          </template>
+        </model-card-data-table>
       </section>
     </main>
   </q-page>
@@ -17,19 +31,18 @@ import { ref, Ref } from 'vue';
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
+import { SearchFilter } from '../components/models';
 
 const authStore = useAuthStore();
 const username = ref(authStore.user?.name);
 
 // Get all user models
-const modelStore = useModelStore();
-// Get models owned by the user
-const currentUserModels: Ref<ModelCardSummary[]> = ref([]);
-if (authStore.user?.userId) {
-  modelStore.getModelsByUser(authStore.user.userId).then((result) => {
-    currentUserModels.value = result;
-  });
-}
+const filter: SearchFilter = {
+  tags: [],
+  tasks: [],
+  frameworks: [],
+  creator: authStore.user?.userId,
+};
 </script>
 
 <style>

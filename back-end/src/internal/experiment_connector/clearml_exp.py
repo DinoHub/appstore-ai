@@ -41,7 +41,7 @@ class ClearMLExperiment(ExperimentConnector):
     def clone(
         cls, exp_id: str, clone_name: Optional[str] = None
     ) -> "ClearMLExperiment":
-        task = Task.clone(source_task_id=exp_id, name=clone_name)
+        task = Task.clone(source_task=exp_id, name=clone_name)
         exp = cls()
         exp.id = task.id
         exp.project_name = task.get_project_name()
@@ -126,7 +126,8 @@ class ClearMLExperiment(ExperimentConnector):
     def clone(self, clone_name: Optional[str] = None) -> "ClearMLExperiment":
         if not self.id:
             raise ValueError("Not currently connected to any experiments")
-        return self.clone(self.id, clone_name)
+        task = Task.clone(source_task=self.id, name=clone_name)
+        return task
 
     def execute(
         self,
