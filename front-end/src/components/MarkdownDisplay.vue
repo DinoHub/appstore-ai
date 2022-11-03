@@ -1,14 +1,14 @@
 <style>
 h1 {
-  font-size: 3rem;
+  font-size: 2.25rem;
 }
 
 h2 {
-  font-size: 2.5rem;
+  font-size: 2rem;
 }
 
 h3 {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 
 h4 {
