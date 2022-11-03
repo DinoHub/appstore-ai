@@ -1,5 +1,11 @@
 <template>
-  <q-card :class="props.cardClass">
+  <q-card
+    v-ripple
+    class="cursor-pointer q-hoverable"
+    :class="props.cardClass"
+    @click="$router.push(`/models/${props.creatorUserId}/${props.modelId}`)"
+  >
+    <span class="q-focus-helper"></span>
     <q-card-section>
       <div class="text-h6">{{ props.title }}</div>
       <q-chip color="primary" text-color="white">
@@ -32,13 +38,13 @@
       {{ props.summary ?? 'No summary provided' }}
     </q-card-section>
     <q-separator></q-separator>
-    <q-card-actions>
-      <q-btn
+    <q-card-actions v-if="isModelOwner">
+      <!-- <q-btn
         flat
         label="View"
         text-color="primary"
         :to="`/models/${props.creatorUserId}/${props.modelId}`"
-      ></q-btn>
+      ></q-btn> -->
       <q-btn
         flat
         label="Edit"
