@@ -29,7 +29,8 @@ h6 {
 </template>
 
 <script setup lang="ts">
-import ApexCharts, { ApexOptions } from 'apexcharts';
+import { Chart } from './models';
+import * as Plotly from 'plotly.js-dist';
 import MarkdownIt from 'markdown-it';
 import customContainer from 'markdown-it-container';
 import hljs from 'highlight.js';
@@ -41,10 +42,7 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const chartData: {
-  id: string;
-  chartOptions: ApexOptions;
-}[] = reactive([]);
+const chartData: Chart[] = reactive([]);
 const md = new MarkdownIt({
   html: true,
   highlight: (str, lang) => {
@@ -65,12 +63,15 @@ const md = new MarkdownIt({
       try {
         // Add chart
         let chartId = `chart-${idx}`;
+        const data: Chart = JSON.parse(m[1].trim());
         chartData.push({
           id: chartId,
-          chartOptions: JSON.parse(m[1].trim()), // https://portswigger.net/web-security/dom-based/client-side-json-injection
+          data: data.data, // https://portswigger.net/web-security/dom-based/client-side-json-injection
+          layout: data.layout,
         });
         return `<div id="${chartId}">`; // apexcharts will use chartid and dynamically render
       } catch (error) {
+        alert(error);
         return '<pre>Error!</pre>';
       }
     } else {
@@ -93,8 +94,9 @@ watch(props, (props) => {
     if (!selector) {
       continue;
     }
-    let chart = new ApexCharts(selector, data.chartOptions);
-    chart.render();
+    // let chart = new ApexCharts(selector, data.chartOptions);
+    // chart.render();
+    Plotly.newPlot(selector, data.data, data.layout);
   }
 });
 </script>

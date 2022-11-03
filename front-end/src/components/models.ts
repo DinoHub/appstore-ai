@@ -20,3 +20,13 @@ export interface FormOptionValue {
   label: string;
   value: string;
 }
+
+export interface Chart {
+  id?: string;
+  data: {
+    [key: string]: any;
+  }[];
+  layout: {
+    [key: string]: any;
+  };
+}
