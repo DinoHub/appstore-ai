@@ -1,4 +1,8 @@
-<style scoped></style>
+<style>
+.q-table__grid-content {
+  justify-content: center;
+}
+</style>
 <template>
   <div class="row">
     <aside class="col col-sm-3" v-if="showFilter">

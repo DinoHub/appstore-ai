@@ -19,7 +19,7 @@
           <model-card-data-table
             :pagination="pagination"
             :filter="filter"
-            card-class="search-card"
+            card-class="col-12"
           >
             <template #top-left>
               <div class="text-h4">Quick Search</div>

@@ -1,8 +1,3 @@
-<style>
-.search-card {
-  width: 100%;
-}
-</style>
 <template>
   <q-page padding>
     <!-- content -->
@@ -10,7 +5,7 @@
       :filter="filter"
       :pagination="pagination"
       show-filter
-      card-class="search-card"
+      card-class="col-12"
       title="Models"
     >
       <template #top-left>

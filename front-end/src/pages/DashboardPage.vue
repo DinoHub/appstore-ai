@@ -1,8 +1,3 @@
-<style>
-.dashboard-card {
-  width: 30%;
-}
-</style>
 <template>
   <q-page padding>
     <!-- content -->
@@ -13,7 +8,7 @@
         <model-card-data-table
           :pagination="pagination"
           :filter="filter"
-          card-class="dashboard-card"
+          card-class="col-xs-12 col-sm-5 col-md-3"
         >
           <template v-slot:top-left>
             <div class="col col-sm-3 text-h4">
