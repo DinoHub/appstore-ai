@@ -4,7 +4,6 @@
       <q-toolbar>
         <q-btn
           flat
-          dense
           round
           icon="menu"
           aria-label="Menu"
@@ -21,8 +20,10 @@
           ><router-link to="/" class="text-h6">
             <q-img
               src="../assets/aas_logo.png"
-              height="50px"
+              height="0"
               fit="scale-down"
+              position="2% 50%"
+              class="q-py-lg"
             ></q-img></router-link
         ></q-toolbar-title>
 
