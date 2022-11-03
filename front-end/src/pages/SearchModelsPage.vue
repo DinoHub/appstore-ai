@@ -8,6 +8,7 @@
     <!-- content -->
     <model-card-data-table
       :filter="filter"
+      :pagination="pagination"
       show-filter
       card-class="search-card"
       title="Models"
@@ -23,10 +24,19 @@
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { reactive, ref, Ref } from 'vue';
 import { useModelStore } from 'src/stores/model-store';
+import { Pagination } from 'src/components/models';
 
 const filter: SearchFilter = {
   tags: [],
   tasks: [],
   frameworks: [],
+};
+
+const pagination: Pagination = {
+  sortBy: '_id',
+  descending: false,
+  page: 1,
+  rowsPerPage: 10,
+  rowsNumber: 1,
 };
 </script>

@@ -10,7 +10,11 @@
     <main>
       <section>
         <div class="row"></div>
-        <model-card-data-table :filter="filter" card-class="dashboard-card">
+        <model-card-data-table
+          :pagination="pagination"
+          :filter="filter"
+          card-class="dashboard-card"
+        >
           <template v-slot:top-left>
             <div class="col col-sm-3 text-h4">
               Your Models
@@ -31,7 +35,7 @@ import { ref, Ref } from 'vue';
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
-import { SearchFilter } from '../components/models';
+import { Pagination, SearchFilter } from '../components/models';
 
 const authStore = useAuthStore();
 const username = ref(authStore.user?.name);
@@ -42,6 +46,14 @@ const filter: SearchFilter = {
   tasks: [],
   frameworks: [],
   creator: authStore.user?.userId,
+};
+
+const pagination: Pagination = {
+  sortBy: '_id',
+  descending: false,
+  page: 1,
+  rowsPerPage: 6,
+  rowsNumber: 1,
 };
 </script>
 

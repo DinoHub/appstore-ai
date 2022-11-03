@@ -111,6 +111,7 @@ export interface Props {
   cardClass?: string;
   showFilter?: boolean;
   filter: SearchFilter;
+  pagination: Pagination;
 }
 
 // Router
@@ -170,13 +171,7 @@ const columns = [
 const loading = ref(false);
 const filter: SearchFilter = reactive(props.filter);
 
-const pagination: Ref<Pagination> = ref({
-  sortBy: '_id',
-  descending: false,
-  page: 1,
-  rowsPerPage: 3,
-  rowsNumber: 1,
-});
+const pagination: Ref<Pagination> = ref(props.pagination);
 
 const sortOptions = Object.freeze([
   {
