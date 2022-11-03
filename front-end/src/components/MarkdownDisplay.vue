@@ -69,7 +69,7 @@ const md = new MarkdownIt({
           data: data.data, // https://portswigger.net/web-security/dom-based/client-side-json-injection
           layout: data.layout,
         });
-        return `<div id="${chartId}">`; // apexcharts will use chartid and dynamically render
+        return `<div class="q-card"><div id="${chartId}" class="q-card__section q-card"></div>`; // apexcharts will use chartid and dynamically render
       } catch (error) {
         alert(error);
         return '<pre>Error!</pre>';
