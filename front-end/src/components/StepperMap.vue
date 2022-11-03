@@ -484,7 +484,7 @@ export default {
     const authStore = useAuthStore();
     const expStore = useExpStore();
 
-    // functions
+    // function for triggering events that should happen when next step is triggered
     function simulateSubmit() {
       if (
         exp_id.value != '' &&
@@ -510,9 +510,7 @@ export default {
       console.log(step.value);
       console.log(model_desc.value);
     }
-    function next() {
-      $refs.stepper.previous();
-    }
+    // function for populating editor with values from previous step
     function populateEditor() {
       card_content.value = `<h3>Description <a id="description"></a></h3>
                               <hr>
@@ -586,7 +584,6 @@ export default {
       frameworkAddUnique,
       task,
       model_name,
-      next,
       owner,
       poc,
       cancel,
