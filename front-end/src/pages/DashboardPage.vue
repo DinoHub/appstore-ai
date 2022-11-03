@@ -8,7 +8,7 @@
         <model-card-data-table
           :pagination="pagination"
           :filter="filter"
-          card-class="col-xs-12 col-sm-5 col-md-3"
+          card-class="col-xs-12 col-sm-6 col-md-3 col-xl-4"
         >
           <template v-slot:top-left>
             <div class="col col-sm-3 text-h4">
