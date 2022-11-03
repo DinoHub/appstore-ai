@@ -37,7 +37,7 @@
           />
         </div>
         <div class="q-pl-sm">
-          <q-btn flat round color="white" icon="search" v-if="loggedIn" />
+          <quick-search-modal v-if="loggedIn"></quick-search-modal>
         </div>
         <div class="q-pl-sm">
           <!-- Notifications -->
@@ -82,6 +82,8 @@
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
 import { ref, computed } from 'vue';
+
+import QuickSearchModal from 'src/components/QuickSearchModal.vue';
 
 const authStore = useAuthStore();
 
