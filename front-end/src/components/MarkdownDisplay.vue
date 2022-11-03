@@ -71,25 +71,23 @@ const md = new MarkdownIt({
         });
         return `<div id="${chartId}">`; // apexcharts will use chartid and dynamically render
       } catch (error) {
-        alert(error);
-        return '';
+        return '<pre>Error!</pre>';
       }
     } else {
       return '</div>';
     }
   },
+  marker: '`',
 });
 
 // Render Markdown
 const mdRef: Ref<HTMLElement | undefined> = ref();
-const rawHTML: Ref<string> = ref('');
 watch(props, (props) => {
   // When parent component gets the model card info, then update the markdown to show
   if (!mdRef.value) {
     return;
   }
   mdRef.value.innerHTML = DOMPurify.sanitize(md.render(props.markdown));
-  // rawHTML.value = md.render(props.markdown);
   for (const data of chartData) {
     let selector = document.getElementById(data.id);
     if (!selector) {
