@@ -1,5 +1,10 @@
 import { LocationQueryValue } from 'vue-router';
 
+export interface Breadcrumb {
+  label: string;
+  to: string;
+}
+
 export interface SortOption {
   label: string;
   value: string;

@@ -67,6 +67,7 @@
     </q-drawer>
 
     <q-page-container>
+      <route-breadcrumbs class="q-pt-md q-pl-md"></route-breadcrumbs>
       <router-view />
     </q-page-container>
 
@@ -85,6 +86,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { ref, computed } from 'vue';
 
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
+import RouteBreadcrumbs from 'src/components/RouteBreadcrumbs.vue';
 
 const authStore = useAuthStore();
 

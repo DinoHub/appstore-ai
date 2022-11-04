@@ -11,7 +11,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     component: MainLayout,
-    children: [{ path: '', name: 'login', component: LoginPage }],
+    children: [{ path: '', name: 'Login', component: LoginPage }],
     beforeEnter: (to) => {
       const auth = useAuthStore();
       if (auth.access_token) {
@@ -26,8 +26,21 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '',
-        name: 'search',
+        name: 'Models',
         component: SearchModelsPage,
+      },
+      {
+        path: ':userId',
+        component: SearchModelsPage,
+        beforeEnter: (to) => {
+          // Redirect to search page filtered by user
+          return {
+            name: 'Models',
+            query: {
+              creator: to.params.userId,
+            },
+          };
+        },
       },
       {
         path: ':userId/:modelId',
@@ -35,7 +48,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'create',
-        name: 'createModel',
+        name: 'Create Model',
         component: CreateModel,
       },
     ],
@@ -43,7 +56,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: MainLayout,
-    children: [{ path: '', name: 'dashboard', component: DashboardPage }],
+    children: [{ path: '', name: 'Dashboard', component: DashboardPage }],
   },
 
   // Always leave this as last one,
