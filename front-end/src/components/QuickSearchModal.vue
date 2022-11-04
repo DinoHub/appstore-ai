@@ -40,7 +40,11 @@ const search = ref(false);
 const filter: SearchFilter = {};
 
 const pagination: Pagination = {
-  sortBy: '_id',
+  sortBy: {
+    label: 'Latest Models (Last Updated)',
+    value: 'lastModified',
+    desc: true
+  },
   descending: false,
   page: 1,
   rowsPerPage: 5,

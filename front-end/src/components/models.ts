@@ -1,7 +1,12 @@
 import { LocationQueryValue } from 'vue-router';
 
+export interface SortOption {
+  label: string;
+  value: string;
+  desc: boolean;
+}
 export interface Pagination {
-  sortBy: string;
+  sortBy: SortOption;
   descending: boolean;
   page: number;
   rowsPerPage: number;

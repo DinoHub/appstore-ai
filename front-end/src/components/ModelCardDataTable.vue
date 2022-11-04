@@ -59,24 +59,30 @@
           <div class="row items-center q-gutter-x-lg">
             <div class="col">
               <q-select
-                label="Sort by"
+                dense
+                rounded
+                outlined
                 v-model="pagination.sortBy"
                 :options="sortOptions"
-                emit-value
-                map-options
+                :option-value="sortValue"
+                :option-label="sortLabel"
                 @update:model-value="tableRef.requestServerInteraction()"
               >
+                <template v-slot:prepend>
+                  <q-icon name="sort"></q-icon>
+                </template>
               </q-select>
             </div>
             <div class="col">
               <q-input
-                borderless
                 dense
+                rounded
+                outlined
                 debounce="300"
                 v-model="filter.title"
-                placeholder="Search"
+                placeholder="Search by title"
               >
-                <template v-slot:append>
+                <template v-slot:prepend>
                   <q-icon name="search" />
                 </template>
               </q-input>
@@ -106,9 +112,13 @@ import { QTableProps } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { LocationQueryValue } from 'vue-router';
 import ModelCard from './ModelCard.vue';
-import { FormOptionValue, Pagination, SearchFilter } from './models';
+import {
+  FormOptionValue,
+  Pagination,
+  SearchFilter,
+  SortOption,
+} from './models';
 
 export interface Props {
   rows?: ModelCardSummary[];
@@ -179,16 +189,19 @@ const pagination: Ref<Pagination> = ref(props.pagination);
 
 const sortOptions = Object.freeze([
   {
-    label: 'ID',
-    value: '_id',
+    label: 'Latest Models (Last Updated)',
+    value: 'lastModified',
+    desc: true,
   },
   {
-    label: 'Title',
+    label: 'Oldest Models (Last Updated)',
+    value: 'lastModified',
+    desc: false,
+  },
+  {
+    label: 'Model Name (A-Z)',
     value: 'title',
-  },
-  {
-    label: 'Oldest (Last Updated)',
-    value: 'lastUpdated',
+    desc: false,
   },
 ]);
 
@@ -210,7 +223,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        }),
+        })
       );
       tasks.splice(
         0,
@@ -220,7 +233,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        }),
+        })
       );
     })
     .catch(() => {
@@ -233,18 +246,27 @@ function compositeId(row: ModelCardSummary): string {
   return `${row.creatorUserId}/${row.modelId}`;
 }
 
+function sortLabel(option: SortOption): string {
+  return option.label;
+}
+
+function sortValue(option: SortOption): SortOption {
+  return option;
+}
+
 function onSearchRequest(props: QTableProps): void {
   if (!props.pagination) {
     return;
   }
-  const { page, rowsPerPage, sortBy, descending } = props.pagination;
+  const { page, rowsPerPage, sortBy } =
+    props.pagination as unknown as Pagination;
   loading.value = true;
   modelStore
     .getModels({
       p: page,
       n: rowsPerPage,
-      sort: sortBy,
-      desc: descending,
+      sort: sortBy?.value ?? '_id',
+      desc: sortBy?.desc ?? true,
       all: rowsPerPage === 0,
       ...filter,
     })
@@ -253,9 +275,14 @@ function onSearchRequest(props: QTableProps): void {
       pagination.value.rowsNumber = total;
       pagination.value.page = page ?? 1;
       pagination.value.rowsPerPage = rowsPerPage ?? 0;
-      pagination.value.sortBy = sortBy ?? '_id';
-      pagination.value.descending = descending ?? false;
+      pagination.value.sortBy = sortBy ?? {
+        label: 'Last Created',
+        value: '_id',
+        desc: true,
+      };
+      pagination.value.descending = sortBy?.desc ?? true;
       loading.value = false;
+      console.log(results);
     });
 }
 
