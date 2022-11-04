@@ -6,7 +6,7 @@
 <template>
   <div class="row">
     <aside class="col col-sm-3" v-if="showFilter">
-      <q-form>
+      <q-form class="q-px-md">
         <div class="text-h6">Query Filters</div>
         <q-expansion-item default-opened label="Task">
           <q-option-group
@@ -41,23 +41,23 @@
     </aside>
     <main class="col">
       <q-table
-        ref="tableRef"
         grid
+        ref="tableRef"
+        rows-per-page-label="Models per page:"
         :rows="rows"
         :columns="columns"
         :row-key="compositeId"
-        v-model:pagination="pagination"
         :filter="filter"
         :loading="loading"
         @request="onSearchRequest"
-        binary-state-sort
+        v-model:pagination="pagination"
       >
         <template v-slot:top-left>
           <slot name="top-left"></slot>
         </template>
         <template v-slot:top-right>
-          <div class="row items-center q-gutter-x-lg">
-            <div class="col">
+          <div class="row q-gutter-md">
+            <div class="col-auto">
               <q-select
                 dense
                 rounded
@@ -73,7 +73,7 @@
                 </template>
               </q-select>
             </div>
-            <div class="col">
+            <div class="col-auto">
               <q-input
                 dense
                 rounded
@@ -90,17 +90,18 @@
           </div>
         </template>
         <template v-slot:item="props">
-          <model-card
-            class="q-ma-md"
-            :card-class="cardClass"
-            :title="props.row.title"
-            :model-id="props.row.modelId"
-            :creator-user-id="props.row.creatorUserId"
-            :tags="props.row.tags"
-            :frameworks="props.row.frameworks"
-            :summary="props.row.summary"
-            :task="props.row.task"
-          ></model-card>
+          <div :class="cardContainerClass ?? ''">
+            <model-card
+              :card-class="cardClass ?? ''"
+              :title="props.row.title"
+              :model-id="props.row.modelId"
+              :creator-user-id="props.row.creatorUserId"
+              :tags="props.row.tags"
+              :frameworks="props.row.frameworks"
+              :summary="props.row.summary"
+              :task="props.row.task"
+            ></model-card>
+          </div>
         </template>
       </q-table>
     </main>
@@ -123,6 +124,7 @@ import {
 export interface Props {
   rows?: ModelCardSummary[];
   cardClass?: string;
+  cardContainerClass?: string;
   showFilter?: boolean;
   filter: SearchFilter;
   pagination: Pagination;
@@ -282,7 +284,6 @@ function onSearchRequest(props: QTableProps): void {
       };
       pagination.value.descending = sortBy?.desc ?? true;
       loading.value = false;
-      console.log(results);
     });
 }
 

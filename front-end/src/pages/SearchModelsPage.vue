@@ -5,7 +5,7 @@
       :filter="filter"
       :pagination="pagination"
       show-filter
-      card-class="col-12"
+      card-container-class="col-12 q-pa-sm"
       title="Models"
     >
       <template #top-left>
