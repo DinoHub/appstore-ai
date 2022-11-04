@@ -31,6 +31,7 @@ async def test_get_all_models(
         ({"tags[]": ["Test Tag", "Tag 2"]}, "Test Model 2"),
         ({"creator": "test_4"}, "Test Model 4"),
         ({"frameworks[]": ["Framework 3"]}, "Test Model 3"),
+        ({"sort_by": "lastModified", "desc": True}, "Test Model 10"),
     ],
 )
 async def test_search_models(
