@@ -81,7 +81,7 @@ async def get_model_card_by_id(
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
-    rows_per_page: int = Query(default=10, alias="n", gt=0),
+    rows_per_page: int = Query(default=10, alias="n", ge=0),
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="_id", alias="sort"),
     title: Optional[str] = Query(default=None),
@@ -108,7 +108,7 @@ async def search_cards(
         query["creatorUserId"] = creator_user_id
 
     # How many documents to skip
-    if not all:
+    if not all or rows_per_page == 0:
         pagination_ptr = (page - 1) * rows_per_page
     else:
         pagination_ptr = 0
@@ -121,7 +121,7 @@ async def search_cards(
             results = await (
                 db["models"]
                 .find(query, projection=return_attr)
-                .sort([(sort_by, DESCENDING if descending else ASCENDING)])
+                .sort(sort_by, DESCENDING if descending else ASCENDING)
                 .skip(pagination_ptr)
                 .limit(rows_per_page)
             ).to_list(length=rows_per_page if rows_per_page != 0 else None)
