@@ -270,7 +270,31 @@
         </div>
       </q-step>
 
-      <q-step :name="6" title="Inference Engine" icon="code"> </q-step>
+      <q-step :name="6" title="Inference Engine" icon="code">
+        <div class="row justify-center">
+          <div class="q-pa-md q-gutter-sm col-xs-4 shadow-1">
+            <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
+            <q-btn
+              icon="check"
+              color="secondary"
+              label="I have set up an Inference Engine API Image"
+              no-caps
+              align="left"
+              class="q-mb-md float-left"
+              style="width: 96%"
+            />
+            <q-btn
+              icon="info"
+              color="black"
+              label="Guide me through the set up process"
+              no-caps
+              align="left"
+              class="float-left"
+              style="width: 96%"
+            />
+          </div>
+        </div>
+      </q-step>
 
       <template v-slot:navigation>
         <q-stepper-navigation>
