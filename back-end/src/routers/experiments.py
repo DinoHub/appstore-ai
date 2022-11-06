@@ -47,7 +47,7 @@ async def get_experiment(
             data["artifacts"].update(exp.models)
 
         return data
-    except ValueError:
+    except ValueError as e:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content=f"Task was not found or values are incorrect",

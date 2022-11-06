@@ -13,6 +13,8 @@ class ArtifactType(str, Enum):
     model = "model"
     dataset = "dataset"
     custom = "custom"
+    pandas = "pandas"
+    dict = "dict"
 
 
 class Artifact(BaseModel):

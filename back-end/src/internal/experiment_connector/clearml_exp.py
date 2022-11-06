@@ -25,9 +25,7 @@ class ClearMLExperiment(ExperimentConnector):
         elif project and exp_name:
             task = Task.get_task(project_name=project, task_name=exp_name)
         else:
-            raise ValueError(
-                "Must specify either exp_id or project and exp_name"
-            )
+            raise ValueError("Must specify either exp_id or project and exp_name")
         exp.id = task.id
         exp.project_name = task.get_project_name()
         exp.exp_name = task.name
@@ -138,9 +136,7 @@ class ClearMLExperiment(ExperimentConnector):
             raise ValueError("Not currently connected to any experiments")
         return self.task.enqueue(queue_name=queue_name, queue_id=queue_id)
 
-    def close(
-        self, delete_task: bool = False, delete_artifacts: bool = False
-    ) -> None:
+    def close(self, delete_task: bool = False, delete_artifacts: bool = False) -> None:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         self.task.close()
