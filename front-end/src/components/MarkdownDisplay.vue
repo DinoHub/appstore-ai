@@ -69,7 +69,7 @@ const md = new MarkdownIt({
           data: data.data, // https://portswigger.net/web-security/dom-based/client-side-json-injection
           layout: data.layout,
         });
-        return `<div class="q-card"><div id="${chartId}" class="q-card__section q-card"></div>`; // apexcharts will use chartid and dynamically render
+        return `<div class="q-card"><div id="${chartId}" class="q-card__section q-card"></div>`; // plotly will use chartid and dynamically render
       } catch (error) {
         alert(error);
         return '<pre>Error!</pre>';
@@ -90,12 +90,10 @@ watch(props, (props) => {
   }
   mdRef.value.innerHTML = DOMPurify.sanitize(md.render(props.markdown));
   for (const data of chartData) {
-    let selector = document.getElementById(data.id);
+    let selector = document.getElementById(data.id ?? '');
     if (!selector) {
       continue;
     }
-    // let chart = new ApexCharts(selector, data.chartOptions);
-    // chart.render();
     Plotly.newPlot(selector, data.data, data.layout, {
       responsive: true,
     });
