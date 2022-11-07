@@ -321,7 +321,7 @@ export default {
       content_css: false,
       content_style: contentUiCss.toString() + '\n' + contentCss.toString(),
       plugins:
-        'insertdatetime lists link image table help anchor code codesample charmap advlist',
+        'insertdatetime lists link image table help anchor code codesample charmap advlist plotly',
     };
 
     console.log(init);
@@ -422,6 +422,7 @@ export default {
       $refs.stepper.previous();
     }
     return {
+      init,
       step,
       simulateSubmit,
       tagAddUnique,

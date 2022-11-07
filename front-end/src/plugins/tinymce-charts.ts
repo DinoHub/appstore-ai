@@ -1,5 +1,3 @@
-import contentCss from 'tinymce/skins/content/default/content.css';
-import contentUiCss from 'tinymce/skins/ui/oxide/content.css';
 import tinymce from 'tinymce';
 
 tinymce.PluginManager.add('plotly', (editor, url) => {
