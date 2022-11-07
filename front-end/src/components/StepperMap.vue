@@ -158,8 +158,18 @@
         :name="3"
         title="Model Description"
         icon="person"
-        :done="task != ''"
-        :error="task == ''"
+        :done="
+          model_desc != '' &&
+          model_explain != '' &&
+          model_use != '' &&
+          model_limit != ''
+        "
+        :error="
+          model_desc == '' ||
+          model_explain == '' ||
+          model_use == '' ||
+          model_limit == ''
+        "
       >
         <div class="row justify-center full-height" style="min-height: 9rem">
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
@@ -169,6 +179,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
         </div>
@@ -180,6 +191,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
         </div>
@@ -191,6 +203,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
         </div>
@@ -202,6 +215,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
         </div>
@@ -271,7 +285,7 @@
       </q-step>
 
       <q-step :name="6" title="Inference Engine" icon="code">
-        <div class="row justify-center">
+        <div class="row justify-center" v-if="task != 'Reinforcement Learning'">
           <div class="q-pa-md q-gutter-sm col-xs-4 shadow-1">
             <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
             <q-btn
@@ -280,8 +294,9 @@
               label="I have set up an Inference Engine API Image"
               no-caps
               align="left"
-              class="q-mb-md float-left"
-              style="width: 96%"
+              class="q-mb-sm float-left"
+              style="width: 95.6%"
+              unelevated
             />
             <q-btn
               icon="info"
@@ -290,7 +305,35 @@
               no-caps
               align="left"
               class="float-left"
-              style="width: 96%"
+              style="width: 95.6%"
+              unelevated
+            />
+          </div>
+        </div>
+        <div class="row justify-center" v-if="task == 'Reinforcement Learning'">
+          <div class="q-pa-md q-gutter-sm col-xs-5 shadow-1">
+            <h6 class="text-left q-mb-sm">
+              Reinforcement Learning Example Video
+            </h6>
+            <p class="text-left q-mt-sm">
+              As a Reinforcement Learning algorithm showcase requires an
+              environment, it may not be possible. In substitution, a video can
+              be submitted in it's place that shows the agent's performance in
+              the environment.
+            </p>
+            <p class="text-negative text-italic">
+              <q-icon class="" name="priority_high" size="1.5rem" />
+              The video should be under 10MB and only contain one run of the
+              agent
+              <q-icon class="" name="priority_high" size="1.5rem" />
+            </p>
+            <q-uploader
+              class="q-mx-auto"
+              url=""
+              label="Submit video here"
+              accept="video/*"
+              max-total-size="10000000"
+              @rejected="onRejected"
             />
           </div>
         </div>
@@ -532,7 +575,7 @@ export default {
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
       console.log(step.value);
-      console.log(model_desc.value);
+      console.log(card_content.value);
     }
     // function for populating editor with values from previous step
     function populateEditor() {
