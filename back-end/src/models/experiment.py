@@ -3,6 +3,7 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+
 class Connector(str, Enum):
     CLEARML = "clearml"
 

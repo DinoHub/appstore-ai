@@ -9,16 +9,8 @@ from ..internal.utils import to_camel_case
 from .common import PyObjectId
 
 
-class ArtifactType(str, Enum):
-    model = "model"
-    dataset = "dataset"
-    custom = "custom"
-    pandas = "pandas"
-    dict = "dict"
-
-
 class Artifact(BaseModel):
-    artifact_type: ArtifactType
+    artifact_type: str
     name: str
     url: AnyUrl
     timestamp: Optional[datetime]

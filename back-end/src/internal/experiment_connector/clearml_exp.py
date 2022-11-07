@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 from clearml import Model, Task
 from clearml.task import Artifact as ClearMLArtifact
 
-from ...models.model import Artifact, ArtifactType
+from ...models.model import Artifact
 from .connector import ExperimentConnector
 
 
@@ -91,7 +91,7 @@ class ClearMLExperiment(ExperimentConnector):
             # model_type: "input", "output"
             for model in values:
                 output[model.name] = Artifact(
-                    artifact_type=ArtifactType.model,
+                    artifact_type="model",
                     name=model.name,
                     url=model.url,
                     framework=model.framework,
