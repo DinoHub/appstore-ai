@@ -186,11 +186,7 @@
               v-model="card_content"
               tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
               api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
-              :init="{
-                height: 650,
-                plugins:
-                  'insertdatetime lists link image table help anchor code codesample charmap advlist',
-              }"
+              :init="init"
               :toolbar="desc_toolbar"
             />
           </div>
@@ -213,14 +209,10 @@
               v-model="metrics_content"
               tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
               api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
-              :init="{
-                height: 600,
-                plugins:
-                  'insertdatetime lists link image table help anchor code codesample charmap',
-              }"
-              toolbar="undo redo | blocks | bold italic underline 
-              strikethrough | alignleft aligncenter alignright | outdent 
-              indent | charmap anchor hr | bullist numlist | insertdatetime graphTinymcePlugin"
+              :init="init"
+              toolbar="undo redo | blocks | bold italic underline
+              strikethrough | alignleft aligncenter alignright | outdent
+              indent | charmap anchor hr | bullist numlist | insertdatetime | plotly"
             />
           </div>
         </div>
@@ -261,31 +253,59 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
+    <q-dialog v-model="cancel">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Quit</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          Are you sure you want to exit the model creation process?
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="red" v-close-popup />
+          <q-space />
+          <q-btn flat label="Save & Quit" color="green" v-close-popup />
+          <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
-  <q-dialog v-model="cancel">
-    <q-card>
-      <q-card-section>
-        <div class="text-h6">Quit</div>
-      </q-card-section>
-
-      <q-card-section class="q-pt-none">
-        Are you sure you want to exit the model creation process?
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="red" v-close-popup />
-        <q-space />
-        <q-btn flat label="Save & Quit" color="green" v-close-popup />
-        <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
 </template>
 
 <script>
 import { useAuthStore } from 'src/stores/auth-store';
 import { useExpStore } from 'src/stores/exp-store';
 import { ref } from 'vue';
+/* Import TinyMCE */
+import tinymce from 'tinymce';
+
+import 'tinymce/tinymce';
+import 'tinymce/icons/default/icons';
+import 'tinymce/themes/silver/theme';
+import 'tinymce/models/dom/model';
+import 'tinymce/skins/ui/tinymce-5/skin.css';
+import contentUiCss from 'tinymce/skins/ui/tinymce-5/content.css';
+import contentCss from 'tinymce/skins/content/default/content.css';
+/* Import plugins */
+import 'tinymce/plugins/image';
+import 'tinymce/plugins/help';
+import 'tinymce/plugins/insertdatetime';
+import 'tinymce/plugins/codesample';
+import 'tinymce/plugins/charmap';
+import 'tinymce/plugins/anchor';
+import 'tinymce/plugins/advlist';
+import 'tinymce/plugins/code';
+import 'tinymce/plugins/emoticons';
+import 'tinymce/plugins/emoticons/js/emojis';
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/lists';
+import 'tinymce/plugins/table';
+
+// TinyMCE plugins
+// https://www.tiny.cloud/docs/tinymce/6/plugins/
+import 'src/plugins/tinymce-charts';
 import Editor from '@tinymce/tinymce-vue';
 
 export default {
@@ -295,8 +315,18 @@ export default {
   },
   setup() {
     // step for stepper to paginate
-    const step = ref(1);
+    const init = {
+      height: 650,
+      skin: false,
+      content_css: false,
+      content_style: contentUiCss.toString() + '\n' + contentCss.toString(),
+      plugins:
+        'insertdatetime lists link image table help anchor code codesample charmap advlist',
+    };
 
+    console.log(init);
+
+    const step = ref(1);
     // variables for the tags and framework
     const tagAddUnique = ref([]);
     const frameworkAddUnique = ref([]);
@@ -317,7 +347,7 @@ export default {
     // toolbar stuff
     const desc_toolbar = [
       'undo redo | blocks | fontfamily fontsize | forecolor backcolor | bold italic underline strikethrough |',
-      ' alignleft aligncenter alignright | outdent indent | bullist numlist | charmap anchor hr | insertdatetime | link image table',
+      ' alignleft aligncenter alignright | outdent indent | bullist numlist | charmap anchor hr | insertdatetime | link image table | plotly',
     ];
 
     // variables for model card step 3

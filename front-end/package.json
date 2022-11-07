@@ -29,6 +29,7 @@
     "pinia-plugin-persistedstate": "^2.3.0",
     "plotly.js-dist": "^2.16.1",
     "quasar": "^2.6.0",
+    "tinymce": "^6.2.0",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"
   },
