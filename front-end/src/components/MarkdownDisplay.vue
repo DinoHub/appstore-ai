@@ -40,6 +40,13 @@ interface Props {
   markdown: string;
 }
 
+// TinyMCE uses <br> for line breaks which hljs cannot render
+hljs.addPlugin({
+  'before:highlightElement': ({ el }) => {
+    el.textContent = el.innerText;
+  },
+});
+
 const props = defineProps<Props>();
 
 const chartData: Chart[] = reactive([]);
@@ -98,5 +105,6 @@ watch(props, (props) => {
       responsive: true,
     });
   }
+  hljs.highlightAll();
 });
 </script>
