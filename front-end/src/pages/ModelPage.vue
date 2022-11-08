@@ -38,7 +38,7 @@
     </aside>
     <q-separator></q-separator>
     <main class="row">
-      <section class="col col-sm-8">
+      <section class="col col-sm-8 q-px-lg q-py-md">
         <markdown-display :markdown="model.description"></markdown-display>
         <markdown-display :markdown="model.performance"></markdown-display>
       </section>

@@ -182,13 +182,14 @@
               <q-icon class="" name="error" size="1.5rem" />
               Please replace the example content with your own content
             </div>
-            <editor
+            <tiptap />
+            <!-- <editor
               v-model="card_content"
               tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
               api_key="v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov"
               :init="init"
               :toolbar="desc_toolbar"
-            />
+            /> -->
           </div>
         </div>
       </q-step>
@@ -307,11 +308,13 @@ import 'tinymce/plugins/table';
 // https://www.tiny.cloud/docs/tinymce/6/plugins/
 import 'src/plugins/tinymce-charts';
 import Editor from '@tinymce/tinymce-vue';
+import TiptapEditorVue from './TiptapEditor.vue';
 
 export default {
   name: 'app',
   components: {
     editor: Editor,
+    tiptap: TiptapEditorVue
   },
   setup() {
     // step for stepper to paginate
@@ -323,9 +326,6 @@ export default {
       plugins:
         'insertdatetime lists link image table help anchor code codesample charmap advlist plotly',
     };
-
-    console.log(init);
-
     const step = ref(1);
     // variables for the tags and framework
     const tagAddUnique = ref([]);
