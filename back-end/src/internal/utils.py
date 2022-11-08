@@ -1,5 +1,7 @@
 import re
 
+from lxml.html.clean import Cleaner
+
 
 def uncased_to_snake_case(string: str) -> str:
     return "_".join(string.lower().split(" "))
@@ -20,3 +22,14 @@ def to_camel_case(string: str) -> str:
     return string_split[0] + "".join(
         word.capitalize() for word in string_split[1:]
     )
+
+def sanitize_html(html: str) -> str:
+    cleaner = Cleaner(
+        comments=True,
+        meta=True,
+        page_structure=True,
+        processing_instructions=True,
+        forms=True,
+        add_nofollow=True,
+    )
+    return cleaner.clean_html(html)
