@@ -102,6 +102,15 @@
               </figure>
             </div>
           </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" @click="chartEditor = false" />
+            <q-btn
+              flat
+              label="Insert"
+              color="primary"
+              @click="insertChart(editor)"
+            />
+          </q-card-actions>
         </q-card>
       </q-dialog>
       <!-- Show Source Code -->
@@ -177,6 +186,25 @@ function _buttonBg(condition: boolean) {
 
 function _iconFill(condition: boolean) {
   return condition ? 'white' : 'black';
+}
+
+function insertChart(editor: Editor) {
+  chartEditor.value = false;
+  const plotDataString = `[{
+  'x': [1, 2, 3, 4, 5],
+  'y': [1, 2, 4, 8, 16]
+  }]`;
+
+  const layout = `
+  {
+    'title': 'A Fancy Plot',
+    'xaxis': { 'title': 'Time' },
+    'yaxis': { 'title': 'Value' }
+  }`;
+
+  editor?.chain().focus().insertContent(`
+  <div id="preview"></div>
+`).run();
 }
 </script>
 <style lang="scss">
