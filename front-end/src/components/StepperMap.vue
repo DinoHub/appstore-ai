@@ -416,7 +416,7 @@ export default {
       console.log(tagAddUnique.value);
       console.log(frameworkAddUnique.value);
       console.log(task.value);
-      console.log(card_content.value);
+      console.log(JSON.stringify(card_content.value));
     }
     function next() {
       $refs.stepper.previous();
