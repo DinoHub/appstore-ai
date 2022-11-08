@@ -2,17 +2,27 @@
 .gradio-container iframe {
   width: 100%;
   height: 90vh;
+  border: none;
 }
 </style>
 <template>
   <div class="gradio-container">
-    <gradio-app src="https://stabilityai-stable-diffusion.hf.space/"></gradio-app>
-    <!-- <iframe :src="props.url"></iframe> -->
+    <!-- <gradio-app src="https://stabilityai-stable-diffusion.hf.space/"></gradio-app> -->
+    <iframe
+      @load="loading = false"
+      v-show="!loading"
+      ref="frame"
+      :src="props.url"
+    ></iframe>
+    <q-inner-loading
+      :showing="loading"
+      label="Loading Inference App..."
+    ></q-inner-loading>
   </div>
 </template>
 
 <script setup lang="ts">
-import { defineProps, onMounted } from 'vue';
+import { defineProps, Ref, ref } from 'vue';
 
 interface Props {
   url: string;
@@ -20,16 +30,18 @@ interface Props {
 
 const props = defineProps<Props>();
 
-onMounted(() => {
-  function make_script(src: string): void {
-    const script = document.createElement('script');
-    script.type = 'module';
-    script.setAttribute('crossorigin', '');
-    script.src = src;
-    document.head.appendChild(script);
-  }
-  make_script(
-    'https://gradio.s3-us-west-2.amazonaws.com/3.9/assets/index.d8955b2b.js'
-  );
-});
+const loading: Ref<boolean> = ref(true);
+
+// onMounted(() => {
+//   function make_script(src: string): void {
+//     const script = document.createElement('script');
+//     script.type = 'module';
+//     script.setAttribute('crossorigin', '');
+//     script.src = src;
+//     document.head.appendChild(script);
+//   }
+//   make_script(
+//     'https://gradio.s3-us-west-2.amazonaws.com/3.9/assets/index.d8955b2b.js'
+//   );
+// });
 </script>
