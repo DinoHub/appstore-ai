@@ -42,7 +42,7 @@
         </div>
         <div class="q-pl-sm">
           <!-- Notifications -->
-          <q-btn flat round color="white" icon="chat" v-if="loggedIn" />
+          <notifications-menu v-if="loggedIn"></notifications-menu>
         </div>
         <!-- <div class="q-pl-sm">
           <q-btn flat round color="white" icon="account_box" v-if="loggedIn" />
@@ -86,6 +86,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { ref, computed } from 'vue';
 
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
+import NotificationsMenu from 'src/components/NotificationsMenu.vue';
 import RouteBreadcrumbs from 'src/components/RouteBreadcrumbs.vue';
 
 const authStore = useAuthStore();
