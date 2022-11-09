@@ -12,7 +12,7 @@ from .common import PyObjectId
 class Artifact(BaseModel):
     artifact_type: str
     name: str
-    url: AnyUrl
+    url: str
     timestamp: Optional[datetime]
     framework: Optional[str]
 
