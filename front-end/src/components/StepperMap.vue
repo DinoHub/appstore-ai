@@ -407,12 +407,20 @@
             </div>
             <div class="text-right col-9">
               <q-btn
-                v-if="creationStore.step > 1"
+                v-if="creationStore.step > 1 && displayImageSubmit == false"
                 color="primary"
                 @click="
                   $refs.stepper.previous();
                   simulateSubmit();
                 "
+                label="Back"
+                class="q-mr-md"
+                :disable="buttonDisable"
+              />
+              <q-btn
+                v-if="creationStore.step > 1 && displayImageSubmit == true"
+                color="primary"
+                @click="triggerImageSub()"
                 label="Back"
                 class="q-mr-md"
                 :disable="buttonDisable"
@@ -583,7 +591,11 @@ export default {
       }
     }
     function triggerImageSub() {
-      displayImageSubmit.value = true;
+      if (displayImageSubmit.value == true) {
+        displayImageSubmit.value = false;
+      } else {
+        displayImageSubmit.value = true;
+      }
     }
     // function for populating editor with values from previous step
     function populateEditor(store) {
