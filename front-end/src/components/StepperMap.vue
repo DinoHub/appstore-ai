@@ -182,7 +182,7 @@
               <q-icon class="" name="error" size="1.5rem" />
               Please replace the example content with your own content
             </div>
-            <tiptap />
+            <tiptap :content="card_content" />
             <!-- <editor
               v-model="card_content"
               tinymce-script-src="https://cdn.tiny.cloud/1/v1er762uh44qnxlbr0msn2lvfsbk5wjihssryzia0va0aiov/tinymce/6/tinymce.min.js"
@@ -314,7 +314,7 @@ export default {
   name: 'app',
   components: {
     editor: Editor,
-    tiptap: TiptapEditorVue
+    tiptap: TiptapEditorVue,
   },
   setup() {
     // step for stepper to paginate
@@ -391,7 +391,9 @@ export default {
                               <blockquote>
                               <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
                               </blockquote>
-                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`);
+                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions. <strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
+                              <chart data-chart data-layout='{ "title" : "Test Chart" }'' data-data='[ { "x" : [1, 2, 3], "y" : [5, 4, 3] } ]''></chart>
+                              `);
 
     // variables for performance metrics in model creation step 4
     const metrics_content = ref('');

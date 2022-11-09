@@ -131,13 +131,19 @@ import python from 'highlight.js/lib/languages/python';
 
 import { lowlight } from 'lowlight';
 
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 
 lowlight.registerLanguage('css', css);
 lowlight.registerLanguage('js', js);
 lowlight.registerLanguage('ts', ts);
 lowlight.registerLanguage('html', html);
 lowlight.registerLanguage('python', python);
+
+export interface Props {
+  content?: string;
+}
+
+const props = defineProps<Props>();
 
 const editor = useEditor({
   extensions: [
@@ -149,21 +155,7 @@ const editor = useEditor({
       lowlight,
     }),
   ],
-  content: `<p>Hello World! 🌍</p><pre><code class="language-javascript">for (var i=1; i <= 20; i++)
-{
-  if (i % 15 == 0)
-    console.log("FizzBuzz");
-  else if (i % 3 == 0)
-    console.log("Fizz");
-  else if (i % 5 == 0)
-    console.log("Buzz");
-  else
-    console.log(i);
-}</code></pre>
-<h1>Chart</h1>
-<chart data-chart data-layout='{ "title" : "Test Chart" }'' data-data='[ { "x" : [1, 2, 3], "y" : [5, 4, 3] } ]''></chart>
-<h2>After Chart</h2>
-`,
+  content: props.content ?? 'Type here...',
 });
 
 const showSource = ref(false);
