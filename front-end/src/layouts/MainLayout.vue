@@ -33,8 +33,9 @@
             color="white"
             to="/models/create"
             icon="add"
-            v-if="loggedIn"
+            v-if="loggedIn && isCreate"
           />
+          <!-- rmb to merge this change as create button shouldn't show up in creation process -->
         </div>
         <div class="q-pl-sm">
           <q-btn flat round color="white" icon="search" v-if="loggedIn" />
@@ -81,12 +82,17 @@
 
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
+import { useRoute } from 'vue-router';
 import { ref, computed } from 'vue';
 
 const authStore = useAuthStore();
 
 const loggedIn = computed(() => {
   return authStore.user && authStore.user?.userId !== null;
+});
+
+const isCreate = computed(() => {
+  return useRoute().name != 'createModel';
 });
 
 const leftDrawerOpen = ref(false);
