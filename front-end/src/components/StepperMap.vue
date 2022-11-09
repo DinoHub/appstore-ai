@@ -1,12 +1,12 @@
 <template>
   <div class="q-pa-md col-9">
     <q-stepper
-      v-model="step"
+      v-model="creationStore.step"
       ref="stepper"
       animated
       done-color="secondary"
       error-color="red"
-      color="primary"
+      active-color="primary"
       class="shadow-0 justify-center text-center full-height"
       header-class="no-border q-px-xl"
     >
@@ -15,35 +15,37 @@
         title="Links"
         icon="link"
         :done="
-          model_path != '' &&
-          (exp_id != '' || exp_platform == '') &&
-          (dataset_id != '' || dataset_platform == '')
+          creationStore.modelPath != '' &&
+          (creationStore.experimentID != '' ||
+            creationStore.experimentPlatform == '') &&
+          (creationStore.datasetID != '' || creationStore.datasetPlatform == '')
         "
         :error="
-          model_path == '' ||
-          (exp_id == '' && exp_platform != '') ||
-          (dataset_id == '' && dataset_platform != '')
+          creationStore.modelPath == '' ||
+          (creationStore.experimentID == '' &&
+            creationStore.experimentPlatform != '') ||
+          (creationStore.datasetID == '' && creationStore.datasetPlatform != '')
         "
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-4 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Links</h6>
             <q-input
-              v-model="model_path"
+              v-model="creationStore.modelPath"
               class="q-ml-md q-pb-xl"
               hint="Model Path"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
             <q-select
-              v-model="exp_platform"
+              v-model="creationStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
-              :options="exp_platforms"
+              :options="creatorPreset.experimentPlatforms"
               hint="Experiment Platform (Optional)"
             />
             <q-input
-              v-if="exp_platform != ''"
-              v-model="exp_id"
+              v-if="creationStore.experimentPlatform != ''"
+              v-model="creationStore.experimentID"
               class="q-ml-md q-pb-xl"
               hint="Experiment ID"
               autogrow
@@ -51,14 +53,14 @@
             >
             </q-input>
             <q-select
-              v-model="dataset_platform"
+              v-model="creationStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
-              :options="dataset_platforms"
+              :options="creatorPreset.datasetPlatforms"
               hint="Dataset Platform (Optional)"
             />
             <q-input
-              v-if="dataset_platform != ''"
-              v-model="dataset_id"
+              v-if="creationStore.datasetPlatform != ''"
+              v-model="creationStore.datasetID"
               class="q-ml-md q-pb-xl"
               hint="Dataset ID"
               autogrow
@@ -73,23 +75,23 @@
         title="Model & Owner Information"
         icon="person"
         :done="
-          task != '' &&
-          model_name != '' &&
-          tagAddUnique.length > 0 &&
-          frameworkAddUnique.length > 0
+          creationStore.modelName != '' &&
+          creationStore.modelTask != '' &&
+          creationStore.tags.length > 0 &&
+          creationStore.frameworks.length > 0
         "
         :error="
-          task == '' ||
-          model_name == '' ||
-          tagAddUnique.length <= 0 ||
-          frameworkAddUnique.length <= 0
+          creationStore.modelName == '' ||
+          creationStore.modelTask == '' ||
+          creationStore.tags.length <= 0 ||
+          creationStore.frameworks.length <= 0
         "
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-3 q-pr-md q-mr-xl shadow-2 rounde">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Information</h6>
             <q-input
-              v-model="model_name"
+              v-model="creationStore.modelName"
               class="q-ml-md q-pb-xl"
               hint="Model Name"
               autogrow
@@ -97,9 +99,9 @@
               reactive-rules
             ></q-input>
             <q-select
-              v-model="task"
+              v-model="creationStore.modelTask"
               class="q-ml-md q-pb-xl"
-              :options="tasks"
+              :options="creatorPreset.tasksList"
               hint="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
@@ -108,7 +110,7 @@
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Tags</h6>
             <q-select
               hint="Tags"
-              v-model="tagAddUnique"
+              v-model="creationStore.tags"
               use-input
               use-chips
               multiple
@@ -116,13 +118,13 @@
               hide-dropdown-icon
               input-debounce="0"
               new-value-mode="add-unique"
-              :loading="loading_exp"
+              :loading="loadingExp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
             />
             <q-select
               hint="Frameworks"
-              v-model="frameworkAddUnique"
+              v-model="creationStore.frameworks"
               use-input
               use-chips
               multiple
@@ -130,7 +132,7 @@
               hide-dropdown-icon
               input-debounce="0"
               new-value-mode="add-unique"
-              :loading="loading_exp"
+              :loading="loadingExp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[
                 (val) => val.length >= 1 || 'One or more frameworks required',
@@ -140,13 +142,13 @@
           <div class="col-3 q-pl-md q-ml-xl shadow-2 rounded">
             <h6 class="text-left q-mt-md q-mb-lg">Owner Information</h6>
             <q-input
-              v-model="owner"
+              v-model="creationStore.modelOwner"
               autogrow
               class="q-mr-md q-pb-xl"
               hint="Model Owner (Optional)"
             ></q-input>
             <q-input
-              v-model="poc"
+              v-model="creationStore.modelPOC"
               autogrow
               class="q-mr-md q-pb-xl"
               hint="Point of Contact (Optional)"
@@ -159,23 +161,23 @@
         title="Model Description"
         icon="person"
         :done="
-          model_desc != '' &&
-          model_explain != '' &&
-          model_use != '' &&
-          model_limit != ''
+          creationStore.modelDesc != '' &&
+          creationStore.modelExplain != '' &&
+          creationStore.modelUsage != '' &&
+          creationStore.modelLimitations != ''
         "
         :error="
-          model_desc == '' ||
-          model_explain == '' ||
-          model_use == '' ||
-          model_limit == ''
+          creationStore.modelDesc == '' ||
+          creationStore.modelExplain == '' ||
+          creationStore.modelUsage == '' ||
+          creationStore.modelLimitations == ''
         "
       >
         <div class="row justify-center full-height" style="min-height: 9rem">
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Description</h6>
             <q-input
-              v-model="model_desc"
+              v-model="creationStore.modelDesc"
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
@@ -187,7 +189,7 @@
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Explanation</h6>
             <q-input
-              v-model="model_explain"
+              v-model="creationStore.modelExplain"
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
@@ -199,7 +201,7 @@
           <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Usage</h6>
             <q-input
-              v-model="model_use"
+              v-model="creationStore.modelUsage"
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
@@ -211,7 +213,7 @@
           <div class="col-9 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Limitations</h6>
             <q-input
-              v-model="model_limit"
+              v-model="creationStore.modelLimitations"
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
@@ -224,8 +226,14 @@
         :name="4"
         title="Card Markdown"
         icon="assignment"
-        :done="card_content.includes('(Example Text to Replace)') == false"
-        :error="card_content.includes('(Example Text to Replace)') != false"
+        :done="
+          creationStore.markdownContent.includes('(Example Text to Replace)') ==
+          false
+        "
+        :error="
+          creationStore.markdownContent.includes('(Example Text to Replace)') !=
+          false
+        "
       >
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
@@ -240,19 +248,31 @@
             </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
-              v-if="card_content.includes('(Example Text to Replace)') != false"
+              v-if="
+                creationStore.markdownContent.includes(
+                  '(Example Text to Replace)'
+                ) != false
+              "
             >
               <q-icon class="" name="error" size="1.5rem" />
               Please remove the example content and style your own content
             </div>
             <editor
-              v-model="card_content"
+              v-model="creationStore.markdownContent"
               :init="{
                 height: 650,
                 plugins:
                   'insertdatetime lists link image table help anchor code codesample charmap advlist',
+                toolbar: creatorPreset.markdownToolbar,
+                setup: (editor) => {
+                  editor.ui.registry.addButton('replaceValues', {
+                    text: 'Replace Values',
+                    onAction: (api) => {
+                      popupContent = true;
+                    },
+                  });
+                },
               }"
-              :toolbar="desc_toolbar"
             />
           </div>
         </div>
@@ -262,7 +282,7 @@
         :name="5"
         title="Performance Metrics"
         icon="leaderboard"
-        :done="step > 4"
+        :done="creationStore.step > 4"
       >
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
@@ -270,7 +290,7 @@
               Performance Metrics
             </h6>
             <editor
-              v-model="metrics_content"
+              v-model="metricsContent"
               :init="{
                 height: 600,
                 plugins:
@@ -285,7 +305,13 @@
       </q-step>
 
       <q-step :name="6" title="Inference Engine" icon="code">
-        <div class="row justify-center" v-if="task != 'Reinforcement Learning'">
+        <div
+          class="row justify-center"
+          v-if="
+            creationStore.modelTask != 'Reinforcement Learning' &&
+            displayImageSubmit == false
+          "
+        >
           <div class="q-pa-md q-gutter-sm col-xs-4 shadow-1">
             <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
             <q-btn
@@ -297,9 +323,10 @@
               class="q-mb-sm float-left"
               style="width: 95.6%"
               unelevated
+              @click="triggerImageSub()"
             />
             <q-btn
-              icon="info"
+              icon="help"
               color="black"
               label="Guide me through the set up process"
               no-caps
@@ -310,21 +337,49 @@
             />
           </div>
         </div>
-        <div class="row justify-center" v-if="task == 'Reinforcement Learning'">
+
+        <div
+          class="row justify-center"
+          v-if="
+            creationStore.modelTask != 'Reinforcement Learning' &&
+            displayImageSubmit == true
+          "
+        >
+          <div class="q-pa-md q-gutter-sm col-xs-4 shadow-1">
+            <h6 class="text-left q-mb-md q-mr-sm">Inference Engine</h6>
+            <q-input
+              class="q-pb-xl q-mr-sm"
+              autogrow
+              hint="Image URI"
+              :rules="[(val) => !!val || 'Field is required']"
+            ></q-input>
+            <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
+            <p class="text-left">
+              Note that the image provided should be an application that can be
+              embedded, using Gradio or Streamlit, with input and output already
+              defined by you. If unsure please check instructions and examples
+              listed under GitHub page.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="row justify-center"
+          v-if="creationStore.modelTask == 'Reinforcement Learning'"
+        >
           <div class="q-pa-md q-gutter-sm col-xs-5 shadow-1">
             <h6 class="text-left q-mb-sm">
               Reinforcement Learning Example Video
             </h6>
-            <p class="text-left q-mt-sm">
+            <span class="text-left">
               As a Reinforcement Learning algorithm showcase requires an
-              environment, it may not be possible. In substitution, a video can
-              be submitted in it's place that shows the agent's performance in
-              the environment.
-            </p>
+              environment, it may not be possible for a interactable demo to be
+              displayed. In substitution, a video can be submitted in it's place
+              that shows the agent's performance in the environment.
+            </span>
             <p class="text-negative text-italic">
               <q-icon class="" name="priority_high" size="1.5rem" />
-              The video should be under 10MB and only contain one run of the
-              agent
+              The video should be under 10MB
               <q-icon class="" name="priority_high" size="1.5rem" />
             </p>
             <q-uploader
@@ -338,7 +393,6 @@
           </div>
         </div>
       </q-step>
-
       <template v-slot:navigation>
         <q-stepper-navigation>
           <div class="row">
@@ -348,12 +402,12 @@
                 @click="cancel = true"
                 label="Cancel"
                 class="q-mr-md"
-                :disable="button_disable"
+                :disable="buttonDisable"
               />
             </div>
             <div class="text-right col-9">
               <q-btn
-                v-if="step > 1"
+                v-if="creationStore.step > 1"
                 color="primary"
                 @click="
                   $refs.stepper.previous();
@@ -361,17 +415,17 @@
                 "
                 label="Back"
                 class="q-mr-md"
-                :disable="button_disable"
+                :disable="buttonDisable"
               />
               <q-btn
-                v-if="step != 6"
+                v-if="creationStore.step != 6"
                 @click="
                   $refs.stepper.next();
                   simulateSubmit();
                 "
                 color="primary"
                 label="Continue"
-                :disable="button_disable"
+                :disable="buttonDisable"
               />
             </div>
           </div>
@@ -379,21 +433,38 @@
       </template>
     </q-stepper>
   </div>
-  <q-dialog v-model="cancel">
+  <q-dialog v-model="cancel" persistent>
     <q-card>
       <q-card-section>
         <div class="text-h6">Quit</div>
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        Are you sure you want to exit the model creation process?
+        Are you sure you want to exit the model creation process? <br />
+        <span class="text-bold"
+          >(Saving will override any previous creations)</span
+        >
       </q-card-section>
 
       <q-card-actions align="right">
         <q-btn flat label="Cancel" color="red" v-close-popup />
         <q-space />
-        <q-btn flat label="Save & Quit" color="green" v-close-popup />
-        <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
+        <q-btn
+          flat
+          label="Save & Quit"
+          color="green"
+          to="/"
+          v-close-popup
+          v-if="localStorage.getItem(creationStore.$id) !== null"
+        />
+        <q-btn
+          flat
+          label="Quit"
+          color="primary"
+          v-close-popup
+          to="/"
+          @click="flushCreator()"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -404,18 +475,40 @@
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        Add Model Description text values to markdown?
+        Replace example content with your own values?
       </q-card-section>
 
       <q-card-actions align="right">
         <q-btn flat label="No" color="red" v-close-popup />
         <q-btn
-          flat
-          label="Yes"
+          flatv
+          label="Replace"
           color="primary"
           v-close-popup
-          @click="populateEditor()"
+          @click="populateEditor(creationStore)"
         />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+  <q-dialog v-model="prevSave" persistent>
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Previous Draft</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        There was a previous draft found, continue editing draft or delete?
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn
+          flat
+          label="Delete"
+          color="red"
+          v-close-popup
+          @click="flushCreator()"
+        />
+        <q-btn flat label="Continue" color="primary" v-close-popup />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -424,6 +517,8 @@
 <script>
 import { useAuthStore } from 'src/stores/auth-store';
 import { useExpStore } from 'src/stores/exp-store';
+import { useCreationStore } from 'src/stores/creation-store';
+import { creationPreset } from 'src/stores/creation-preset';
 import { ref } from 'vue';
 import Editor from '@tinymce/tinymce-vue';
 
@@ -433,245 +528,104 @@ export default {
     editor: Editor,
   },
   setup() {
-    // step for stepper to paginate
-    const step = ref(1);
+    // constants for stores
+    const authStore = useAuthStore();
+    const expStore = useExpStore();
+    const creationStore = useCreationStore();
+    const creatorPreset = creationPreset();
 
-    // variables for lists used for the selects in model creation process
-    const tasks = ref([
-      'Computer Vision',
-      'Natural Language Processing',
-      'Audio Processing',
-      'Multimodal',
-      'Reinforcement Learning',
-      'Tabular',
-    ]);
-    const exp_platforms = ref(['', 'ClearML']);
-    const dataset_platforms = ref(['', 'ClearML']);
+    // const for checking whether previous saves exist
+    const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
 
-    // variables for the tags and framework
-    const tagAddUnique = ref([]);
-    const frameworkAddUnique = ref([]);
-
-    // other model and owner metadata for the
-    const model_name = ref('');
-    const task = ref('');
-    const owner = ref('');
-    const poc = ref('');
-
-    // textareas for description,usage,limitations of model
-    const model_desc = ref('');
-    const model_explain = ref('');
-    const model_use = ref('');
-    const model_limit = ref('');
-
-    // info about model, experiments and datasets links
-    const model_path = ref('');
-    const exp_platform = ref('');
-    const exp_id = ref('');
-    const dataset_platform = ref('');
-    const dataset_id = ref('');
-    const loading_exp = ref(false);
-
-    // toolbar stuff
-    const desc_toolbar = [
-      'undo redo | blocks | fontfamily fontsize | forecolor backcolor | bold italic underline strikethrough |',
-      ' alignleft aligncenter alignright | outdent indent | bullist numlist | charmap anchor hr | insertdatetime | link image table',
-    ];
-
-    // variables for model card
-    const card_content = ref(`<h3>Description <a id="description"></a></h3>
-                              <hr>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model. Additionally other things like metrics used/best scores can be posted in tables or other formats too if desired.&nbsp;</span></p>
-                              <table style="border-collapse: collapse; width: 46.8289%; height: 164px; background-color: rgb(194, 224, 244); border: 1px solid rgb(126, 140, 141); margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 65.8868%;"><col style="width: 34.1157%;"></colgroup>
-                              <tbody>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Metrics Used</strong></span></td>
-                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Best Score</strong></span></td>
-                              </tr>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 1</td>
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">24.96</td>
-                              </tr>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 2</td>
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">22.2</td>
-                              </tr>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 3</td>
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">23.2</td>
-                              </tr>
-                              </tbody>
-                              </table>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
-                              <p>&nbsp;</p>
-                              <h3>Explanation <a id="explanation"></a></h3>
-                              <hr>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p>This section should explain the model.</p>
-                              <p dir="ltr">Description may include:</p>
-                              <ol style="list-style-type: lower-alpha;">
-                              <li dir="ltr"><em><strong>general logic</strong></em> &ndash; what are the key features that matter and how are they related?</li>
-                              <li dir="ltr"><em><strong>particular inferences </strong></em>&ndash; are specific predictions explained?&nbsp;</li>
-                              <li dir="ltr"><em><strong>nature </strong></em>&ndash; are explanations in the form of associations (e.g., feature importance), contrasts (e.g., counterfactuals), or causal models?</li>
-                              <li dir="ltr"><em><strong>medium </strong></em>&ndash;are they provided as text, visuals or some other format?</li>
-                              <li dir="ltr"><em><strong>audience </strong></em>&ndash; which user personas are they meant for?</li>
-                              <li dir="ltr"><em><strong>motivation</strong></em> &ndash; why were this nature and medium chosen for this audience?</li>
-                              </ol>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
-                              <p>&nbsp;</p>
-                              <h3>Model Use <a id="model_use"></a></h3>
-                              <hr>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
-                              <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.</p>
-                              <p>Random formula: x<sup>2</sup> + &pi;</p>
-                              <pre class="language-python"><code>for i in new_list:
-    print(i + "hello")</code></pre>
-                              <p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.&nbsp;</p><p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
-                              <p>&nbsp;</p>
-                              <h3>Limitations <a id="limitations"></a></h3>
-                              <hr>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
-                              <blockquote>
-                              <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
-                              </blockquote>
-                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`);
+    // bool for loading state when retrieving experiments
+    const loadingExp = ref(false);
 
     // variables for performance metrics in model creation
-    const metrics_content = ref('');
+    const metricsContent = ref('');
+
+    // variables for inference submit
+    const displayImageSubmit = ref(false);
 
     // variables for popup exits
     const cancel = ref(false);
     const popupContent = ref(false);
-    const button_disable = ref(false);
-
-    // constants for stores
-    const authStore = useAuthStore();
-    const expStore = useExpStore();
+    const buttonDisable = ref(false);
 
     // function for triggering events that should happen when next step is triggered
     function simulateSubmit() {
       if (
-        exp_id.value != '' &&
-        step.value == 2 &&
-        tagAddUnique.value.length == 0 &&
-        tagAddUnique.value.length == 0
+        creationStore.experimentID != '' &&
+        creationStore.step == 2 &&
+        creationStore.tags.length == 0 &&
+        creationStore.frameworks.length == 0
       ) {
-        loading_exp.value = true;
-        button_disable.value = true;
-        expStore.getExperimentByID(exp_id.value).then((value) => {
-          console.log(value);
-          tagAddUnique.value = value.tags;
-          frameworkAddUnique.value = value.frameworks;
-          loading_exp.value = false;
-          button_disable.value = false;
+        loadingExp.value = true;
+        buttonDisable.value = true;
+        expStore.getExperimentByID(creationStore.experimentID).then((value) => {
+          creationStore.tags = value.tags;
+          creationStore.frameworks = value.frameworks;
+          loadingExp.value = false;
+          buttonDisable.value = false;
         });
       }
-      if (step.value == 4) {
-        popupContent.value = true;
+      console.log(creationStore.step);
+    }
+    function flushCreator() {
+      creationStore.$reset();
+      localStorage.removeItem(`${creationStore.$id}`);
+    }
+    function finalSubmit() {
+      if (creationStore.modelOwner == '') {
+        creationStore.modelOwner = authStore.user?.name;
       }
-      console.log(tagAddUnique.value);
-      console.log(frameworkAddUnique.value);
-      console.log(step.value);
-      console.log(card_content.value);
+      if (creationStore.modelPOC == '') {
+        creationStore.modelPOC = authStore.user?.name;
+      }
+    }
+    function triggerImageSub() {
+      displayImageSubmit.value = true;
     }
     // function for populating editor with values from previous step
-    function populateEditor() {
-      card_content.value = `<h3>Description <a id="description"></a></h3>
-                              <hr>
-                              <p>${model_desc.value}</p>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;">The general description of your model, usually a summary paragraph that can give developers a good idea of the purpose of said model. Additionally other things like metrics used/best scores can be posted in tables or other formats too if desired.&nbsp;</span></p>
-                              <table style="border-collapse: collapse; width: 46.8289%; height: 164px; background-color: rgb(194, 224, 244); border: 1px solid rgb(126, 140, 141); margin-left: auto; margin-right: auto;" border="1"><colgroup><col style="width: 65.8868%;"><col style="width: 34.1157%;"></colgroup>
-                              <tbody>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Metrics Used</strong></span></td>
-                              <td style="border-width: 1px; height: 25.2px; background-color: rgb(53, 152, 219); text-align: center; border-color: rgb(126, 140, 141);"><span style="color: rgb(236, 240, 241);"><strong>Best Score</strong></span></td>
-                              </tr>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 1</td>
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">24.96</td>
-                              </tr>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 2</td>
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">22.2</td>
-                              </tr>
-                              <tr style="height: 25.2px;">
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">Metric 3</td>
-                              <td style="border-width: 1px; height: 25.2px; text-align: center; border-color: rgb(126, 140, 141);">23.2</td>
-                              </tr>
-                              </tbody>
-                              </table>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
-                              <p>&nbsp;</p>
-                              <h3>Explanation <a id="explanation"></a></h3>
-                              <hr>
-                              <p>${model_explain.value}</p>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p>This section should explain the model.</p>
-                              <p dir="ltr">Description may include:</p>
-                              <ol style="list-style-type: lower-alpha;">
-                              <li dir="ltr"><em><strong>general logic</strong></em> &ndash; what are the key features that matter and how are they related?</li>
-                              <li dir="ltr"><em><strong>particular inferences </strong></em>&ndash; are specific predictions explained?&nbsp;</li>
-                              <li dir="ltr"><em><strong>nature </strong></em>&ndash; are explanations in the form of associations (e.g., feature importance), contrasts (e.g., counterfactuals), or causal models?</li>
-                              <li dir="ltr"><em><strong>medium </strong></em>&ndash;are they provided as text, visuals or some other format?</li>
-                              <li dir="ltr"><em><strong>audience </strong></em>&ndash; which user personas are they meant for?</li>
-                              <li dir="ltr"><em><strong>motivation</strong></em> &ndash; why were this nature and medium chosen for this audience?</li>
-                              </ol>
-                              <p><span style="font-family: 'trebuchet ms', geneva, sans-serif;"><strong><em>(Example Text to Replace)</em></strong></span></p>
-                              <p>&nbsp;</p>
-                              <h3>Model Use <a id="model_use"></a></h3>
-                              <hr>
-                              <p>${model_use.value}</p>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p>What task the model is used on, whether it's meant for downstream tasks, what genre or type of data it can be used on, etc.</p>
-                              <p>You can use the raw model for masked language modeling, but it's mostly intended to be fine-tuned on a downstream task. See the model hub to look for fine-tuned versions on a task that interests you.</p>
-                              <p>Random formula: x<sup>2</sup> + &pi;</p>
-                              <pre class="language-python"><code>for i in new_list:
-    print(i + "hello")</code></pre>
-                              <p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially masked) to make decisions, such as sequence classification, token classification or question answering. For tasks such as text generation you should look at model like GPT2.&nbsp;</p><p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>
-                              <p>&nbsp;</p>
-                              <h3>Limitations <a id="limitations"></a></h3>
-                              <hr>
-                              <p>${model_limit.value}</p>
-                              <p><strong>EXAMPLE:</strong></p>
-                              <p>The limitation or issues that the model may possible, any biases towards certain types of data, etc.</p>
-                              <blockquote>
-                              <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
-                              </blockquote>
-                              <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`;
+    function populateEditor(store) {
+      store.$patch({
+        markdownContent: `
+      <h3>Description <a id="description"></a></h3>
+      <hr>
+      ${store.modelDesc}
+      <p>&nbsp;</p>
+      <h3>Explanation <a id="explanation"></a></h3>
+      <hr>
+      ${store.modelExplain}
+      <p>&nbsp;</p>
+      <h3>Model Usage <a id="model_use"></a></h3>
+      <hr>
+      ${store.modelLimitations}
+      <p>&nbsp;</p>
+      <h3>Limitations <a id="limitations"></a></h3>
+      <hr>
+      ${store.modelLimitations}
+      <p>&nbsp;</p>
+      `,
+      });
+      popupContent.value = false;
     }
     return {
-      step,
       simulateSubmit,
       populateEditor,
-      tagAddUnique,
-      frameworkAddUnique,
-      task,
-      model_name,
-      owner,
-      poc,
+      flushCreator,
+      triggerImageSub,
       cancel,
-      model_path,
-      exp_platform,
-      exp_id,
-      dataset_platform,
-      dataset_id,
-      tasks,
-      model_desc,
-      model_explain,
-      model_use,
-      model_limit,
       popupContent,
-      exp_platforms,
-      dataset_platforms,
-      card_content,
-      metrics_content,
-      desc_toolbar,
-      loading_exp,
-      button_disable,
+      metricsContent,
+      loadingExp,
+      buttonDisable,
+      expStore,
+      creationStore,
+      authStore,
+      creatorPreset,
+      prevSave,
+      displayImageSubmit,
+      localStorage,
     };
   },
 };
