@@ -140,6 +140,8 @@ import { useEditor, EditorContent } from '@tiptap/vue-3';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import Placeholder from '@tiptap/extension-placeholder';
+import Chart from 'src/plugins/tiptap-charts';
 import css from 'highlight.js/lib/languages/css';
 import js from 'highlight.js/lib/languages/javascript';
 import ts from 'highlight.js/lib/languages/typescript';
@@ -158,6 +160,7 @@ lowlight.registerLanguage('python', python);
 
 const editor = useEditor({
   extensions: [
+    Chart,
     StarterKit,
     Underline,
     CodeBlockLowlight.configure({
@@ -174,7 +177,11 @@ const editor = useEditor({
     console.log("Buzz");
   else
     console.log(i);
-}</code></pre>`,
+}</code></pre>
+<h1>Chart</h1>
+<chart data-chart data-layout='{ "title" : "Test Chart" }'' data-data='[ { "x" : [1, 2, 3], "y" : [5, 4, 3] } ]''></chart>
+<h2>After Chart</h2>
+`,
 });
 
 const showSource = ref(false);
@@ -190,21 +197,30 @@ function _iconFill(condition: boolean) {
 
 function insertChart(editor: Editor) {
   chartEditor.value = false;
-  const plotDataString = `[{
-  'x': [1, 2, 3, 4, 5],
-  'y': [1, 2, 4, 8, 16]
-  }]`;
+  const plotDataString = JSON.stringify([
+    {
+      x: [1, 2, 3, 4, 5],
+      y: [1, 2, 4, 8, 16],
+    },
+  ]);
 
-  const layout = `
-  {
-    'title': 'A Fancy Plot',
-    'xaxis': { 'title': 'Time' },
-    'yaxis': { 'title': 'Value' }
-  }`;
+  const layout = JSON.stringify({
+    title: 'A Fancy Plot',
+    xaxis: { title: 'Time' },
+    yaxis: { title: 'Value' },
+  });
 
-  editor?.chain().focus().insertContent(`
-  <div id="preview"></div>
-`).run();
+  editor
+    ?.chain()
+    .focus()
+    .insertContent({
+      type: 'chart',
+      attrs: {
+        layout: layout,
+        data: plotDataString,
+      },
+    })
+    .run();
 }
 </script>
 <style lang="scss">

@@ -95,7 +95,9 @@ watch(props, (props) => {
   if (!mdRef.value) {
     return;
   }
-  mdRef.value.innerHTML = DOMPurify.sanitize(md.render(props.markdown));
+  mdRef.value.innerHTML = DOMPurify.sanitize(
+    md.render(props.markdown.replaceAll('\\n', '<br>')),
+  );
   for (const data of chartData) {
     let selector = document.getElementById(data.id ?? '');
     if (!selector) {
