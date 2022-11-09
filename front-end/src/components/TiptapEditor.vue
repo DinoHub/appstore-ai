@@ -88,30 +88,10 @@
       />
       <!-- Chart Editor -->
       <q-btn dense icon="insert_chart" @click="chartEditor = true" />
-      <q-dialog v-model="chartEditor">
-        <q-card>
-          <q-card-section>
-            <div class="text-h5">Chart Editor</div>
-            <div>
-              <div>
-                <!-- Editor -->
-              </div>
-              <figure class="col">
-                <!-- Preview -->
-                <span class="text-h6">Preview</span>
-              </figure>
-            </div>
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn flat label="Cancel" @click="chartEditor = false" />
-            <q-btn
-              flat
-              label="Insert"
-              color="primary"
-              @click="insertChart(editor)"
-            />
-          </q-card-actions>
-        </q-card>
+      <q-dialog persistent full-width v-model="chartEditor">
+        <plotly-editor
+          @new-plot="(data, layout) => insertChart(editor, data, layout)"
+        ></plotly-editor>
       </q-dialog>
       <!-- Show Source Code -->
       <q-btn label="Show Source Code" dense @click="showSource = true"></q-btn>
@@ -137,6 +117,7 @@
 
 <script setup lang="ts">
 import { useEditor, EditorContent } from '@tiptap/vue-3';
+import PlotlyEditor from './PlotlyEditor.vue';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -163,6 +144,7 @@ const editor = useEditor({
     Chart,
     StarterKit,
     Underline,
+    Placeholder,
     CodeBlockLowlight.configure({
       lowlight,
     }),
@@ -195,29 +177,19 @@ function _iconFill(condition: boolean) {
   return condition ? 'white' : 'black';
 }
 
-function insertChart(editor: Editor) {
-  chartEditor.value = false;
-  const plotDataString = JSON.stringify([
-    {
-      x: [1, 2, 3, 4, 5],
-      y: [1, 2, 4, 8, 16],
-    },
-  ]);
-
-  const layout = JSON.stringify({
-    title: 'A Fancy Plot',
-    xaxis: { title: 'Time' },
-    yaxis: { title: 'Value' },
-  });
-
+function insertChart(
+  editor: Editor,
+  data: Record<string, any>[],
+  layout: Record<string, any>,
+) {
   editor
     ?.chain()
     .focus()
     .insertContent({
       type: 'chart',
       attrs: {
-        layout: layout,
-        data: plotDataString,
+        layout: JSON.stringify(layout),
+        data: JSON.stringify(data),
       },
     })
     .run();
