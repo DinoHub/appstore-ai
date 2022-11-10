@@ -29,6 +29,19 @@ const routes: RouteRecordRaw[] = [
     name: 'Model',
     children: [
       {
+        path: ':userId',
+        component: SearchModelsPage,
+        beforeEnter: (to) => {
+          // Redirect to search page filtered by user
+          return {
+            name: 'Models',
+            query: {
+              creator: to.params.userId,
+            },
+          };
+        },
+      },
+      {
         path: ':userId/:modelId',
         component: ModelPage,
       },
