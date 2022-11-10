@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
+import { Cookies } from 'quasar';
 
 export const useCreationStore = defineStore('creationStore', {
   state: () => {
@@ -21,6 +22,7 @@ export const useCreationStore = defineStore('creationStore', {
       modelExplain: '',
       modelUsage: '',
       modelLimitations: '',
+      inferenceImage: '',
       markdownContent: `<h3>Description <a id="description"></a></h3>
       <hr>
       <p><strong>EXAMPLE:</strong></p>
@@ -82,7 +84,30 @@ export const useCreationStore = defineStore('creationStore', {
     };
   },
   getters: {},
-  actions: {},
+  actions: {
+    async launchImage(inferenceImage: string, userId: string): Promise<void> {
+      try {
+        const pushedApp = await api.post(
+          '/engines/',
+          {
+            service: {
+              owner_id: userId,
+              image_uri: inferenceImage,
+              service_name: inferenceImage + '123123',
+            },
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+          }
+        );
+      } catch {
+        console.log('failure');
+      }
+    },
+  },
   persist: {
     storage: localStorage,
     paths: [
@@ -103,6 +128,7 @@ export const useCreationStore = defineStore('creationStore', {
       'modelUsage',
       'modelLimitations',
       'markdownContent',
+      'inferenceImage',
     ],
   },
 });
