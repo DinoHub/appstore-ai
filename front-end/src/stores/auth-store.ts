@@ -68,13 +68,14 @@ export const useAuthStore = defineStore('auth', {
       this.router.push(this.returnUrl || '/');
     },
     logout(): void {
-      this.router.push('/login');
       Cookies.remove('auth');
+      this.router.push('/login');
       location.reload();
       localStorage.removeItem('creationStore');
     },
     async refresh(): Promise<void> {
       console.warn('Refreshing access token');
+      Cookies.remove('auth');
       try {
         const response = await api.post('/auth/refresh', {
           grant_type: 'refresh_token',
