@@ -622,8 +622,6 @@ function simulateSubmit() {
     });
   }
   console.log(creationStore.step);
-  console.log(tagAddUnique.value);
-  console.log(frameworkAddUnique.value);
   console.log(task.value);
   console.log(JSON.stringify(card_content.value));
 }
