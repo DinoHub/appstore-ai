@@ -66,6 +66,12 @@ spec:
                   name: {{ include "ai-be.fullname" . }}
                   key: prod_db_password
                   optional: true
+            - name: PROD_IE_NAMESPACE
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-be.fullname" . }}
+                  key: prod_ie_namespace
+                  optional: true
             - name: CLEARML_WEB_HOST
               valueFrom:
                 secretKeyRef:
