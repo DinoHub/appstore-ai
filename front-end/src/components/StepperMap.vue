@@ -622,8 +622,6 @@ function simulateSubmit() {
     });
   }
   console.log(creationStore.step);
-  console.log(task.value);
-  console.log(JSON.stringify(card_content.value));
 }
 function flushCreator() {
   creationStore.$reset();
