@@ -87,14 +87,14 @@ export const useCreationStore = defineStore('creationStore', {
   actions: {
     async launchImage(inferenceImage: string, userId: string): Promise<void> {
       try {
+        console.log(inferenceImage);
+        console.log(userId);
         const pushedApp = await api.post(
           '/engines/',
           {
-            service: {
-              owner_id: userId,
-              image_uri: inferenceImage,
-              service_name: inferenceImage + '123123',
-            },
+            owner_id: userId,
+            image_uri: inferenceImage,
+            service_name: inferenceImage + '123123',
           },
           {
             headers: {
