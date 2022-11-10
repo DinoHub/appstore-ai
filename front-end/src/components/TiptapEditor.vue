@@ -96,6 +96,14 @@
         icon="format_list_numbered"
         @click="editor?.chain().focus().toggleOrderedList().run()"
       />
+      <!-- Image -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        icon="image"
+        @click="imageUploader = true"
+      ></q-btn>
     </bubble-menu>
     <floating-menu
       class="q-gutter-xs row"
@@ -154,6 +162,14 @@
         icon="format_list_numbered"
         @click="editor?.chain().focus().toggleOrderedList().run()"
       />
+      <!-- Add Image -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        icon="image"
+        @click="imageUploader = true"
+      ></q-btn>
       <!-- Chart Editor -->
       <q-btn dense icon="insert_chart" @click="chartEditor = true" />
     </floating-menu>
@@ -242,6 +258,24 @@
         icon="format_list_numbered"
         @click="editor?.chain().focus().toggleOrderedList().run()"
       />
+      <!-- Add Image -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        icon="image"
+        @click="imageUploader = true"
+      ></q-btn>
+      <q-dialog v-model="imageUploader">
+        <q-uploader
+          label="Upload Image (up to 5mb)"
+          accept=".jpg, image/*"
+          max-total-size="5242880"
+          :factory="uploadMedia"
+          @uploaded="addMedia"
+        >
+        </q-uploader>
+      </q-dialog>
       <!-- Chart Editor -->
       <q-btn dense icon="insert_chart" @click="chartEditor = true" />
       <q-dialog persistent full-width v-model="chartEditor">
@@ -296,6 +330,7 @@ import Table from '@tiptap/extension-table';
 import TableHeader from '@tiptap/extension-table-header';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
+import Image from '@tiptap/extension-image';
 import Chart from 'src/plugins/tiptap-charts';
 
 import hljs from 'highlight.js';
@@ -308,6 +343,7 @@ import python from 'highlight.js/lib/languages/python';
 import { lowlight } from 'lowlight';
 
 import { ref } from 'vue';
+import { useAuthStore } from 'src/stores/auth-store';
 
 lowlight.registerLanguage('css', css);
 lowlight.registerLanguage('js', js);
@@ -335,12 +371,16 @@ const editor = useEditor({
     TableRow,
     TableHeader,
     TableCell,
+    Image.configure({
+      allowBase64: true,
+    }),
   ],
   content: props.content ?? 'Type here...',
 });
 
 const showSource = ref(false);
 const chartEditor = ref(false);
+const imageUploader = ref(false);
 
 function _buttonBg(condition: boolean) {
   return condition ? 'primary' : 'white';
@@ -366,6 +406,25 @@ function insertChart(
       },
     })
     .run();
+}
+
+function uploadMedia(file) {
+  return new Promise((resolve, reject) => {
+    // Get Token
+    const authStore = useAuthStore();
+    resolve({
+      url: process.env.backendAPI + '/media/upload',
+      method: 'POST',
+      headers: [
+        { name: 'Authorization', value: `Bearer ${authStore.access_token}` },
+      ],
+      withCredentials: true,
+    });
+  });
+}
+
+function addMedia({ files, xhr }) {
+  // Add uploaded images to Editor
 }
 
 function displaySourceCode(editor: Editor) {
