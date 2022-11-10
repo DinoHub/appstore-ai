@@ -8,3 +8,4 @@ class InferenceEngineService(BaseModel):
     owner_id: str
     service_name: str  # use this to generate
     image_uri: str
+    container_port: Optional[str]
