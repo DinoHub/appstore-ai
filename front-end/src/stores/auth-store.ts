@@ -69,7 +69,7 @@ export const useAuthStore = defineStore('auth', {
     },
     logout(): void {
       this.router.push('/login');
-      this.$reset();  
+      Cookies.remove('auth');
       location.reload();
       localStorage.removeItem('creationStore');
     },
