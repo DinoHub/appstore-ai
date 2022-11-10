@@ -3,36 +3,35 @@
     v-ripple
     class="cursor-pointer q-hoverable"
     :class="props.cardClass"
-    @click="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
+    @click.stop="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
   >
     <span class="q-focus-helper"></span>
     <q-card-section>
       <div class="text-h6">{{ props.title }}</div>
-      <q-chip color="primary" text-color="white">
-        <router-link class="router-link" :to="`/models/?tasks=${props.task}`">
-          {{ props.task }}</router-link
-        >
-      </q-chip>
-      <q-chip
+      <material-chip
+        :label="props.task"
+        type="task"
+        clickable
+        @click.stop="$router.push(`/models?tasks=${props.task}`)"
+      />
+      <material-chip
         v-for="tag in props.frameworks"
         :key="tag"
-        color="accent"
-        text-color="white"
+        :label="tag"
+        type="framework"
+        clickable
+        @click.stop="$router.push(`/models?frameworks=${tag}`)"
       >
-        <router-link class="router-link" :to="`/models/?frameworks=${tag}`">{{
-          tag
-        }}</router-link>
-      </q-chip>
-      <q-chip
+      </material-chip>
+      <material-chip
         v-for="tag in props.tags"
         :key="tag"
-        color="secondary"
-        text-color="white"
+        :label="tag"
+        type="tag"
+        clickable
+        @click.stop="$router.push(`/models?tags=${tag}`)"
       >
-        <router-link class="router-link" :to="`/models/?tags=${tag}`">{{
-          tag
-        }}</router-link>
-      </q-chip>
+      </material-chip>
     </q-card-section>
     <q-card-section>
       {{ props.summary ?? 'No summary provided' }}
@@ -59,6 +58,8 @@
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
 import { computed, defineProps } from 'vue';
+import MaterialChip from './MaterialChip.vue';
+
 export interface Props {
   creatorUserId: string;
   modelId: string;
