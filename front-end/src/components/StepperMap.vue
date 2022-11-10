@@ -581,9 +581,11 @@ import 'src/plugins/tinymce-charts';
 import Editor from '@tinymce/tinymce-vue';
 import { Cookies } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
+import { useAuthStore } from 'src/stores/auth-store';
 
 // constants for stores
 const expStore = useExpStore();
+const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const creatorPreset = useCreationPreset();
 
