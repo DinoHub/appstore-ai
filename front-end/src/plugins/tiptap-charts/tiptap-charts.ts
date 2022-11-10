@@ -2,7 +2,7 @@ import * as Plotly from 'plotly.js-dist';
 
 import { Node, mergeAttributes } from '@tiptap/core';
 
-import ChartDisplay from 'src/components/TiptapChart.vue';
+import ChartDisplay from 'src/components/editor/TiptapChart.vue';
 import { Node as ProseMirrorNode } from 'prosemirror-model';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 

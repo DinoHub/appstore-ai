@@ -5,5 +5,3 @@
     >
   </q-toolbar>
 </template>
-
-<script setup lang="ts"></script>

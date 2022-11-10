@@ -36,7 +36,7 @@
 
 <script setup lang="ts">
 import { ref, Ref } from 'vue';
-import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
+import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { Pagination, SearchFilter } from '../components/models';

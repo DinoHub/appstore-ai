@@ -274,7 +274,7 @@
                 },
               }"
             /> -->
-            <tiptap :content="card_content" />
+            <tiptap-editor :content="creationStore.markdownContent" />
           </div>
         </div>
       </q-step>
@@ -451,110 +451,104 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
-    <q-dialog v-model="cancel">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Quit</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          Are you sure you want to exit the model creation process?
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" color="red" v-close-popup />
-          <q-space />
-          <q-btn flat label="Save & Quit" color="green" v-close-popup />
-          <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+    <dialog>
+      <q-dialog v-model="cancel">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Quit</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Are you sure you want to exit the model creation process?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" color="red" v-close-popup />
+            <q-space />
+            <q-btn flat label="Save & Quit" color="green" v-close-popup />
+            <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="cancel" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Quit</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Are you sure you want to exit the model creation process? <br />
+            <span class="text-bold"
+              >(Saving will override any previous creations)</span
+            >
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancel" color="red" v-close-popup />
+            <q-space />
+            <q-btn
+              flat
+              label="Save & Quit"
+              color="green"
+              to="/"
+              v-close-popup
+              v-if="localStorage.getItem(creationStore.$id) !== null"
+            />
+            <q-btn
+              flat
+              label="Quit"
+              color="primary"
+              v-close-popup
+              to="/"
+              @click="flushCreator()"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="popupContent">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Markdown</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Replace example content with your own values?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="No" color="red" v-close-popup />
+            <q-btn
+              flatv
+              label="Replace"
+              color="primary"
+              v-close-popup
+              @click="populateEditor(creationStore)"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="prevSave" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Previous Draft</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            There was a previous draft found, continue editing draft or delete?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              flat
+              label="Delete"
+              color="red"
+              v-close-popup
+              @click="flushCreator()"
+            />
+            <q-btn flat label="Continue" color="primary" v-close-popup />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </dialog>
   </div>
-  <q-dialog v-model="cancel" persistent>
-    <q-card>
-      <q-card-section>
-        <div class="text-h6">Quit</div>
-      </q-card-section>
-
-      <q-card-section class="q-pt-none">
-        Are you sure you want to exit the model creation process? <br />
-        <span class="text-bold"
-          >(Saving will override any previous creations)</span
-        >
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancel" color="red" v-close-popup />
-        <q-space />
-        <q-btn
-          flat
-          label="Save & Quit"
-          color="green"
-          to="/"
-          v-close-popup
-          v-if="localStorage.getItem(creationStore.$id) !== null"
-        />
-        <q-btn
-          flat
-          label="Quit"
-          color="primary"
-          v-close-popup
-          to="/"
-          @click="flushCreator()"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-  <q-dialog v-model="popupContent">
-    <q-card>
-      <q-card-section>
-        <div class="text-h6">Markdown</div>
-      </q-card-section>
-
-      <q-card-section class="q-pt-none">
-        Replace example content with your own values?
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn flat label="No" color="red" v-close-popup />
-        <q-btn
-          flatv
-          label="Replace"
-          color="primary"
-          v-close-popup
-          @click="populateEditor(creationStore)"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-  <q-dialog v-model="prevSave" persistent>
-    <q-card>
-      <q-card-section>
-        <div class="text-h6">Previous Draft</div>
-      </q-card-section>
-
-      <q-card-section class="q-pt-none">
-        There was a previous draft found, continue editing draft or delete?
-      </q-card-section>
-
-      <q-card-actions align="right">
-        <q-btn
-          flat
-          label="Delete"
-          color="red"
-          v-close-popup
-          @click="flushCreator()"
-        />
-        <q-btn flat label="Continue" color="primary" v-close-popup />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
 </template>
 
-<script>
+<script setup lang="ts">
 import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
-import { creationPreset } from 'src/stores/creation-preset';
+import { useCreationPreset } from 'src/stores/creation-preset';
 import { ref } from 'vue';
 /* Import TinyMCE */
 import tinymce from 'tinymce';
@@ -586,121 +580,94 @@ import 'tinymce/plugins/table';
 import 'src/plugins/tinymce-charts';
 import Editor from '@tinymce/tinymce-vue';
 import { Cookies } from 'quasar';
-import TiptapEditorVue from './TiptapEditor.vue';
+import TiptapEditor from './editor/TiptapEditor.vue';
 
-export default {
-  name: 'app',
-  components: {
-    editor: Editor,
-    tiptap: TiptapEditorVue,
-  },
-  setup() {
-    // constants for stores
-    const expStore = useExpStore();
-    const creationStore = useCreationStore();
-    const creatorPreset = creationPreset();
+// constants for stores
+const expStore = useExpStore();
+const creationStore = useCreationStore();
+const creatorPreset = useCreationPreset();
 
-    // const for checking whether previous saves exist
-    const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
+// const for checking whether previous saves exist
+const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
 
-    // bool for loading state when retrieving experiments
-    const loadingExp = ref(false);
+// bool for loading state when retrieving experiments
+const loadingExp = ref(false);
 
-    // variables for performance metrics in model creation
-    const metricsContent = ref('');
+// variables for performance metrics in model creation
+const metricsContent = ref('');
 
-    // variables for inference submit
-    const displayImageSubmit = ref(false);
+// variables for inference submit
+const displayImageSubmit = ref(false);
 
-    // variables for popup exits
-    const cancel = ref(false);
-    const popupContent = ref(false);
-    const buttonDisable = ref(false);
+// variables for popup exits
+const cancel = ref(false);
+const popupContent = ref(false);
+const buttonDisable = ref(false);
 
-    // function for triggering events that should happen when next step is triggered
-    function simulateSubmit() {
-      if (
-        creationStore.experimentID != '' &&
-        creationStore.step == 2 &&
-        creationStore.tags.length == 0 &&
-        creationStore.frameworks.length == 0
-      ) {
-        loadingExp.value = true;
-        buttonDisable.value = true;
-        expStore.getExperimentByID(creationStore.experimentID).then((value) => {
-          creationStore.tags = value.tags;
-          creationStore.frameworks = value.frameworks;
-          loadingExp.value = false;
-          buttonDisable.value = false;
-        });
-      }
-      console.log(creationStore.step);
-      console.log(tagAddUnique.value);
-      console.log(frameworkAddUnique.value);
-      console.log(task.value);
-      console.log(JSON.stringify(card_content.value));
-    }
-    function flushCreator() {
-      creationStore.$reset();
-      localStorage.removeItem(`${creationStore.$id}`);
-    }
-    function submitImage() {
-      creationStore.launchImage(
-        creationStore.inferenceImage,
-        Cookies.get('auth').user.userId
-      );
-    }
-    function finalSubmit() {
-      if (creationStore.modelOwner == '') {
-        creationStore.modelOwner = authStore.user?.name;
-      }
-      if (creationStore.modelPOC == '') {
-        creationStore.modelPOC = authStore.user?.name;
-      }
-    }
+// function for triggering events that should happen when next step is triggered
+function simulateSubmit() {
+  if (
+    creationStore.experimentID != '' &&
+    creationStore.step == 2 &&
+    creationStore.tags.length == 0 &&
+    creationStore.frameworks.length == 0
+  ) {
+    loadingExp.value = true;
+    buttonDisable.value = true;
+    expStore.getExperimentByID(creationStore.experimentID).then((value) => {
+      creationStore.tags = value.tags;
+      creationStore.frameworks = value.frameworks;
+      loadingExp.value = false;
+      buttonDisable.value = false;
+    });
+  }
+  console.log(creationStore.step);
+  console.log(tagAddUnique.value);
+  console.log(frameworkAddUnique.value);
+  console.log(task.value);
+  console.log(JSON.stringify(card_content.value));
+}
+function flushCreator() {
+  creationStore.$reset();
+  localStorage.removeItem(`${creationStore.$id}`);
+}
+function submitImage() {
+  creationStore.launchImage(
+    creationStore.inferenceImage,
+    Cookies.get('auth').user.userId
+  );
+}
+function finalSubmit() {
+  if (creationStore.modelOwner == '') {
+    creationStore.modelOwner = authStore.user?.name;
+  }
+  if (creationStore.modelPOC == '') {
+    creationStore.modelPOC = authStore.user?.name;
+  }
+}
 
-    // function for populating editor with values from previous step
-    function populateEditor(store) {
-      store.$patch({
-        markdownContent: `
-      <h3>Description <a id="description"></a></h3>
-      <hr>
-      ${store.modelDesc}
-      <p>&nbsp;</p>
-      <h3>Explanation <a id="explanation"></a></h3>
-      <hr>
-      ${store.modelExplain}
-      <p>&nbsp;</p>
-      <h3>Model Usage <a id="model_use"></a></h3>
-      <hr>
-      ${store.modelLimitations}
-      <p>&nbsp;</p>
-      <h3>Limitations <a id="limitations"></a></h3>
-      <hr>
-      ${store.modelLimitations}
-      <p>&nbsp;</p>
-      `,
-      });
-      popupContent.value = false;
-    }
-    return {
-      simulateSubmit,
-      populateEditor,
-      flushCreator,
-      submitImage,
-      finalSubmit,
-      cancel,
-      popupContent,
-      metricsContent,
-      loadingExp,
-      buttonDisable,
-      expStore,
-      creationStore,
-      creatorPreset,
-      prevSave,
-      displayImageSubmit,
-      localStorage,
-    };
-  },
-};
+// function for populating editor with values from previous step
+function populateEditor(store) {
+  store.$patch({
+    markdownContent: `
+  <h3>Description <a id="description"></a></h3>
+  <hr>
+  ${store.modelDesc}
+  <p>&nbsp;</p>
+  <h3>Explanation <a id="explanation"></a></h3>
+  <hr>
+  ${store.modelExplain}
+  <p>&nbsp;</p>
+  <h3>Model Usage <a id="model_use"></a></h3>
+  <hr>
+  ${store.modelLimitations}
+  <p>&nbsp;</p>
+  <h3>Limitations <a id="limitations"></a></h3>
+  <hr>
+  ${store.modelLimitations}
+  <p>&nbsp;</p>
+  `,
+  });
+  popupContent.value = false;
+}
 </script>

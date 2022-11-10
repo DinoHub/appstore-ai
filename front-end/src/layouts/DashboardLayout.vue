@@ -4,7 +4,7 @@
       <the-navbar></the-navbar>
     </q-header>
 
-    <q-drawer v-model="rightDrawerOpen" side="right">
+    <q-drawer v-model="activitiesDrawerOpen" side="right">
       <!-- drawer content -->
     </q-drawer>
 
@@ -19,8 +19,9 @@
 </template>
 
 <script setup lang="ts">
-import TheNavbar from 'src/components/TheNavbar.vue';
-import TheFooter from 'src/components/TheFooter.vue';
+import TheNavbar from 'src/components/layout/TheNavbar.vue';
+import TheFooter from 'src/components/layout/TheFooter.vue';
+
 import { ref, Ref } from 'vue';
-const rightDrawerOpen: Ref<boolean> = ref(false);
+const activitiesDrawerOpen: Ref<boolean> = ref(false);
 </script>

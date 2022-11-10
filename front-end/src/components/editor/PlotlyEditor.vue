@@ -1,9 +1,3 @@
-<!-- <style scoped>
-.q-card {
-  max-width: fit-content;
-  width: 100vw;
-}
-</style> -->
 <template>
   <q-card>
     <q-card-section>
@@ -47,16 +41,20 @@
 </template>
 
 <script setup lang="ts">
-import PlotlyChart from './PlotlyChart.vue';
+import PlotlyChart from '../content/PlotlyChart.vue';
 import JSONEditorVue from 'json-editor-vue';
-import { reactive, Ref, ref } from 'vue';
+import { Ref, ref } from 'vue';
+
 export interface Props {
   data?: Record<string, any>[];
   layout?: Record<string, any>;
   update?: boolean;
 }
+
 const props = defineProps<Props>();
 const emit = defineEmits(['updatePlot', 'newPlot']);
+
+const tab = ref('data');
 const data: Ref<Record<string, any>[]> = ref(
   props.data ?? [
     {
@@ -64,7 +62,7 @@ const data: Ref<Record<string, any>[]> = ref(
       y: [],
       type: 'scatter',
     },
-  ],
+  ]
 );
 const layout: Ref<Record<string, any>> = ref(
   props.layout ?? {
@@ -75,9 +73,8 @@ const layout: Ref<Record<string, any>> = ref(
     yaxis: {
       title: 'Y Axis Label',
     },
-  },
+  }
 );
-const tab = ref('data');
 
 function update() {
   console.log('Updating Plot');

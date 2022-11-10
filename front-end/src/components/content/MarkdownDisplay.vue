@@ -29,7 +29,7 @@ h6 {
 </template>
 
 <script setup lang="ts">
-import { Chart } from './models';
+import { Chart } from '.../models';
 import * as Plotly from 'plotly.js-dist';
 import MarkdownIt from 'markdown-it';
 import customContainer from 'markdown-it-container';

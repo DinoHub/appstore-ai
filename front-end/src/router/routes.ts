@@ -4,7 +4,6 @@ import DashboardPage from 'pages/DashboardPage.vue';
 import ErrorNotFound from 'pages/ErrorNotFound.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
-import ModelCardLayout from 'layouts/ModelCardLayout.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
 import SearchLayout from 'layouts/SearchLayout.vue';

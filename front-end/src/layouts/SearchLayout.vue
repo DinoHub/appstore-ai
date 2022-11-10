@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import TheFooter from 'src/components/TheFooter.vue';
-import TheNavbar from 'src/components/TheNavbar.vue';
-import RouteBreadcrumbs from 'src/components/RouteBreadcrumbs.vue';
+import TheFooter from 'src/components/layout/TheFooter.vue';
+import TheNavbar from 'src/components/layout/TheNavbar.vue';
+import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 </script>

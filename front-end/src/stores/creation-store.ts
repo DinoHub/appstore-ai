@@ -6,23 +6,23 @@ import { Cookies } from 'quasar';
 export const useCreationStore = defineStore('creationStore', {
   state: () => {
     return {
-      step: 1,
-      tags: [],
-      frameworks: [],
-      modelPath: '',
-      experimentPlatform: '',
-      experimentID: '',
-      datasetPlatform: '',
-      datasetID: '',
-      modelName: '',
-      modelTask: '',
-      modelOwner: '',
-      modelPOC: '',
-      modelDesc: '',
-      modelExplain: '',
-      modelUsage: '',
-      modelLimitations: '',
-      inferenceImage: '',
+      step: 1 as number,
+      tags: [] as string[],
+      frameworks: [] as string[],
+      modelPath: '' as string,
+      experimentPlatform: '' as string, // todo: enum
+      experimentID: '' as string,
+      datasetPlatform: '' as string,
+      datasetID: '' as string,
+      modelName: '' as string,
+      modelTask: '' as string,
+      modelOwner: '' as string,
+      modelPOC: '' as string,
+      modelDesc: '' as string,
+      modelExplain: '' as string,
+      modelUsage: '' as string,
+      modelLimitations: '' as string,
+      inferenceImage: '' as string,
       markdownContent: `<h3>Description <a id="description"></a></h3>
       <hr>
       <p><strong>EXAMPLE:</strong></p>
@@ -80,7 +80,7 @@ export const useCreationStore = defineStore('creationStore', {
       <blockquote>
       <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
       </blockquote>
-      <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>`,
+      <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>` as string,
     };
   },
   getters: {},

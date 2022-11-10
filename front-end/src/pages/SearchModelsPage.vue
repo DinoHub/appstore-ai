@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
+import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
 import { reactive, ref, Ref } from 'vue';
 import { useModelStore } from 'src/stores/model-store';
 import { Pagination } from 'src/components/models';

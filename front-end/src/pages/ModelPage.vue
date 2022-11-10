@@ -151,9 +151,9 @@
 
 <script setup lang="ts">
 import { ModelCard } from 'src/stores/model-store';
-import MarkdownDisplay from 'src/components/MarkdownDisplay.vue';
-import GradioFrame from 'src/components/GradioFrame.vue';
-import ArtifactCard from 'src/components/ArtifactCard.vue';
+import MarkdownDisplay from 'src/components/content/MarkdownDisplay.vue';
+import GradioFrame from 'src/components/content/GradioFrame.vue';
+import ArtifactCard from 'src/components/content/ArtifactCard.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';

@@ -29,10 +29,11 @@
 <script setup lang="ts">
 import { nodeViewProps, NodeViewWrapper } from '@tiptap/vue-3';
 import { ref } from 'vue';
-import PlotlyChart from './PlotlyChart.vue';
+import PlotlyChart from '../content/PlotlyChart.vue';
 import PlotlyEditor from './PlotlyEditor.vue';
 
 const props = defineProps(nodeViewProps);
+
 const chartEditor = ref(false);
 
 function update(data: Record<string, any>[], layout: Record<string, any>) {

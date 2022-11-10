@@ -3,7 +3,7 @@
     <q-toolbar-title
       ><router-link to="/" class="text-h6">
         <q-img
-          src="../assets/aas_logo.png"
+          src="src/assets/aas_logo.png"
           height="0"
           fit="scale-down"
           position="2% 50%"
@@ -51,7 +51,7 @@ import { computed } from 'vue';
 
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
 import NotificationsMenu from 'src/components/NotificationsMenu.vue';
-import RouteBreadcrumbs from 'src/components/RouteBreadcrumbs.vue';
+import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 
 const authStore = useAuthStore();
 

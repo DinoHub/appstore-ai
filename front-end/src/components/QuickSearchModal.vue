@@ -33,7 +33,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import ModelCardDataTable from './ModelCardDataTable.vue';
+import ModelCardDataTable from './content/ModelCardDataTable.vue';
 import { Pagination } from './models';
 
 const search = ref(false);

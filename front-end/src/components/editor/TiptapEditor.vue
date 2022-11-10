@@ -1,9 +1,3 @@
-<style scoped>
-.sticky {
-  position: sticky;
-  top: 0;
-}
-</style>
 <template>
   <!-- Editor Toolbar -->
   <div v-if="editor" style="overflow: none">
@@ -345,15 +339,18 @@ import { lowlight } from 'lowlight';
 import { ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 
+
+
+export interface Props {
+  content?: string;
+}
+
+// Register languages for code highlighting
 lowlight.registerLanguage('css', css);
 lowlight.registerLanguage('js', js);
 lowlight.registerLanguage('ts', ts);
 lowlight.registerLanguage('html', html);
 lowlight.registerLanguage('python', python);
-
-export interface Props {
-  content?: string;
-}
 
 const props = defineProps<Props>();
 const editor = useEditor({
