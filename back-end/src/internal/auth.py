@@ -40,6 +40,7 @@ def create_access_token(
     data: dict, expires_delta: Union[timedelta, None] = None
 ) -> str:
     to_encode = data.copy()
+    print(to_encode)
     if expires_delta is not None:
         expire = datetime.utcnow() + expires_delta
     else:
@@ -101,6 +102,7 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
+    print(token_data)
     return token_data
 
 
@@ -110,10 +112,8 @@ async def check_is_admin(
     csrf: CsrfProtect = Depends(),
     db=Depends(get_db),
 ) -> User:
-    user = await get_current_user(
-        request, token, db=db, csrf=csrf, is_admin=True
-    )
-    if not user["adminPriv"]:
+    user = await get_current_user(request, token, db=db, csrf=csrf, is_admin=True)
+    if user.role != UserRoles.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User does not have admin access",
