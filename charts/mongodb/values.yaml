@@ -348,13 +348,13 @@ initdbScripts:
     mongo.users.insertMany([
       {
         userId: 'master',
-        name: 'MasterUser',
+        name: 'Master User',
         password: '$2b$12$dJgAk/YGHoGH203M2H0Fvu.XL3A1BulreQS1NZTRcZ9XHhUHfkU.K',
         adminPriv: true
       },
       {
         userId: 'dev1',
-        name: 'DeveloperOne',
+        name: 'Developer One',
         password: '$2b$12$coDQnalKv3kw8kzuwztyc.l6gfveM/ERMVQioVYN9OQq6KheDG3ae',
         adminPriv: false
       },
