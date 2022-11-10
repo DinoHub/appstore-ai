@@ -113,7 +113,7 @@ async def check_is_admin(
     user = await get_current_user(
         request, token, db=db, csrf=csrf, is_admin=True
     )
-    if not user["adminPriv"]:
+    if not user.role == UserRoles.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User does not have admin access",
