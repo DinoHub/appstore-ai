@@ -8,16 +8,16 @@
   <q-page padding>
     <!-- content -->
     <main>
-      <div class="row text-h4 q-px-xl">Welcome Back, {{ username ?? 'User' }}</div>
+      <div class="row text-h4 q-px-xl">
+        Welcome Back, {{ username ?? 'User' }}
+      </div>
       <div class="row q-px-xl q-py-sm">
-        <div class="col-auto text-h5 self-center">
-          Your Models
-        </div>
+        <div class="col-auto text-h5 self-center">Your Models</div>
         <div class="col-auto q-px-md">
-          <q-btn round icon="add" to="/models/create"></q-btn>
+          <q-btn fab-mini icon="add" to="/models/create"></q-btn>
         </div>
         <div class="col-auto q-pl-sm self-center">
-          <q-btn flat label="View all models" to="/models"></q-btn>
+          <q-btn rounded outline label="View all models" to="/models"></q-btn>
         </div>
       </div>
       <section>

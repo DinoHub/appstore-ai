@@ -6,7 +6,11 @@
         {{ model.title }}
       </div>
       <div class="col-12 col-sm-4 self-center text-right">
-        <q-btn label="Perform Transfer Learning" color="primary"></q-btn>
+        <q-btn
+          rounded
+          label="Perform Transfer Learning"
+          color="primary"
+        ></q-btn>
       </div>
     </header>
     <aside class="row q-py-sm">
@@ -67,7 +71,6 @@
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel v-if="model.inferenceApi" name="inference">
-              <!-- TODO: Add Gradio iframe here-->
               <gradio-frame :url="model.inferenceApi"></gradio-frame>
             </q-tab-panel>
             <q-tab-panel name="metadata">
