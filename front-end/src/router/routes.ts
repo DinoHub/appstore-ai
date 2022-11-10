@@ -1,10 +1,13 @@
 import CreateModel from 'pages/CreateModel.vue';
+import DashboardLayout from 'layouts/DashboardLayout.vue';
 import DashboardPage from 'pages/DashboardPage.vue';
 import ErrorNotFound from 'pages/ErrorNotFound.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
+import ModelCardLayout from 'layouts/ModelCardLayout.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
+import SearchLayout from 'layouts/SearchLayout.vue';
 import SearchModelsPage from 'pages/SearchModelsPage.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
@@ -21,8 +24,23 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/models',
+    path: '/model',
     component: MainLayout,
+    children: [
+      {
+        path: ':userId/:modelId',
+        component: ModelPage,
+      },
+      {
+        path: 'create',
+        name: 'Create Model',
+        component: CreateModel,
+      },
+    ],
+  },
+  {
+    path: '/models',
+    component: SearchLayout,
     children: [
       {
         path: '',
@@ -42,20 +60,11 @@ const routes: RouteRecordRaw[] = [
           };
         },
       },
-      {
-        path: ':userId/:modelId',
-        component: ModelPage,
-      },
-      {
-        path: 'create',
-        name: 'Create Model',
-        component: CreateModel,
-      },
     ],
   },
   {
     path: '/',
-    component: MainLayout,
+    component: DashboardLayout,
     children: [{ path: '', name: 'Dashboard', component: DashboardPage }],
   },
 

@@ -5,40 +5,43 @@
 </style>
 <template>
   <div class="row">
-    <aside class="col col-sm-3" v-if="showFilter">
-      <q-form class="q-px-md">
-        <div class="text-h6">Query Filters</div>
-        <q-expansion-item default-opened label="Task">
-          <q-option-group
-            v-model="filter.tasks"
-            :options="tasks"
-            color="primary"
-            type="checkbox"
-          ></q-option-group>
-        </q-expansion-item>
-        <q-expansion-item label="Frameworks">
-          <q-option-group
-            v-model="filter.frameworks"
-            :options="frameworks"
-            color="primary"
-            type="checkbox"
-          ></q-option-group>
-        </q-expansion-item>
-        <q-expansion-item default-opened label="Tags">
-          <q-select
-            hint="Type in tags or use dropdown to add available tags"
-            v-model="filter.tags"
-            use-input
-            use-chips
-            multiple
-            autogrow
-            input-debounce="0"
-            new-value-mode="add-unique"
-            :options="tags"
-          ></q-select>
-        </q-expansion-item>
-      </q-form>
-    </aside>
+    <q-drawer :model-value="showFilter" v-if="showFilter">
+      <aside class="col col-sm-3 q-pt-md">
+        <q-form class="q-px-md">
+          <div class="text-h6">Query Filters</div>
+          <q-expansion-item default-opened label="Task">
+            <q-option-group
+              v-model="filter.tasks"
+              :options="tasks"
+              color="primary"
+              type="checkbox"
+            ></q-option-group>
+          </q-expansion-item>
+          <q-expansion-item label="Frameworks">
+            <q-option-group
+              v-model="filter.frameworks"
+              :options="frameworks"
+              color="primary"
+              type="checkbox"
+            ></q-option-group>
+          </q-expansion-item>
+          <q-expansion-item default-opened label="Tags">
+            <q-select
+              hint="Type in tags or use dropdown to add available tags"
+              v-model="filter.tags"
+              use-input
+              use-chips
+              multiple
+              autogrow
+              input-debounce="0"
+              new-value-mode="add-unique"
+              :options="tags"
+            ></q-select>
+          </q-expansion-item>
+        </q-form>
+      </aside>
+    </q-drawer>
+
     <main class="col">
       <q-table
         grid
@@ -225,7 +228,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        })
+        }),
       );
       tasks.splice(
         0,
@@ -235,7 +238,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        })
+        }),
       );
     })
     .catch(() => {

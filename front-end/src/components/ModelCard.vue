@@ -3,7 +3,7 @@
     v-ripple
     class="cursor-pointer q-hoverable"
     :class="props.cardClass"
-    @click="$router.push(`/models/${props.creatorUserId}/${props.modelId}`)"
+    @click="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
   >
     <span class="q-focus-helper"></span>
     <q-card-section>
