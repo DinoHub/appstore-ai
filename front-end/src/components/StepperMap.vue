@@ -304,7 +304,13 @@
         </div>
       </q-step>
 
-      <q-step :name="6" title="Inference Engine" icon="code">
+      <q-step
+        :name="6"
+        title="Inference Engine"
+        icon="code"
+        :done="creationStore.step > 6"
+        v-if="creationStore.modelTask != 'Reinforcement Learning'"
+      >
         <div
           class="row justify-center"
           v-if="
@@ -312,7 +318,7 @@
             displayImageSubmit == false
           "
         >
-          <div class="q-pa-md q-gutter-sm col-xs-4 shadow-1">
+          <div class="q-pa-md q-gutter-sm col-4 shadow-1">
             <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
             <q-btn
               icon="check"
@@ -323,7 +329,10 @@
               class="q-mb-sm float-left"
               style="width: 95.6%"
               unelevated
-              @click="triggerImageSub()"
+              @click="
+                $refs.stepper.next();
+                simulateSubmit();
+              "
             />
             <q-btn
               icon="help"
@@ -337,20 +346,20 @@
             />
           </div>
         </div>
+      </q-step>
 
+      <q-step :name="7" title="Submission" icon="publish">
         <div
           class="row justify-center"
-          v-if="
-            creationStore.modelTask != 'Reinforcement Learning' &&
-            displayImageSubmit == true
-          "
+          v-if="creationStore.modelTask != 'Reinforcement Learning'"
         >
-          <div class="q-pa-md q-gutter-sm col-xs-4 shadow-1">
+          <div class="q-pa-md q-gutter-sm col-4 shadow-1">
             <h6 class="text-left q-mb-md q-mr-sm">Inference Engine</h6>
             <q-input
               class="q-pb-xl q-mr-sm"
               autogrow
               hint="Image URI"
+              v-model="creationStore.inferenceImage"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
             <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
@@ -362,12 +371,11 @@
             </p>
           </div>
         </div>
-
         <div
           class="row justify-center"
           v-if="creationStore.modelTask == 'Reinforcement Learning'"
         >
-          <div class="q-pa-md q-gutter-sm col-xs-5 shadow-1">
+          <div class="q-pa-md q-gutter-sm col-5 shadow-1">
             <h6 class="text-left q-mb-sm">
               Reinforcement Learning Example Video
             </h6>
@@ -395,8 +403,8 @@
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
-          <div class="row">
-            <div class="text-right col-2">
+          <div class="row justify-center">
+            <div class="text-right col-1">
               <q-btn
                 color="red"
                 @click="cancel = true"
@@ -405,9 +413,9 @@
                 :disable="buttonDisable"
               />
             </div>
-            <div class="text-right col-9">
+            <div class="text-right col-6">
               <q-btn
-                v-if="creationStore.step > 1 && displayImageSubmit == false"
+                v-if="creationStore.step > 1"
                 color="primary"
                 @click="
                   $refs.stepper.previous();
@@ -418,21 +426,23 @@
                 :disable="buttonDisable"
               />
               <q-btn
-                v-if="creationStore.step > 1 && displayImageSubmit == true"
-                color="primary"
-                @click="triggerImageSub()"
-                label="Back"
-                class="q-mr-md"
-                :disable="buttonDisable"
-              />
-              <q-btn
-                v-if="creationStore.step != 6"
+                v-if="creationStore.step < 6"
                 @click="
                   $refs.stepper.next();
                   simulateSubmit();
                 "
                 color="primary"
                 label="Continue"
+                :disable="buttonDisable"
+              />
+
+              <q-btn
+                v-if="
+                  creationStore.step == 7 && creationStore.inferenceImage != ''
+                "
+                @click="submitImage()"
+                color="primary"
+                label="Submit Image"
                 :disable="buttonDisable"
               />
             </div>
@@ -523,12 +533,12 @@
 </template>
 
 <script>
-import { useAuthStore } from 'src/stores/auth-store';
 import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { creationPreset } from 'src/stores/creation-preset';
 import { ref } from 'vue';
 import Editor from '@tinymce/tinymce-vue';
+import { Cookies } from 'quasar';
 
 export default {
   name: 'app',
@@ -537,7 +547,6 @@ export default {
   },
   setup() {
     // constants for stores
-    const authStore = useAuthStore();
     const expStore = useExpStore();
     const creationStore = useCreationStore();
     const creatorPreset = creationPreset();
@@ -582,6 +591,12 @@ export default {
       creationStore.$reset();
       localStorage.removeItem(`${creationStore.$id}`);
     }
+    function submitImage() {
+      creationStore.launchImage(
+        creationStore.inferenceImage,
+        Cookies.get('auth').user.userId
+      );
+    }
     function finalSubmit() {
       if (creationStore.modelOwner == '') {
         creationStore.modelOwner = authStore.user?.name;
@@ -590,13 +605,7 @@ export default {
         creationStore.modelPOC = authStore.user?.name;
       }
     }
-    function triggerImageSub() {
-      if (displayImageSubmit.value == true) {
-        displayImageSubmit.value = false;
-      } else {
-        displayImageSubmit.value = true;
-      }
-    }
+
     // function for populating editor with values from previous step
     function populateEditor(store) {
       store.$patch({
@@ -625,7 +634,8 @@ export default {
       simulateSubmit,
       populateEditor,
       flushCreator,
-      triggerImageSub,
+      submitImage,
+      finalSubmit,
       cancel,
       popupContent,
       metricsContent,
@@ -633,7 +643,6 @@ export default {
       buttonDisable,
       expStore,
       creationStore,
-      authStore,
       creatorPreset,
       prevSave,
       displayImageSubmit,
