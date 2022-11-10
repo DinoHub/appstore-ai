@@ -632,20 +632,22 @@ function flushCreator() {
 function submitImage() {
   creationStore.launchImage(
     creationStore.inferenceImage,
-    Cookies.get('auth').user.userId
+    Cookies.get('auth').user.userId // Need to JSON.parse?
   );
 }
 function finalSubmit() {
-  if (creationStore.modelOwner == '') {
-    creationStore.modelOwner = authStore.user?.name;
-  }
-  if (creationStore.modelPOC == '') {
-    creationStore.modelPOC = authStore.user?.name;
+  if (authStore.user?.name) {
+    if (creationStore.modelOwner == '') {
+      creationStore.modelOwner = authStore.user.name;
+    }
+    if (creationStore.modelPOC == '') {
+      creationStore.modelPOC = authStore.user.name;
+    }
   }
 }
 
 // function for populating editor with values from previous step
-function populateEditor(store) {
+function populateEditor(store: typeof creationStore) {
   store.$patch({
     markdownContent: `
   <h3>Description <a id="description"></a></h3>
