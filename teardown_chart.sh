@@ -14,7 +14,7 @@ if [ "$mode" = "be" ]; then
 elif  [ "$mode" = "db" ]; then
     helm uninstall ai-mongo
 elif  [ "$mode" = "ie" ]; then
-    helm install ai-ie
+    helm uninstall ai-ie
 else
     echo "ModeError"
 fi
