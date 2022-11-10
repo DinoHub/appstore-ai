@@ -4,10 +4,10 @@ metadata:
   # "namespace" omitted since ClusterRoles are not namespaced
   name: inference-engine-manager
 rules:
-- apiGroups: ["serving.knative.dev"]
-  #
-  resources: ["services"]
-  verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+  - apiGroups: ["serving.knative.dev", "knative.serving.dev"]
+    #
+    resources: ["services"]
+    verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 # This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
@@ -16,9 +16,9 @@ metadata:
   name: manage-inference-engine
   namespace: inference-engine
 subjects:
-- kind: ServiceAccount
-  name: backend-service # Name is case sensitive
-  namespace: default
+  - kind: ServiceAccount
+    name: backend-service # Name is case sensitive
+    namespace: default
 roleRef:
   kind: ClusterRole
   name: inference-engine-manager
