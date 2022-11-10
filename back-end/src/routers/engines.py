@@ -75,9 +75,10 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
-        except:
+        except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Error"
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when creating inference engine: {e}",
             )
         return resp
 
