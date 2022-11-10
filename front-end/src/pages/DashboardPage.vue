@@ -1,23 +1,33 @@
 <style>
-.dashboard-card {
-  width: 30%;
+#dashboardModels .q-table__grid-content {
+  justify-content: flex-start;
 }
 </style>
+
 <template>
   <q-page padding>
     <!-- content -->
-    <div class="text-h3">Welcome Back, {{ username ?? 'User' }}</div>
     <main>
+      <div class="row text-h4 q-px-xl">Welcome Back, {{ username ?? 'User' }}</div>
+      <div class="row q-px-xl q-py-sm">
+        <div class="col-auto text-h5 self-center">
+          Your Models
+        </div>
+        <div class="col-auto q-px-md">
+          <q-btn round icon="add" to="/models/create"></q-btn>
+        </div>
+        <div class="col-auto q-pl-sm self-center">
+          <q-btn flat label="View all models" to="/models"></q-btn>
+        </div>
+      </div>
       <section>
-        <div class="row"></div>
-        <model-card-data-table card-class="dashboard-card">
-          <template v-slot:top-left>
-            <div class="col col-sm-3 text-h4">
-              Your Models
-              <q-btn round icon="add" to="/models/create"></q-btn>
-            </div>
-            <router-link to="/models">View all models</router-link>
-          </template>
+        <model-card-data-table
+          id="dashboardModels"
+          :pagination="pagination"
+          :filter="filter"
+          card-container-class="q-pa-md col-xs-12 col-sm-5 col-md-3"
+          class="q-px-sm"
+        >
         </model-card-data-table>
       </section>
     </main>
@@ -29,13 +39,30 @@ import { ref, Ref } from 'vue';
 import ModelCardDataTable from 'src/components/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
+import { Pagination, SearchFilter } from '../components/models';
 
 const authStore = useAuthStore();
 const username = ref(authStore.user?.name);
 
 // Get all user models
-const modelStore = useModelStore();
-// Get models owned by the user
+const filter: SearchFilter = {
+  tags: [],
+  tasks: [],
+  frameworks: [],
+  creator: authStore.user?.userId,
+};
+
+const pagination: Pagination = {
+  sortBy: {
+    label: 'Latest Models (Last Updated)',
+    value: 'lastModified',
+    desc: true,
+  },
+  descending: false,
+  page: 1,
+  rowsPerPage: 6,
+  rowsNumber: 1,
+};
 </script>
 
 <style>

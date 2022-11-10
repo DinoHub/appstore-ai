@@ -9,5 +9,7 @@ spec:
         - image: {{ image_name }}
           # imagePullPolicy: Always # TODO: uncomment when registry is properly set up
           imagePullPolicy: IfNotPresent
+          {% if port %}
           ports:
-            - containerPort: 4001
+            - containerPort: {{ port }}
+          {% endif %}

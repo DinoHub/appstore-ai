@@ -16,7 +16,7 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
-from ..internal.utils import uncased_to_snake_case
+from ..internal.utils import uncased_to_snake_case, sanitize_html
 from ..models.iam import TokenData
 from ..models.model import (
     ModelCardModelDB,
@@ -81,7 +81,7 @@ async def get_model_card_by_id(
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
-    rows_per_page: int = Query(default=10, alias="n", gt=0),
+    rows_per_page: int = Query(default=10, alias="n", ge=0),
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="_id", alias="sort"),
     title: Optional[str] = Query(default=None),
@@ -103,12 +103,12 @@ async def search_cards(
     if tags:
         query["tags"] = {"$all": tags}
     if frameworks:
-        query["frameworks"] = {"$all": frameworks}
+        query["frameworks"] = {"$in": frameworks}
     if creator_user_id:
         query["creatorUserId"] = creator_user_id
 
     # How many documents to skip
-    if not all:
+    if not all or rows_per_page == 0:
         pagination_ptr = (page - 1) * rows_per_page
     else:
         pagination_ptr = 0
@@ -121,7 +121,7 @@ async def search_cards(
             results = await (
                 db["models"]
                 .find(query, projection=return_attr)
-                .sort([(sort_by, DESCENDING if descending else ASCENDING)])
+                .sort(sort_by, DESCENDING if descending else ASCENDING)
                 .skip(pagination_ptr)
                 .limit(rows_per_page)
             ).to_list(length=rows_per_page if rows_per_page != 0 else None)
@@ -159,6 +159,11 @@ async def create_model_card_metadata(
     db, mongo_client = db
     card.tags = set(card.tags)  # remove duplicates
     card.frameworks = set(card.frameworks)
+    
+    # Sanitize html
+    card.description = sanitize_html(card.description)
+    card.performance = sanitize_html(card.performance)
+
     card = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
@@ -192,6 +197,12 @@ async def update_model_card_metadata_by_id(
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
     card = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
+
+    if "description" in card:
+        card["description"] = sanitize_html(card["description"])
+    if "performance" in card:
+        card["performance"] = sanitize_html(card["performance"])
+
     card["lastModified"] = str(datetime.datetime.now())
     if len(card) > 0:
         # perform transaction to ensure we can roll back changes

@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import { LocationQueryValue } from 'vue-router';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
@@ -21,6 +22,7 @@ export interface ModelCardSummary {
   modelId: string;
   creatorUserId: string;
   title: string;
+  task: string;
   summary: string;
   tags: string[];
   frameworks: string[];
@@ -36,8 +38,9 @@ export interface SearchParams {
   all?: boolean;
   creatorUserId?: string;
   title?: string;
-  tags?: string[];
-  frameworks?: string[];
+  tags?: string[] | LocationQueryValue[];
+  frameworks?: string[] | LocationQueryValue[];
+  tasks?: string[] | LocationQueryValue[];
 }
 
 export interface AvailableFilterResponse {
@@ -90,6 +93,7 @@ export const useModelStore = defineStore('model', {
               'modelId',
               'creatorUserId',
               'title',
+              'task',
               'summary',
               'tags',
               'frameworks',
@@ -118,28 +122,6 @@ export const useModelStore = defineStore('model', {
           this.router.push('/404');
         }
         return Promise.reject('Unable to get model metadata');
-      }
-    },
-    async getModelsByUser(userId: string): Promise<SearchResponse> {
-      try {
-        const res = await api.get(`/models/${userId}`, {
-          params: {
-            return: [
-              'modelId',
-              'creatorUserId',
-              'title',
-              'summary',
-              'tags',
-              'frameworks',
-              'lastModified',
-              'created',
-            ],
-          },
-        });
-        const { results, total }: SearchResponse = res.data;
-        return { results, total };
-      } catch (error) {
-        return Promise.reject(error);
       }
     },
     async deleteModelById(userId: string, modelId: string): Promise<void> {

@@ -109,7 +109,7 @@ async def check_is_admin(
     token: str = Depends(oauth2_scheme),
     csrf: CsrfProtect = Depends(),
     db=Depends(get_db),
-) -> User:
+) -> TokenData:
     user = await get_current_user(request, token, db=db, csrf=csrf, is_admin=True)
     if user.role != UserRoles.admin:
         raise HTTPException(

@@ -257,7 +257,7 @@
               <q-icon class="" name="error" size="1.5rem" />
               Please remove the example content and style your own content
             </div>
-            <editor
+            <!-- <editor
               v-model="creationStore.markdownContent"
               :init="{
                 height: 650,
@@ -273,7 +273,8 @@
                   });
                 },
               }"
-            />
+            /> -->
+            <tiptap :content="card_content" />
           </div>
         </div>
       </q-step>
@@ -450,6 +451,24 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
+    <q-dialog v-model="cancel">
+      <q-card>
+        <q-card-section>
+          <div class="text-h6">Quit</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          Are you sure you want to exit the model creation process?
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" color="red" v-close-popup />
+          <q-space />
+          <q-btn flat label="Save & Quit" color="green" v-close-popup />
+          <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
   <q-dialog v-model="cancel" persistent>
     <q-card>
@@ -537,13 +556,43 @@ import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { creationPreset } from 'src/stores/creation-preset';
 import { ref } from 'vue';
+/* Import TinyMCE */
+import tinymce from 'tinymce';
+
+import 'tinymce/tinymce';
+import 'tinymce/icons/default/icons';
+import 'tinymce/themes/silver/theme';
+import 'tinymce/models/dom/model';
+import 'tinymce/skins/ui/tinymce-5/skin.css';
+import contentUiCss from 'tinymce/skins/ui/tinymce-5/content.css';
+import contentCss from 'tinymce/skins/content/default/content.css';
+/* Import plugins */
+import 'tinymce/plugins/image';
+import 'tinymce/plugins/help';
+import 'tinymce/plugins/insertdatetime';
+import 'tinymce/plugins/codesample';
+import 'tinymce/plugins/charmap';
+import 'tinymce/plugins/anchor';
+import 'tinymce/plugins/advlist';
+import 'tinymce/plugins/code';
+import 'tinymce/plugins/emoticons';
+import 'tinymce/plugins/emoticons/js/emojis';
+import 'tinymce/plugins/link';
+import 'tinymce/plugins/lists';
+import 'tinymce/plugins/table';
+
+// TinyMCE plugins
+// https://www.tiny.cloud/docs/tinymce/6/plugins/
+import 'src/plugins/tinymce-charts';
 import Editor from '@tinymce/tinymce-vue';
 import { Cookies } from 'quasar';
+import TiptapEditorVue from './TiptapEditor.vue';
 
 export default {
   name: 'app',
   components: {
     editor: Editor,
+    tiptap: TiptapEditorVue,
   },
   setup() {
     // constants for stores
@@ -586,6 +635,10 @@ export default {
         });
       }
       console.log(creationStore.step);
+      console.log(tagAddUnique.value);
+      console.log(frameworkAddUnique.value);
+      console.log(task.value);
+      console.log(JSON.stringify(card_content.value));
     }
     function flushCreator() {
       creationStore.$reset();

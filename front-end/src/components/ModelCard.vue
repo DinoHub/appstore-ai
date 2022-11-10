@@ -1,35 +1,50 @@
 <template>
-  <q-card :class="props.cardClass">
+  <q-card
+    v-ripple
+    class="cursor-pointer q-hoverable"
+    :class="props.cardClass"
+    @click="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
+  >
+    <span class="q-focus-helper"></span>
     <q-card-section>
       <div class="text-h6">{{ props.title }}</div>
-      <q-chip
-        v-for="tag in props.tags"
-        :key="tag"
-        color="primary"
-        text-color="white"
-      >
-        {{ tag }}
+      <q-chip color="primary" text-color="white">
+        <router-link class="router-link" :to="`/models/?tasks=${props.task}`">
+          {{ props.task }}</router-link
+        >
       </q-chip>
       <q-chip
         v-for="tag in props.frameworks"
         :key="tag"
-        color="primary"
+        color="accent"
         text-color="white"
       >
-        {{ tag }}
+        <router-link class="router-link" :to="`/models/?frameworks=${tag}`">{{
+          tag
+        }}</router-link>
+      </q-chip>
+      <q-chip
+        v-for="tag in props.tags"
+        :key="tag"
+        color="secondary"
+        text-color="white"
+      >
+        <router-link class="router-link" :to="`/models/?tags=${tag}`">{{
+          tag
+        }}</router-link>
       </q-chip>
     </q-card-section>
     <q-card-section>
       {{ props.summary ?? 'No summary provided' }}
     </q-card-section>
     <q-separator></q-separator>
-    <q-card-actions>
-      <q-btn
+    <q-card-actions v-if="isModelOwner">
+      <!-- <q-btn
         flat
         label="View"
         text-color="primary"
-        :to="`models/${props.creatorUserId}/${props.modelId}`"
-      ></q-btn>
+        :to="`/models/${props.creatorUserId}/${props.modelId}`"
+      ></q-btn> -->
       <q-btn
         flat
         label="Edit"
@@ -49,6 +64,7 @@ export interface Props {
   modelId: string;
   title: string;
   summary?: string;
+  task: string;
   tags: string[];
   frameworks: string[];
   cardClass: string;

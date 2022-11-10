@@ -28,8 +28,6 @@ export interface JWT {
 // TODO: Fix storing the access token in a secured way that Axios can use for the OAuth
 // currently have to store accesstoken in Cookie that is not secured (httponly)
 
-const $q = useQuasar();
-
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
@@ -60,6 +58,7 @@ export const useAuthStore = defineStore('auth', {
         this.access_token = access_token;
         this.refresh_token = refresh_token;
       } catch (err) {
+        const $q = useQuasar();
         $q.notify({
           message: 'Failed to login',
           color: 'failure',
@@ -69,6 +68,10 @@ export const useAuthStore = defineStore('auth', {
     },
     logout(): void {
       Cookies.remove('auth');
+      this.user = null;
+      this.access_token = null;
+      this.refresh_token = null;
+      this.returnUrl = null;
       this.router.push('/login');
       location.reload();
       localStorage.removeItem('creationStore');

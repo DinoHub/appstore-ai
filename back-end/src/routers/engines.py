@@ -54,6 +54,7 @@ async def create_inference_engine_service(
             {
                 "engine_name": service.service_name,
                 "image_name": service.image_uri,
+                "port": service.container_port,
             }
         )
     )
@@ -136,6 +137,7 @@ async def update_inference_engine_service(
             {
                 "engine_name": service.service_name,
                 "image_name": service.image_uri,
+                "image_name": service.container_port,
             }
         )
     )

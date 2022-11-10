@@ -1,18 +1,19 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <main class="row">
-      <div class="col">
+    <main class="row justify-center items-center">
+      <div class="col-4">
         <h1>Welcome to the AI App Store</h1>
       </div>
-      <section class="col">
+      <section class="col-4">
         <q-card tag="form">
           <q-card-section>
-            <h4>Login</h4>
+            <div class="text-h5">Login</div>
           </q-card-section>
           <q-card-section>
-            <q-form @submit="onSubmit">
+            <q-form @submit="onSubmit" class="q-gutter-md">
               <q-input
+                outlined
                 v-model="userId"
                 label="User ID"
                 lazy-rules
@@ -21,6 +22,7 @@
                 ]"
               ></q-input>
               <q-input
+                outlined
                 v-model="password"
                 label="Password"
                 type="password"
@@ -31,9 +33,10 @@
               ></q-input>
               <q-btn
                 label="Login"
-                icon="login"
                 type="submit"
                 color="primary"
+                padding="sm xl"
+                rounded
               ></q-btn>
             </q-form>
           </q-card-section>

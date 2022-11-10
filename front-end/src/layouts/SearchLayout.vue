@@ -7,7 +7,7 @@
       <route-breadcrumbs class="q-pt-md q-pl-md"></route-breadcrumbs>
       <router-view />
     </q-page-container>
-    <q-footer>
+    <q-footer elevated>
       <the-footer></the-footer>
     </q-footer>
   </q-layout>

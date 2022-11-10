@@ -1,3 +1,4 @@
+import json
 from typing import Dict, List, Optional
 
 from clearml import Model, Task
@@ -60,10 +61,13 @@ class ClearMLExperiment(ExperimentConnector):
         return self.task.get_tags()
 
     @property
-    def metrics(self) -> Dict:
+    def metrics(self) -> List[Dict]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return self.task.get_reported_scalars()
+        raw_data: Dict[str, Dict] = self.task.get_reported_scalars()
+        return list(
+            map(lambda x: self._to_plotly_json(x[0], x[1]), raw_data.items())
+        )
 
     @property
     def artifacts(self) -> Dict[str, Artifact]:
@@ -99,14 +103,19 @@ class ClearMLExperiment(ExperimentConnector):
         return output
 
     @property
-    def plots(self) -> Dict:
+    def plots(self) -> List[Dict]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         # NOTE: Plot data is plotly compatible
         # TODO: Consider using back end to GET this info, and front-end editor
         # add option to import the plot, giving options based on the
         # results of the GET request for plot and scalar info
-        return self.task.get_reported_plots()
+        return list(
+            map(
+                lambda x: json.loads(x["plot_str"]),
+                self.task.get_reported_plots(),
+            )
+        )
 
     def get_metadata(self) -> Dict:
         if not self.task:
@@ -164,3 +173,20 @@ class ClearMLExperiment(ExperimentConnector):
             task_filter=task_filter,
         )
         return task_list
+
+    @staticmethod
+    def _to_plotly_json(title: str, data: Dict) -> Dict[str, Dict]:
+        result = {
+            "data": [],
+            "layout": {
+                "title": title,
+            },
+        }
+        for values in data.values():
+            result["data"].append(
+                {
+                    "mode": "lines+markers",
+                    **values,
+                }
+            )
+        return result
