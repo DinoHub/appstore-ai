@@ -1,7 +1,7 @@
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import jwt_decode from 'jwt-decode';
-import { useQuasar } from 'quasar';
+import { Cookies, useQuasar } from 'quasar';
 
 export enum Role {
   user = 'user',
@@ -68,10 +68,10 @@ export const useAuthStore = defineStore('auth', {
       this.router.push(this.returnUrl || '/');
     },
     logout(): void {
-      this.user = null;
-      this.access_token = null;
-      this.refresh_token = null;
       this.router.push('/login');
+      this.$reset();  
+      location.reload();
+      localStorage.removeItem('creationStore');
     },
     async refresh(): Promise<void> {
       console.warn('Refreshing access token');
