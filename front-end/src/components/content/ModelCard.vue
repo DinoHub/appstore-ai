@@ -38,17 +38,12 @@
     </q-card-section>
     <q-separator></q-separator>
     <q-card-actions v-if="isModelOwner">
-      <!-- <q-btn
-        flat
-        label="View"
-        text-color="primary"
-        :to="`/models/${props.creatorUserId}/${props.modelId}`"
-      ></q-btn> -->
       <q-btn
         flat
         label="Edit"
         text-color="primary"
         :to="`models/${props.creatorUserId}/${props.modelId}/edit`"
+        @click.stop
         v-if="isModelOwner"
       ></q-btn>
     </q-card-actions>
