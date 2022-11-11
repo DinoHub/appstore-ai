@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import PlotlyChart from '../content/PlotlyChart.vue';
 import JSONEditorVue from 'json-editor-vue';
-import { Ref, ref } from 'vue';
+import { Ref, ref, watch } from 'vue';
 
 export interface Props {
   data?: Record<string, any>[];
@@ -85,4 +85,22 @@ function insert() {
   console.log('Creating Plot');
   emit('newPlot', data.value, layout.value);
 }
+
+watch(data, (newData) => {
+  // Sometimes new data is a string, so we need to parse it
+  // Check if string
+  if (typeof newData === 'string') {
+    // Parse string
+    data.value = JSON.parse(newData);
+  }
+});
+
+watch(layout, (newLayout) => {
+  // Sometimes new data is a string, so we need to parse it
+  // Check if string
+  if (typeof newLayout === 'string') {
+    // Parse string
+    layout.value = JSON.parse(newLayout);
+  }
+});
 </script>
