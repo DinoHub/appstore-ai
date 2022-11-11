@@ -3,7 +3,7 @@
     <q-toolbar-title
       ><router-link to="/" class="text-h6">
         <q-img
-          src="src/assets/aas_logo.png"
+          src="../../assets/aas_logo.png"
           height="0"
           fit="scale-down"
           position="2% 50%"
