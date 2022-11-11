@@ -14,7 +14,7 @@
           Your Models
         </div>
         <div class="col-auto q-px-md">
-          <q-btn round icon="add" to="/models/create"></q-btn>
+          <q-btn round icon="add" to="/model/create"></q-btn>
         </div>
         <div class="col-auto q-pl-sm self-center">
           <q-btn flat label="View all models" to="/models"></q-btn>
