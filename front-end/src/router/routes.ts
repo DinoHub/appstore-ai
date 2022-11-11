@@ -25,10 +25,10 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/model',
     component: MainLayout,
-    name: 'Model',
     children: [
       {
         path: '',
+        name: 'Model',
         component: SearchModelsPage,
         beforeEnter: () => {
           // Redirect to search page filtered by user
