@@ -1,316 +1,318 @@
 <template>
   <!-- Editor Toolbar -->
   <div v-if="editor" style="overflow: none">
-    <bubble-menu
-      class="q-gutter-xs row"
-      :tippy-options="{ duration: 180 }"
-      :editor="editor"
-    >
-      <!-- Bold -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('bold') ?? true)"
-        :color="_buttonBg(editor?.isActive('bold') ?? true)"
-        icon="format_bold"
-        @click="editor?.chain().focus().toggleBold().run()"
-      />
-      <!-- Italic -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('italic') ?? true)"
-        :color="_buttonBg(editor?.isActive('italic') ?? true)"
-        icon="format_italic"
-        @click="editor?.chain().focus().toggleItalic().run()"
-      />
-      <!-- Underline -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('underline') ?? true)"
-        :color="_buttonBg(editor?.isActive('underline') ?? true)"
-        icon="format_underline"
-        @click="editor?.chain().focus().toggleUnderline().run()"
-      />
-      <!-- Strike -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('strike') ?? true)"
-        :color="_buttonBg(editor?.isActive('strike') ?? true)"
-        icon="format_strikethrough"
-        @click="editor?.chain().focus().toggleStrike().run()"
-      />
-      <!-- Code Block -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
-        :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
-        icon="code"
-        @click="editor?.chain().focus().toggleCodeBlock().run()"
-      />
-      <!-- H1-H3 -->
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
-        label="H1"
-        @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
-      />
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
-        label="H2"
-        @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
-      />
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
-        label="H3"
-        @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
-      />
-      <!-- Bullet List -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
-        :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
-        icon="format_list_bulleted"
-        @click="editor?.chain().focus().toggleBulletList().run()"
-      />
-      <!-- Ordered List -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
-        :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
-        icon="format_list_numbered"
-        @click="editor?.chain().focus().toggleOrderedList().run()"
-      />
-      <!-- Image -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
-        icon="image"
-        @click="imageUploader = true"
-      ></q-btn>
-    </bubble-menu>
-    <floating-menu
-      class="q-gutter-xs row"
-      :tippy-options="{ duration: 100 }"
-      :editor="editor"
-    >
-      <!-- H1-H3 -->
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
-        label="H1"
-        @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
-      />
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
-        label="H2"
-        @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
-      />
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
-        label="H3"
-        @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
-      />
-      <!-- Code Block -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
-        :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
-        icon="code"
-        @click="editor?.chain().focus().toggleCodeBlock().run()"
-      />
-      <!-- Bullet List -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
-        :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
-        icon="format_list_bulleted"
-        @click="editor?.chain().focus().toggleBulletList().run()"
-      />
-      <!-- Ordered List -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
-        :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
-        icon="format_list_numbered"
-        @click="editor?.chain().focus().toggleOrderedList().run()"
-      />
-      <!-- Add Image -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
-        icon="image"
-        @click="imageUploader = true"
-      ></q-btn>
-      <!-- Chart Editor -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
-        icon="insert_chart"
-        @click="chartEditor = true"
-      />
-    </floating-menu>
-    <aside class="q-gutter-sm row">
-      <!-- Bold -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('bold') ?? true)"
-        :color="_buttonBg(editor?.isActive('bold') ?? true)"
-        icon="format_bold"
-        @click="editor?.chain().focus().toggleBold().run()"
-      />
-      <!-- Italic -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('italic') ?? true)"
-        :color="_buttonBg(editor?.isActive('italic') ?? true)"
-        icon="format_italic"
-        @click="editor?.chain().focus().toggleItalic().run()"
-      />
-      <!-- Underline -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('underline') ?? true)"
-        :color="_buttonBg(editor?.isActive('underline') ?? true)"
-        icon="format_underline"
-        @click="editor?.chain().focus().toggleUnderline().run()"
-      />
-      <!-- Strike -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('strike') ?? true)"
-        :color="_buttonBg(editor?.isActive('strike') ?? true)"
-        icon="format_strikethrough"
-        @click="editor?.chain().focus().toggleStrike().run()"
-      />
-      <!-- Code Block -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
-        :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
-        icon="code"
-        @click="editor?.chain().focus().toggleCodeBlock().run()"
-      />
-      <!-- H1-H3 -->
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
-        label="H1"
-        @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
-      />
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
-        label="H2"
-        @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
-      />
-      <q-btn
-        dense
-        :text-color="
-          _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
-        "
-        :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
-        label="H3"
-        @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
-      />
-      <!-- Bullet List -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
-        :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
-        icon="format_list_bulleted"
-        @click="editor?.chain().focus().toggleBulletList().run()"
-      />
-      <!-- Ordered List -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
-        :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
-        icon="format_list_numbered"
-        @click="editor?.chain().focus().toggleOrderedList().run()"
-      />
-      <!-- Add Image -->
-      <q-btn
-        dense
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
-        icon="image"
-        @click="imageUploader = true"
-      ></q-btn>
-      <q-dialog v-model="imageUploader">
-        <q-uploader
-          label="Upload Image (up to 5mb)"
-          accept=".jpg, image/*"
-          max-total-size="5242880"
-          :factory="uploadMedia"
-          @uploaded="addMedia"
-        >
-        </q-uploader>
-      </q-dialog>
-      <!-- Chart Editor -->
-      <q-btn
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
-        dense
-        icon="insert_chart"
-        @click="chartEditor = true"
-      />
-      <q-dialog persistent full-width v-model="chartEditor">
-        <plotly-editor
-          @new-plot="(data, layout) => insertChart(editor, data, layout)"
-        ></plotly-editor>
-      </q-dialog>
-      <!-- Show Source Code -->
-      <q-btn
-        label="Show Source Code"
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
-        dense
-        @click="
-          () => {
-            displaySourceCode(editor);
-          }
-        "
-      ></q-btn>
-      <q-dialog v-model="showSource">
-        <q-card>
-          <q-card-section>
-            <pre>
-                <code id="source" class="language-html">
-                </code>
-              </pre>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
+    <aside v-if="props.editable">
+      <bubble-menu
+        class="q-gutter-xs row"
+        :tippy-options="{ duration: 180 }"
+        :editor="editor"
+      >
+        <!-- Bold -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('bold') ?? true)"
+          :color="_buttonBg(editor?.isActive('bold') ?? true)"
+          icon="format_bold"
+          @click="editor?.chain().focus().toggleBold().run()"
+        />
+        <!-- Italic -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('italic') ?? true)"
+          :color="_buttonBg(editor?.isActive('italic') ?? true)"
+          icon="format_italic"
+          @click="editor?.chain().focus().toggleItalic().run()"
+        />
+        <!-- Underline -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('underline') ?? true)"
+          :color="_buttonBg(editor?.isActive('underline') ?? true)"
+          icon="format_underline"
+          @click="editor?.chain().focus().toggleUnderline().run()"
+        />
+        <!-- Strike -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('strike') ?? true)"
+          :color="_buttonBg(editor?.isActive('strike') ?? true)"
+          icon="format_strikethrough"
+          @click="editor?.chain().focus().toggleStrike().run()"
+        />
+        <!-- Code Block -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
+          :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
+          icon="code"
+          @click="editor?.chain().focus().toggleCodeBlock().run()"
+        />
+        <!-- H1-H3 -->
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
+          label="H1"
+          @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+        />
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
+          label="H2"
+          @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+        />
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
+          label="H3"
+          @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+        />
+        <!-- Bullet List -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
+          :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
+          icon="format_list_bulleted"
+          @click="editor?.chain().focus().toggleBulletList().run()"
+        />
+        <!-- Ordered List -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
+          :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
+          icon="format_list_numbered"
+          @click="editor?.chain().focus().toggleOrderedList().run()"
+        />
+        <!-- Image -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('image') ?? true)"
+          :color="_buttonBg(editor?.isActive('image') ?? true)"
+          icon="image"
+          @click="imageUploader = true"
+        ></q-btn>
+      </bubble-menu>
+      <floating-menu
+        class="q-gutter-xs row"
+        :tippy-options="{ duration: 100 }"
+        :editor="editor"
+      >
+        <!-- H1-H3 -->
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
+          label="H1"
+          @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+        />
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
+          label="H2"
+          @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+        />
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
+          label="H3"
+          @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+        />
+        <!-- Code Block -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
+          :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
+          icon="code"
+          @click="editor?.chain().focus().toggleCodeBlock().run()"
+        />
+        <!-- Bullet List -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
+          :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
+          icon="format_list_bulleted"
+          @click="editor?.chain().focus().toggleBulletList().run()"
+        />
+        <!-- Ordered List -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
+          :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
+          icon="format_list_numbered"
+          @click="editor?.chain().focus().toggleOrderedList().run()"
+        />
+        <!-- Add Image -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('image') ?? true)"
+          :color="_buttonBg(editor?.isActive('image') ?? true)"
+          icon="image"
+          @click="imageUploader = true"
+        ></q-btn>
+        <!-- Chart Editor -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('image') ?? true)"
+          :color="_buttonBg(editor?.isActive('image') ?? true)"
+          icon="insert_chart"
+          @click="chartEditor = true"
+        />
+      </floating-menu>
+      <aside class="q-gutter-sm row">
+        <!-- Bold -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('bold') ?? true)"
+          :color="_buttonBg(editor?.isActive('bold') ?? true)"
+          icon="format_bold"
+          @click="editor?.chain().focus().toggleBold().run()"
+        />
+        <!-- Italic -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('italic') ?? true)"
+          :color="_buttonBg(editor?.isActive('italic') ?? true)"
+          icon="format_italic"
+          @click="editor?.chain().focus().toggleItalic().run()"
+        />
+        <!-- Underline -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('underline') ?? true)"
+          :color="_buttonBg(editor?.isActive('underline') ?? true)"
+          icon="format_underline"
+          @click="editor?.chain().focus().toggleUnderline().run()"
+        />
+        <!-- Strike -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('strike') ?? true)"
+          :color="_buttonBg(editor?.isActive('strike') ?? true)"
+          icon="format_strikethrough"
+          @click="editor?.chain().focus().toggleStrike().run()"
+        />
+        <!-- Code Block -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
+          :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
+          icon="code"
+          @click="editor?.chain().focus().toggleCodeBlock().run()"
+        />
+        <!-- H1-H3 -->
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
+          label="H1"
+          @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+        />
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
+          label="H2"
+          @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+        />
+        <q-btn
+          dense
+          :text-color="
+            _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
+          "
+          :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
+          label="H3"
+          @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+        />
+        <!-- Bullet List -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
+          :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
+          icon="format_list_bulleted"
+          @click="editor?.chain().focus().toggleBulletList().run()"
+        />
+        <!-- Ordered List -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
+          :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
+          icon="format_list_numbered"
+          @click="editor?.chain().focus().toggleOrderedList().run()"
+        />
+        <!-- Add Image -->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('image') ?? true)"
+          :color="_buttonBg(editor?.isActive('image') ?? true)"
+          icon="image"
+          @click="imageUploader = true"
+        ></q-btn>
+        <q-dialog v-model="imageUploader">
+          <q-uploader
+            label="Upload Image (up to 5mb)"
+            accept=".jpg, image/*"
+            max-total-size="5242880"
+            :factory="uploadMedia"
+            @uploaded="addMedia"
+          >
+          </q-uploader>
+        </q-dialog>
+        <!-- Chart Editor -->
+        <q-btn
+          :text-color="_iconFill(editor?.isActive('image') ?? true)"
+          :color="_buttonBg(editor?.isActive('image') ?? true)"
+          dense
+          icon="insert_chart"
+          @click="chartEditor = true"
+        />
+        <q-dialog persistent full-width v-model="chartEditor">
+          <plotly-editor
+            @new-plot="(data, layout) => insertChart(editor, data, layout)"
+          ></plotly-editor>
+        </q-dialog>
+        <!-- Show Source Code -->
+        <q-btn
+          label="Show Source Code"
+          :text-color="_iconFill(editor?.isActive('image') ?? true)"
+          :color="_buttonBg(editor?.isActive('image') ?? true)"
+          dense
+          @click="
+            () => {
+              displaySourceCode(editor);
+            }
+          "
+        ></q-btn>
+        <q-dialog v-model="showSource">
+          <q-card>
+            <q-card-section>
+              <pre>
+                  <code id="source" class="language-html">
+                  </code>
+                </pre>
+            </q-card-section>
+          </q-card>
+        </q-dialog>
+      </aside>
     </aside>
     <editor-content
       class="text-left q-pl-md"
@@ -355,6 +357,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 
 export interface Props {
   content?: string;
+  editable?: boolean;
 }
 
 // Register languages for code highlighting
@@ -391,6 +394,7 @@ const editor = useEditor({
     content.value = editor.getHTML();
     emit('update:content', content.value);
   },
+  editable: props.editable ?? false
 });
 
 const showSource = ref(false);
