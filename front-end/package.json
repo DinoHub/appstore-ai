@@ -12,7 +12,6 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
-    "@tinymce/tinymce-vue": "^5.0.0",
     "@tiptap/core": "^2.0.0-beta.199",
     "@tiptap/extension-code-block-lowlight": "^2.0.0-beta.202",
     "@tiptap/extension-image": "^2.0.0-beta.202",
@@ -29,7 +28,6 @@
     "@types/plotly.js-basic-dist": "^1.54.1",
     "axios": "^0.21.1",
     "dompurify": "^2.4.0",
-    "graph-tinymce-plugin": "^0.0.4",
     "highlight.js": "^11.6.0",
     "json-editor-vue": "^0.9.2",
     "jwt-decode": "^3.1.2",
@@ -40,7 +38,6 @@
     "pinia-plugin-persistedstate": "^2.3.0",
     "plotly.js-dist": "^2.16.1",
     "quasar": "^2.6.0",
-    "tinymce": "^6.2.0",
     "vanilla-jsoneditor": "^0.9.2",
     "vue": "^3.0.0",
     "vue-router": "^4.0.0"

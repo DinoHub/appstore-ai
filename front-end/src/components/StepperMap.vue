@@ -4,9 +4,9 @@
       v-model="creationStore.step"
       ref="stepper"
       animated
-      done-color="secondary"
+      done-color="primary"
       error-color="error"
-      active-color="primary"
+      active-color="secondary"
       class="shadow-0 justify-center text-center full-height"
       header-class="no-border q-px-xl"
     >
@@ -560,40 +560,10 @@ import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 import { ref } from 'vue';
-/* Import TinyMCE */
-import tinymce from 'tinymce';
 
-import 'tinymce/tinymce';
-import 'tinymce/icons/default/icons';
-import 'tinymce/themes/silver/theme';
-import 'tinymce/models/dom/model';
-import 'tinymce/skins/ui/tinymce-5/skin.css';
-import contentUiCss from 'tinymce/skins/ui/tinymce-5/content.css';
-import contentCss from 'tinymce/skins/content/default/content.css';
-/* Import plugins */
-import 'tinymce/plugins/image';
-import 'tinymce/plugins/help';
-import 'tinymce/plugins/insertdatetime';
-import 'tinymce/plugins/codesample';
-import 'tinymce/plugins/charmap';
-import 'tinymce/plugins/anchor';
-import 'tinymce/plugins/advlist';
-import 'tinymce/plugins/code';
-import 'tinymce/plugins/emoticons';
-import 'tinymce/plugins/emoticons/js/emojis';
-import 'tinymce/plugins/link';
-import 'tinymce/plugins/lists';
-import 'tinymce/plugins/table';
-
-// TinyMCE plugins
-// https://www.tiny.cloud/docs/tinymce/6/plugins/
-import 'src/plugins/tinymce-charts';
-import Editor from '@tinymce/tinymce-vue';
 import { Cookies } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
 import { useAuthStore } from 'src/stores/auth-store';
-
-const emit = defineEmits(['refresh']);
 
 // constants for stores
 const expStore = useExpStore();
