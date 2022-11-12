@@ -9,7 +9,7 @@
       <aside class="col col-sm-3 q-pt-md">
         <q-form class="q-px-md">
           <div class="text-h6">Query Filters</div>
-          <q-expansion-item default-opened label="Task">
+          <q-expansion-item default-opened icon="task" label="Task">
             <q-option-group
               v-model="filter.tasks"
               :options="tasks"
@@ -17,7 +17,7 @@
               type="checkbox"
             ></q-option-group>
           </q-expansion-item>
-          <q-expansion-item label="Frameworks">
+          <q-expansion-item icon="code" label="Frameworks">
             <q-option-group
               v-model="filter.frameworks"
               :options="frameworks"
@@ -25,15 +25,18 @@
               type="checkbox"
             ></q-option-group>
           </q-expansion-item>
-          <q-expansion-item default-opened label="Tags">
+          <q-expansion-item default-opened icon="tag" label="Tags">
             <q-select
               hint="Type in tags or use dropdown to add available tags"
+              class="q-ma-sm"
+              color="secondary"
               v-model="filter.tags"
               use-input
               use-chips
               multiple
               autogrow
-              input-debounce="0"
+              outlined
+              input-debounce="500"
               new-value-mode="add-unique"
               :options="tags"
             ></q-select>
@@ -81,7 +84,7 @@
                 dense
                 rounded
                 outlined
-                debounce="300"
+                debounce="500"
                 v-model="filter.title"
                 placeholder="Search by title"
               >
