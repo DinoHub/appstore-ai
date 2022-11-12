@@ -3,7 +3,7 @@
     :label="label"
     :icon="icon"
     :color="color ?? colorMapping[props.type]"
-    :text-color="textColor ?? 'white'"
+    :text-color="textColor ?? 'surface'"
   ></q-chip>
 </template>
 
