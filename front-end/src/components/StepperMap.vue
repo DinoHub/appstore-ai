@@ -30,33 +30,38 @@
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-4 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Links</h6>
+            <!-- modelPath? -->
             <q-input
+              outlined
               v-model="creationStore.modelPath"
               class="q-ml-md q-pb-xl"
-              hint="Model Path"
+              label="Model Path"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
             <q-select
+              outlined
               v-model="creationStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.experimentPlatforms"
-              hint="Experiment Platform (Optional)"
+              label="Experiment Platform (Optional)"
             />
             <q-input
+              outlined
               v-if="creationStore.experimentPlatform != ''"
               v-model="creationStore.experimentID"
               class="q-ml-md q-pb-xl"
-              hint="Experiment ID"
+              label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             >
             </q-input>
             <q-select
+              outlined
               v-model="creationStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.datasetPlatforms"
-              hint="Dataset Platform (Optional)"
+              label="Dataset Platform (Optional)"
             />
             <q-input
               v-if="creationStore.datasetPlatform != ''"
@@ -88,28 +93,31 @@
         "
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
-          <div class="col-3 q-pr-md q-mr-xl shadow-2 rounde">
+          <div class="col q-pr-md q-mr-xl shadow-2 rounde">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Information</h6>
             <q-input
+              outlined
               v-model="creationStore.modelName"
               class="q-ml-md q-pb-xl"
-              hint="Model Name"
+              label="Model Name"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
               reactive-rules
             ></q-input>
             <q-select
+              outlined
               v-model="creationStore.modelTask"
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.tasksList"
-              hint="Task"
+              label="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
           </div>
-          <div class="col-3 q-mx-md shadow-2 rounded">
+          <div class="col q-mx-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Model Tags</h6>
             <q-select
-              hint="Tags"
+              outlined
+              label="Tags"
               v-model="creationStore.tags"
               use-input
               use-chips
@@ -123,7 +131,8 @@
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
             />
             <q-select
-              hint="Frameworks"
+              outlined
+              label="Frameworks"
               v-model="creationStore.frameworks"
               use-input
               use-chips
@@ -139,19 +148,21 @@
               ]"
             />
           </div>
-          <div class="col-3 q-pl-md q-ml-xl shadow-2 rounded">
+          <div class="col q-pl-md q-ml-xl shadow-2 rounded">
             <h6 class="text-left q-mt-md q-mb-lg">Owner Information</h6>
             <q-input
+              outlined
               v-model="creationStore.modelOwner"
               autogrow
               class="q-mr-md q-pb-xl"
-              hint="Model Owner (Optional)"
+              label="Model Owner (Optional)"
             ></q-input>
             <q-input
+              outlined
               v-model="creationStore.modelPOC"
               autogrow
               class="q-mr-md q-pb-xl"
-              hint="Point of Contact (Optional)"
+              label="Point of Contact (Optional)"
             ></q-input>
           </div>
         </div>
@@ -181,6 +192,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -193,6 +205,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -205,6 +218,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -217,6 +231,7 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
+              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -407,10 +422,14 @@
           <div class="row justify-center">
             <div class="text-right col-1">
               <q-btn
-                color="red"
+                no-caps
+                outline
+                rounded
+                color="error"
                 @click="cancel = true"
                 label="Cancel"
                 class="q-mr-md"
+                padding="sm xl"
                 :disable="buttonDisable"
               />
             </div>
@@ -422,8 +441,12 @@
                   $refs.stepper.previous();
                   simulateSubmit();
                 "
+                no-caps
+                outline
+                rounded
                 label="Back"
                 class="q-mr-md"
+                padding="sm xl"
                 :disable="buttonDisable"
               />
               <q-btn
@@ -432,8 +455,11 @@
                   $refs.stepper.next();
                   simulateSubmit();
                 "
+                no-caps
+                rounded
                 color="primary"
                 label="Continue"
+                padding="sm xl"
                 :disable="buttonDisable"
               />
 
