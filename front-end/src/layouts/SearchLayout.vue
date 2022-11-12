@@ -4,7 +4,6 @@
       <the-navbar></the-navbar>
     </q-header>
     <q-page-container>
-      <route-breadcrumbs class="q-pt-md q-pl-md"></route-breadcrumbs>
       <router-view />
     </q-page-container>
     <q-footer elevated>
