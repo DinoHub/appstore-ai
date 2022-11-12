@@ -3,15 +3,19 @@
     <!-- content -->
     <model-card-data-table
       :filter="filter"
+      :filter-drawer="filterDrawer"
       :pagination="pagination"
       show-filter
       card-container-class="col-12 q-pa-sm"
       title="Models"
     >
       <template #top-left>
-        <div class="text-h3">Models</div>
+        <div class="display-medium">Models</div>
       </template>
     </model-card-data-table>
+    <q-page-sticky position="bottom-right" :offset="[18,18]">
+      <q-btn fab icon="filter_alt" color="tertiary" @click="filterDrawer = !filterDrawer"></q-btn>
+    </q-page-sticky>
   </q-page>
 </template>
 
@@ -26,6 +30,8 @@ const filter: SearchFilter = {
   tasks: [],
   frameworks: [],
 };
+
+const filterDrawer = ref(false);
 
 const pagination: Pagination = {
   sortBy: {

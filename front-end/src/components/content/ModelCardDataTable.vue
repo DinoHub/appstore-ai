@@ -5,7 +5,7 @@
 </style>
 <template>
   <div class="row">
-    <q-drawer :model-value="showFilter" v-if="showFilter">
+    <q-drawer show-if-above :model-value="props.filterDrawer" v-if="showFilter">
       <aside class="col col-sm-3 q-pt-md">
         <q-form class="q-px-md">
           <div class="text-h6">Query Filters</div>
@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { QTableProps } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
-import { onMounted, reactive, Ref, ref } from 'vue';
+import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ModelCard from './ModelCard.vue';
 import {
@@ -129,6 +129,7 @@ export interface Props {
   cardClass?: string;
   cardContainerClass?: string;
   showFilter?: boolean;
+  filterDrawer?: boolean;
   filter: SearchFilter;
   pagination: Pagination;
 }
