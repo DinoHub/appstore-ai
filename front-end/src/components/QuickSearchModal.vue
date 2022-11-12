@@ -20,6 +20,7 @@
             :pagination="pagination"
             :filter="filter"
             card-container-class="col-12 q-pa-sm"
+            card-class="bg-surface-variant"
           >
             <template #top-left>
               <div class="display-medium">Quick Search</div>

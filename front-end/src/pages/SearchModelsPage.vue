@@ -7,6 +7,7 @@
       :pagination="pagination"
       show-filter
       card-container-class="col-12 q-pa-sm"
+      card-class="bg-surface-variant"
       title="Models"
     >
       <template #top-left>
