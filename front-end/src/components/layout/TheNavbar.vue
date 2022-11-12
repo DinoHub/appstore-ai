@@ -1,5 +1,5 @@
 <template>
-  <q-toolbar>
+  <q-toolbar class="bg-dark">
     <q-toolbar-title
       ><router-link to="/" class="text-h6">
         <q-img
@@ -32,6 +32,9 @@
           <q-btn flat round color="white" icon="account_box" v-if="loggedIn" />
         </div> -->
     <div class="q-pl-sm">
+      <dark-mode-toggle></dark-mode-toggle>
+    </div>
+    <div class="q-pl-sm">
       <q-btn
         flat
         dense
@@ -52,6 +55,7 @@ import { computed } from 'vue';
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
 import NotificationsMenu from 'src/components/NotificationsMenu.vue';
 import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
+import DarkModeToggle from './DarkModeToggle.vue';
 
 const authStore = useAuthStore();
 

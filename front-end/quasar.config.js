@@ -93,6 +93,7 @@ module.exports = configure(function (ctx) {
           size: '5px',
           position: 'bottom',
         },
+        dark: 'false'
       },
 
       // iconSet: 'material-icons', // Quasar icon set
