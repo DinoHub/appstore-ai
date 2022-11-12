@@ -165,9 +165,15 @@
         @click="imageUploader = true"
       ></q-btn>
       <!-- Chart Editor -->
-      <q-btn dense icon="insert_chart" @click="chartEditor = true" />
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        icon="insert_chart"
+        @click="chartEditor = true"
+      />
     </floating-menu>
-    <aside class="bg-white q-gutter-sm row">
+    <aside class="q-gutter-sm row">
       <!-- Bold -->
       <q-btn
         dense
@@ -271,7 +277,13 @@
         </q-uploader>
       </q-dialog>
       <!-- Chart Editor -->
-      <q-btn dense icon="insert_chart" @click="chartEditor = true" />
+      <q-btn
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        dense
+        icon="insert_chart"
+        @click="chartEditor = true"
+      />
       <q-dialog persistent full-width v-model="chartEditor">
         <plotly-editor
           @new-plot="(data, layout) => insertChart(editor, data, layout)"
@@ -280,6 +292,8 @@
       <!-- Show Source Code -->
       <q-btn
         label="Show Source Code"
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
         dense
         @click="
           () => {
@@ -336,10 +350,8 @@ import python from 'highlight.js/lib/languages/python';
 
 import { lowlight } from 'lowlight';
 
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
-
-
 
 export interface Props {
   content?: string;
@@ -353,6 +365,8 @@ lowlight.registerLanguage('html', html);
 lowlight.registerLanguage('python', python);
 
 const props = defineProps<Props>();
+const emit = defineEmits(['update:content']);
+const content = ref(props.content ?? '');
 const editor = useEditor({
   extensions: [
     Chart,
@@ -372,7 +386,11 @@ const editor = useEditor({
       allowBase64: true,
     }),
   ],
-  content: props.content ?? 'Type here...',
+  content: content.value ?? 'Type here...',
+  onUpdate({ editor }) {
+    content.value = editor.getHTML();
+    emit('update:content', content.value);
+  },
 });
 
 const showSource = ref(false);
@@ -390,7 +408,7 @@ function _iconFill(condition: boolean) {
 function insertChart(
   editor: Editor,
   data: Record<string, any>[],
-  layout: Record<string, any>,
+  layout: Record<string, any>
 ) {
   editor
     ?.chain()
@@ -436,6 +454,15 @@ function displaySourceCode(editor: Editor) {
     console.warn('Cannot find!');
   }
 }
+
+watch(props, (newVal) => { // ensure that we can replace the content from outside
+  // this is used to populate card descriptions
+  if (content.value && newVal.content) {
+    content.value = newVal.content;
+    editor.value?.chain().setContent(content.value).run();
+    emit('update:content', content.value);
+  }
+});
 </script>
 <style lang="scss">
 /* Basic editor styles */

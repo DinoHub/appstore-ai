@@ -5,7 +5,7 @@
       ref="stepper"
       animated
       done-color="secondary"
-      error-color="red"
+      error-color="error"
       active-color="primary"
       class="shadow-0 justify-center text-center full-height"
       header-class="no-border q-px-xl"
@@ -261,6 +261,13 @@
               You can follow the example content structure or come up with
               something else.
             </p>
+            <!-- Button to populate markdown with text from previous step-->
+            <q-btn
+              label="Populate card description"
+              rounded
+              color="secondary"
+              @click="popupContent = true"
+            />
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
@@ -272,24 +279,10 @@
               <q-icon class="" name="error" size="1.5rem" />
               Please remove the example content and style your own content
             </div>
-            <!-- <editor
-              v-model="creationStore.markdownContent"
-              :init="{
-                height: 650,
-                plugins:
-                  'insertdatetime lists link image table help anchor code codesample charmap advlist',
-                toolbar: creatorPreset.markdownToolbar,
-                setup: (editor) => {
-                  editor.ui.registry.addButton('replaceValues', {
-                    text: 'Replace Values',
-                    onAction: (api) => {
-                      popupContent = true;
-                    },
-                  });
-                },
-              }"
-            /> -->
-            <tiptap-editor :content="creationStore.markdownContent" />
+            <tiptap-editor
+              :content="creationStore.markdownContent"
+              @update:content="creationStore.markdownContent = $event"
+            />
           </div>
         </div>
       </q-step>
@@ -305,16 +298,9 @@
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
               Performance Metrics
             </h6>
-            <editor
-              v-model="metricsContent"
-              :init="{
-                height: 600,
-                plugins:
-                  'insertdatetime lists link image table help anchor code codesample charmap',
-              }"
-              toolbar="undo redo | blocks | bold italic underline 
-              strikethrough | alignleft aligncenter alignright | outdent 
-              indent | charmap anchor hr | bullist numlist | insertdatetime graphTinymcePlugin"
+            <tiptap-editor
+              :content="creationStore.performanceMarkdown"
+              @update:content="creationStore.performanceMarkdown = $event"
             />
           </div>
         </div>
@@ -345,10 +331,7 @@
               class="q-mb-sm float-left"
               style="width: 95.6%"
               unelevated
-              @click="
-                $refs.stepper.next();
-                simulateSubmit();
-              "
+              @click="$refs.stepper.next()"
             />
             <q-btn
               icon="help"
@@ -439,7 +422,7 @@
                 color="primary"
                 @click="
                   $refs.stepper.previous();
-                  simulateSubmit();
+                  retrieveExperimentDetails();
                 "
                 no-caps
                 outline
@@ -453,7 +436,7 @@
                 v-if="creationStore.step < 6"
                 @click="
                   $refs.stepper.next();
-                  simulateSubmit();
+                  retrieveExperimentDetails();
                 "
                 no-caps
                 rounded
@@ -478,22 +461,6 @@
       </template>
     </q-stepper>
     <dialog>
-      <q-dialog v-model="cancel">
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Quit</div>
-          </q-card-section>
-          <q-card-section class="q-pt-none">
-            Are you sure you want to exit the model creation process?
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="red" v-close-popup />
-            <q-space />
-            <q-btn flat label="Save & Quit" color="green" v-close-popup />
-            <q-btn flat label="Quit" color="primary" v-close-popup to="/" />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
       <q-dialog v-model="cancel" persistent>
         <q-card>
           <q-card-section>
@@ -506,23 +473,32 @@
             >
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="Cancel" color="red" v-close-popup />
+            <q-btn
+              rounded
+              outline
+              label="Cancel"
+              padding="sm xl"
+              color="error"
+              v-close-popup
+            />
             <q-space />
             <q-btn
-              flat
-              label="Save & Quit"
-              color="green"
-              to="/"
-              v-close-popup
-              v-if="localStorage.getItem(creationStore.$id) !== null"
-            />
-            <q-btn
-              flat
+              rounded
+              outline
               label="Quit"
-              color="primary"
+              color="secondary"
               v-close-popup
               to="/"
               @click="flushCreator()"
+            />
+            <q-btn
+              rounded
+              label="Save & Quit"
+              color="primary"
+              padding="sm xl"
+              to="/"
+              v-close-popup
+              v-if="prevSave"
             />
           </q-card-actions>
         </q-card>
@@ -557,13 +533,21 @@
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
-              flat
+              outline
+              rounded
               label="Delete"
-              color="red"
+              color="error"
+              padding="sm xl"
               v-close-popup
               @click="flushCreator()"
             />
-            <q-btn flat label="Continue" color="primary" v-close-popup />
+            <q-btn
+              rounded
+              padding="sm xl"
+              label="Continue"
+              color="primary"
+              v-close-popup
+            />
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -609,6 +593,8 @@ import { Cookies } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 
+const emit = defineEmits(['refresh']);
+
 // constants for stores
 const expStore = useExpStore();
 const authStore = useAuthStore();
@@ -633,34 +619,44 @@ const popupContent = ref(false);
 const buttonDisable = ref(false);
 
 // function for triggering events that should happen when next step is triggered
-function simulateSubmit() {
-  if (
-    creationStore.experimentID != '' &&
-    creationStore.step == 2 &&
-    creationStore.tags.length == 0 &&
-    creationStore.frameworks.length == 0
-  ) {
+function retrieveExperimentDetails() {
+  // TODO: if invalid experiment id, should warn user
+  if (creationStore.step === 2 && creationStore.experimentID !== '') {
     loadingExp.value = true;
     buttonDisable.value = true;
-    expStore.getExperimentByID(creationStore.experimentID).then((value) => {
-      creationStore.tags = value.tags;
-      creationStore.frameworks = value.frameworks;
-      loadingExp.value = false;
-      buttonDisable.value = false;
-    });
+    expStore
+      .getExperimentByID(creationStore.experimentID)
+      .then((data) => {
+        // TODO: Move this logic to the store
+        creationStore.tags = Array.from(
+          new Set([...creationStore.tags, ...data.tags])
+        );
+        creationStore.frameworks = Array.from(
+          new Set([...creationStore.frameworks, ...data.frameworks])
+        );
+        loadingExp.value = false;
+        buttonDisable.value = false;
+      })
+      .catch(() => {
+        loadingExp.value = false; // don't lock user out when error
+        buttonDisable.value = false;
+        console.error('Error in retrieving experiment details');
+      });
   }
-  console.log(creationStore.step);
 }
+
 function flushCreator() {
   creationStore.$reset();
   localStorage.removeItem(`${creationStore.$id}`);
 }
+
 function submitImage() {
   creationStore.launchImage(
     creationStore.inferenceImage,
     Cookies.get('auth').user.userId // Need to JSON.parse?
   );
 }
+
 function finalSubmit() {
   if (authStore.user?.name) {
     if (creationStore.modelOwner == '') {
@@ -674,8 +670,7 @@ function finalSubmit() {
 
 // function for populating editor with values from previous step
 function populateEditor(store: typeof creationStore) {
-  store.$patch({
-    markdownContent: `
+  (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
   <hr>
   ${store.modelDesc}
@@ -686,14 +681,13 @@ function populateEditor(store: typeof creationStore) {
   <p>&nbsp;</p>
   <h3>Model Usage <a id="model_use"></a></h3>
   <hr>
-  ${store.modelLimitations}
+  ${store.modelUsage}
   <p>&nbsp;</p>
   <h3>Limitations <a id="limitations"></a></h3>
   <hr>
   ${store.modelLimitations}
   <p>&nbsp;</p>
-  `,
-  });
-  popupContent.value = false;
+  `),
+    (popupContent.value = false);
 }
 </script>
