@@ -30,7 +30,7 @@ module.exports = configure(function (ctx) {
     boot: ['axios'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
-    css: ['app.scss'],
+    css: ['app.scss', 'theme.css'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -90,7 +90,7 @@ module.exports = configure(function (ctx) {
       config: {
         loadingBar: {
           color: 'primary',
-          size: '15px',
+          size: '5px',
           position: 'bottom',
         },
       },

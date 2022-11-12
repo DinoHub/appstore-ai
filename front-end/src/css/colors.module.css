@@ -1,0 +1,180 @@
+.bg-primary {
+  background-color: var(--md-sys-color-primary);
+}
+.text-primary {
+  color: var(--md-sys-color-primary);
+}
+.bg-on-primary {
+  background-color: var(--md-sys-color-on-primary);
+}
+.text-on-primary {
+  color: var(--md-sys-color-on-primary);
+}
+.bg-primary-container {
+  background-color: var(--md-sys-color-primary-container);
+}
+.text-primary-container {
+  color: var(--md-sys-color-primary-container);
+}
+.bg-on-primary-container {
+  background-color: var(--md-sys-color-on-primary-container);
+}
+.text-on-primary-container {
+  color: var(--md-sys-color-on-primary-container);
+}
+.bg-secondary {
+  background-color: var(--md-sys-color-secondary);
+}
+.text-secondary {
+  color: var(--md-sys-color-secondary);
+}
+.bg-on-secondary {
+  background-color: var(--md-sys-color-on-secondary);
+}
+.text-on-secondary {
+  color: var(--md-sys-color-on-secondary);
+}
+.bg-secondary-container {
+  background-color: var(--md-sys-color-secondary-container);
+}
+.text-secondary-container {
+  color: var(--md-sys-color-secondary-container);
+}
+.bg-on-secondary-container {
+  background-color: var(--md-sys-color-on-secondary-container);
+}
+.text-on-secondary-container {
+  color: var(--md-sys-color-on-secondary-container);
+}
+.bg-tertiary {
+  background-color: var(--md-sys-color-tertiary);
+}
+.text-tertiary {
+  color: var(--md-sys-color-tertiary);
+}
+.bg-on-tertiary {
+  background-color: var(--md-sys-color-on-tertiary);
+}
+.text-on-tertiary {
+  color: var(--md-sys-color-on-tertiary);
+}
+.bg-tertiary-container {
+  background-color: var(--md-sys-color-tertiary-container);
+}
+.text-tertiary-container {
+  color: var(--md-sys-color-tertiary-container);
+}
+.bg-on-tertiary-container {
+  background-color: var(--md-sys-color-on-tertiary-container);
+}
+.text-on-tertiary-container {
+  color: var(--md-sys-color-on-tertiary-container);
+}
+.bg-error {
+  background-color: var(--md-sys-color-error);
+}
+.text-error {
+  color: var(--md-sys-color-error);
+}
+.bg-error-container {
+  background-color: var(--md-sys-color-error-container);
+}
+.text-error-container {
+  color: var(--md-sys-color-error-container);
+}
+.bg-on-error {
+  background-color: var(--md-sys-color-on-error);
+}
+.text-on-error {
+  color: var(--md-sys-color-on-error);
+}
+.bg-on-error-container {
+  background-color: var(--md-sys-color-on-error-container);
+}
+.text-on-error-container {
+  color: var(--md-sys-color-on-error-container);
+}
+.bg-background {
+  background-color: var(--md-sys-color-background);
+}
+.text-background {
+  color: var(--md-sys-color-background);
+}
+.bg-on-background {
+  background-color: var(--md-sys-color-on-background);
+}
+.text-on-background {
+  color: var(--md-sys-color-on-background);
+}
+.bg-surface {
+  background-color: var(--md-sys-color-surface);
+}
+.text-surface {
+  color: var(--md-sys-color-surface);
+}
+.bg-on-surface {
+  background-color: var(--md-sys-color-on-surface);
+}
+.text-on-surface {
+  color: var(--md-sys-color-on-surface);
+}
+.bg-surface-variant {
+  background-color: var(--md-sys-color-surface-variant);
+}
+.text-surface-variant {
+  color: var(--md-sys-color-surface-variant);
+}
+.bg-on-surface-variant {
+  background-color: var(--md-sys-color-on-surface-variant);
+}
+.text-surface-variant {
+  color: var(--md-sys-color-on-surface-variant);
+}
+.bg-outline {
+  background-color: var(--md-sys-color-outline);
+}
+.text-outline {
+  color: var(--md-sys-color-outline);
+}
+.bg-inverse-on-surface {
+  background-color: var(--md-sys-color-inverse-on-surface);
+}
+.text-inverse-on-surface {
+  color: var(--md-sys-color-inverse-on-surface);
+}
+.bg-inverse-surface {
+  background-color: var(--md-sys-color-inverse-surface);
+}
+.text-inverse-surface {
+  color: var(--md-sys-color-inverse-surface);
+}
+.bg-inverse-primary {
+  background-color: var(--md-sys-color-inverse-primary);
+}
+.text-inverse-primary {
+  color: var(--md-sys-color-inverse-primary);
+}
+.bg-shadow {
+  background-color: var(--md-sys-color-shadow);
+}
+.text-shadow {
+  color: var(--md-sys-color-shadow);
+}
+.bg-surface-tint {
+  background-color: var(--md-sys-color-surface-tint);
+}
+.text-surface-tint {
+  color: var(--md-sys-color-surface-tint);
+}
+.bg-outline-variant {
+  background-color: var(--md-sys-color-outline-variant);
+}
+.text-outline-variant {
+  color: var(--md-sys-color-outline-variant);
+}
+.bg-scrim {
+  background-color: var(--md-sys-color-scrim);
+}
+.text-scrim {
+  color: var(--md-sys-color-scrim);
+}
