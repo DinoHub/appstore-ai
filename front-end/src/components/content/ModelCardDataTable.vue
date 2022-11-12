@@ -84,6 +84,7 @@
                 dense
                 rounded
                 outlined
+                autofocus=""
                 debounce="500"
                 v-model="filter.title"
                 placeholder="Search by title"
