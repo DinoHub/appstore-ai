@@ -1,47 +1,52 @@
 <template>
   <q-card
     v-ripple
-    class="cursor-pointer q-hoverable"
+    class="cursor-pointer q-hoverable  q-pa-sm"
     :class="props.cardClass"
     @click.stop="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
   >
     <span class="q-focus-helper"></span>
     <q-card-section>
-      <div class="text-h6">{{ props.title }}</div>
-      <material-chip
-        :label="props.task"
-        type="task"
-        clickable
-        @click.stop="$router.push(`/models?tasks=${props.task}`)"
-      />
-      <material-chip
-        v-for="tag in props.frameworks"
-        :key="tag"
-        :label="tag"
-        type="framework"
-        clickable
-        @click.stop="$router.push(`/models?frameworks=${tag}`)"
-      >
-      </material-chip>
-      <material-chip
-        v-for="tag in props.tags"
-        :key="tag"
-        :label="tag"
-        type="tag"
-        clickable
-        @click.stop="$router.push(`/models?tags=${tag}`)"
-      >
-      </material-chip>
+      <div class="headline-small">{{ props.title }}</div>
+      <div>
+        <material-chip
+          :label="props.task"
+          type="task"
+          clickable
+          @click.stop="$router.push(`/models?tasks=${props.task}`)"
+        />
+        <material-chip
+          v-for="tag in props.frameworks"
+          :key="tag"
+          :label="tag"
+          type="framework"
+          clickable
+          @click.stop="$router.push(`/models?frameworks=${tag}`)"
+        >
+        </material-chip>
+        <material-chip
+          v-for="tag in props.tags"
+          :key="tag"
+          :label="tag"
+          type="tag"
+          clickable
+          @click.stop="$router.push(`/models?tags=${tag}`)"
+        >
+        </material-chip>
+      </div>
     </q-card-section>
     <q-card-section>
       {{ props.summary ?? 'No summary provided' }}
     </q-card-section>
-    <q-separator></q-separator>
-    <q-card-actions v-if="isModelOwner">
+    <q-card-actions align="right" v-if="isModelOwner">
       <q-btn
-        flat
-        label="Edit"
-        text-color="primary"
+        outline
+        rounded
+        no-caps
+        color="outline"
+        text-color="on-outline"
+        label="Edit Model Card"
+        padding="sm md"
         :to="`models/${props.creatorUserId}/${props.modelId}/edit`"
         @click.stop
         v-if="isModelOwner"

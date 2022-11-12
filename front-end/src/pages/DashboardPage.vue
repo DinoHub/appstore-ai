@@ -8,29 +8,23 @@
   <q-page padding>
     <!-- content -->
     <main>
-      <div class="row text-h4 q-px-xl">Welcome Back, {{ username ?? 'User' }}</div>
-      <div class="row q-px-xl q-py-sm">
-        <div class="col-auto text-h5 self-center">
-          Your Models
-        </div>
-        <div class="col-auto q-px-md">
-          <q-btn round icon="add" to="/model/create"></q-btn>
-        </div>
-        <div class="col-auto q-pl-sm self-center">
-          <q-btn flat label="View all models" to="/models"></q-btn>
-        </div>
-      </div>
+      <div class="row display-medium q-pl-md">Welcome Back, {{ username ?? 'User' }}</div>
       <section>
         <model-card-data-table
           id="dashboardModels"
           :pagination="pagination"
           :filter="filter"
           card-container-class="q-pa-md col-xs-12 col-sm-5 col-md-3"
+          card-class="bg-surface-variant"
           class="q-px-sm"
         >
+          <template #top-left><span class="display-small">Your Models</span></template>
         </model-card-data-table>
       </section>
     </main>
+    <q-page-sticky position="bottom-right" :offset="[18,18]">
+      <q-btn fab icon="add" color="tertiary" to="/model/create"></q-btn>
+    </q-page-sticky>
   </q-page>
 </template>
 

@@ -18,7 +18,7 @@ export interface Props {
 
 const colorMapping = {
   task: 'primary',
-  framework: 'accent',
+  framework: 'tertiary',
   tag: 'secondary',
 };
 
