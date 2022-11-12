@@ -22,7 +22,7 @@
             card-container-class="col-12 q-pa-sm"
           >
             <template #top-left>
-              <div class="text-h4">Quick Search</div>
+              <div class="display-medium">Quick Search</div>
             </template>
           </model-card-data-table>
         </q-card-section>
@@ -47,7 +47,7 @@ const pagination: Pagination = {
   },
   descending: false,
   page: 1,
-  rowsPerPage: 5,
+  rowsPerPage: 4,
   rowsNumber: 1,
 };
 </script>
