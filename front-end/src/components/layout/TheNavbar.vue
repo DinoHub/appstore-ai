@@ -10,7 +10,10 @@
           class="q-py-lg"
         ></q-img></router-link
     ></q-toolbar-title>
-
+    <q-tabs v-if="loggedIn" shrink stretch>
+      <q-route-tab label="Dashboard" to="/" exact no-caps></q-route-tab>
+      <q-route-tab label="Models" to="/models" exact no-caps></q-route-tab>
+    </q-tabs>
     <div class="q-pl-sm">
       <q-btn
         flat
