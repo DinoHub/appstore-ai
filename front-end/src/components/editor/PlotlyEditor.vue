@@ -19,7 +19,7 @@
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="data">
           <div class="text-h6">Data</div>
-          <JSONEditorVue v-model="data"></JSONEditorVue>
+          <JSONEditorVue :onRenderValue="onRenderValueData" v-model="data"></JSONEditorVue>
           <div class="text-h6">Layout</div>
           <JSONEditorVue v-model="layout"></JSONEditorVue>
         </q-tab-panel>
@@ -43,6 +43,7 @@
 <script setup lang="ts">
 import PlotlyChart from '../content/PlotlyChart.vue';
 import JSONEditorVue from 'json-editor-vue';
+import { renderJSONSchemaEnum, renderValue } from 'vanilla-jsoneditor'
 import { Ref, ref, watch } from 'vue';
 
 export interface Props {
@@ -84,6 +85,10 @@ function update() {
 function insert() {
   console.log('Creating Plot');
   emit('newPlot', data.value, layout.value);
+}
+
+function onRenderValueData(props) {
+  return renderValue(props)
 }
 
 watch(data, (newData) => {
