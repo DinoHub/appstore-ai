@@ -1,24 +1,27 @@
 <style scoped>
 .gradio-container iframe {
   width: 100%;
-  height: 90vh;
+  height: 100vh;
   border: none;
 }
 </style>
 <template>
-  <div class="gradio-container">
+  <q-card class="gradio-container bg-white">
     <!-- <gradio-app src="https://stabilityai-stable-diffusion.hf.space/"></gradio-app> -->
-    <iframe
-      @load="loading = false"
-      v-show="!loading"
-      ref="frame"
-      :src="props.url"
-    ></iframe>
-    <q-inner-loading
-      :showing="loading"
-      label="Loading Inference App..."
-    ></q-inner-loading>
-  </div>
+    <q-card-section>
+      <iframe
+        @load="
+          loading = false;
+        "
+        v-show="!loading"
+        :src="props.url"
+      ></iframe>
+      <q-inner-loading
+        :showing="loading"
+        label="Loading Inference App..."
+      ></q-inner-loading>
+    </q-card-section>
+  </q-card>
 </template>
 
 <script setup lang="ts">
@@ -29,7 +32,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
 const loading: Ref<boolean> = ref(true);
 
 // onMounted(() => {
