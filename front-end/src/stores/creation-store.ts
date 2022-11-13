@@ -81,7 +81,7 @@ export const useCreationStore = defineStore('creationStore', {
       <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
       </blockquote>
       <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>` as string,
-      performanceMarkdown: `<h3>Performance</h3>` as string,
+      performanceMarkdown: '<h3>Performance</h3>' as string,
     };
   },
   getters: {},
