@@ -11,6 +11,7 @@
     "test": "echo \"No test specified\" && exit 0"
   },
   "dependencies": {
+    "@highlightjs/vue-plugin": "^2.1.0",
     "@quasar/extras": "^1.0.0",
     "@tiptap/core": "^2.0.0-beta.199",
     "@tiptap/extension-code-block-lowlight": "^2.0.0-beta.202",
