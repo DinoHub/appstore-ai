@@ -1,5 +1,15 @@
 <template>
   <q-toolbar class="bg-dark">
+    <!-- Button to open  navrail -->
+    <q-btn
+      v-if="navRailOpen"
+      flat
+      round
+      dense
+      icon="menu"
+      aria-label="Menu"
+      @click="$emit('toggle-nav-rail')"
+    ></q-btn>
     <q-toolbar-title
       ><router-link to="/" class="text-h6">
         <q-img
@@ -10,7 +20,7 @@
           class="q-py-lg"
         ></q-img></router-link
     ></q-toolbar-title>
-    <q-tabs v-if="loggedIn" shrink stretch>
+    <q-tabs v-if="loggedIn && !navRailOpen" shrink stretch>
       <q-route-tab label="Dashboard" to="/" exact no-caps></q-route-tab>
       <q-route-tab label="Models" to="/models" exact no-caps></q-route-tab>
     </q-tabs>
@@ -53,14 +63,24 @@
 
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
 import NotificationsMenu from 'src/components/NotificationsMenu.vue';
 import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 import DarkModeToggle from './DarkModeToggle.vue';
 
+export interface Props {
+  navRailOpen?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  navRailOpen: false,
+});
+
 const authStore = useAuthStore();
+const emit = defineEmits(['toggle-nav-rail']);
+
 
 const loggedIn = computed(() => {
   return authStore.user && authStore.user?.userId !== null;

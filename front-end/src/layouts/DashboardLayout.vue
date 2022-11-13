@@ -1,11 +1,14 @@
 <template>
   <q-layout view="hHh lpR fff">
     <q-header elevated>
-      <the-navbar></the-navbar>
+      <the-navbar nav-rail-open @toggle-nav-rail="navSidebarOpen = !navSidebarOpen"></the-navbar>
     </q-header>
 
     <q-drawer v-model="activitiesDrawerOpen" side="right">
       <!-- drawer content -->
+    </q-drawer>
+    <q-drawer width="120" v-model="navSidebarOpen" show-if-above side="left">
+     <nav-rail></nav-rail> 
     </q-drawer>
 
     <q-page-container>
@@ -21,7 +24,9 @@
 <script setup lang="ts">
 import TheNavbar from 'src/components/layout/TheNavbar.vue';
 import TheFooter from 'src/components/layout/TheFooter.vue';
+import NavRail from 'src/components/layout/NavRail.vue';
 
 import { ref, Ref } from 'vue';
 const activitiesDrawerOpen: Ref<boolean> = ref(false);
+const navSidebarOpen: Ref<boolean> = ref(true);
 </script>
