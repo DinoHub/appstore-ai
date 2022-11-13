@@ -1,6 +1,154 @@
 <template>
   <!-- Editor Toolbar -->
   <div v-if="editor" style="overflow: none">
+    <aside class="q-gutter-sm row">
+      <!-- Bold -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('bold') ?? true)"
+        :color="_buttonBg(editor?.isActive('bold') ?? true)"
+        icon="format_bold"
+        @click="editor?.chain().focus().toggleBold().run()"
+      />
+      <!-- Italic -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('italic') ?? true)"
+        :color="_buttonBg(editor?.isActive('italic') ?? true)"
+        icon="format_italic"
+        @click="editor?.chain().focus().toggleItalic().run()"
+      />
+      <!-- Underline -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('underline') ?? true)"
+        :color="_buttonBg(editor?.isActive('underline') ?? true)"
+        icon="format_underline"
+        @click="editor?.chain().focus().toggleUnderline().run()"
+      />
+      <!-- Strike -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('strike') ?? true)"
+        :color="_buttonBg(editor?.isActive('strike') ?? true)"
+        icon="format_strikethrough"
+        @click="editor?.chain().focus().toggleStrike().run()"
+      />
+      <!-- Code Block -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
+        :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
+        icon="code"
+        @click="editor?.chain().focus().toggleCodeBlock().run()"
+      />
+      <!-- H1-H3 -->
+      <q-btn
+        dense
+        :text-color="
+          _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
+        "
+        :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
+        label="H1"
+        @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+      />
+      <q-btn
+        dense
+        :text-color="
+          _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
+        "
+        :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
+        label="H2"
+        @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+      />
+      <q-btn
+        dense
+        :text-color="
+          _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
+        "
+        :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
+        label="H3"
+        @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+      />
+      <!-- Bullet List -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
+        :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
+        icon="format_list_bulleted"
+        @click="editor?.chain().focus().toggleBulletList().run()"
+      />
+      <!-- Ordered List -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
+        :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
+        icon="format_list_numbered"
+        @click="editor?.chain().focus().toggleOrderedList().run()"
+      />
+      <!-- Add Image -->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        icon="image"
+        @click="imageUploader = true"
+      ></q-btn>
+      <q-dialog v-model="imageUploader">
+        <q-uploader
+          label="Upload Image (up to 5mb)"
+          accept=".jpg, image/*"
+          max-total-size="5242880"
+          :factory="uploadMedia"
+          @uploaded="addMedia"
+        >
+        </q-uploader>
+      </q-dialog>
+      <!-- Chart Editor -->
+      <q-btn
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        dense
+        icon="insert_chart"
+        @click="chartEditor = true"
+      />
+      <q-dialog persistent full-width v-model="chartEditor">
+        <plotly-editor
+          @new-plot="(data, layout) => insertChart(editor, data, layout)"
+        ></plotly-editor>
+      </q-dialog>
+      <!-- Show Source Code -->
+      <q-btn
+        label="Show Source Code"
+        :text-color="_iconFill(editor?.isActive('image') ?? true)"
+        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        dense
+        @click="showSource = true"
+      ></q-btn>
+      <q-dialog v-model="showSource">
+        <q-card>
+          <q-card-section>
+            <div class="title-large">Source Code</div>
+          </q-card-section>
+          <q-card-section>
+            <highlightjs
+              language="html"
+              :code="
+                props.content ??
+                `<span class='text-error'>No Source Code</span>`
+              "
+            ></highlightjs>
+          </q-card-section>
+        </q-card>
+      </q-dialog>
+    </aside>
+    <main>
+      <editor-content
+        class="text-left q-pl-md"
+        @click="editor?.commands.focus()"
+        :editor="editor"
+      />
+    </main>
     <aside v-if="props.editable">
       <bubble-menu
         class="q-gutter-xs row"
@@ -174,157 +322,14 @@
           @click="chartEditor = true"
         />
       </floating-menu>
-      <aside class="q-gutter-sm row">
-        <!-- Bold -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('bold') ?? true)"
-          :color="_buttonBg(editor?.isActive('bold') ?? true)"
-          icon="format_bold"
-          @click="editor?.chain().focus().toggleBold().run()"
-        />
-        <!-- Italic -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('italic') ?? true)"
-          :color="_buttonBg(editor?.isActive('italic') ?? true)"
-          icon="format_italic"
-          @click="editor?.chain().focus().toggleItalic().run()"
-        />
-        <!-- Underline -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('underline') ?? true)"
-          :color="_buttonBg(editor?.isActive('underline') ?? true)"
-          icon="format_underline"
-          @click="editor?.chain().focus().toggleUnderline().run()"
-        />
-        <!-- Strike -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('strike') ?? true)"
-          :color="_buttonBg(editor?.isActive('strike') ?? true)"
-          icon="format_strikethrough"
-          @click="editor?.chain().focus().toggleStrike().run()"
-        />
-        <!-- Code Block -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('codeBlock') ?? true)"
-          :color="_buttonBg(editor?.isActive('codeBlock') ?? true)"
-          icon="code"
-          @click="editor?.chain().focus().toggleCodeBlock().run()"
-        />
-        <!-- H1-H3 -->
-        <q-btn
-          dense
-          :text-color="
-            _iconFill(editor?.isActive('heading', { level: 1 }) ?? true)
-          "
-          :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
-          label="H1"
-          @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
-        />
-        <q-btn
-          dense
-          :text-color="
-            _iconFill(editor?.isActive('heading', { level: 2 }) ?? true)
-          "
-          :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
-          label="H2"
-          @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
-        />
-        <q-btn
-          dense
-          :text-color="
-            _iconFill(editor?.isActive('heading', { level: 3 }) ?? true)
-          "
-          :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
-          label="H3"
-          @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
-        />
-        <!-- Bullet List -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('bulletList') ?? true)"
-          :color="_buttonBg(editor?.isActive('bulletList') ?? true)"
-          icon="format_list_bulleted"
-          @click="editor?.chain().focus().toggleBulletList().run()"
-        />
-        <!-- Ordered List -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('orderedList') ?? true)"
-          :color="_buttonBg(editor?.isActive('orderedList') ?? true)"
-          icon="format_list_numbered"
-          @click="editor?.chain().focus().toggleOrderedList().run()"
-        />
-        <!-- Add Image -->
-        <q-btn
-          dense
-          :text-color="_iconFill(editor?.isActive('image') ?? true)"
-          :color="_buttonBg(editor?.isActive('image') ?? true)"
-          icon="image"
-          @click="imageUploader = true"
-        ></q-btn>
-        <q-dialog v-model="imageUploader">
-          <q-uploader
-            label="Upload Image (up to 5mb)"
-            accept=".jpg, image/*"
-            max-total-size="5242880"
-            :factory="uploadMedia"
-            @uploaded="addMedia"
-          >
-          </q-uploader>
-        </q-dialog>
-        <!-- Chart Editor -->
-        <q-btn
-          :text-color="_iconFill(editor?.isActive('image') ?? true)"
-          :color="_buttonBg(editor?.isActive('image') ?? true)"
-          dense
-          icon="insert_chart"
-          @click="chartEditor = true"
-        />
-        <q-dialog persistent full-width v-model="chartEditor">
-          <plotly-editor
-            @new-plot="(data, layout) => insertChart(editor, data, layout)"
-          ></plotly-editor>
-        </q-dialog>
-        <!-- Show Source Code -->
-        <q-btn
-          label="Show Source Code"
-          :text-color="_iconFill(editor?.isActive('image') ?? true)"
-          :color="_buttonBg(editor?.isActive('image') ?? true)"
-          dense
-          @click="
-            () => {
-              displaySourceCode(editor);
-            }
-          "
-        ></q-btn>
-        <q-dialog v-model="showSource">
-          <q-card>
-            <q-card-section>
-              <pre>
-                  <code id="source" class="language-html">
-                  </code>
-                </pre>
-            </q-card-section>
-          </q-card>
-        </q-dialog>
-      </aside>
     </aside>
-    <editor-content
-      class="text-left q-pl-md"
-      @click="editor?.commands.focus()"
-      :editor="editor"
-    />
   </div>
 </template>
 
 <script setup lang="ts">
 import {
   useEditor,
+  Editor,
   EditorContent,
   BubbleMenu,
   FloatingMenu,
@@ -343,7 +348,8 @@ import TableCell from '@tiptap/extension-table-cell';
 import Image from '@tiptap/extension-image';
 import Chart from 'src/plugins/tiptap-charts';
 
-import hljs from 'highlight.js';
+import 'highlight.js/lib/common';
+import hljsVuePlugin from '@highlightjs/vue-plugin';
 import css from 'highlight.js/lib/languages/css';
 import js from 'highlight.js/lib/languages/javascript';
 import ts from 'highlight.js/lib/languages/typescript';
@@ -352,13 +358,15 @@ import python from 'highlight.js/lib/languages/python';
 
 import { lowlight } from 'lowlight';
 
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 
 export interface Props {
   content?: string;
   editable?: boolean;
+  replaceContent?: boolean;
 }
+const highlightjs = hljsVuePlugin.component;
 
 // Register languages for code highlighting
 lowlight.registerLanguage('css', css);
@@ -368,7 +376,7 @@ lowlight.registerLanguage('html', html);
 lowlight.registerLanguage('python', python);
 
 const props = defineProps<Props>();
-const emit = defineEmits(['update:content']);
+const emit = defineEmits(['update:content', 'replaced-content']);
 const content = ref(props.content ?? '');
 const editor = useEditor({
   extensions: [
@@ -389,12 +397,12 @@ const editor = useEditor({
       allowBase64: true,
     }),
   ],
-  content: content.value ?? 'Type here...',
+  content: props.content ?? 'Type here...',
   onUpdate({ editor }) {
     content.value = editor.getHTML();
     emit('update:content', content.value);
   },
-  editable: props.editable ?? false
+  editable: props.editable ?? false,
 });
 
 const showSource = ref(false);
@@ -446,25 +454,14 @@ function addMedia({ files, xhr }) {
   // Add uploaded images to Editor
 }
 
-function displaySourceCode(editor: Editor) {
-  // TODO: FIX THIS
-  showSource.value = true;
-  const select = document.getElementById('source');
-  if (select) {
-    select.innerHTML = editor.getHTML();
-    console.log(select.innerHTML);
-    hljs.highlightAll();
-  } else {
-    console.warn('Cannot find!');
-  }
-}
-
-watch(props, (newVal) => { // ensure that we can replace the content from outside
+watch(props, (newVal) => {
+  // ensure that we can replace the content from outside
   // this is used to populate card descriptions
-  if (content.value && newVal.content) {
+  if (props.replaceContent && newVal.content) {
     content.value = newVal.content;
     editor.value?.chain().setContent(content.value).run();
-    emit('update:content', content.value);
+    emit('update:content', content.value); // emit the new content
+    emit('replaced-content'); // set props.replaceContent to false after this
   }
 });
 </script>

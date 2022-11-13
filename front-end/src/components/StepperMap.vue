@@ -280,8 +280,11 @@
               Please remove the example content and style your own content
             </div>
             <tiptap-editor
+              editable
               :content="creationStore.markdownContent"
+              :replace-content="replaceContent"
               @update:content="creationStore.markdownContent = $event"
+              @replaced-content="replaceContent = false"
             />
           </div>
         </div>
@@ -299,6 +302,7 @@
               Performance Metrics
             </h6>
             <tiptap-editor
+              editable
               :content="creationStore.performanceMarkdown"
               @update:content="creationStore.performanceMarkdown = $event"
             />
@@ -559,7 +563,7 @@
 import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
-import { ref } from 'vue';
+import { Ref, ref } from 'vue';
 
 import { Cookies } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
@@ -576,9 +580,7 @@ const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
-
-// variables for performance metrics in model creation
-const metricsContent = ref('');
+const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
 
 // variables for inference submit
 const displayImageSubmit = ref(false);
@@ -640,6 +642,7 @@ function finalSubmit() {
 
 // function for populating editor with values from previous step
 function populateEditor(store: typeof creationStore) {
+  replaceContent.value = true;
   (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
   <hr>
