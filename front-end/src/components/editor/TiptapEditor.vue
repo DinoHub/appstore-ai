@@ -1,7 +1,7 @@
 <template>
   <!-- Editor Toolbar -->
   <div v-if="editor" style="overflow: none">
-    <aside class="q-gutter-sm row">
+    <q-toolbar v-if="props.editable" class="q-gutter-sm row">
       <!-- Bold -->
       <q-btn
         dense
@@ -119,7 +119,7 @@
       </q-dialog>
       <!-- Show Source Code -->
       <q-btn
-        label="Show Source Code"
+        icon="html"
         :text-color="_iconFill(editor?.isActive('image') ?? true)"
         :color="_buttonBg(editor?.isActive('image') ?? true)"
         dense
@@ -131,17 +131,17 @@
             <div class="title-large">Source Code</div>
           </q-card-section>
           <q-card-section>
-            <highlightjs
+            <!-- <highlightjs
               language="html"
-              :code="
-                props.content ??
-                `<span class='text-error'>No Source Code</span>`
-              "
-            ></highlightjs>
+              :code="content"
+            ></highlightjs> -->
+            <code>
+              {{ content }}
+            </code>
           </q-card-section>
         </q-card>
       </q-dialog>
-    </aside>
+    </q-toolbar>
     <main>
       <editor-content
         class="text-left q-pl-md"

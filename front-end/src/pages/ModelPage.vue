@@ -41,8 +41,8 @@
       <section class="col col-sm-8 q-px-lg q-py-md">
         <!-- <markdown-display :markdown="model.description"></markdown-display> -->
         <!-- <markdown-display :markdown="model.performance"></markdown-display> -->
-        <tiptap-editor :content="model.description"></tiptap-editor>
-        <tiptap-editor :content="model.performance"></tiptap-editor>
+        <tiptap-display :content="model.description"></tiptap-display>
+        <tiptap-display :content="model.performance"></tiptap-display>
       </section>
       <aside class="col col-sm-4">
         <div class="q-gutter-y-md">
@@ -157,6 +157,7 @@ import MarkdownDisplay from 'src/components/content/MarkdownDisplay.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
+import TiptapDisplay from 'src/components/content/TiptapDisplay.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
@@ -197,6 +198,7 @@ modelStore.getModelById(userId, modelId).then((card) => {
   if (!model.inferenceApi) {
     tab.value = Tabs.metadata; // if inference not available, hide
   }
+  console.log(model.description)
 });
 
 const isModelOwner = computed(() => {
