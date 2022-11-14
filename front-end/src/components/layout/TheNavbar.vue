@@ -69,7 +69,7 @@ import { useRoute } from 'vue-router';
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
 import NotificationsMenu from 'src/components/NotificationsMenu.vue';
 import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
-import DarkModeToggle from './DarkModeToggle.vue';
+import DarkModeToggle from './DarkModeToggle.vue'; 
 
 export interface Props {
   navRailOpen?: boolean;
