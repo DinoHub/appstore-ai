@@ -16,7 +16,7 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
-from ..internal.utils import uncased_to_snake_case, sanitize_html
+from ..internal.utils import sanitize_html, uncased_to_snake_case
 from ..models.iam import TokenData
 from ..models.model import (
     ModelCardModelDB,
@@ -159,7 +159,7 @@ async def create_model_card_metadata(
     db, mongo_client = db
     card.tags = set(card.tags)  # remove duplicates
     card.frameworks = set(card.frameworks)
-    
+
     # Sanitize html
     card.description = sanitize_html(card.description)
     card.performance = sanitize_html(card.performance)
@@ -203,8 +203,8 @@ async def update_model_card_metadata_by_id(
     if "performance" in card:
         card["performance"] = sanitize_html(card["performance"])
 
-    card["lastModified"] = str(datetime.datetime.now())
     if len(card) > 0:
+        card["lastModified"] = str(datetime.datetime.now())
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
