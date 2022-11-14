@@ -81,7 +81,8 @@ export const useCreationStore = defineStore('creationStore', {
       <p><strong>"I think, therefore I am" -Ren&eacute; Descartes</strong></p>
       </blockquote>
       <p>The training data used for this model contains a lot of unfiltered content from the internet, which is far from neutral. Therefore, the model can have biased predictions.</p> <p><strong><em><span style="font-family: 'trebuchet ms', geneva, sans-serif;">(Example Text to Replace)</span></em></strong></p>` as string,
-      performanceMarkdown: '<h3>Performance</h3>' as string,
+      performanceMarkdown:
+        '<h3>Performance</h3><hr><ul><li><p>This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button! </p></li></ul><chart data-layout="{&quot;title&quot;:{&quot;text&quot;:&quot;Example Graph&quot;},&quot;xaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[0.6391275611368142,7.360872438863185],&quot;autorange&quot;:true},&quot;yaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[5.6050955414012735,74.39490445859873],&quot;autorange&quot;:true}}" data-data="[{&quot;x&quot;:[1,2,3,4,5,6,7,8,9,10],&quot;y&quot;:[10,20,30,40,50,60,70],&quot;type&quot;:&quot;scatter&quot;}]"></chart>' as string,
     };
   },
   getters: {},
@@ -130,6 +131,7 @@ export const useCreationStore = defineStore('creationStore', {
       'modelLimitations',
       'markdownContent',
       'inferenceImage',
+      'performanceMarkdown',
     ],
   },
 });

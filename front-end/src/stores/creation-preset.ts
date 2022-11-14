@@ -15,10 +15,6 @@ export const useCreationPreset = defineStore('createPreset', {
       ] as string[],
       datasetPlatforms: ['', 'ClearML'] as string[],
       experimentPlatforms: ['', 'ClearML'] as string[],
-      markdownToolbar: [
-        'undo redo | blocks | fontfamily fontsize | forecolor backcolor | bold italic underline strikethrough |',
-        ' alignleft aligncenter alignright | outdent indent | bullist numlist | charmap anchor hr | insertdatetime | link image table | replaceValues',
-      ],
     };
   },
   getters: {},

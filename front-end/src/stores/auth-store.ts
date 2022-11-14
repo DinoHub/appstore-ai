@@ -93,5 +93,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
   },
-  persist: true,
+  persist: {
+    paths: ['user', 'access_token', 'refresh_token'],
+  },
 });

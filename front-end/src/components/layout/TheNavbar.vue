@@ -31,7 +31,7 @@
         color="white"
         to="/model/create"
         icon="add"
-        v-if="loggedIn"
+        v-if="loggedIn && isCreatePage"
       />
     </div>
     <div class="q-pl-sm">
@@ -64,6 +64,7 @@
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
 import { computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
 import NotificationsMenu from 'src/components/NotificationsMenu.vue';
@@ -81,9 +82,12 @@ const props = withDefaults(defineProps<Props>(), {
 const authStore = useAuthStore();
 const emit = defineEmits(['toggle-nav-rail']);
 
-
 const loggedIn = computed(() => {
   return authStore.user && authStore.user?.userId !== null;
+});
+
+const isCreatePage = computed(() => {
+  return useRoute().name != 'Create Model';
 });
 
 function onLogout() {
