@@ -63,7 +63,7 @@ module.exports = configure(function (ctx) {
       // publicPath: '/',
       // analyze: true,
       env: {
-        backendAPI: ctx.dev ? 'http://127.0.0.1:8080' : '',
+        backendAPI: ctx.dev ? 'http://localhost:7070' : '',
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
@@ -93,7 +93,7 @@ module.exports = configure(function (ctx) {
           size: '5px',
           position: 'bottom',
         },
-        dark: 'false'
+        dark: 'false',
       },
 
       // iconSet: 'material-icons', // Quasar icon set
