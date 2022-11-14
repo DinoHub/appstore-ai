@@ -46,7 +46,7 @@ async def get_available_inference_engine_services(
         with k8s_client as client:
             api = CustomObjectsApi(client)
             results = api.list_namespaced_custom_object(
-                group="knative.serving.dev",
+                group="serving.knative.dev",
                 version="v1",
                 namespace=config.IE_NAMESPACE,
                 plural="services",
@@ -224,6 +224,11 @@ async def delete_inference_engine_service(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"Error when deleting inference engine: {e}",
                     )
+
+
+@router.delete("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_orphan_services(db=Depends(get_db)):
+    raise NotImplementedError
 
 
 @router.patch("/{service_name}")
