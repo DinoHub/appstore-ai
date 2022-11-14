@@ -121,7 +121,9 @@ async def create_inference_engine_service(
             db, mongo_client = db
             service_metadata = jsonable_encoder(
                 InferenceEngineService(
-                    **service.dict(),
+                    image_uri=service.image_uri,
+                    container_port=service.container_port,
+                    external_dns=service.external_dns,
                     owner_id=user.user_id,
                     model_id=uncased_to_snake_case(service.model_id),
                     created=datetime.datetime.now(),
@@ -141,10 +143,10 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
-        except TypeError:
+        except TypeError as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="API has no access to the K8S cluster",
+                detail=f"API has no access to the K8S cluster: {e}",
             )
         except DuplicateKeyError:
             raise HTTPException(
