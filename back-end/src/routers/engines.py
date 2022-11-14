@@ -34,10 +34,10 @@ async def get_available_inference_engine_services(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="API has no access to the K8S cluster",
         )
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal Server Error when trying to get all KNative Services in Cluster",
+            detail=f"Internal Server Error: {e}",
         )
 
 
