@@ -125,7 +125,9 @@ async def create_inference_engine_service(
                     container_port=service.container_port,
                     external_dns=service.external_dns,
                     owner_id=user.user_id,
-                    model_id=uncased_to_snake_case(service.model_id),
+                    model_id=uncased_to_snake_case(
+                        service.model_id
+                    ),  # conver title to ID
                     created=datetime.datetime.now(),
                     last_modified=datetime.datetime.now(),
                     inference_url=url,
