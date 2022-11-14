@@ -136,7 +136,12 @@
               <div class="text-h6">Manage your model</div>
 
               <div class="q-py-md">
-                <q-btn label="Edit Model Card" color="primary"></q-btn>
+                <q-btn
+                  label="Edit Model Card Metadata"
+                  :to="`/model/${userId}/${modelId}/edit`"
+                  rounded
+                  color="secondary"
+                ></q-btn>
               </div>
               <div>
                 <q-form
