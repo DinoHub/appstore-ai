@@ -3,6 +3,7 @@
   width: 100%;
   height: 100vh;
   border: none;
+  border-radius: 0.5rem;
 }
 </style>
 <template>
@@ -10,9 +11,7 @@
     <!-- <gradio-app src="https://stabilityai-stable-diffusion.hf.space/"></gradio-app> -->
     <q-card-section>
       <iframe
-        @load="
-          loading = false;
-        "
+        @load="loading = false"
         v-show="!loading"
         :src="props.url"
       ></iframe>
