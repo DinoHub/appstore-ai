@@ -23,7 +23,9 @@ def init_db():
     # db["models"].create_index(
     #     [("modelId", 1), ("creatorUserId", 1)], unique=True
     # )
-
+    # db["services"].create_index(
+    #     [("serviceName", 1)], unique=True
+    # )
     # # TODO: Remove the below code
     # db["users"].insert_many(
     #     [  # Hack to auto insert known user for now

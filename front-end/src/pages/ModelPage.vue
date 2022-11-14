@@ -45,7 +45,7 @@
       <section class="col col-sm-8 q-px-lg q-py-md">
         <!-- <markdown-display :markdown="model.description"></markdown-display> -->
         <!-- <markdown-display :markdown="model.performance"></markdown-display> -->
-        <tiptap-display :content="model.description"></tiptap-display>
+        <tiptap-display :content="model.markdown"></tiptap-display>
         <tiptap-display :content="model.performance"></tiptap-display>
       </section>
       <aside class="col col-sm-4">
@@ -59,7 +59,7 @@
             align="justify"
           >
             <q-tab
-              v-if="model.inferenceApi"
+              v-if="model.inferenceServiceName"
               name="inference"
               label="Inference"
             ></q-tab>
@@ -72,8 +72,8 @@
             <q-tab v-if="isModelOwner" name="manage" label="Manage"></q-tab>
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
-            <q-tab-panel v-if="model.inferenceApi" name="inference">
-              <gradio-frame :url="model.inferenceApi"></gradio-frame>
+            <q-tab-panel v-if="model.inferenceServiceName" name="inference">
+              <gradio-frame :url="inferenceUrl"></gradio-frame>
             </q-tab-panel>
             <q-tab-panel name="metadata">
               <q-markup-table>
@@ -165,6 +165,7 @@ import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute } from 'vue-router';
+import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 
 enum Tabs {
   inference = 'inference',
@@ -177,31 +178,41 @@ const route = useRoute();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 const tab: Ref<Tabs> = ref(Tabs.inference);
+const inferenceUrl: Ref<string | null> = ref(null);
 const authStore = useAuthStore();
 const modelStore = useModelStore();
+const inferenceServiceStore = useInferenceServiceStore();
 
 const model = reactive({
   modelId: '',
   title: '',
-  task: 'Image ',
+  task: '',
   tags: [],
   frameworks: [],
   creatorUserId: '',
-  inferenceApi: 'https://www.youtube.com/embed/tgbNymZ7vqY',
-  description: '# Default',
+  inferenceServiceName: '',
+  markdown: '',
   performance: '',
   created: '',
   lastModified: '',
   artifacts: [],
-  summary: '',
+  description: '',
+  explanation: '',
+  usage: '',
+  limitations: '',
 }) as ModelCard;
 
 modelStore.getModelById(userId, modelId).then((card) => {
   Object.assign(model, card);
-  if (!model.inferenceApi) {
+  if (!model.inferenceServiceName) {
     tab.value = Tabs.metadata; // if inference not available, hide
+    return;
   }
-  console.log(model.description);
+  inferenceServiceStore
+    .getServiceByName(model.inferenceServiceName)
+    .then((service) => {
+      inferenceUrl.value = service.inferenceUrl;
+    });
 });
 
 const isModelOwner = computed(() => {

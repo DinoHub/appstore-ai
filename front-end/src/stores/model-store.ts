@@ -9,27 +9,48 @@ export interface Artifact {
   type: string;
   url: string;
 }
-export interface ModelCard extends ModelCardSummary {
-  owner?: string;
-  pointOfContact?: string;
-  inferenceApi: string;
-  description: string;
-  performance: string;
-  artifacts: Artifact[];
-}
 
 export interface ModelCardSummary {
   modelId: string;
   creatorUserId: string;
   title: string;
   task: string;
-  summary: string;
+  description: string;
   tags: string[];
   frameworks: string[];
   lastModified: string;
   created: string;
 }
 
+export interface ModelCard extends ModelCardSummary {
+  owner?: string;
+  pointOfContact?: string;
+  inferenceServiceName: string;
+  explanation: string;
+  usage: string;
+  limitations: string;
+  markdown: string;
+  performance: string;
+  artifacts: Artifact[];
+}
+
+export interface CreateModelCard {
+  title: string;
+  task: string;
+  summary: string;
+  tags: string[];
+  frameworks: string[];
+  owner?: string;
+  pointOfContact?: string;
+  inferenceServiceName: string;
+  markdown: string;
+  performance: string;
+  artifacts: Artifact[];
+  description: string;
+  explanation: string;
+  usage: string;
+  limitations: string;
+}
 export interface SearchParams {
   p?: number; // page
   n?: number; // rows per page
@@ -94,7 +115,7 @@ export const useModelStore = defineStore('model', {
               'creatorUserId',
               'title',
               'task',
-              'summary',
+              'description',
               'tags',
               'frameworks',
               'lastModified',
@@ -108,6 +129,15 @@ export const useModelStore = defineStore('model', {
         const errRes = error as AxiosError;
         console.error('Error', errRes.message);
         return Promise.reject(error);
+      }
+    },
+    async createModel(metadata: CreateModelCard): Promise<ModelCard> {
+      try {
+        const res = await api.post('models/', metadata);
+        const data: ModelCard = res.data;
+        return data;
+      } catch (error) {
+        return Promise.reject('Failed to create model card');
       }
     },
     async getModelById(userId: string, modelId: string): Promise<ModelCard> {

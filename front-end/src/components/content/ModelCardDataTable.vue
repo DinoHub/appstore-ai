@@ -105,7 +105,7 @@
               :creator-user-id="props.row.creatorUserId"
               :tags="props.row.tags"
               :frameworks="props.row.frameworks"
-              :summary="props.row.summary"
+              :description="props.row.description"
               :task="props.row.task"
             ></model-card>
           </div>
@@ -184,12 +184,6 @@ const columns = [
     required: true,
     label: 'Tags',
     field: 'tags',
-  },
-  {
-    name: 'summary',
-    required: false,
-    label: 'Summary',
-    field: 'summary',
   },
 ];
 const loading = ref(false);

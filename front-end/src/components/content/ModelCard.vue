@@ -1,7 +1,7 @@
 <template>
   <q-card
     v-ripple
-    class="cursor-pointer q-hoverable  q-pa-sm"
+    class="cursor-pointer q-hoverable q-pa-sm"
     :class="props.cardClass"
     @click.stop="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
   >
@@ -36,7 +36,7 @@
       </div>
     </q-card-section>
     <q-card-section>
-      {{ props.summary ?? 'No summary provided' }}
+      {{ props.description ?? 'No description provided' }}
     </q-card-section>
     <q-card-actions align="right" v-if="isModelOwner">
       <q-btn
@@ -64,7 +64,7 @@ export interface Props {
   creatorUserId: string;
   modelId: string;
   title: string;
-  summary?: string;
+  description?: string;
   task: string;
   tags: string[];
   frameworks: string[];
