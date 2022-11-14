@@ -1,7 +1,7 @@
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import jwt_decode from 'jwt-decode';
-import { Cookies, useQuasar } from 'quasar';
+import { Cookies, useQuasar ,Notify} from 'quasar';
 
 export enum Role {
   user = 'user',
@@ -58,8 +58,7 @@ export const useAuthStore = defineStore('auth', {
         this.access_token = access_token;
         this.refresh_token = refresh_token;
       } catch (err) {
-        const $q = useQuasar();
-        $q.notify({
+        Notify.create({
           message: 'Failed to login',
           color: 'failure',
         });

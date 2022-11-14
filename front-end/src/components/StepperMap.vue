@@ -594,6 +594,7 @@ import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 import { useAuthStore } from 'src/stores/auth-store';
+import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { Ref, ref } from 'vue';
 
 import { Cookies, useQuasar, Notify } from 'quasar';
@@ -604,6 +605,7 @@ const expStore = useExpStore();
 const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const creatorPreset = useCreationPreset();
+const ieStore = useInferenceServiceStore();
 
 // const for checking whether previous saves exist
 const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
@@ -653,9 +655,9 @@ function flushCreator() {
 }
 
 function submitImage() {
-  creationStore.launchImage(
-    creationStore.inferenceImage,
-    Cookies.get('auth').user.userId // Need to JSON.parse?
+  ieStore.createService(
+    creationStore.modelName,
+    creationStore.inferenceImage
   );
 }
 
