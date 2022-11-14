@@ -9,10 +9,11 @@ export interface Artifact {
   type: string;
   url: string;
 }
+
 export interface ModelCard extends ModelCardSummary {
   owner?: string;
   pointOfContact?: string;
-  inferenceApi: string;
+  inferenceServiceName: string;
   description: string;
   performance: string;
   artifacts: Artifact[];
