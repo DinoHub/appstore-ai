@@ -26,6 +26,18 @@ from ..models.iam import TokenData
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 
 
+@router.get("/{service_name}")
+async def get_inference_engine_service(
+    service_name: str,
+    db=Depends(get_db),
+):
+    db, _ = db
+    service = await db["services"].find_one({"serviceName": service_name})
+    if service is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    return service
+
+
 @router.get("/")
 async def get_available_inference_engine_services(
     k8s_client: ApiClient = Depends(get_k8s_client),
