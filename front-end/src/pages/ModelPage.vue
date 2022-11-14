@@ -103,6 +103,22 @@
                     <td>Model Creator</td>
                     <td>{{ model.creatorUserId }}</td>
                   </tr>
+                  <tr>
+                    <td>Description</td>
+                    <td>{{ model.description }}</td>
+                  </tr>
+                  <tr>
+                    <td>Explaination</td>
+                    <td>{{ model.explanation }}</td>
+                  </tr>
+                  <tr>
+                    <td>Usage</td>
+                    <td>{{ model.usage }}</td>
+                  </tr>
+                  <tr>
+                    <td>Limitations</td>
+                    <td>{{ model.limitations }}</td>
+                  </tr>
                 </tbody>
               </q-markup-table>
             </q-tab-panel>
