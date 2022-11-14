@@ -8,7 +8,9 @@
   <q-page padding>
     <!-- content -->
     <main>
-      <div class="row display-medium q-pl-md">Welcome Back, {{ username ?? 'User' }}</div>
+      <div class="row display-medium q-pl-md">
+        Welcome Back, {{ username ?? 'User' }}
+      </div>
       <section>
         <model-card-data-table
           id="dashboardModels"
@@ -18,11 +20,13 @@
           card-class="bg-surface-variant"
           class="q-px-sm"
         >
-          <template #top-left><span class="display-small">Your Models</span></template>
+          <template #top-left
+            ><span class="display-small">Your Models</span></template
+          >
         </model-card-data-table>
       </section>
     </main>
-    <q-page-sticky position="bottom-right" :offset="[18,18]">
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn fab icon="add" color="tertiary" to="/model/create"></q-btn>
     </q-page-sticky>
   </q-page>

@@ -104,6 +104,15 @@
         >
         </q-uploader>
       </q-dialog>
+      <!-- Table Editor -->
+      <q-btn dense icon="table_chart" @click="tableCreator = true"> </q-btn>
+      <q-dialog v-model="tableCreator">
+        <table-creator
+          @create-table="
+            (noRows, noCols) => insertTable(editor, noRows, noCols)
+          "
+        ></table-creator>
+      </q-dialog>
       <!-- Chart Editor -->
       <q-btn
         :text-color="_iconFill(editor?.isActive('image') ?? true)"
@@ -336,6 +345,7 @@ import {
 } from '@tiptap/vue-3';
 
 import PlotlyEditor from './PlotlyEditor.vue';
+import TableCreator from './TableCreator.vue';
 
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -407,6 +417,7 @@ const editor = useEditor({
 
 const showSource = ref(false);
 const chartEditor = ref(false);
+const tableCreator = ref(false);
 const imageUploader = ref(false);
 
 function _buttonBg(condition: boolean) {
@@ -420,7 +431,7 @@ function _iconFill(condition: boolean) {
 function insertChart(
   editor: Editor,
   data: Record<string, any>[],
-  layout: Record<string, any>
+  layout: Record<string, any>,
 ) {
   editor
     ?.chain()
@@ -431,6 +442,21 @@ function insertChart(
         layout: JSON.stringify(layout),
         data: JSON.stringify(data),
       },
+    })
+    .run();
+}
+
+function insertTable(editor: Editor, noRows: number, noCols: number) {
+  if (noRows < 1 || noCols < 1) {
+    throw RangeError;
+  }
+  editor
+    ?.chain()
+    .focus()
+    .insertTable({
+      rows: noRows,
+      cols: noCols,
+      withHeaderRow: true,
     })
     .run();
 }
@@ -452,6 +478,7 @@ function uploadMedia(file) {
 
 function addMedia({ files, xhr }) {
   // Add uploaded images to Editor
+  // TODO
 }
 
 watch(props, (newVal) => {
