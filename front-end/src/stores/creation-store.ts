@@ -109,6 +109,41 @@ export const useCreationStore = defineStore('creationStore', {
         console.log('failure');
       }
     },
+    async checkMetadataValues() {
+      const keys = Object.keys(this.$state).filter(
+        (item) =>
+          ![
+            'step',
+            'tags',
+            'frameworks',
+            'performanceMarkdown',
+            'markdownContent',
+            'datasetID',
+            'experimentID',
+            'datasetPlatform',
+            'experimentPlatform',
+            'inferenceImage',
+            'modelOwner',
+            'modelPOC',
+          ].includes(item)
+      );
+      if (this.$state.tags.length == 0 || this.$state.frameworks.length == 0) {
+        return false;
+      }
+      if (
+        (this.$state.datasetID == '' && this.$state.datasetPlatform != '') ||
+        (this.$state.experimentID == '' && this.$state.experimentPlatform != '')
+      ) {
+        return false;
+      }
+      for (const key of keys) {
+        if (this.$state[key] == '') {
+          console.log(this.$state);
+          return false;
+        }
+      }
+      return true;
+    },
   },
   persist: {
     storage: localStorage,
