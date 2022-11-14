@@ -161,7 +161,7 @@ async def create_model_card_metadata(
     card.frameworks = set(card.frameworks)
 
     # Sanitize html
-    card.description = sanitize_html(card.description)
+    card.description = sanitize_html(card.markdown)
     card.performance = sanitize_html(card.performance)
 
     card = jsonable_encoder(
@@ -198,8 +198,8 @@ async def update_model_card_metadata_by_id(
     # by alias => convert snake_case to camelCase
     card = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
 
-    if "description" in card:
-        card["description"] = sanitize_html(card["description"])
+    if "markdown" in card:
+        card["markdown"] = sanitize_html(card["markdown"])
     if "performance" in card:
         card["performance"] = sanitize_html(card["performance"])
 

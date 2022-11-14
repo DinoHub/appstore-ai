@@ -80,8 +80,12 @@ def model_metadata() -> List[Dict]:
             "modelId": f"test-model-card-{idx}",
             "creatorUserId": f"test_{idx}",
             "title": f"Test Model {idx}",
-            "description": "# Markdown Text",
-            "performance": "# Markdown Text",
+            "markdown": "<h1>Test</h1>",
+            "performance": "<h2>Performance</h2>",
+            "description": "Lorum ipsum",
+            "explanation": "Lorum ipsum",
+            "usage": "Lorum ipsum",
+            "limitations": "Lorum ipsum",
             "created": str(datetime.datetime.now()),
             "lastModified": str(datetime.datetime.now()),
             "tags": ["Test Tag", f"Tag {idx}"],
@@ -110,7 +114,7 @@ def model_metadata() -> List[Dict]:
 def create_model_card() -> Dict:
     return {
         "title": "Test Model",
-        "description": "# Markdown Text",
+        "markdown": "# Markdown Text",
         "performance": "# Markdown Text",
         "tags": ["Test Tag", "Insert"],
         "task": "Testing Model Card",

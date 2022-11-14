@@ -19,13 +19,16 @@ class Artifact(BaseModel):
 
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str
-    description: str
+    markdown: str
     performance: str
     task: str  # a task is a tag
     inference_service_name: str
     tags: List[str]  # for all other tags
     frameworks: List[str]
-    summary: Optional[str]
+    description: Optional[str]
+    explanation: Optional[str]
+    usage: Optional[str]
+    limitations: Optional[str]
     owner: Optional[str]
     point_of_contact: Optional[str]
     clearml_exp_id: Optional[str]
@@ -53,8 +56,11 @@ class ModelCardModelDB(ModelCardModelIn):
 
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
-    summary: Optional[str]
     description: Optional[str]
+    explanation: Optional[str]
+    usage: Optional[str]
+    limitations: Optional[str]
+    markdown: Optional[str]
     performance: Optional[str]
     tags: Optional[List[str]]  # for all other tags
     task: Optional[str]  # a task is a tag

@@ -45,7 +45,7 @@
       <section class="col col-sm-8 q-px-lg q-py-md">
         <!-- <markdown-display :markdown="model.description"></markdown-display> -->
         <!-- <markdown-display :markdown="model.performance"></markdown-display> -->
-        <tiptap-display :content="model.description"></tiptap-display>
+        <tiptap-display :content="model.markdown"></tiptap-display>
         <tiptap-display :content="model.performance"></tiptap-display>
       </section>
       <aside class="col col-sm-4">
@@ -186,17 +186,20 @@ const inferenceServiceStore = useInferenceServiceStore();
 const model = reactive({
   modelId: '',
   title: '',
-  task: 'Image ',
+  task: '',
   tags: [],
   frameworks: [],
   creatorUserId: '',
   inferenceServiceName: '',
-  description: '# Default',
+  markdown: '',
   performance: '',
   created: '',
   lastModified: '',
   artifacts: [],
-  summary: '',
+  description: '',
+  explanation: '',
+  usage: '',
+  limitations: '',
 }) as ModelCard;
 
 modelStore.getModelById(userId, modelId).then((card) => {
