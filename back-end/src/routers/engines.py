@@ -1,17 +1,27 @@
+import datetime
 from urllib.error import HTTPError
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi.encoders import jsonable_encoder
 from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from kubernetes.client.rest import RESTResponse
+from pymongo.errors import DuplicateKeyError
 from yaml import safe_load
 
 from ..config.config import config
+from ..internal.auth import get_current_user
+from ..internal.db import get_db
 from ..internal.k8s_client import get_k8s_client
 from ..internal.templates import template_env
-from ..internal.utils import k8s_safe_name
-from ..models.engine import InferenceEngineService
+from ..internal.utils import k8s_safe_name, uncased_to_snake_case
+from ..models.engine import (
+    CreateInferenceEngineService,
+    InferenceEngineService,
+    UpdateInferenceEngineService,
+)
+from ..models.iam import TokenData
 
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 
@@ -44,24 +54,18 @@ async def get_available_inference_engine_services(
 
 @router.post("/")
 async def create_inference_engine_service(
-    service: InferenceEngineService,
+    service: CreateInferenceEngineService,
     k8s_client: ApiClient = Depends(get_k8s_client),
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
 ):
-    """Deploy an Inference Engine as a KNative Service
-
-    :param service: An object containing a service name and an image URI
-    :type service: InferenceEngineService
-    :param k8s_client: K8S Client, defaults to Depends(get_k8s_client)
-    :type k8s_client: ApiClient, optional
-    :raises HTTPException: 500 Internal Server Error if K8S deployment fails
-    :return: Response from the Python K8S Client
-    :rtype: Any # TODO: Find out what the return type is
-    """
     # First check that model actually exists in DB
     # Create Deployment Template
+    if not user.user_id:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     template = template_env.get_template("inference-engine-service.yaml.j2")
     service_name = k8s_safe_name(
-        f"{service.owner_id}-{service.model_id}-{uuid4()}"
+        f"{user.user_id}-{service.model_id}-{uuid4()}"
     )
     deployment_template = safe_load(
         template.render(
@@ -85,16 +89,41 @@ async def create_inference_engine_service(
             name="kourier", namespace="knative-serving"
         )
         lb_ip = kn.status.load_balancer.ingress[0].ip
+        if service.external_dns:
+            url = (
+                f"{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
+            )
+        else:
+            url = f"{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io"
         # Create instance of API class
         api = CustomObjectsApi(client)
         try:
-            resp = api.create_namespaced_custom_object(
+            api.create_namespaced_custom_object(
                 group="serving.knative.dev",
                 version="v1",
                 plural="services",
                 namespace=config.IE_NAMESPACE,
                 body=deployment_template,
             )
+            # Save info into DB
+            db, mongo_client = db
+            service_metadata = jsonable_encoder(
+                InferenceEngineService(
+                    **service.dict(),
+                    owner_id=user.user_id,
+                    model_id=uncased_to_snake_case(service.model_id),
+                    created=datetime.datetime.now(),
+                    last_modified=datetime.datetime.now(),
+                    inference_url=url,
+                    service_name=service_name,
+                ),
+                by_alias=True,  # convert snake_case to camelCase
+            )
+
+            async with await mongo_client.start_session() as session:
+                async with session.start_transaction():
+                    await db["services"].insert_one(service_metadata)
+            return service_metadata
         except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -105,23 +134,24 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="API has no access to the K8S cluster",
             )
+        except DuplicateKeyError:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Unable to add duplicate service",
+            )
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
-        return {
-            "inference_url": f"{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io",
-            "service_name": service_name,
-            "model_id": service.model_id,
-            "owner_id": service.owner_id,
-        }
 
 
 @router.delete("/{service_name}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_inference_engine_service(
     service_name: str = Path(description="Name of KService to Delete"),
     k8s_client: ApiClient = Depends(get_k8s_client),
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
 ):
     """Delete a deployed inference engine from the K8S cluster.
 
@@ -131,39 +161,62 @@ async def delete_inference_engine_service(
     :type k8s_client: ApiClient, optional
     :raises HTTPException: 500 Internal Server Error if deletion fails
     """
-    # Delete Service on K8S
-    with k8s_client as client:
-        # Create instance of API class
-        api = CustomObjectsApi(client)
-        try:
-            api.delete_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                plural="services",
-                namespace=config.IE_NAMESPACE,
-                name=service_name,
+
+    ## Get User ID from Request
+    db, mongo_client = db
+    async with await mongo_client.start_session() as session:
+        async with session.start_transaction():
+            # Check user has access to service
+            existing_service = await db["services"].find_one(
+                {"serviceName": service_name}
             )
-        except (K8sAPIException, HTTPError) as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when deleting inference engine: {e}",
-            )
-        except TypeError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="API has no access to the K8S cluster",
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when deleting inference engine: {e}",
-            )
+            if (
+                existing_service is not None
+                and existing_service["ownerId"] != user.user_id
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have owner access to KService",
+                )
+            await db["services"].delete_one({"serviceName": service_name})
+            with k8s_client as client:
+                # Create instance of API class
+                api = CustomObjectsApi(client)
+                try:
+                    api.delete_namespaced_custom_object(
+                        group="serving.knative.dev",
+                        version="v1",
+                        plural="services",
+                        namespace=config.IE_NAMESPACE,
+                        name=service_name,
+                    )
+                except (K8sAPIException, HTTPError) as e:
+                    session.abort_transaction()  # if failed to remove in k8s, rollback db change
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Error when deleting inference engine: {e}",
+                    )
+                except TypeError:
+                    session.abort_transaction()
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="API has no access to the K8S cluster",
+                    )
+                except Exception as e:
+                    session.abort_transaction()
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail=f"Error when deleting inference engine: {e}",
+                    )
 
 
-@router.patch("/")
+@router.patch("/{service_name}")
 async def update_inference_engine_service(
-    service: InferenceEngineService,
+    service_name: str,
+    service: UpdateInferenceEngineService,
     k8s_client: ApiClient = Depends(get_k8s_client),
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
 ):
     """Update an existing inference engine inside the K8S cluster
 
@@ -174,43 +227,76 @@ async def update_inference_engine_service(
     :raises HTTPException: 500 Internal Server Error if failed to update
     """
     # Create Deployment Template
-    template = template_env.get_template("inference-engine-service.yaml.j2")
+    db, mongo_client = db
+    updated_metadata = {k: v for k, v in service.dict() if v is not None}
 
-    deployment_template = safe_load(
-        template.render(
-            {
-                "engine_name": service.service_name,
-                "image_name": service.image_uri,
-                "image_name": service.container_port,
-            }
-        )
-    )
-
-    # Deploy Service on K8S
-    with k8s_client as client:
-        # Create instance of API class
-        api = CustomObjectsApi(client)
-        try:
-            api.replace_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                plural="services",
-                namespace=config.IE_NAMESPACE,
-                name=service.service_name,
-                body=deployment_template,
-            )
-        except (K8sAPIException, HTTPError) as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when updating inference engine: {e}",
-            )
-        except TypeError:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="API has no access to the K8S cluster",
-            )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when updating inference engine: {e}",
-            )
+    if len(updated_metadata) > 0:
+        updated_metadata["lastModified"] = str(datetime.datetime.now())
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                # Check if user has editor access
+                existing_service = await db["services"].find_one(
+                    {"serviceName": service_name}
+                )
+                if existing_service is None:
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail=f"KService with name {service_name} not found",
+                    )
+                elif existing_service["ownerId"] != user.user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="User does not have owner access to KService",
+                    )
+                result = await db["services"].update_one(
+                    {"serviceName": service_name}, {"$set": updated_metadata}
+                )
+                updated_service = await db["services"].find_one(
+                    {"serviceName": service_name}
+                )
+                if result.modified_count != 1:
+                    # Not necessary to update service?
+                    return updated_service
+                template = template_env.get_template(
+                    "inference-engine-service.yaml.j2"
+                )
+                deployment_template = safe_load(
+                    template.render(
+                        {
+                            "engine_name": service_name,
+                            "image_name": updated_service.image_name,
+                            "port": updated_service.container_port,
+                        }
+                    )
+                )
+                # Deploy Service on K8S
+                with k8s_client as client:
+                    # Create instance of API class
+                    api = CustomObjectsApi(client)
+                    try:
+                        api.replace_namespaced_custom_object(
+                            group="serving.knative.dev",
+                            version="v1",
+                            plural="services",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name,
+                            body=deployment_template,
+                        )
+                    except (K8sAPIException, HTTPError) as e:
+                        session.abort_transaction()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error when updating inference engine: {e}",
+                        )
+                    except TypeError:
+                        session.abort_transaction()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="API has no access to the K8S cluster",
+                        )
+                    except Exception as e:
+                        session.abort_transaction()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error when updating inference engine: {e}",
+                        )

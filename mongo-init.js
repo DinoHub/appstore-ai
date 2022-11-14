@@ -3,6 +3,7 @@ db = db.getSiblingDB("app_store");
 db.createCollection("users");
 db.users.createIndex({ userId: 1 }, { unique: true });
 db.models.createIndex({ modelId: 1, creatorUserId: 1 }, { unique: true });
+db.services.createIndex({ serviceName: 1 }, { unique: true });
 
 db.users.insertMany([
   {
