@@ -261,13 +261,6 @@
               You can follow the example content structure or come up with
               something else.
             </p>
-            <!-- Button to populate markdown with text from previous step-->
-            <q-btn
-              label="Populate card description"
-              rounded
-              color="secondary"
-              @click="popupContent = true"
-            />
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
@@ -279,6 +272,14 @@
               <q-icon class="" name="error" size="1.5rem" />
               Please remove the example content and style your own content
             </div>
+            <!-- Button to populate markdown with text from previous step-->
+            <q-btn
+              label="Populate card description"
+              rounded
+              color="secondary"
+              @click="popupContent = true"
+            />
+
             <tiptap-editor
               editable
               :content="creationStore.markdownContent"
@@ -294,13 +295,42 @@
         :name="5"
         title="Performance Metrics"
         icon="leaderboard"
-        :done="creationStore.step > 4"
+        :done="
+          creationStore.performanceMarkdown.includes(
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+          ) == false
+        "
+        :error="
+          creationStore.performanceMarkdown.includes(
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+          ) != false
+        "
       >
         <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">
               Performance Metrics
             </h6>
+            <p class="text-left q-ml-md q-mb-sm">
+              This is a editor section for performance metrics to be inserted.
+              <br />
+              If a ClearML experiment ID was given, the scalars will be inserted
+              here.<br />
+              Style the performance metrics and insert any relevant descriptions
+              to your liking to let users know the performance of the model.
+            </p>
+            <div
+              class="text-left q-ml-md q-mb-md text-italic text-negative"
+              v-if="
+                creationStore.performanceMarkdown.includes(
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                ) != false
+              "
+            >
+              <q-icon class="" name="error" size="1.5rem" />
+              Please remove the example content and style/update with your own
+              content
+            </div>
             <tiptap-editor
               editable
               :content="creationStore.performanceMarkdown"
@@ -335,7 +365,7 @@
               class="q-mb-sm float-left"
               style="width: 95.6%"
               unelevated
-              @click="$refs.stepper.next()"
+              @click="checkMetadata($refs.stepper)"
             />
             <q-btn
               icon="help"
@@ -563,11 +593,11 @@
 import { useExpStore } from 'src/stores/exp-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
+import { useAuthStore } from 'src/stores/auth-store';
 import { Ref, ref } from 'vue';
 
-import { Cookies } from 'quasar';
+import { Cookies, useQuasar, Notify } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
-import { useAuthStore } from 'src/stores/auth-store';
 
 // constants for stores
 const expStore = useExpStore();
@@ -627,6 +657,29 @@ function submitImage() {
     creationStore.inferenceImage,
     Cookies.get('auth').user.userId // Need to JSON.parse?
   );
+}
+
+async function checkMetadata(reference) {
+  const metadataIsDone = creationStore.checkMetadataValues();
+  if ((await metadataIsDone) == true) {
+    reference.next();
+  } else {
+    Notify.create({
+      message: 'Enter all values into required fields first before proceeding',
+      position: 'top',
+      icon: 'warning',
+      color: 'negative',
+      actions: [
+        {
+          label: 'Dismiss',
+          color: 'white',
+          handler: () => {
+            /* ... */
+          },
+        },
+      ],
+    });
+  }
 }
 
 function finalSubmit() {
