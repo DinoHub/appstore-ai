@@ -29,5 +29,45 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to get inference engine');
       }
     },
+    async createService(
+      modelId: string,
+      imageUri: string,
+      port?: string,
+    ): Promise<InferenceEngineService> {
+      try {
+        const res = await api.post('/engines/', {
+          modelId: modelId,
+          imageUri: imageUri,
+          port: port,
+        });
+        const data: InferenceEngineService = res.data;
+        return data;
+      } catch (error) {
+        return Promise.reject('Unable to create inference engine');
+      }
+    },
+    async updateService(
+      serviceName: string,
+      imageUri?: string,
+      port?: string,
+    ): Promise<InferenceEngineService> {
+      try {
+        const res = await api.patch(`/engines/${serviceName}`, {
+          imageUri: imageUri,
+          port: port,
+        });
+        const data: InferenceEngineService = res.data;
+        return data;
+      } catch (error) {
+        return Promise.reject('Unable to update inference engine');
+      }
+    },
+    async deleteService(serviceName: string): Promise<void> {
+      try {
+        await api.delete(`/engines/${serviceName}`);
+      } catch (error) {
+        return Promise.reject('Unable to delete inference engine');
+      }
+    },
   },
 });
