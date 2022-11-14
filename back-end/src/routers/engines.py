@@ -18,16 +18,27 @@ router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 async def get_available_inference_engine_services(
     k8s_client: ApiClient = Depends(get_k8s_client),
 ):
-    with k8s_client as client:
-        api = CustomObjectsApi(client)
-        results = api.list_namespaced_custom_object(
-            group="knative.serving.dev",
-            version="v1",
-            namespace=config.IE_NAMESPACE,
-            plural="services",
-        )
+    try:
+        with k8s_client as client:
+            api = CustomObjectsApi(client)
+            results = api.list_namespaced_custom_object(
+                group="knative.serving.dev",
+                version="v1",
+                namespace=config.IE_NAMESPACE,
+                plural="services",
+            )
 
-    return results
+        return results
+    except TypeError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="API has no access to the K8S cluster",
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal Server Error when trying to get all KNative Services in Cluster",
+        )
 
 
 @router.post("/")
@@ -76,6 +87,11 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
+        except TypeError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="API has no access to the K8S cluster",
+            )
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -110,6 +126,16 @@ async def delete_inference_engine_service(
                 name=service_name,
             )
         except (K8sAPIException, HTTPError) as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when deleting inference engine: {e}",
+            )
+        except TypeError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="API has no access to the K8S cluster",
+            )
+        except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when deleting inference engine: {e}",
@@ -156,6 +182,16 @@ async def update_inference_engine_service(
                 body=deployment_template,
             )
         except (K8sAPIException, HTTPError) as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error when updating inference engine: {e}",
+            )
+        except TypeError:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="API has no access to the K8S cluster",
+            )
+        except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when updating inference engine: {e}",
