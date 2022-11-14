@@ -22,7 +22,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     description: str
     performance: str
     task: str  # a task is a tag
-    inference_api: AnyUrl
+    inference_service_name: str
     tags: List[str]  # for all other tags
     frameworks: List[str]
     summary: Optional[str]
@@ -62,7 +62,7 @@ class UpdateModelCardModel(BaseModel):
     point_of_contact: Optional[str]
     owner: Optional[str]
     clearml_exp_id: Optional[str]
-    inference_api: Optional[AnyUrl]
+    inference_service_name: Optional[str]
     artifacts: Optional[
         Dict[str, Artifact]
     ]  # will need to use GET /experiments/{exp_id} to get this

@@ -89,7 +89,7 @@ def model_metadata() -> List[Dict]:
             "frameworks": ["pytest", f"Framework {idx}"],
             "pointOfContact": "Santa Claus",
             "owner": "Rudolph",
-            "inferenceApi": "https://fake_inference.com",
+            "inferenceServiceName": "test-service",
             "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
             "artifacts": [
                 {
@@ -117,7 +117,7 @@ def create_model_card() -> Dict:
         "frameworks": ["pytest"],
         "pointOfContact": "Santa Claus",
         "owner": "Rudolph",
-        "inferenceApi": "http://fakeinference.com",
+        "inferenceServiceName": "test-service",
         "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
         "artifacts": [
             {
