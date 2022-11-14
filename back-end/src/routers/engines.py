@@ -1,7 +1,8 @@
 from urllib.error import HTTPError
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
-from kubernetes.client import ApiClient, CustomObjectsApi
+from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from kubernetes.client.rest import RESTResponse
 from yaml import safe_load
@@ -9,6 +10,7 @@ from yaml import safe_load
 from ..config.config import config
 from ..internal.k8s_client import get_k8s_client
 from ..internal.templates import template_env
+from ..internal.utils import k8s_safe_name
 from ..models.engine import InferenceEngineService
 
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
@@ -27,7 +29,6 @@ async def get_available_inference_engine_services(
                 namespace=config.IE_NAMESPACE,
                 plural="services",
             )
-
         return results
     except TypeError:
         raise HTTPException(
@@ -59,19 +60,31 @@ async def create_inference_engine_service(
     # First check that model actually exists in DB
     # Create Deployment Template
     template = template_env.get_template("inference-engine-service.yaml.j2")
-
+    service_name = k8s_safe_name(
+        f"{service.owner_id}-{service.model_id}-{uuid4()}"
+    )
     deployment_template = safe_load(
         template.render(
             {
-                "engine_name": service.service_name,
+                "engine_name": service_name,
                 "image_name": service.image_uri,
                 "port": service.container_port,
             }
         )
     )
-
+    if not config.IE_NAMESPACE:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="No Namespace specified",
+        )
     # Deploy Service on K8S
     with k8s_client as client:
+        # Get KNative Serving Ext Ip
+        kn_api = CoreV1Api(client)
+        kn = kn_api.read_namespaced_service(
+            name="kourier", namespace="knative-serving"
+        )
+        lb_ip = kn.status.load_balancer.ingress[0].ip
         # Create instance of API class
         api = CustomObjectsApi(client)
         try:
@@ -97,7 +110,12 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
-        return resp
+        return {
+            "inference_url": f"{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io",
+            "service_name": service_name,
+            "model_id": service.model_id,
+            "owner_id": service.owner_id,
+        }
 
 
 @router.delete("/{service_name}", status_code=status.HTTP_204_NO_CONTENT)
