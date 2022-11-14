@@ -47,7 +47,7 @@
         text-color="on-outline"
         label="Edit Model Card"
         padding="sm md"
-        :to="`models/${props.creatorUserId}/${props.modelId}/edit`"
+        :to="`model/${props.creatorUserId}/${props.modelId}/edit`"
         @click.stop
         v-if="isModelOwner"
       ></q-btn>

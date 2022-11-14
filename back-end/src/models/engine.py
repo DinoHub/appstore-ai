@@ -9,7 +9,7 @@ from .common import PyObjectId
 
 
 class CreateInferenceEngineService(BaseModel):
-    model_id: str
+    model_id: str  # NOTE: actually model title, will convert to model id in backend
     image_uri: str
     container_port: Optional[int]
     external_dns: Optional[str]

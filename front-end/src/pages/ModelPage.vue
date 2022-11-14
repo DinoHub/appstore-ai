@@ -14,31 +14,30 @@
       </div>
     </header>
     <aside class="row q-py-sm">
-      <q-chip color="primary" text-color="white">
-        <router-link class="router-link" :to="`/models/?tasks=${model.task}`">
-          {{ model.task }}</router-link
-        >
-      </q-chip>
-      <q-chip
+      <material-chip
+        :label="model.task"
+        type="task"
+        clickable
+        @click.stop="$router.push(`/models?tasks=${model.task}`)"
+      />
+      <material-chip
         v-for="tag in model.frameworks"
         :key="tag"
-        color="accent"
-        text-color="white"
+        :label="tag"
+        type="framework"
+        clickable
+        @click.stop="$router.push(`/models?frameworks=${tag}`)"
       >
-        <router-link class="router-link" :to="`/models/?frameworks=${tag}`">{{
-          tag
-        }}</router-link>
-      </q-chip>
-      <q-chip
+      </material-chip>
+      <material-chip
         v-for="tag in model.tags"
         :key="tag"
-        color="secondary"
-        text-color="white"
+        :label="tag"
+        type="tag"
+        clickable
+        @click.stop="$router.push(`/models?tags=${tag}`)"
       >
-        <router-link class="router-link" :to="`/models/?tags=${tag}`">{{
-          tag
-        }}</router-link>
-      </q-chip>
+      </material-chip>
     </aside>
     <q-separator></q-separator>
     <main class="row">
@@ -103,6 +102,22 @@
                     <td>Model Creator</td>
                     <td>{{ model.creatorUserId }}</td>
                   </tr>
+                  <tr>
+                    <td>Description</td>
+                    <td>{{ model.description }}</td>
+                  </tr>
+                  <tr>
+                    <td>Explaination</td>
+                    <td>{{ model.explanation }}</td>
+                  </tr>
+                  <tr>
+                    <td>Usage</td>
+                    <td>{{ model.usage }}</td>
+                  </tr>
+                  <tr>
+                    <td>Limitations</td>
+                    <td>{{ model.limitations }}</td>
+                  </tr>
                 </tbody>
               </q-markup-table>
             </q-tab-panel>
@@ -120,7 +135,12 @@
               <div class="text-h6">Manage your model</div>
 
               <div class="q-py-md">
-                <q-btn label="Edit Model Card" color="primary"></q-btn>
+                <q-btn
+                  label="Edit Model Card Metadata"
+                  :to="`/model/${userId}/${modelId}/edit`"
+                  rounded
+                  color="secondary"
+                ></q-btn>
               </div>
               <div>
                 <q-form
@@ -157,6 +177,7 @@
 <script setup lang="ts">
 import { ModelCard } from 'src/stores/model-store';
 import MarkdownDisplay from 'src/components/content/MarkdownDisplay.vue';
+import MaterialChip from 'src/components/content/MaterialChip.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
