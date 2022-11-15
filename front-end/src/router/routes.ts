@@ -17,7 +17,7 @@ const routes: RouteRecordRaw[] = [
     children: [{ path: '', name: 'Login', component: LoginPage }],
     beforeEnter: (to) => {
       const auth = useAuthStore();
-      if (auth.access_token) {
+      if (auth.user?.userId) {
         // Logged in
         return '/';
       }
