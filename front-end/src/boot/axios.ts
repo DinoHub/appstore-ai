@@ -22,11 +22,6 @@ const api = axios.create({
 });
 
 // Set Interceptor
-api.interceptors.request.use((config) => {
-  const authStore = useAuthStore();
-  config.headers['Authorization'] = `Bearer ${authStore.access_token}`;
-  return config;
-});
 
 api.interceptors.response.use(
   (response) => {
