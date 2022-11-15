@@ -18,6 +18,7 @@ from ..internal.auth import (
     create_access_token,
     decode_jwt,
     verify_password,
+    oauth2_scheme,
 )
 from ..internal.db import get_db
 from ..models.iam import Token, UserRoles
@@ -63,9 +64,23 @@ async def auth_user(
                     refresh_token = create_access_token(
                         data=data, expires_delta=refresh_token_expires
                     )
-
+                    response.set_cookie(
+                        "access_token",
+                        value=f"Bearer {access_token}",
+                        httponly=True,
+                        expires=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
+                        max_age=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
+                    )
+                    response.set_cookie(
+                        "refresh_token",
+                        value=f"Bearer {refresh_token}",
+                        httponly=True,
+                        expires=60 * REFRESH_TOKEN_EXPIRE_MINUTES,
+                        max_age=60 * REFRESH_TOKEN_EXPIRE_MINUTES,
+                    )
                     # Protect Cookies with CSRF
                     csrf.set_csrf_cookie(response)
+
                     return {
                         "access_token": access_token,
                         "refresh_token": refresh_token,
@@ -94,7 +109,7 @@ async def refresh_token(
     try:
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
-            rs = form.get("refresh_token")
+            rs = request.cookies["refresh_token"]
             token_data = decode_jwt(
                 rs,
                 is_admin=form.get("role") == UserRoles.admin,
@@ -121,6 +136,12 @@ async def refresh_token(
                             data=data,
                             expires_delta=access_token_expires,
                         )
+                        response.set_cookie(
+                            "access_token",
+                            value=access_token,
+                            httponly=True,
+                            expires=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
+                        )
                         csrf = CsrfProtect()
                         csrf.set_csrf_cookie(response)
                         return {
@@ -142,6 +163,19 @@ async def refresh_token(
     except JWTError:
         raise CREDENTIALS_EXCEPTION
     raise CREDENTIALS_EXCEPTION
+
+
+@router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
+def logout_user(response: Response, token: str = Depends(oauth2_scheme)):
+    try:
+        response.delete_cookie("access_token")
+        response.delete_cookie("refresh_token")
+        response.delete_cookie("fastapi-csrf-token")
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An error occurred",
+        )
 
 
 @router.get(
