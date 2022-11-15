@@ -10,16 +10,17 @@
   <q-card class="gradio-container bg-white">
     <!-- <gradio-app src="https://stabilityai-stable-diffusion.hf.space/"></gradio-app> -->
     <q-card-section>
+      <q-inner-loading
+        :showing="loading"
+        label="Loading Inference App..."
+      ></q-inner-loading>
+    </q-card-section>
+    <q-card-section>
       <iframe
         @load="loading = false"
         v-show="!loading"
         :src="props.url"
       ></iframe>
-      <q-inner-loading
-        :showing="loading"
-        v-if="loading"
-        label="Loading Inference App..."
-      ></q-inner-loading>
     </q-card-section>
   </q-card>
 </template>
