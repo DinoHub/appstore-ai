@@ -3,6 +3,7 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .config.config import config
 from .internal.auth import check_is_admin, get_current_user
 from .routers import auth, datasets, engines, experiments, iam, models
 
@@ -38,10 +39,26 @@ tags_metadata = [
 app = FastAPI(title="Model Zoo", description=description, openapi_tags=tags_metadata)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:9000"],  # TODO: Replace with config file?
-    allow_methods=["*"],
+    allow_origins=list(
+        set(
+            [
+                "http://localhost:9000",
+                "http://127.0.0.1:9000",
+                "http://172.20.255.203",
+                "http://appstore.ai",
+                (config.FRONTEND_HOST if config else ""),
+            ]
+        )
+    ),
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_credentials=True,
-    allow_headers=["*"],
+    allow_headers=[
+        "Content-Type",
+        "Set-Cookie",
+        "Access-Control-Allow-Headers",
+        "Authorization",
+        "Access-Control-Allow-Origin",
+    ],
 )
 
 app.include_router(auth.router)

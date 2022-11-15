@@ -17,6 +17,7 @@
       ></iframe>
       <q-inner-loading
         :showing="loading"
+        v-if="loading"
         label="Loading Inference App..."
       ></q-inner-loading>
     </q-card-section>

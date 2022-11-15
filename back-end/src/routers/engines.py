@@ -76,7 +76,9 @@ async def create_inference_engine_service(
     if not user.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     template = template_env.get_template("inference-engine-service.yaml.j2")
-    service_name = k8s_safe_name(f"{user.user_id}-{service.model_id}-{uuid4()}")
+    service_name = k8s_safe_name(
+        f"{user.user_id}-{service.model_id}-{uuid4()}"
+    )
     print(service.image_uri)
     deployment_template = safe_load(
         template.render(
@@ -96,12 +98,17 @@ async def create_inference_engine_service(
     with k8s_client as client:
         # Get KNative Serving Ext Ip
         kn_api = CoreV1Api(client)
-        kn = kn_api.read_namespaced_service(name="kourier", namespace="knative-serving")
+        kn = kn_api.read_namespaced_service(
+            name="kourier", namespace="knative-serving"
+        )
         lb_ip = kn.status.load_balancer.ingress[0].ip
         if service.external_dns:
-            url = f"{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
+            # TODO: Support for https
+            url = f"http://{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
         else:
-            url = f"{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io"
+            url = (
+                f"http://{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io"
+            )
         # Create instance of API class
         api = CustomObjectsApi(client)
         try:
@@ -273,7 +280,9 @@ async def update_inference_engine_service(
                 if result.modified_count != 1:
                     # Not necessary to update service?
                     return updated_service
-                template = template_env.get_template("inference-engine-service.yaml.j2")
+                template = template_env.get_template(
+                    "inference-engine-service.yaml.j2"
+                )
                 deployment_template = safe_load(
                     template.render(
                         {

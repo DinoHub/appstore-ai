@@ -8,6 +8,7 @@ from pydantic import BaseSettings, Field, MongoDsn
 class GlobalConfig(BaseSettings):
     ENV_STATE: str = Field(default="dev", env="ENV_STATE")
     DB_NAME: str = Field(default="appStoreDB")
+    FRONTEND_HOST: str = Field(default="http://localhost:9000")
     ALGORITHM: str = Field(default="HS256")
     MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=1)
     SECRET_KEY: Optional[
