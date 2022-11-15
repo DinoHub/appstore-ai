@@ -159,9 +159,10 @@
                   >
                   </q-input>
                   <q-btn
+                    rounded
                     label="Delete"
                     type="submit"
-                    color="negative"
+                    color="error"
                     :disable="confirmId !== confirmDeleteLabel"
                   ></q-btn>
                 </q-form>
