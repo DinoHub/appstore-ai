@@ -1,5 +1,6 @@
 import re
 
+from lxml.etree import ParserError
 from lxml.html.clean import Cleaner
 
 
@@ -46,4 +47,12 @@ def sanitize_html(html: str) -> str:
         forms=True,
         add_nofollow=True,
     )
-    return cleaner.clean_html(html)
+    try:
+        cleaned: str = cleaner.clean_html(html)
+        if type(cleaned) != str:
+            raise TypeError
+        return cleaned
+    except ParserError as e:
+        return "Error!"
+    except TypeError as e:
+        return "Error!"
