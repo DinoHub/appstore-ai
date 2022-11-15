@@ -1,7 +1,7 @@
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import jwt_decode from 'jwt-decode';
-import { Cookies, useQuasar ,Notify} from 'quasar';
+import { Cookies, useQuasar, Notify } from 'quasar';
 
 export enum Role {
   user = 'user',
@@ -32,8 +32,6 @@ export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
     returnUrl: null as string | null,
-    access_token: null as string | null,
-    refresh_token: null as string | null,
   }),
   actions: {
     async login(userId: string, password: string): Promise<void> {
@@ -55,44 +53,39 @@ export const useAuthStore = defineStore('auth', {
           name: jwt_data.name,
           role: jwt_data.role,
         } as User;
-        this.access_token = access_token;
-        this.refresh_token = refresh_token;
       } catch (err) {
         Notify.create({
+          type: 'negative',
+          position: 'top',
           message: 'Failed to login',
-          color: 'failure',
         });
       }
       this.router.push(this.returnUrl || '/');
     },
     logout(): void {
-      Cookies.remove('auth');
-      this.user = null;
-      this.access_token = null;
-      this.refresh_token = null;
-      this.returnUrl = null;
-      this.router.push('/login');
-      location.reload();
-      localStorage.removeItem('creationStore');
+      try {
+        const response = api.delete('/auth/logout');
+        this.user = null;
+        localStorage.removeItem('auth');
+        this.router.push({ name: 'Login' });
+      } catch (err) {
+        console.warn('Logout failed');
+      }
     },
     async refresh(): Promise<void> {
       console.warn('Refreshing access token');
-      Cookies.remove('auth');
       try {
         const response = await api.post('/auth/refresh', {
           grant_type: 'refresh_token',
-          refresh_token: this.refresh_token,
+          refresh_token: Cookies.get('refresh_token'),
         });
-        const { access_token }: LoginResponse = response.data;
-        // Set tokens
-        this.access_token = access_token;
       } catch (err) {
         console.error(err);
-        this.logout();
       }
     },
   },
   persist: {
-    paths: ['user', 'access_token', 'refresh_token'],
+    storage: localStorage,
+    paths: ['user', 'returnUrl'],
   },
 });

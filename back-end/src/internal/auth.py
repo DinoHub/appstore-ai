@@ -1,19 +1,20 @@
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Union
 
 from fastapi import Depends, HTTPException, Request, status
-from fastapi.security import OAuth2PasswordBearer
 from fastapi_csrf_protect import CsrfProtect
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 
 from ..config.config import config
-from ..models.iam import CsrfSettings, TokenData, User, UserRoles
+from ..models.iam import TokenData, UserRoles
+from ..models.auth import CsrfSettings, OAuth2PasswordBearerWithCookie
 from .db import get_db
 
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/")
+oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/auth/")
 
 
 @CsrfProtect.load_config
