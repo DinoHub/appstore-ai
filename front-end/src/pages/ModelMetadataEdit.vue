@@ -352,6 +352,7 @@ import { useModelStore } from 'src/stores/model-store';
 import { useEditMetadataStore } from 'src/stores/edit-metadata-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 
+import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
 const creatorPreset = useCreationPreset();
