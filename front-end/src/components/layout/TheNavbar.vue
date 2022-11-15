@@ -83,7 +83,7 @@ const authStore = useAuthStore();
 const emit = defineEmits(['toggle-nav-rail']);
 
 const loggedIn = computed(() => {
-  return authStore.user && authStore.user?.userId !== null;
+  return authStore.user && authStore.user !== null;
 });
 
 const isCreatePage = computed(() => {
