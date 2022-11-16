@@ -25,16 +25,6 @@
       <q-route-tab label="Models" to="/models" exact no-caps></q-route-tab>
     </q-tabs>
     <div class="q-pl-sm">
-      <q-btn
-        flat
-        round
-        color="white"
-        to="/model/create"
-        icon="add"
-        v-if="loggedIn && isCreatePage"
-      />
-    </div>
-    <div class="q-pl-sm">
       <quick-search-modal v-if="loggedIn"></quick-search-modal>
     </div>
     <div class="q-pl-sm">
