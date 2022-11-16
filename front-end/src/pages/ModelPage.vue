@@ -8,6 +8,8 @@
       <div class="col-12 col-sm-4 self-center text-right">
         <q-btn
           rounded
+          no-caps
+          disable
           label="Perform Transfer Learning"
           color="primary"
         ></q-btn>
