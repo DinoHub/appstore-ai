@@ -161,7 +161,7 @@ async def create_model_card_metadata(
     card.frameworks = set(card.frameworks)
 
     # Sanitize html
-    card.description = sanitize_html(card.markdown)
+    card.markdown = sanitize_html(card.markdown)
     card.performance = sanitize_html(card.performance)
 
     card = jsonable_encoder(
