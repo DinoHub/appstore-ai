@@ -139,9 +139,17 @@
               <div class="q-py-md">
                 <q-btn
                   label="Edit Model Card Metadata"
-                  :to="`/model/${userId}/${modelId}/edit`"
+                  :to="`/model/${userId}/${modelId}/edit/metadata`"
                   rounded
                   color="secondary"
+                ></q-btn>
+              </div>
+              <div class="q-py-md">
+                <q-btn
+                  label="Edit Model Inference Service"
+                  :to="`/model/${userId}/${modelId}/edit/inference`"
+                  rounded
+                  color="tertiary"
                 ></q-btn>
               </div>
               <div>
