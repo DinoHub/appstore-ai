@@ -121,7 +121,7 @@ async def refresh_token(
                 async with session.start_transaction():
                     if (
                         user := await db["users"].find_one(
-                            {"userId": token_data.user_id}
+                            {"userId": token_data.user_id, "adminPriv": token_data.role == UserRoles.admin}
                         )
                     ) is not None:
                         data = {
@@ -162,7 +162,7 @@ async def refresh_token(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Refresh Token Expired, you will need to logout and log back in to create a new refresh token.",
         )
-    except JWTError:
+    except JWTError as e:
         raise CREDENTIALS_EXCEPTION
     except Exception as e:
         raise HTTPException(
