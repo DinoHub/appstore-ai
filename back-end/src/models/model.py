@@ -3,7 +3,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 from bson import ObjectId
-from pydantic import AnyUrl, BaseModel, Field
+from pydantic import BaseModel, Field
 
 from ..internal.utils import to_camel_case
 from .experiment import LinkedExperiment
@@ -12,13 +12,15 @@ from .common import PyObjectId
 
 
 class Artifact(BaseModel):
-    artifact_type: str
+    artifact_type: str = Field(..., alias="artifactType")
     name: str
     url: str
     timestamp: Optional[datetime]
     framework: Optional[str]
+
     class Config:
-        alias_generator = to_camel_case
+        allow_population_by_field_name = True
+
 
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str

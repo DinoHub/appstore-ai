@@ -1,7 +1,7 @@
 from typing import Union
 from enum import Enum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from ..internal.utils import to_camel_case
 
 
@@ -11,9 +11,10 @@ class Connector(str, Enum):
     
 class LinkedExperiment(BaseModel):
     connector : Connector 
-    experiment_id : str
+    experiment_id : str  = Field(..., alias="experimentId")
     class Config:
-        alias_generator = to_camel_case
+        allow_population_by_field_name = True
+
 class ClonePackageModel(BaseModel):
     id: str
     clone_name: Union[str, None] = None

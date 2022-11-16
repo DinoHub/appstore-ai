@@ -163,7 +163,7 @@ async def create_model_card_metadata(
     # Sanitize html
     card.markdown = sanitize_html(card.markdown)
     card.performance = sanitize_html(card.performance)
-
+    print(card.dict())
     card = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),

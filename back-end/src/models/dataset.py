@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import Dict, List, Optional, Union
 from enum import Enum
 
-from pydantic import BaseModel
-from ..internal.utils import to_camel_case
+from pydantic import BaseModel, Field
 
 class Connector(str, Enum):
     DEFAULT = ""
@@ -11,9 +10,9 @@ class Connector(str, Enum):
 
 class LinkedDataset(BaseModel):
     connector : Connector
-    dataset_id : str
+    dataset_id : str = Field(..., alias="datasetId")
     class Config:
-        alias_generator = to_camel_case
+        allow_population_by_field_name = True
 class DatasetModel(BaseModel):
     id: str
     name: Optional[str]
