@@ -399,7 +399,7 @@
             <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
             <p class="text-left">
               Note that the image provided should be an application that can be
-              embedded, using Gradio or Streamlit, with input and output already
+              embedded using Gradio, with input and output already
               defined by you. If unsure please check instructions and examples
               listed under GitHub page.
             </p>
