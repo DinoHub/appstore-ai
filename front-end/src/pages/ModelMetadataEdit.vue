@@ -1,9 +1,6 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <header>
-      <span class="text-h3">Edit Model</span>
-    </header>
     <q-stepper
       v-model="editMetadataStore.step"
       ref="stepper"
@@ -69,6 +66,7 @@
               label="Dataset Platform (Optional)"
             />
             <q-input
+              outlined
               v-if="editMetadataStore.datasetPlatform != ''"
               v-model="editMetadataStore.datasetID"
               class="q-ml-md q-pb-xl"
@@ -244,12 +242,12 @@
         icon="assignment"
         :done="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)',
+            '(Example Text to Replace)'
           ) == false
         "
         :error="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)',
+            '(Example Text to Replace)'
           ) != false
         "
       >
@@ -268,7 +266,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.markdownContent.includes(
-                  '(Example Text to Replace)',
+                  '(Example Text to Replace)'
                 ) != false
               "
             >
@@ -300,12 +298,12 @@
         icon="leaderboard"
         :done="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) == false
         "
         :error="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) != false
         "
       >
@@ -326,7 +324,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
                 ) != false
               "
             >
@@ -342,18 +340,309 @@
           </div>
         </div>
       </q-step>
+      <template v-slot:navigation>
+        <q-stepper-navigation>
+          <div class="row justify-center">
+            <div class="text-right col-1">
+              <q-btn
+                no-caps
+                outline
+                rounded
+                color="error"
+                @click="cancel = true"
+                label="Cancel"
+                class="q-mr-md"
+                padding="sm xl"
+                :disable="buttonDisable"
+              />
+            </div>
+            <div class="text-right col-6">
+              <q-btn
+                v-if="editMetadataStore.step > 1"
+                color="primary"
+                @click="$refs.stepper.previous()"
+                no-caps
+                outline
+                rounded
+                label="Back"
+                class="q-mr-md"
+                padding="sm xl"
+                :disable="buttonDisable"
+              />
+              <q-btn
+                v-if="editMetadataStore.step < 5"
+                @click="$refs.stepper.next()"
+                no-caps
+                rounded
+                color="primary"
+                label="Continue"
+                padding="sm xl"
+                :disable="buttonDisable"
+              />
+              <q-btn
+                v-if="editMetadataStore.step == 5"
+                no-caps
+                rounded
+                @click="saveEdit()"
+                color="primary"
+                label="Save Edits"
+                :disable="buttonDisable"
+              />
+            </div>
+          </div>
+        </q-stepper-navigation>
+      </template>
     </q-stepper>
+    <dialog>
+      <q-dialog v-model="cancel" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Quit</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Are you sure you want to exit the model creation process? <br />
+            <span class="text-bold"
+              >(Saving will override any previous creations)</span
+            >
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              rounded
+              outline
+              label="Cancel"
+              padding="sm xl"
+              color="error"
+              v-close-popup
+            />
+            <q-space />
+            <q-btn
+              rounded
+              outline
+              label="Quit"
+              color="secondary"
+              v-close-popup
+              to="/"
+              @click="flushDraft()"
+            />
+            <q-btn
+              rounded
+              label="Save & Quit"
+              color="primary"
+              padding="sm xl"
+              to="/"
+              v-close-popup
+              v-if="prevSave"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="popupContent">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Markdown</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Replace example content with your own values?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="No" color="red" v-close-popup />
+            <q-btn
+              flatv
+              label="Replace"
+              color="primary"
+              v-close-popup
+              @click="populateEditor(editMetadataStore)"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="prevSave" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Previous Draft</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            There was a previous draft found, continue editing draft or reset
+            back to original content?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              outline
+              rounded
+              label="Reset"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+              @click="flushDraft()"
+            />
+            <q-btn
+              rounded
+              padding="sm xl"
+              label="Continue"
+              color="primary"
+              v-close-popup
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </dialog>
   </q-page>
 </template>
 
 <script setup lang="ts">
-import { Ref, ref } from 'vue';
-import { useModelStore } from 'src/stores/model-store';
-import { useEditMetadataStore } from 'src/stores/edit-metadata-store';
+// TODO: Refactor model creation and editing code
+// as the way it is currently handled is not ideal
+// e.g. Repetitive Code
+import { onMounted, Ref, ref, watch } from 'vue';
+import { useAuthStore } from 'src/stores/auth-store';
+import { Notify } from 'quasar';
+import { useExpStore } from 'src/stores/exp-store';
+import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
+import { useRoute, useRouter } from 'vue-router';
 
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
+const experimentStore = useExpStore();
 const creatorPreset = useCreationPreset();
+const authStore = useAuthStore();
+const route = useRoute();
+const router = useRouter();
+const modelId = route.params.modelId as string;
+
+// const for checking whether previous draft exist
+const prevSave = ref(localStorage.getItem(editMetadataStore.$id) !== null);
+
+// bool for loading state when retrieving experiments
+const loadingExp = ref(false);
+const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+
+// variables for popup exits
+const cancel = ref(false);
+const popupContent = ref(false);
+const buttonDisable = ref(false);
+
+function flushDraft() {
+  editMetadataStore.$reset();
+  localStorage.removeItem(`${editMetadataStore.$id}`);
+  editMetadataStore.loadFromMetadata(modelId); // we want to reset the store to the original model
+}
+
+async function checkMetadata(reference) {
+  const metadataIsDone = editMetadataStore.checkMetadataValues();
+  if ((await metadataIsDone) == true) {
+    reference.next();
+  } else {
+    Notify.create({
+      message: 'Enter all values into required fields first before proceeding',
+      position: 'top',
+      icon: 'warning',
+      color: 'negative',
+      actions: [
+        {
+          label: 'Dismiss',
+          color: 'white',
+          handler: () => {
+            /* ... */
+          },
+        },
+      ],
+    });
+  }
+}
+function saveEdit() {
+  if (authStore.user?.name) {
+    if (editMetadataStore.modelOwner == '') {
+      editMetadataStore.modelOwner = authStore.user.name;
+    }
+    if (editMetadataStore.modelPOC == '') {
+      editMetadataStore.modelPOC = authStore.user.name;
+    }
+  }
+  editMetadataStore.submitEdit(modelId).then(
+    // Redirect to model page
+    () => {
+      Notify.create({
+        message: 'Model successfully edited',
+        position: 'bottom',
+        icon: 'check',
+        color: 'positive',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              /* ... */
+            },
+          },
+        ],
+      });
+      editMetadataStore.$reset();
+      localStorage.removeItem(`${editMetadataStore.$id}`);
+        router.push(`/model/${authStore.user?.userId}/${modelId}`);
+      }
+  ).catch(
+    () => {
+      Notify.create({
+        message: 'Error editing model',
+        position: 'bottom',
+        icon: 'warning',
+        color: 'negative',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              /* ... */
+            },
+          },
+        ],
+      });
+    }
+  );
+}
+
+function populateEditor(store: typeof editMetadataStore) {
+  replaceContent.value = true;
+  (store.markdownContent = `
+  <h3>Description <a id="description"></a></h3>
+  <hr>
+  ${store.modelDesc}
+  <p>&nbsp;</p>
+  <h3>Explanation <a id="explanation"></a></h3>
+  <hr>
+  ${store.modelExplain}
+  <p>&nbsp;</p>
+  <h3>Model Usage <a id="model_use"></a></h3>
+  <hr>
+  ${store.modelUsage}
+  <p>&nbsp;</p>
+  <h3>Limitations <a id="limitations"></a></h3>
+  <hr>
+  ${store.modelLimitations}
+  <p>&nbsp;</p>
+  `),
+    (popupContent.value = false);
+}
+
+function setStateFromExperimentDetails(state: typeof editMetadataStore) {
+  if (state.experimentID !== editMetadataStore.experimentID) {
+    experimentStore.getExperimentByID(state.experimentID).then((data) => {
+      editMetadataStore.tags = Array.from(
+        new Set([...editMetadataStore.tags, ...data.tags])
+      );
+      editMetadataStore.frameworks = Array.from(
+        new Set([...editMetadataStore.frameworks, ...data.frameworks])
+      );
+    });
+  }
+}
+
+onMounted(() => {
+  if (!prevSave.value) {
+    editMetadataStore.loadFromMetadata(modelId);
+  }
+  watch(editMetadataStore, setStateFromExperimentDetails);
+});
 </script>
