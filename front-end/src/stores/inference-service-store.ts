@@ -8,6 +8,7 @@ export interface InferenceEngineService {
   ownerId: string;
   imageUri: string;
   inferenceUrl: string;
+  containerPort?: number;
 }
 
 export const useInferenceServiceStore = defineStore('service', {
