@@ -393,6 +393,7 @@
               autogrow
               hint="Image URI"
               v-model="creationStore.inferenceImage"
+              :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
             <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
@@ -433,6 +434,9 @@
             />
           </div>
         </div>
+      </q-step>
+      <q-step :name="8" title="Confirm" icon="task">
+        <gradio-frame :url="appURI"></gradio-frame>
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -484,10 +488,20 @@
                 v-if="
                   creationStore.step == 7 && creationStore.inferenceImage != ''
                 "
-                @click="submitImage()"
+                @click="submitImage($refs.stepper)"
+                no-caps
+                rounded
                 color="primary"
                 label="Submit Image"
                 :disable="buttonDisable"
+              />
+              <q-btn
+                v-if="creationStore.step == 8"
+                @click="submitImage($refs.stepper)"
+                no-caps
+                rounded
+                color="primary"
+                label="Confirm Model Card Creation"
               />
             </div>
           </div>
@@ -532,7 +546,7 @@
               padding="sm xl"
               to="/"
               v-close-popup
-              v-if="prevSave"
+              v-if="prevSave == true"
             />
           </q-card-actions>
         </q-card>
@@ -597,6 +611,8 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { Ref, ref } from 'vue';
 
+import GradioFrame from 'src/components/content/GradioFrame.vue';
+
 import { Cookies, useQuasar, Notify } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
 
@@ -616,6 +632,7 @@ const replaceContent: Ref<boolean> = ref(false); // indicator to replace content
 
 // variables for inference submit
 const displayImageSubmit = ref(false);
+const appURI = ref('');
 
 // variables for popup exits
 const cancel = ref(false);
@@ -654,11 +671,37 @@ function flushCreator() {
   localStorage.removeItem(`${creationStore.$id}`);
 }
 
-function submitImage() {
-  ieStore.createService(
-    creationStore.modelName,
-    creationStore.inferenceImage
-  );
+function submitImage(reference) {
+  buttonDisable.value = true;
+  loadingExp.value = true;
+  var response = ieStore
+    .createService(creationStore.modelName, creationStore.inferenceImage)
+    .then((data) => {
+      buttonDisable.value = false;
+      loadingExp.value = false;
+      appURI.value = data.inferenceUrl;
+      reference.next();
+    })
+    .catch(() => {
+      buttonDisable.value = false;
+      loadingExp.value = false;
+      console.error('Error in retrieving experiment details');
+      Notify.create({
+        message: 'Failed to deploy image and create service. Please try again.',
+        position: 'top',
+        icon: 'warning',
+        color: 'negative',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              /* ... */
+            },
+          },
+        ],
+      });
+    });
 }
 
 async function checkMetadata(reference) {
