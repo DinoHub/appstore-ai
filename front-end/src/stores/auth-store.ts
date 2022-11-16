@@ -67,6 +67,7 @@ export const useAuthStore = defineStore('auth', {
         const response = api.delete('/auth/logout');
         this.user = null;
         localStorage.removeItem('auth');
+        localStorage.removeItem('creationStore')
         this.router.push({ name: 'Login' });
       } catch (err) {
         console.warn('Logout failed');
@@ -78,8 +79,11 @@ export const useAuthStore = defineStore('auth', {
         const response = await api.post('/auth/refresh', {
           grant_type: 'refresh_token'
         });
-        location.reload()
       } catch (err) {
+        localStorage.removeItem('auth');
+        localStorage.removeItem('creationStore')
+        this.router.push({ name: 'Login' });
+        location.reload()
         console.error(err);
       }
     },
