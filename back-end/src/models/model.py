@@ -17,7 +17,8 @@ class Artifact(BaseModel):
     url: str
     timestamp: Optional[datetime]
     framework: Optional[str]
-
+    class Config:
+        alias_generator = to_camel_case
 
 class ModelCardModelIn(BaseModel):  # Input spec
     title: str

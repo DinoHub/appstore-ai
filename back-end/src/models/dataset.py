@@ -3,6 +3,7 @@ from typing import Dict, List, Optional, Union
 from enum import Enum
 
 from pydantic import BaseModel
+from ..internal.utils import to_camel_case
 
 class Connector(str, Enum):
     DEFAULT = ""
@@ -11,6 +12,8 @@ class Connector(str, Enum):
 class LinkedDataset(BaseModel):
     connector : Connector
     dataset_id : str
+    class Config:
+        alias_generator = to_camel_case
 class DatasetModel(BaseModel):
     id: str
     name: Optional[str]
