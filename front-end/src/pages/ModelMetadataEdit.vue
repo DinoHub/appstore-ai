@@ -567,7 +567,7 @@ function saveEdit() {
         message: 'Model successfully edited',
         position: 'bottom',
         icon: 'check',
-        color: 'positive',
+        color: 'primary',
         actions: [
           {
             label: 'Dismiss',
