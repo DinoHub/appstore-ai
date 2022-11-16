@@ -237,6 +237,8 @@ modelStore.getModelById(userId, modelId).then((card) => {
     .then((service) => {
       inferenceUrl.value = service.inferenceUrl;
     });
+}).catch((err) => {
+  console.error(err);
 });
 
 const isModelOwner = computed(() => {
