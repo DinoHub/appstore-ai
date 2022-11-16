@@ -53,15 +53,26 @@ const routes: RouteRecordRaw[] = [
         },
       },
       {
-        path: ':userId/:modelId/edit/metadata',
-        name: 'Edit Model Metadata',
-        component: ModelMetadataEdit,
+        path: ':userId/:modelId/edit',
+        name: 'Edit',
+        children: [
+          {
+            path: '',
+            redirect: 'metadata',
+          },
+          {
+            path: 'metadata',
+            name: 'Model Metadata',
+            component: ModelMetadataEdit,
+          },
+          {
+            path: 'inference',
+            name: 'Model Inference Service',
+            component: ModelInferenceServiceEdit,
+          },
+        ],
       },
-      {
-        path: ':userId/:modelId/edit/inference',
-        name: 'Edit Model Inference Service',
-        component: ModelInferenceServiceEdit,
-      },
+
       {
         path: ':userId/:modelId',
         component: ModelPage,
