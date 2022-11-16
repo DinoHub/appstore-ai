@@ -10,6 +10,7 @@ from fastapi import (
 )
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_csrf_protect import CsrfProtect
+from fastapi_csrf_protect.exceptions import CsrfProtectError
 from jose import ExpiredSignatureError, JWTError
 from fastapi.security.utils import get_authorization_scheme_param
 
@@ -106,8 +107,10 @@ async def refresh_token(
     request: Request,
     response: Response,
     db=Depends(get_db),
+    csrf: CsrfProtect = Depends(),
 ):
     try:
+        csrf.validate_csrf_in_cookies(request)
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
             rs = request.cookies["refresh_token"]
@@ -161,9 +164,15 @@ async def refresh_token(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Refresh Token Expired, you will need to logout and log back in to create a new refresh token.",
+            headers={},
         )
     except JWTError:
         raise CREDENTIALS_EXCEPTION
+    except CsrfProtectError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="CSRF token was removed or tampered with",
+        )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -172,7 +181,7 @@ async def refresh_token(
 
 
 @router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout_user(response: Response, token: str = Depends(oauth2_scheme)):
+def logout_user(response: Response):
     try:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
