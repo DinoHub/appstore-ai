@@ -1,6 +1,7 @@
 <template>
   <q-page padding>
     <!-- content -->
+    <model-card-edit-tabs></model-card-edit-tabs>
     <q-stepper
       v-model="editMetadataStore.step"
       ref="stepper"
@@ -502,6 +503,7 @@ import { useCreationPreset } from 'src/stores/creation-preset';
 import { useRoute, useRouter } from 'vue-router';
 
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
+import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
 const experimentStore = useExpStore();
