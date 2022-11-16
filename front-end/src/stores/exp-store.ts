@@ -15,8 +15,11 @@ export interface Experiment {
   config: Config;
   owner: string;
 }
+
 export const useExpStore = defineStore('exp', {
-  state: () => ({}),
+  state: () => ({
+    experimentConnectors: ['', 'ClearML'] as string[],
+  }),
   getters: {},
   actions: {
     async getExperimentByID(exp_id: string): Promise<Experiment> {
