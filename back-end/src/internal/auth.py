@@ -7,6 +7,7 @@ from fastapi_csrf_protect.exceptions import CsrfProtectError
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 
+
 from ..config.config import config
 from ..models.iam import TokenData, UserRoles
 from ..models.auth import CsrfSettings, OAuth2PasswordBearerWithCookie
@@ -48,18 +49,16 @@ def create_access_token(
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode,
-        config.SECRET_KEY
-        if to_encode["role"] == UserRoles.user
-        else config.ADMIN_SECRET_KEY,
+        config.SECRET_KEY,
         algorithm=config.ALGORITHM,
     )
     return encoded_jwt
 
 
-def decode_jwt(token: str, is_admin: bool = False) -> TokenData:
+def decode_jwt(token: str) -> TokenData:
     payload = jwt.decode(
         token,
-        config.ADMIN_SECRET_KEY if is_admin else config.SECRET_KEY,
+        config.SECRET_KEY,
         algorithms=[config.ALGORITHM],
     )
     return TokenData(
@@ -75,12 +74,11 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db=Depends(get_db),
     csrf: CsrfProtect = Depends(),
-    is_admin: bool = False,
 ) -> TokenData:
     db, mongo_client = db
     try:
         csrf.validate_csrf_in_cookies(request)
-        token_data = decode_jwt(token, is_admin)
+        token_data = decode_jwt(token)
         if token_data.user_id is None or token_data.role is None:
             raise CREDENTIALS_EXCEPTION
     except ExpiredSignatureError:
@@ -111,7 +109,7 @@ async def check_is_admin(
     csrf: CsrfProtect = Depends(),
     db=Depends(get_db),
 ) -> TokenData:
-    user = await get_current_user(request, token, db=db, csrf=csrf, is_admin=True)
+    user = await get_current_user(request, token, db=db, csrf=csrf)
     if user.role != UserRoles.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

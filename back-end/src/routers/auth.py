@@ -11,6 +11,7 @@ from fastapi import (
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_csrf_protect import CsrfProtect
 from jose import ExpiredSignatureError, JWTError
+from fastapi.security.utils import get_authorization_scheme_param
 
 from ..internal.auth import (
     CREDENTIALS_EXCEPTION,
@@ -110,10 +111,11 @@ async def refresh_token(
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
             rs = request.cookies["refresh_token"]
-            token_data = decode_jwt(
-                rs,
-                is_admin=form.get("role") == UserRoles.admin,
-            )
+            scheme, param = get_authorization_scheme_param(rs)
+            if param:
+                token_data = decode_jwt(param)
+            else:
+                token_data = decode_jwt(rs)
             db, mongo_client = db
             async with await mongo_client.start_session() as session:
                 async with session.start_transaction():
@@ -138,7 +140,7 @@ async def refresh_token(
                         )
                         response.set_cookie(
                             "access_token",
-                            value=access_token,
+                            value=f"Bearer {access_token}",
                             httponly=True,
                             expires=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
                         )
@@ -162,7 +164,11 @@ async def refresh_token(
         )
     except JWTError:
         raise CREDENTIALS_EXCEPTION
-    raise CREDENTIALS_EXCEPTION
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Wrong access method",
+        )
 
 
 @router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)

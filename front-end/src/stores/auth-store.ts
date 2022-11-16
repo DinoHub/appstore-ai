@@ -76,9 +76,9 @@ export const useAuthStore = defineStore('auth', {
       console.warn('Refreshing access token');
       try {
         const response = await api.post('/auth/refresh', {
-          grant_type: 'refresh_token',
-          refresh_token: Cookies.get('refresh_token'),
+          grant_type: 'refresh_token'
         });
+        location.reload()
       } catch (err) {
         console.error(err);
       }
