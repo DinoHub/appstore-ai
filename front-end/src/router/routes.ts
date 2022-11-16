@@ -54,10 +54,17 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: ':userId/:modelId/edit',
-        name: 'Edit',
+        beforeEnter: (to) => {
+          const auth = useAuthStore();
+          if (auth.user?.userId !== to.params.userId) {
+            // Check if user is the owner of the model
+            return '/';
+          }
+        },
         children: [
           {
             path: '',
+            name: 'Edit',
             redirect: 'metadata',
           },
           {
