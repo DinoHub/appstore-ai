@@ -74,7 +74,7 @@ class UpdateModelCardModel(BaseModel):
     owner: Optional[str]
     inference_service_name: Optional[str]
     artifacts: Optional[
-        Dict[str, Artifact]
+        List[Artifact]
     ]  # will need to use GET /experiments/{exp_id} to get this
     experiment: Optional[LinkedExperiment]
     dataset: Optional[LinkedDataset]
