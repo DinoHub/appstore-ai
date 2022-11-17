@@ -46,6 +46,13 @@ def sanitize_html(html: str) -> str:
         processing_instructions=True,
         forms=True,
         add_nofollow=True,
+        whitelist_tags=[
+            "chart",
+            "embed",
+            "iframe"
+        ],
+        safe_attrs_only=False,
+        remove_unknown_tags=False
     )
     try:
         cleaned: str = cleaner.clean_html(html)

@@ -5,6 +5,7 @@ import ErrorNotFound from 'pages/ErrorNotFound.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
 import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
+import ModelInferenceServiceEdit from 'src/pages/ModelInferenceServiceEdit.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
 import SearchLayout from 'layouts/SearchLayout.vue';
@@ -53,9 +54,32 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: ':userId/:modelId/edit',
-        name: 'Edit Model',
-        component: ModelMetadataEdit,
+        beforeEnter: (to) => {
+          const auth = useAuthStore();
+          if (auth.user?.userId !== to.params.userId) {
+            // Check if user is the owner of the model
+            return '/';
+          }
+        },
+        children: [
+          {
+            path: '',
+            name: 'Edit',
+            redirect: 'metadata',
+          },
+          {
+            path: 'metadata',
+            name: 'Model Metadata',
+            component: ModelMetadataEdit,
+          },
+          {
+            path: 'inference',
+            name: 'Model Inference Service',
+            component: ModelInferenceServiceEdit,
+          },
+        ],
       },
+
       {
         path: ':userId/:modelId',
         component: ModelPage,

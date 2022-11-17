@@ -6,8 +6,19 @@ import { defineStore } from 'pinia';
 
 export interface Artifact {
   name: string;
-  type: string;
+  artifactType: string;
   url: string;
+  timestamp?: string
+}
+
+export interface LinkedExperiment {
+  connector: string;
+  experimentId: string;
+}
+
+export interface LinkedDataset {
+  connector: string;
+  datasetId: string;
 }
 
 export interface ModelCardSummary {
@@ -32,12 +43,13 @@ export interface ModelCard extends ModelCardSummary {
   markdown: string;
   performance: string;
   artifacts: Artifact[];
+  experiment?: LinkedExperiment;
+  dataset?: LinkedDataset;
 }
 
 export interface CreateModelCard {
   title: string;
   task: string;
-  summary: string;
   tags: string[];
   frameworks: string[];
   owner?: string;
@@ -50,7 +62,29 @@ export interface CreateModelCard {
   explanation: string;
   usage: string;
   limitations: string;
+  experiment?: LinkedExperiment;
+  dataset?: LinkedDataset;
 }
+
+export interface UpdateModelCard {
+  title?: string;
+  task?: string;
+  tags?: string[];
+  frameworks?: string[];
+  owner?: string;
+  pointOfContact?: string;
+  inferenceServiceName?: string;
+  markdown?: string;
+  performance?: string;
+  artifacts?: Artifact[];
+  description?: string;
+  explanation?: string;
+  usage?: string;
+  limitations?: string;
+  experiment?: LinkedExperiment;
+  dataset?: LinkedDataset;
+}
+
 export interface SearchParams {
   p?: number; // page
   n?: number; // rows per page
@@ -84,15 +118,14 @@ export const useModelStore = defineStore('model', {
       'Multimodal',
       'Reinforcement Learning',
       'Tabular',
-    ], // TODO: use MongoDB aggregate so only tasks in DB are shown
+    ],
     frameworks: [
-      // TODO: Dynamically get frameworks
       'Keras',
       'PyTorch',
     ],
     tags: [
       'Example',
-      'Keras', // TODO: dynamically get tags
+      'Keras', 
     ],
   }),
   getters: {},
@@ -138,6 +171,13 @@ export const useModelStore = defineStore('model', {
         return data;
       } catch (error) {
         return Promise.reject('Failed to create model card');
+      }
+    },
+    async updateModel(metadata: UpdateModelCard, userId: string, modelId: string): Promise<void> {
+      try {
+        await api.put(`models/${userId}/${modelId}`, metadata);
+      } catch (error) {
+        return Promise.reject('Failed to edit model card');
       }
     },
     async getModelById(userId: string, modelId: string): Promise<ModelCard> {

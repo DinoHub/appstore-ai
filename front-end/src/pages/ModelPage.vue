@@ -8,6 +8,8 @@
       <div class="col-12 col-sm-4 self-center text-right">
         <q-btn
           rounded
+          no-caps
+          disable
           label="Perform Transfer Learning"
           color="primary"
         ></q-btn>
@@ -102,6 +104,10 @@
                     <td>Model Creator</td>
                     <td>{{ model.creatorUserId }}</td>
                   </tr>
+                  <tr v-if="model.experiment?.connector">
+                    <td>{{ model.experiment.connector }} Experiment ID</td>
+                    <td>{{ model.experiment.experimentId }}</td>
+                  </tr>
                   <tr>
                     <td>Description</td>
                     <td>{{ model.description }}</td>
@@ -137,9 +143,17 @@
               <div class="q-py-md">
                 <q-btn
                   label="Edit Model Card Metadata"
-                  :to="`/model/${userId}/${modelId}/edit`"
+                  :to="`/model/${userId}/${modelId}/edit/metadata`"
                   rounded
                   color="secondary"
+                ></q-btn>
+              </div>
+              <div class="q-py-md">
+                <q-btn
+                  label="Edit Model Inference Service"
+                  :to="`/model/${userId}/${modelId}/edit/inference`"
+                  rounded
+                  color="tertiary"
                 ></q-btn>
               </div>
               <div>
@@ -159,9 +173,10 @@
                   >
                   </q-input>
                   <q-btn
+                    rounded
                     label="Delete"
                     type="submit"
-                    color="negative"
+                    color="error"
                     :disable="confirmId !== confirmDeleteLabel"
                   ></q-btn>
                 </q-form>
@@ -223,18 +238,23 @@ const model = reactive({
   limitations: '',
 }) as ModelCard;
 
-modelStore.getModelById(userId, modelId).then((card) => {
-  Object.assign(model, card);
-  if (!model.inferenceServiceName) {
-    tab.value = Tabs.metadata; // if inference not available, hide
-    return;
-  }
-  inferenceServiceStore
-    .getServiceByName(model.inferenceServiceName)
-    .then((service) => {
-      inferenceUrl.value = service.inferenceUrl;
-    });
-});
+modelStore
+  .getModelById(userId, modelId)
+  .then((card) => {
+    Object.assign(model, card);
+    if (!model.inferenceServiceName) {
+      tab.value = Tabs.metadata; // if inference not available, hide
+      return;
+    }
+    inferenceServiceStore
+      .getServiceByName(model.inferenceServiceName)
+      .then((service) => {
+        inferenceUrl.value = service.inferenceUrl;
+      });
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 
 const isModelOwner = computed(() => {
   return model.creatorUserId == authStore.user?.userId;

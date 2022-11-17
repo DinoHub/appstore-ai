@@ -25,15 +25,18 @@ const api = axios.create({
 
 api.interceptors.response.use(
   (response) => {
+    // If request succeeds, reset indicator
+    Cookies.remove('requestRetry');
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
     if (
       (error.response?.status === 403 || error.response?.status === 401) &&
-      !originalRequest._retry
+      !Cookies.get('requestRetry')
     ) {
-      originalRequest._retry = true;
+      // Set indicator to prevent infinite loop
+      Cookies.set('requestRetry', 'true');
       // get refresh token
       const authStore = useAuthStore();
       await authStore.refresh();

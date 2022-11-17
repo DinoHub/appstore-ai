@@ -94,7 +94,10 @@ def model_metadata() -> List[Dict]:
             "pointOfContact": "Santa Claus",
             "owner": "Rudolph",
             "inferenceServiceName": "test-service",
-            "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+            "experiment": {
+                "connector": "clearml",
+                "experiment_id": "e-047f991269004aceaf18a25c3c1def20",
+            },
             "artifacts": [
                 {
                     "artifact_type": "model",
@@ -122,7 +125,10 @@ def create_model_card() -> Dict:
         "pointOfContact": "Santa Claus",
         "owner": "Rudolph",
         "inferenceServiceName": "test-service",
-        "clearmlExpId": "e-047f991269004aceaf18a25c3c1def20",
+        "experiment": {
+            "connector": "clearml",
+            "experiment_id": "e-047f991269004aceaf18a25c3c1def20",
+        },
         "artifacts": [
             {
                 "artifact_type": "model",

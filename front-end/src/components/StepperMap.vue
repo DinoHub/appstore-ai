@@ -192,7 +192,6 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
-              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -205,7 +204,6 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
-              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -218,7 +216,6 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
-              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -231,7 +228,6 @@
               class="q-ml-md q-mb-lg"
               type="textarea"
               filled
-              autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -265,7 +261,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -297,12 +293,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -323,7 +319,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -399,9 +395,9 @@
             <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
             <p class="text-left">
               Note that the image provided should be an application that can be
-              embedded using Gradio, with input and output already
-              defined by you. If unsure please check instructions and examples
-              listed under GitHub page.
+              embedded using Gradio, with input and output already defined by
+              you. If unsure please check instructions and examples listed under
+              GitHub page.
             </p>
           </div>
         </div>
@@ -650,10 +646,10 @@ function retrieveExperimentDetails() {
       .then((data) => {
         // TODO: Move this logic to the store
         creationStore.tags = Array.from(
-          new Set([...creationStore.tags, ...data.tags])
+          new Set([...creationStore.tags, ...data.tags]),
         );
         creationStore.frameworks = Array.from(
-          new Set([...creationStore.frameworks, ...data.frameworks])
+          new Set([...creationStore.frameworks, ...data.frameworks]),
         );
         loadingExp.value = false;
         buttonDisable.value = false;

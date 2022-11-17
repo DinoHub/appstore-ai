@@ -41,7 +41,7 @@ export const useAuthStore = defineStore('auth', {
         creds.append('password', password);
         const response = await api.post('/auth/', creds);
         // Decode JWT
-        const { access_token, refresh_token }: LoginResponse = response.data;
+        const { access_token }: LoginResponse = response.data;
         const jwt_data = jwt_decode(access_token) as JWT;
 
         if (!jwt_data) {
@@ -64,10 +64,10 @@ export const useAuthStore = defineStore('auth', {
     },
     logout(): void {
       try {
-        const response = api.delete('/auth/logout');
+        api.delete('/auth/logout');
         this.user = null;
         localStorage.removeItem('auth');
-        localStorage.removeItem('creationStore')
+        localStorage.removeItem('creationStore');
         this.router.push({ name: 'Login' });
       } catch (err) {
         console.warn('Logout failed');
@@ -76,14 +76,14 @@ export const useAuthStore = defineStore('auth', {
     async refresh(): Promise<void> {
       console.warn('Refreshing access token');
       try {
-        const response = await api.post('/auth/refresh', {
-          grant_type: 'refresh_token'
+        await api.post('/auth/refresh', {
+          grant_type: 'refresh_token',
         });
       } catch (err) {
         localStorage.removeItem('auth');
-        localStorage.removeItem('creationStore')
+        localStorage.removeItem('creationStore');
         this.router.push({ name: 'Login' });
-        location.reload()
+        location.reload();
         console.error(err);
       }
     },

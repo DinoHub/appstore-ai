@@ -3,18 +3,23 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 from bson import ObjectId
-from pydantic import AnyUrl, BaseModel, Field
+from pydantic import BaseModel, Field
 
 from ..internal.utils import to_camel_case
+from .experiment import LinkedExperiment
+from .dataset import LinkedDataset
 from .common import PyObjectId
 
 
 class Artifact(BaseModel):
-    artifact_type: str
+    artifact_type: str = Field(..., alias="artifactType")
     name: str
     url: str
     timestamp: Optional[datetime]
     framework: Optional[str]
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
@@ -29,13 +34,13 @@ class ModelCardModelIn(BaseModel):  # Input spec
     explanation: Optional[str]
     usage: Optional[str]
     limitations: Optional[str]
-    owner: Optional[str]
+    owner: Optional[str] # NOTE: This is different from creator_user_id
     point_of_contact: Optional[str]
-    clearml_exp_id: Optional[str]
     artifacts: Optional[
         List[Artifact]
     ]  # will need to use GET /experiments/{exp_id} to get this
-
+    experiment: Optional[LinkedExperiment]
+    dataset: Optional[LinkedDataset]
     class Config:
         alias_generator = to_camel_case
 
@@ -67,11 +72,12 @@ class UpdateModelCardModel(BaseModel):
     frameworks: Optional[List[str]]
     point_of_contact: Optional[str]
     owner: Optional[str]
-    clearml_exp_id: Optional[str]
     inference_service_name: Optional[str]
     artifacts: Optional[
-        Dict[str, Artifact]
+        List[Artifact]
     ]  # will need to use GET /experiments/{exp_id} to get this
+    experiment: Optional[LinkedExperiment]
+    dataset: Optional[LinkedDataset]
 
     class Config:
         alias_generator = to_camel_case
