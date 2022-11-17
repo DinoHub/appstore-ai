@@ -19,7 +19,7 @@
       <iframe
         @load="loading = false"
         v-show="!loading"
-        :src="props.url"
+        :src="props.url + '?__theme=light'"
       ></iframe>
     </q-card-section>
   </q-card>
@@ -34,17 +34,4 @@ interface Props {
 
 const props = defineProps<Props>();
 const loading: Ref<boolean> = ref(true);
-
-// onMounted(() => {
-//   function make_script(src: string): void {
-//     const script = document.createElement('script');
-//     script.type = 'module';
-//     script.setAttribute('crossorigin', '');
-//     script.src = src;
-//     document.head.appendChild(script);
-//   }
-//   make_script(
-//     'https://gradio.s3-us-west-2.amazonaws.com/3.9/assets/index.d8955b2b.js'
-//   );
-// });
 </script>
