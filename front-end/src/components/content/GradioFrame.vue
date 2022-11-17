@@ -1,7 +1,7 @@
 <style scoped>
 .gradio-container iframe {
   width: 100%;
-  height: 100vh;
+  height: 50vh;
   border: none;
   border-radius: 0.5rem;
 }
