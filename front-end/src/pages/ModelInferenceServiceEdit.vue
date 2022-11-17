@@ -5,6 +5,7 @@
     <q-stepper
       v-model="editInferenceServiceStore.step"
       animated
+      ref="stepper"
       done-color="primary"
       error-color="error"
       active-color="secondary"
@@ -14,6 +15,8 @@
         title="Inference Service"
         icon="mdi-server"
         done-editable
+        :done="editInferenceServiceStore.imageUri != ''"
+        :error="editInferenceServiceStore.imageUri == ''"
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-4 q-pr-md shadow-2 rounded">
@@ -66,9 +69,7 @@
               <q-btn
                 v-if="editInferenceServiceStore.step > 1"
                 color="primary"
-                @click="
-                  $refs.stepper.previous();
-                "
+                @click="$refs.stepper.previous()"
                 no-caps
                 outline
                 rounded
@@ -79,9 +80,7 @@
               />
               <q-btn
                 v-if="editInferenceServiceStore.step < 2"
-                @click="
-                  $refs.stepper.next();
-                "
+                @click="$refs.stepper.next()"
                 no-caps
                 rounded
                 color="primary"
@@ -104,7 +103,78 @@
         </q-stepper-navigation>
       </template>
     </q-stepper>
-
+    <dialog>
+      <q-dialog v-model="cancel" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Quit</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Are you sure you want to exit the model creation process? <br />
+            <span class="text-bold"
+              >(Saving will override any previous creations)</span
+            >
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              rounded
+              outline
+              label="Cancel"
+              padding="sm xl"
+              color="error"
+              v-close-popup
+            />
+            <q-space />
+            <q-btn
+              rounded
+              outline
+              label="Quit"
+              color="secondary"
+              v-close-popup
+              to="/"
+              @click="flushDraft()"
+            />
+            <q-btn
+              rounded
+              label="Save & Quit"
+              color="primary"
+              padding="sm xl"
+              to="/"
+              v-close-popup
+              v-if="prevSave"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="prevSave" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Previous Draft</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            There was a previous draft found, continue editing draft or delete?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              outline
+              rounded
+              label="Delete"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+              @click="flushDraft()"
+            />
+            <q-btn
+              rounded
+              padding="sm xl"
+              label="Continue"
+              color="primary"
+              v-close-popup
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </dialog>
   </q-page>
 </template>
 
@@ -123,10 +193,19 @@ const editInferenceServiceStore = useEditInferenceServiceStore();
 const modelStore = useModelStore();
 const modelId = route.params.modelId as string;
 
-const prevSave = ref(false); // TODO: Replace with actual check
+const prevSave = ref(
+  localStorage.getItem(editInferenceServiceStore.$id) !== null,
+);
 const cancel = ref(false);
 const popupContent = ref(false);
 const buttonDisable = ref(false);
+
+function flushDraft() {
+  editInferenceServiceStore.$reset();
+  localStorage.removeItem(`${editInferenceServiceStore.$id}`);
+  editInferenceServiceStore.loadFromInferenceService(modelId); // we want to reset the store to the original model
+}
+
 onMounted(() => {
   if (!prevSave.value) {
     editInferenceServiceStore.loadFromInferenceService(modelId);
