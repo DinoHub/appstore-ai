@@ -104,6 +104,10 @@
                     <td>Model Creator</td>
                     <td>{{ model.creatorUserId }}</td>
                   </tr>
+                  <tr v-if="model.experiment?.connector">
+                    <td>{{ model.experiment.connector }} Experiment ID</td>
+                    <td>{{ model.experiment.experimentId }}</td>
+                  </tr>
                   <tr>
                     <td>Description</td>
                     <td>{{ model.description }}</td>
@@ -234,20 +238,23 @@ const model = reactive({
   limitations: '',
 }) as ModelCard;
 
-modelStore.getModelById(userId, modelId).then((card) => {
-  Object.assign(model, card);
-  if (!model.inferenceServiceName) {
-    tab.value = Tabs.metadata; // if inference not available, hide
-    return;
-  }
-  inferenceServiceStore
-    .getServiceByName(model.inferenceServiceName)
-    .then((service) => {
-      inferenceUrl.value = service.inferenceUrl;
-    });
-}).catch((err) => {
-  console.error(err);
-});
+modelStore
+  .getModelById(userId, modelId)
+  .then((card) => {
+    Object.assign(model, card);
+    if (!model.inferenceServiceName) {
+      tab.value = Tabs.metadata; // if inference not available, hide
+      return;
+    }
+    inferenceServiceStore
+      .getServiceByName(model.inferenceServiceName)
+      .then((service) => {
+        inferenceUrl.value = service.inferenceUrl;
+      });
+  })
+  .catch((err) => {
+    console.error(err);
+  });
 
 const isModelOwner = computed(() => {
   return model.creatorUserId == authStore.user?.userId;
