@@ -82,9 +82,8 @@ export const useAuthStore = defineStore('auth', {
       } catch (err) {
         localStorage.removeItem('auth');
         localStorage.removeItem('creationStore');
-        this.router.push({ name: 'Login' });
-        location.reload();
         console.error(err);
+        this.logout();
       }
     },
   },
