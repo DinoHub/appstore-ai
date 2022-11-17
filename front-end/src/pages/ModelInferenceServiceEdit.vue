@@ -80,7 +80,7 @@
                 :disable="buttonDisable"
               />
               <q-btn
-                v-if="editInferenceServiceStore.step < 2"
+                v-if="editInferenceServiceStore.step === 2"
                 @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
@@ -89,10 +89,10 @@
                 padding="sm xl"
                 :disable="editInferenceServiceStore.imageUri === ''"
               />
-
               <q-btn
                 v-if="
-                  editInferenceServiceStore.step === 2 && false // TODO: check
+                  editInferenceServiceStore.step === 2 &&
+                  editInferenceServiceStore.imageUri
                 "
                 @click="updateService()"
                 color="primary"
@@ -111,10 +111,7 @@
             <div class="text-h6">Quit</div>
           </q-card-section>
           <q-card-section class="q-pt-none">
-            Are you sure you want to exit the model creation process? <br />
-            <span class="text-bold"
-              >(Saving will override any previous creations)</span
-            >
+            Are you sure you want to exit? <br />
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -133,44 +130,6 @@
               color="secondary"
               v-close-popup
               to="/"
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              label="Save & Quit"
-              color="primary"
-              padding="sm xl"
-              to="/"
-              v-close-popup
-              v-if="prevSave"
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
-      <q-dialog v-model="prevSave" persistent>
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Previous Draft</div>
-          </q-card-section>
-          <q-card-section class="q-pt-none">
-            There was a previous draft found, continue editing draft or delete?
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              outline
-              rounded
-              label="Delete"
-              color="error"
-              padding="sm xl"
-              v-close-popup
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              padding="sm xl"
-              label="Continue"
-              color="primary"
-              v-close-popup
             />
           </q-card-actions>
         </q-card>
@@ -187,8 +146,7 @@ import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-se
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute, useRouter } from 'vue-router';
-import { onMounted } from 'vue-demi';
-import { ref, Ref } from 'vue';
+import { ref, Ref, onMounted } from 'vue';
 import { Notify, QStepper } from 'quasar';
 
 const route = useRoute();
@@ -200,18 +158,9 @@ const modelStore = useModelStore();
 const modelId = route.params.modelId as string;
 const previewUrl: Ref<string | null> = ref(null);
 
-const prevSave = ref(
-  localStorage.getItem(editInferenceServiceStore.$id) !== null,
-);
 const cancel = ref(false);
 const popupContent = ref(false);
 const buttonDisable = ref(false);
-
-function flushDraft() {
-  editInferenceServiceStore.$reset();
-  localStorage.removeItem(`${editInferenceServiceStore.$id}`);
-  editInferenceServiceStore.loadFromInferenceService(modelId); // we want to reset the store to the original model
-}
 
 function launchPreview(stepper: QStepper) {
   inferenceServiceStore
@@ -260,8 +209,6 @@ function updateService() {
           },
         ],
       });
-      editInferenceServiceStore.$reset();
-      localStorage.removeItem(`${editInferenceServiceStore.$id}`);
       router.push(`/model/${authStore.user?.userId}/${modelId}`);
     });
   if (previewServiceName) {
@@ -271,8 +218,6 @@ function updateService() {
 }
 
 onMounted(() => {
-  if (!prevSave.value) {
-    editInferenceServiceStore.loadFromInferenceService(modelId);
-  }
+  editInferenceServiceStore.loadFromInferenceService(modelId);
 });
 </script>

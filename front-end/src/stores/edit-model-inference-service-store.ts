@@ -37,9 +37,5 @@ export const useEditInferenceServiceStore = defineStore(
         this.serviceName = serviceName;
       },
     },
-    persist: {
-      storage: localStorage,
-      paths: ['step', 'imageUri', 'containerPort', 'serviceName'],
-    },
   },
 );
