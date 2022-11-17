@@ -184,8 +184,7 @@ import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute } from 'vue-router';
-import { onMounted } from 'vue-demi';
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 
 const route = useRoute();
 const inferenceServiceStore = useInferenceServiceStore();
@@ -194,7 +193,7 @@ const modelStore = useModelStore();
 const modelId = route.params.modelId as string;
 
 const prevSave = ref(
-  localStorage.getItem(editInferenceServiceStore.$id) !== null,
+  localStorage.getItem(editInferenceServiceStore.$id) !== null
 );
 const cancel = ref(false);
 const popupContent = ref(false);
