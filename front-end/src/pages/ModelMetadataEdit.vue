@@ -243,12 +243,12 @@
         icon="assignment"
         :done="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)'
+            '(Example Text to Replace)',
           ) == false
         "
         :error="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)'
+            '(Example Text to Replace)',
           ) != false
         "
       >
@@ -267,7 +267,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -299,12 +299,12 @@
         icon="leaderboard"
         :done="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -325,7 +325,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -357,7 +357,7 @@
                 :disable="buttonDisable"
               />
             </div>
-            <div class="text-right col-6">
+            <div class="text-right col-6 q-gutter-md">
               <q-btn
                 v-if="editMetadataStore.step > 1"
                 color="primary"
@@ -381,12 +381,12 @@
                 :disable="buttonDisable"
               />
               <q-btn
-                v-if="editMetadataStore.step == 5"
                 no-caps
                 rounded
                 @click="saveEdit()"
                 color="primary"
                 label="Save Edits"
+                padding="sm xl"
                 :disable="buttonDisable"
               />
             </div>
@@ -562,30 +562,32 @@ function saveEdit() {
       editMetadataStore.modelPOC = authStore.user.name;
     }
   }
-  editMetadataStore.submitEdit(modelId).then(
-    // Redirect to model page
-    () => {
-      Notify.create({
-        message: 'Model successfully edited',
-        position: 'bottom',
-        icon: 'check',
-        color: 'primary',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
+  editMetadataStore
+    .submitEdit(modelId)
+    .then(
+      // Redirect to model page
+      () => {
+        Notify.create({
+          message: 'Model successfully edited',
+          position: 'bottom',
+          icon: 'check',
+          color: 'primary',
+          actions: [
+            {
+              label: 'Dismiss',
+              color: 'white',
+              handler: () => {
+                /* ... */
+              },
             },
-          },
-        ],
-      });
-      editMetadataStore.$reset();
-      localStorage.removeItem(`${editMetadataStore.$id}`);
+          ],
+        });
+        editMetadataStore.$reset();
+        localStorage.removeItem(`${editMetadataStore.$id}`);
         router.push(`/model/${authStore.user?.userId}/${modelId}`);
-      }
-  ).catch(
-    () => {
+      },
+    )
+    .catch(() => {
       Notify.create({
         message: 'Error editing model',
         position: 'bottom',
@@ -601,8 +603,7 @@ function saveEdit() {
           },
         ],
       });
-    }
-  );
+    });
 }
 
 function populateEditor(store: typeof editMetadataStore) {
@@ -632,10 +633,10 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
   if (state.experimentID !== editMetadataStore.experimentID) {
     experimentStore.getExperimentByID(state.experimentID).then((data) => {
       editMetadataStore.tags = Array.from(
-        new Set([...editMetadataStore.tags, ...data.tags])
+        new Set([...editMetadataStore.tags, ...data.tags]),
       );
       editMetadataStore.frameworks = Array.from(
-        new Set([...editMetadataStore.frameworks, ...data.frameworks])
+        new Set([...editMetadataStore.frameworks, ...data.frameworks]),
       );
     });
   }
