@@ -48,6 +48,7 @@
         icon="mdi-server-network"
         done-editable
       >
+        <gradio-frame :v-show="previewUrl" :url="previewUrl"></gradio-frame>
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -80,22 +81,22 @@
               />
               <q-btn
                 v-if="editInferenceServiceStore.step < 2"
-                @click="$refs.stepper.next()"
+                @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
                 color="primary"
                 label="Continue"
                 padding="sm xl"
-                :disable="buttonDisable"
+                :disable="editInferenceServiceStore.imageUri === ''"
               />
 
               <q-btn
                 v-if="
                   editInferenceServiceStore.step === 2 && false // TODO: check
                 "
-                @click="submitImage()"
+                @click="updateService()"
                 color="primary"
-                label="Submit Image"
+                label="Update Service"
                 :disable="buttonDisable"
               />
             </div>
@@ -180,18 +181,24 @@
 
 <script setup lang="ts">
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
+import GradioFrame from 'src/components/content/GradioFrame.vue';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
+import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { onMounted } from 'vue-demi';
-import { ref } from 'vue';
+import { ref, Ref } from 'vue';
+import { Notify, QStepper } from 'quasar';
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 const inferenceServiceStore = useInferenceServiceStore();
 const editInferenceServiceStore = useEditInferenceServiceStore();
 const modelStore = useModelStore();
 const modelId = route.params.modelId as string;
+const previewUrl: Ref<string | null> = ref(null);
 
 const prevSave = ref(
   localStorage.getItem(editInferenceServiceStore.$id) !== null,
@@ -204,6 +211,63 @@ function flushDraft() {
   editInferenceServiceStore.$reset();
   localStorage.removeItem(`${editInferenceServiceStore.$id}`);
   editInferenceServiceStore.loadFromInferenceService(modelId); // we want to reset the store to the original model
+}
+
+function launchPreview(stepper: QStepper) {
+  inferenceServiceStore
+    .createService(
+      modelId,
+      editInferenceServiceStore.imageUri,
+      editInferenceServiceStore.containerPort,
+    )
+    .then((data) => {
+      editInferenceServiceStore.previewServiceName = data.serviceName;
+      previewUrl.value = data.inferenceUrl;
+      stepper.next();
+    })
+    .catch(() => {
+      Notify.create({
+        message: 'Failed to launch preview of inference engine',
+        position: 'bottom',
+        icon: 'check',
+        color: 'error',
+      });
+    });
+}
+
+function updateService() {
+  const previewServiceName = editInferenceServiceStore.previewServiceName;
+  inferenceServiceStore
+    .updateService(
+      editInferenceServiceStore.serviceName,
+      editInferenceServiceStore.imageUri,
+      editInferenceServiceStore.containerPort,
+    )
+    .then((data) => {
+      console.log('Inference service updated');
+      Notify.create({
+        message: 'Inference Service updated',
+        position: 'bottom',
+        icon: 'check',
+        color: 'primary',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              //
+            },
+          },
+        ],
+      });
+      editInferenceServiceStore.$reset();
+      localStorage.removeItem(`${editInferenceServiceStore.$id}`);
+      router.push(`/model/${authStore.user?.userId}/${modelId}`);
+    });
+  if (previewServiceName) {
+    // Remove preview service
+    inferenceServiceStore.deleteService(previewServiceName);
+  }
 }
 
 onMounted(() => {
