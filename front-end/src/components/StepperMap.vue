@@ -434,15 +434,7 @@
       <q-step :name="8" title="Confirm" icon="task">
         <div class="row justify-center">
           <div class="col-5">
-            <gradio-frame
-              class="shadow-2"
-              style="
-                iframe {
-                }
-              "
-              :url="appURI"
-            >
-            </gradio-frame>
+            <gradio-frame class="shadow-2" :url="appURI"> </gradio-frame>
           </div>
           <div
             class="q-ml-xl col-3 shadow-2 rounded-borders q-my-auto"
