@@ -261,7 +261,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)',
+                  '(Example Text to Replace)'
                 ) != false
               "
             >
@@ -293,12 +293,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) != false
         "
       >
@@ -319,7 +319,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
                 ) != false
               "
             >
@@ -432,7 +432,36 @@
         </div>
       </q-step>
       <q-step :name="8" title="Confirm" icon="task">
-        <gradio-frame :url="appURI"></gradio-frame>
+        <div class="row justify-center">
+          <div class="col-5">
+            <gradio-frame
+              class="shadow-2"
+              style="
+                iframe {
+                }
+              "
+              :url="appURI"
+            >
+            </gradio-frame>
+          </div>
+          <div
+            class="q-ml-xl col-3 shadow-2 rounded-borders q-my-auto"
+            style="border-radius: 1; height: 60%"
+          >
+            <h6 class="text-left q-ml-md q-my-sm">Inference Engine</h6>
+            <p class="text-left q-ml-md">
+              The inference engine application will be displayed here. Please
+              ensure it works as intended and can receive inputs and outputs as
+              designed by you.
+            </p>
+            <q-icon name="warning" color="negative" size="1.75rem" />
+            <p class="text-center text-bold q-px-lg text-negative">
+              Ensure all information has been input correctly and the inference
+              engine application is working as intended. Once confirmed all
+              information will be published.
+            </p>
+          </div>
+        </div>
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -493,7 +522,7 @@
               />
               <q-btn
                 v-if="creationStore.step == 8"
-                @click="submitImage($refs.stepper)"
+                @click="finalSubmit()"
                 no-caps
                 rounded
                 color="primary"
@@ -605,12 +634,16 @@ import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import { useModelStore } from 'src/stores/model-store';
 import { Ref, ref } from 'vue';
+import { useRouter } from 'vue-router';
 
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 
 import { Cookies, useQuasar, Notify } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
+
+const router = useRouter();
 
 // constants for stores
 const expStore = useExpStore();
@@ -618,6 +651,7 @@ const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const creatorPreset = useCreationPreset();
 const ieStore = useInferenceServiceStore();
+const modelStore = useModelStore();
 
 // const for checking whether previous saves exist
 const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
@@ -629,6 +663,7 @@ const replaceContent: Ref<boolean> = ref(false); // indicator to replace content
 // variables for inference submit
 const displayImageSubmit = ref(false);
 const appURI = ref('');
+const serviceName = ref('');
 
 // variables for popup exits
 const cancel = ref(false);
@@ -646,10 +681,10 @@ function retrieveExperimentDetails() {
       .then((data) => {
         // TODO: Move this logic to the store
         creationStore.tags = Array.from(
-          new Set([...creationStore.tags, ...data.tags]),
+          new Set([...creationStore.tags, ...data.tags])
         );
         creationStore.frameworks = Array.from(
-          new Set([...creationStore.frameworks, ...data.frameworks]),
+          new Set([...creationStore.frameworks, ...data.frameworks])
         );
         loadingExp.value = false;
         buttonDisable.value = false;
@@ -676,12 +711,14 @@ function submitImage(reference) {
       buttonDisable.value = false;
       loadingExp.value = false;
       appURI.value = data.inferenceUrl;
+      serviceName.value = data.serviceName;
       reference.next();
     })
     .catch(() => {
       buttonDisable.value = false;
       loadingExp.value = false;
       console.error('Error in retrieving experiment details');
+
       Notify.create({
         message: 'Failed to deploy image and create service. Please try again.',
         position: 'top',
@@ -732,6 +769,79 @@ function finalSubmit() {
       creationStore.modelPOC = authStore.user.name;
     }
   }
+  var cardPackage = {
+    title: creationStore.modelName,
+    task: creationStore.modelTask,
+    tags: creationStore.tags,
+    frameworks: creationStore.frameworks,
+    owner: creationStore.modelOwner,
+    pointOfContact: creationStore.modelPOC,
+    inferenceServiceName: serviceName.value,
+    markdown: creationStore.markdownContent,
+    performance: creationStore.performanceMarkdown,
+    artifacts: [
+      { name: 'model', artifactType: 'model', url: creationStore.modelPath },
+    ],
+    description: creationStore.modelDesc,
+    explanation: creationStore.modelExplain,
+    usage: creationStore.modelUsage,
+    limitations: creationStore.modelLimitations,
+  };
+
+  if (
+    creationStore.experimentID != '' &&
+    creationStore.experimentPlatform != ''
+  ) {
+    cardPackage.experiment = {
+      connector: creationStore.experimentPlatform,
+      experimentId: creationStore.experimentID,
+    };
+  }
+
+  if (creationStore.datasetID != '' && creationStore.datasetPlatform != '') {
+    cardPackage.dataset = {
+      connector: creationStore.datasetPlatform,
+      datasetId: creationStore.datasetID,
+    };
+  }
+  console.log(cardPackage);
+  modelStore
+    .createModel(cardPackage)
+    .then((data) => {
+      Notify.create({
+        message: 'Sucessfully created',
+        position: 'top',
+        icon: 'success',
+        color: 'secondary',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              /* ... */
+            },
+          },
+        ],
+      });
+      router.push('/');
+    })
+    .catch((err) => {
+      Notify.create({
+        message: 'Something went wrong in the creation process. Try again.',
+        position: 'top',
+        icon: 'warning',
+        color: 'negative',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              /* ... */
+            },
+          },
+        ],
+      });
+    });
 }
 
 // function for populating editor with values from previous step
