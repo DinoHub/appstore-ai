@@ -142,7 +142,7 @@ try:
     # get variables from env pass in Dockerfile
     MODEL_NAME = os.environ.get("MODEL_NAME", "xlm_roberta_zsl")
     MODEL_VERSION = os.environ.get("MODEL_VERSION", "1")
-    TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "172.20.0.3")
+    TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "172.20.0.4")
     TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
     TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
     TRITON_MODE = os.environ.get("TRITON_MODE", "EXPLICIT")
