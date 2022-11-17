@@ -33,7 +33,7 @@ export const useInferenceServiceStore = defineStore('service', {
     async createService(
       modelId: string,
       imageUri: string,
-      port?: string,
+      port?: number,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.post('/engines/', {
@@ -50,7 +50,7 @@ export const useInferenceServiceStore = defineStore('service', {
     async updateService(
       serviceName: string,
       imageUri?: string,
-      port?: string,
+      port?: number,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.patch(`/engines/${serviceName}`, {

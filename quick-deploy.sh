@@ -1,5 +1,21 @@
 #!/bin/sh
+# create registry container unless it already exists
+reg_name='kind-registry'
+reg_port='5001'
+if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)" != 'true' ]; then
+  docker run \
+    -d --restart=always -p "127.0.0.1:${reg_port}:5000" --name "${reg_name}" \
+    registry:2
+fi
 kind create cluster --config=k8s/kind.yaml
+
+if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.kind}}' "${reg_name}")" = 'null' ]; then
+  docker network connect "kind" "${reg_name}"
+fi
+
+# Currently registry is broken
+# kubectl apply -f k8s/registry.yaml
+
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
 kubectl apply -f k8s/dashboard/admin.yaml
 sh k8s/dashboard/generate-token.sh
@@ -8,8 +24,7 @@ kubectl create namespace metallb-system
 helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
 kubectl wait --for=condition=Ready pod --all -n metallb-system
-# Duplicate as sometimes above times out just as it finishes
-kubectl wait --for=condition=Ready pod --all -n metallb-system
+sleep 20
 kubectl apply -f k8s/metallb-config.yaml -n metallb-system
 
 # Setup NGINX Ingress
@@ -24,8 +39,8 @@ kubectl apply -f https://github.com/knative/operator/releases/download/knative-v
 kubectl create namespace knative-serving
 
 # Load in images
-kind load docker-image appstore-ai-back-end:latest
-kind load docker-image appstore-ai-front-end:latest
+kind load docker-image aas-back-end:latest
+kind load docker-image aas-front-end:latest
 # Set up helm charts
 helm install ai-mongodb charts/mongodb/ --values charts/mongodb/values.yaml
 helm install ai-backend charts/ai-be/ --values charts/ai-be/values.yaml

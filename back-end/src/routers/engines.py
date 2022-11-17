@@ -251,7 +251,9 @@ async def update_inference_engine_service(
     """
     # Create Deployment Template
     db, mongo_client = db
-    updated_metadata = {k: v for k, v in service.dict() if v is not None}
+    updated_metadata = {
+        k: v for k, v in service.dict(by_alias=True).items() if v is not None
+    }
 
     if len(updated_metadata) > 0:
         updated_metadata["lastModified"] = str(datetime.datetime.now())

@@ -9,7 +9,9 @@ export const useEditInferenceServiceStore = defineStore(
     state: () => ({
       step: 1 as number,
       imageUri: '' as string,
-      containerPort: null as number | null,
+      containerPort: undefined as number | undefined,
+      serviceName: '' as string,
+      previewServiceName: null as string | null,
     }),
     getters: {},
     actions: {
@@ -31,12 +33,9 @@ export const useEditInferenceServiceStore = defineStore(
 
         // Load the data
         this.imageUri = service.imageUri;
-        this.containerPort = service.containerPort ?? null;
+        this.containerPort = service.containerPort ?? undefined;
+        this.serviceName = serviceName;
       },
-    },
-    persist: {
-      storage: localStorage,
-      paths: ['step', 'imageUri', 'containerPort'],
     },
   },
 );

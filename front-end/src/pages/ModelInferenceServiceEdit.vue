@@ -48,6 +48,7 @@
         icon="mdi-server-network"
         done-editable
       >
+        <gradio-frame :v-show="previewUrl" :url="previewUrl"></gradio-frame>
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -80,22 +81,25 @@
               />
               <q-btn
                 v-if="editInferenceServiceStore.step < 2"
-                @click="$refs.stepper.next()"
+                @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
                 color="primary"
                 label="Continue"
                 padding="sm xl"
-                :disable="buttonDisable"
+                :disable="editInferenceServiceStore.imageUri === ''"
               />
-
               <q-btn
                 v-if="
-                  editInferenceServiceStore.step === 2 && false // TODO: check
+                  editInferenceServiceStore.step === 2 &&
+                  editInferenceServiceStore.imageUri
                 "
-                @click="submitImage()"
+                @click="updateService()"
+                no-caps
+                rounded
                 color="primary"
-                label="Submit Image"
+                padding="sm xl"
+                label="Update Service"
                 :disable="buttonDisable"
               />
             </div>
@@ -110,10 +114,7 @@
             <div class="text-h6">Quit</div>
           </q-card-section>
           <q-card-section class="q-pt-none">
-            Are you sure you want to exit the model creation process? <br />
-            <span class="text-bold"
-              >(Saving will override any previous creations)</span
-            >
+            Are you sure you want to exit? <br />
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -132,44 +133,6 @@
               color="secondary"
               v-close-popup
               to="/"
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              label="Save & Quit"
-              color="primary"
-              padding="sm xl"
-              to="/"
-              v-close-popup
-              v-if="prevSave"
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
-      <q-dialog v-model="prevSave" persistent>
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Previous Draft</div>
-          </q-card-section>
-          <q-card-section class="q-pt-none">
-            There was a previous draft found, continue editing draft or delete?
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              outline
-              rounded
-              label="Delete"
-              color="error"
-              padding="sm xl"
-              v-close-popup
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              padding="sm xl"
-              label="Continue"
-              color="primary"
-              v-close-popup
             />
           </q-card-actions>
         </q-card>
@@ -180,34 +143,84 @@
 
 <script setup lang="ts">
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
+import GradioFrame from 'src/components/content/GradioFrame.vue';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
+import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
-import { useRoute } from 'vue-router';
-import { ref, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ref, Ref, onMounted } from 'vue';
+import { Notify, QStepper } from 'quasar';
 
 const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
 const inferenceServiceStore = useInferenceServiceStore();
 const editInferenceServiceStore = useEditInferenceServiceStore();
 const modelStore = useModelStore();
 const modelId = route.params.modelId as string;
+const previewUrl: Ref<string | null> = ref(null);
 
-const prevSave = ref(
-  localStorage.getItem(editInferenceServiceStore.$id) !== null
-);
 const cancel = ref(false);
 const popupContent = ref(false);
 const buttonDisable = ref(false);
 
-function flushDraft() {
-  editInferenceServiceStore.$reset();
-  localStorage.removeItem(`${editInferenceServiceStore.$id}`);
-  editInferenceServiceStore.loadFromInferenceService(modelId); // we want to reset the store to the original model
+function launchPreview(stepper: QStepper) {
+  inferenceServiceStore
+    .createService(
+      modelId,
+      editInferenceServiceStore.imageUri,
+      editInferenceServiceStore.containerPort,
+    )
+    .then((data) => {
+      editInferenceServiceStore.previewServiceName = data.serviceName;
+      previewUrl.value = data.inferenceUrl;
+      stepper.next();
+    })
+    .catch(() => {
+      Notify.create({
+        message: 'Failed to launch preview of inference engine',
+        position: 'bottom',
+        icon: 'check',
+        color: 'error',
+      });
+    });
+}
+
+function updateService() {
+  const previewServiceName = editInferenceServiceStore.previewServiceName;
+  inferenceServiceStore
+    .updateService(
+      editInferenceServiceStore.serviceName,
+      editInferenceServiceStore.imageUri,
+      editInferenceServiceStore.containerPort,
+    )
+    .then((data) => {
+      console.log('Inference service updated');
+      Notify.create({
+        message: 'Inference Service updated',
+        position: 'bottom',
+        icon: 'check',
+        color: 'primary',
+        actions: [
+          {
+            label: 'Dismiss',
+            color: 'white',
+            handler: () => {
+              //
+            },
+          },
+        ],
+      });
+      router.push(`/model/${authStore.user?.userId}/${modelId}`);
+    });
+  if (previewServiceName) {
+    // Remove preview service
+    inferenceServiceStore.deleteService(previewServiceName);
+  }
 }
 
 onMounted(() => {
-  if (!prevSave.value) {
-    editInferenceServiceStore.loadFromInferenceService(modelId);
-  }
+  editInferenceServiceStore.loadFromInferenceService(modelId);
 });
 </script>
