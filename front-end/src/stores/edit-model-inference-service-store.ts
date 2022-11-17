@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
-import { useModelStore } from './model-store';
 import { useInferenceServiceStore } from './inference-service-store';
+import { useModelStore } from './model-store';
 
 export const useEditInferenceServiceStore = defineStore(
   'editInferenceService',
@@ -20,13 +20,13 @@ export const useEditInferenceServiceStore = defineStore(
 
         const data = await modelStore.getModelById(
           authStore.user?.userId ?? '',
-          modelId
+          modelId,
         );
         const serviceName = data.inferenceServiceName;
 
         // Get the inference service
         const service = await inferenceServiceStore.getServiceByName(
-          serviceName
+          serviceName,
         );
 
         // Load the data
@@ -34,5 +34,9 @@ export const useEditInferenceServiceStore = defineStore(
         this.containerPort = service.containerPort ?? null;
       },
     },
-  }
+    persist: {
+      storage: localStorage,
+      paths: ['step', 'imageUri', 'containerPort'],
+    },
+  },
 );
