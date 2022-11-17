@@ -41,18 +41,24 @@ def get_password_hash(password: str) -> str:
 def create_access_token(
     data: dict, expires_delta: Union[timedelta, None] = None
 ) -> str:
-    to_encode = data.copy()
-    if expires_delta is not None:
-        expire = datetime.utcnow() + expires_delta
-    else:
-        expire = datetime.utcnow() + timedelta(minutes=360)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(
-        to_encode,
-        config.SECRET_KEY,
-        algorithm=config.ALGORITHM,
-    )
-    return encoded_jwt
+    try:
+        to_encode = data.copy()
+        if expires_delta is not None:
+            expire = datetime.utcnow() + expires_delta
+        else:
+            expire = datetime.utcnow() + timedelta(minutes=360)
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(
+            to_encode,
+            config.SECRET_KEY,
+            algorithm=config.ALGORITHM,
+        )
+        return encoded_jwt
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_406_NOT_ACCEPTABLE,
+            detail=f"Token failed to encode",
+        )
 
 
 def decode_jwt(token: str) -> TokenData:
