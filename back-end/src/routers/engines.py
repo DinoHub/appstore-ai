@@ -289,8 +289,8 @@ async def update_inference_engine_service(
                     template.render(
                         {
                             "engine_name": service_name,
-                            "image_name": updated_service.image_name,
-                            "port": updated_service.container_port,
+                            "image_name": updated_service["imageUri"],
+                            "port": updated_service["containerPort"],
                         }
                     )
                 )
@@ -299,7 +299,7 @@ async def update_inference_engine_service(
                     # Create instance of API class
                     api = CustomObjectsApi(client)
                     try:
-                        api.replace_namespaced_custom_object(
+                        api.patch_namespaced_custom_object(
                             group="serving.knative.dev",
                             version="v1",
                             plural="services",
