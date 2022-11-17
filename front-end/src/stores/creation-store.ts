@@ -1,12 +1,10 @@
-import { AxiosError } from 'axios';
-import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
-import { Cookies } from 'quasar';
+
 
 export const useCreationStore = defineStore('creationStore', {
   state: () => {
     return {
-      step: 1 as number,
+      step: 1 as number ,
       tags: [] as string[],
       frameworks: [] as string[],
       modelPath: '' as string,
@@ -87,28 +85,6 @@ export const useCreationStore = defineStore('creationStore', {
   },
   getters: {},
   actions: {
-    async launchImage(inferenceImage: string, userId: string): Promise<void> {
-      try {
-        console.log(inferenceImage);
-        console.log(userId);
-        const pushedApp = await api.post(
-          '/engines/',
-          {
-            owner_id: userId,
-            image_uri: inferenceImage,
-            service_name: inferenceImage + '123123',
-          },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              Accept: 'application/json',
-            },
-          }
-        );
-      } catch {
-        console.log('failure');
-      }
-    },
     async checkMetadataValues() {
       const keys = Object.keys(this.$state).filter(
         (item) =>
