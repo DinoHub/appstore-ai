@@ -95,7 +95,10 @@
                   editInferenceServiceStore.imageUri
                 "
                 @click="updateService()"
+                no-caps
+                rounded
                 color="primary"
+                padding="sm xl"
                 label="Update Service"
                 :disable="buttonDisable"
               />
