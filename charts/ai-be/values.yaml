@@ -5,7 +5,7 @@
 replicaCount: 1
 
 image:
-  repository: appstore-ai-back-end
+  repository: aas-back-end
   pullPolicy: Never
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"

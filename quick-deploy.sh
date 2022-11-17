@@ -13,7 +13,8 @@ if [ "$(docker inspect -f='{{json .NetworkSettings.Networks.kind}}' "${reg_name}
   docker network connect "kind" "${reg_name}"
 fi
 
-kubectl apply -f k8s/registry.yaml
+# Currently registry is broken
+# kubectl apply -f k8s/registry.yaml
 
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.1/aio/deploy/recommended.yaml
 kubectl apply -f k8s/dashboard/admin.yaml
@@ -23,9 +24,7 @@ kubectl create namespace metallb-system
 helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
 kubectl wait --for=condition=Ready pod --all -n metallb-system
-# Duplicate as sometimes above times out just as it finishes
-sleep 5
-kubectl wait --for=condition=Ready pod --all -n metallb-system
+sleep 20
 kubectl apply -f k8s/metallb-config.yaml -n metallb-system
 
 # Setup NGINX Ingress
@@ -40,8 +39,8 @@ kubectl apply -f https://github.com/knative/operator/releases/download/knative-v
 kubectl create namespace knative-serving
 
 # Load in images
-kind load docker-image appstore-ai-back-end:latest
-kind load docker-image appstore-ai-front-end:latest
+kind load docker-image aas-back-end:latest
+kind load docker-image aas-front-end:latest
 # Set up helm charts
 helm install ai-mongodb charts/mongodb/ --values charts/mongodb/values.yaml
 helm install ai-backend charts/ai-be/ --values charts/ai-be/values.yaml
