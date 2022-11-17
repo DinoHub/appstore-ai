@@ -80,7 +80,7 @@
                 :disable="buttonDisable"
               />
               <q-btn
-                v-if="editInferenceServiceStore.step === 2"
+                v-if="editInferenceServiceStore.step < 2"
                 @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
