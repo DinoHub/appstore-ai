@@ -654,6 +654,8 @@ function populateEditor(store: typeof editMetadataStore) {
 
 function setStateFromExperimentDetails(state: typeof editMetadataStore) {
   if (state.experimentID) {
+    buttonDisable.value = true;
+    loadingExp.value = true;
     experimentStore
       .getExperimentByID(state.experimentID)
       .then((data) => {
@@ -663,10 +665,24 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
         editMetadataStore.frameworks = Array.from(
           new Set([...editMetadataStore.frameworks, ...data.frameworks]),
         );
+        Notify.create({
+          message: 'Retrieved metadata from experiment!',
+          color: 'primary',
+          position: 'top-right',
+        });
       })
       .catch((err) => {
         console.error('Failed to retrieve experiment details');
         console.error(err);
+        Notify.create({
+          message: 'Failed to get metadata from experiment',
+          color: 'error',
+          position: 'top-right',
+        });
+      })
+      .finally(() => {
+        buttonDisable.value = false;
+        loadingExp.value = false;
       });
   }
 }
@@ -702,14 +718,21 @@ function addExpPlots(store: typeof editMetadataStore) {
         replacePerformanceContent.value = true;
         store.performanceMarkdown = newPerformance;
         showPlotModal.value = false;
-        buttonDisable.value = false;
+        Notify.create({
+          message: 'Successfully inserted plots from experiment',
+          color: 'primary',
+          position: 'top-right',
+        });
       })
       .catch((err) => {
-        buttonDisable.value = false;
         Notify.create({
           message: 'Failed to insert plots',
           color: 'error',
+          position: 'top-right',
         });
+      })
+      .finally(() => {
+        buttonDisable.value = false;
       });
   }
 }

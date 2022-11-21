@@ -744,11 +744,20 @@ function retrieveExperimentDetails() {
         creationStore.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
         loadingExp.value = false;
         buttonDisable.value = false;
+        Notify.create({
+          message: 'Retrieved metadata from experiment!',
+          color: 'primary',
+          position: 'top-right',
+        });
       })
       .catch(() => {
         loadingExp.value = false; // don't lock user out when error
         buttonDisable.value = false;
-        console.error('Error in retrieving experiment details');
+        Notify.create({
+          message: 'Failed to get metadata from experiment',
+          color: 'error',
+          position: 'top-right',
+        });
       });
   }
 }
@@ -768,6 +777,12 @@ function submitImage(reference) {
       loadingExp.value = false;
       appURI.value = data.inferenceUrl;
       serviceName.value = data.serviceName;
+      Notify.create({
+        message:
+          'Initializing service for testing. You may have to wait a while for the service to start...',
+        color: 'primary',
+        position: 'top-right',
+      });
       reference.next();
     })
     .catch(() => {
@@ -777,7 +792,7 @@ function submitImage(reference) {
 
       Notify.create({
         message: 'Failed to deploy image and create service. Please try again.',
-        position: 'top',
+        position: 'top-right',
         icon: 'warning',
         color: 'negative',
         actions: [
@@ -866,7 +881,7 @@ function finalSubmit() {
     .then((data) => {
       Notify.create({
         message: 'Sucessfully created',
-        position: 'top',
+        position: 'top-right',
         icon: 'success',
         color: 'secondary',
         actions: [
@@ -884,7 +899,7 @@ function finalSubmit() {
     .catch((err) => {
       Notify.create({
         message: 'Something went wrong in the creation process. Try again.',
-        position: 'top',
+        position: 'top-right',
         icon: 'warning',
         color: 'negative',
         actions: [
@@ -954,14 +969,21 @@ function addExpPlots(store: typeof creationStore) {
         replacePerformanceContent.value = true;
         store.performanceMarkdown = newPerformance;
         showPlotModal.value = false;
-        buttonDisable.value = false;
+        Notify.create({
+          message: 'Successfully inserted plots from experiment',
+          color: 'primary',
+          position: 'top-right',
+        });
       })
       .catch((err) => {
-        buttonDisable.value = false;
         Notify.create({
           message: 'Failed to insert plots',
           color: 'error',
+          position: 'top-right',
         });
+      })
+      .finally(() => {
+        buttonDisable.value = false;
       });
   }
 }
