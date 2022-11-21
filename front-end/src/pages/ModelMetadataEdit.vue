@@ -478,7 +478,7 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
-      <q-dialog v-model="showPlotModal">
+      <q-dialog v-model="showPlotModal" persistent>
         <q-card>
           <q-card-section>
             <div class="text-h6">Retrieve Experiment Plots</div>
@@ -495,6 +495,7 @@
               color="error"
               padding="sm xl"
               v-close-popup
+              :disable="buttonDisable"
             />
             <q-btn
               rounded
@@ -503,8 +504,12 @@
               label="Add plots"
               color="primary"
               @click="addExpPlots(editMetadataStore)"
+              :disable="buttonDisable"
             />
           </q-card-actions>
+          <q-inner-loading :showing="buttonDisable">
+            <q-spinner-gears size="50px" color="primary" />
+          </q-inner-loading>
         </q-card>
       </q-dialog>
     </dialog>
@@ -667,7 +672,7 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
 }
 
 function addExpPlots(store: typeof editMetadataStore) {
-  replacePerformanceContent.value = true;
+  buttonDisable.value = true;
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
     experimentStore
@@ -696,10 +701,13 @@ function addExpPlots(store: typeof editMetadataStore) {
             continue;
           }
         }
+        replacePerformanceContent.value = true;
         store.performanceMarkdown = newPerformance;
         showPlotModal.value = false;
+        buttonDisable.value = false;
       })
       .catch((err) => {
+        buttonDisable.value = false;
         Notify.create({
           message: 'Failed to insert plots',
           color: 'error',
