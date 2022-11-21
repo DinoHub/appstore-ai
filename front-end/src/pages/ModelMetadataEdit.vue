@@ -287,6 +287,7 @@
                 <q-btn
                   label="Populate card description"
                   rounded
+                  no-caps
                   color="secondary"
                   @click="popupContent = true"
                 />
@@ -338,9 +339,23 @@
             </div>
             <tiptap-editor
               editable
+              :replace-content="replacePerformanceContent"
+              @replaced-content="replacePerformanceContent = false"
               :content="editMetadataStore.performanceMarkdown"
               @update:content="editMetadataStore.performanceMarkdown = $event"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Retrieve plots from experiment"
+                  rounded
+                  no-caps
+                  color="secondary"
+                  @click="showPlotModal = true"
+                  v-if="
+                    editMetadataStore.experimentPlatform != '' &&
+                    editMetadataStore.experimentID != ''
+                  " /></template
+            ></tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -455,6 +470,36 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
+      <q-dialog v-model="showPlotModal">
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Retrieve Experiment Plots</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Retrieve any plots from your experiment?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              outline
+              rounded
+              no-caps
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+            />
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              label="Add plots"
+              color="primary"
+              v-close-popup
+              @click="addExpPlots(editMetadataStore)"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </dialog>
   </q-page>
 </template>
@@ -463,7 +508,8 @@
 // TODO: Refactor model creation and editing code
 // as the way it is currently handled is not ideal
 // e.g. Repetitive Code
-import { onMounted, Ref, ref, watch } from 'vue';
+import { onMounted, Ref, ref } from 'vue';
+import { watchDebounced } from '@vueuse/core';
 import { useAuthStore } from 'src/stores/auth-store';
 import { Notify } from 'quasar';
 import { useExpStore } from 'src/stores/exp-store';
@@ -485,10 +531,12 @@ const modelId = route.params.modelId as string;
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
 const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
 
 // variables for popup exits
 const cancel = ref(false);
 const popupContent = ref(false);
+const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
 async function checkMetadata(reference) {
@@ -590,20 +638,66 @@ function populateEditor(store: typeof editMetadataStore) {
 }
 
 function setStateFromExperimentDetails(state: typeof editMetadataStore) {
-  if (state.experimentID !== editMetadataStore.experimentID) {
-    experimentStore.getExperimentByID(state.experimentID).then((data) => {
-      editMetadataStore.tags = Array.from(
-        new Set([...editMetadataStore.tags, ...data.tags]),
-      );
-      editMetadataStore.frameworks = Array.from(
-        new Set([...editMetadataStore.frameworks, ...data.frameworks]),
-      );
-    });
+  if (state.experimentID) {
+    experimentStore
+      .getExperimentByID(state.experimentID, true)
+      .then((data) => {
+        editMetadataStore.tags = Array.from(
+          new Set([...editMetadataStore.tags, ...data.tags]),
+        );
+        editMetadataStore.frameworks = Array.from(
+          new Set([...editMetadataStore.frameworks, ...data.frameworks]),
+        );
+        editMetadataStore.plots = [
+          ...(data.plots ?? []),
+          ...(data.scalars ?? []),
+        ];
+      })
+      .catch((err) => {
+        console.error('Failed to retrieve experiment details');
+        console.error(err);
+      });
+  }
+}
+
+function addExpPlots(store: typeof editMetadataStore) {
+  try {
+    replacePerformanceContent.value = true;
+    let newPerformance = store.performanceMarkdown;
+
+    // Get all plots from experiment
+    for (const chart of store.plots) {
+      try {
+        newPerformance += `
+          <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
+            /["]/g,
+            '&quot;',
+          )}" data-data="${JSON.stringify(chart.data).replace(
+            /["]/g,
+            '&quot;',
+          )}"></chart>
+          <p></p>
+        `;
+        console.log(newPerformance);
+      } catch (err) {
+        console.log('Failed to retrieve chart');
+        console.log(err);
+        continue;
+      }
+    }
+    store.performanceMarkdown = newPerformance;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    showPlotModal.value = false;
   }
 }
 
 onMounted(() => {
   editMetadataStore.loadFromMetadata(modelId);
-  watch(editMetadataStore, setStateFromExperimentDetails);
+  watchDebounced(editMetadataStore, setStateFromExperimentDetails, {
+    debounce: 2000,
+    maxWait: 5000,
+  });
 });
 </script>

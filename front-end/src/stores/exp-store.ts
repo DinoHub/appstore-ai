@@ -1,4 +1,5 @@
 import { AxiosError } from 'axios';
+import { Chart } from 'src/components/models';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 
@@ -14,6 +15,8 @@ export interface Experiment {
   frameworks: string[];
   config: Config;
   owner: string;
+  scalars?: Chart[];
+  plots?: Chart[];
 }
 
 export const useExpStore = defineStore('exp', {
@@ -22,22 +25,27 @@ export const useExpStore = defineStore('exp', {
   }),
   getters: {},
   actions: {
-    async getExperimentByID(exp_id: string): Promise<Experiment> {
+    async getExperimentByID(
+      exp_id: string,
+      returnPlots = false,
+      returnArtifacts = false,
+    ): Promise<Experiment> {
       try {
         const res = await api.get(`experiments/${exp_id}`, {
           params: {
             connector: 'clearml',
-            return_plots: false,
-            return_artifacts: false,
+            return_plots: returnPlots,
+            return_artifacts: returnArtifacts,
           },
         });
         const data: Experiment = res.data;
         return data;
       } catch (error) {
         const errRes = error as AxiosError;
+        console.error(errRes.response?.data);
         if (errRes.response?.status === 404) {
           console.error('Experiment Not Found');
-          this.router.push('/404');
+          // TODO: Notify reject
         }
         return Promise.reject('Unable to get experiment');
       }

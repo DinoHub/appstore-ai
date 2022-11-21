@@ -1,3 +1,4 @@
+import { Chart } from 'src/components/models';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useModelStore } from './model-store';
@@ -22,6 +23,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     modelLimitations: '' as string,
     markdownContent: '' as string,
     performanceMarkdown: '' as string,
+    plots: [] as Chart[],
   }),
   getters: {},
   actions: {
