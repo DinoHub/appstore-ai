@@ -44,4 +44,4 @@ ARG ENV_STATE=dev
 ENV ENV_STATE=${ENV_STATE}
 
 EXPOSE 8080
-CMD [ "poetry", "run", "python", "-m", "uvicorn", "src.main:app","--host=0.0.0.0", "--port", "8080" ]
+CMD [ "poetry", "run", "python", "-m", "uvicorn", "src.main:app","--host=0.0.0.0", "--port", "8080", "--workers", "4" ]
