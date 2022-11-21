@@ -19,19 +19,26 @@
       <iframe
         @load="loading = false"
         v-show="!loading"
-        :src="props.url + '?__theme=light'"
+        :src="iframeUrl"
       ></iframe>
     </q-card-section>
   </q-card>
 </template>
 
 <script setup lang="ts">
-import { defineProps, Ref, ref } from 'vue';
+import { defineProps, Ref, ref, computed, ComputedRef } from 'vue';
 
 interface Props {
   url: string;
+  dark?: boolean;
 }
 
 const props = defineProps<Props>();
 const loading: Ref<boolean> = ref(true);
+
+const iframeUrl: ComputedRef<string | undefined> = computed(() => {
+  return props.url
+    ? `${props.url}?__theme=${props.dark ? 'dark' : 'light'}`
+    : undefined;
+});
 </script>

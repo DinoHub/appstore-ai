@@ -74,7 +74,16 @@
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
-              <gradio-frame :url="inferenceUrl"></gradio-frame>
+              <gradio-frame
+                :url="inferenceUrl"
+                v-show="inferenceUrl"
+              ></gradio-frame>
+              <q-card v-show="!inferenceUrl">
+                <q-card-section class="headline-small"
+                  >Inference service is not available for this
+                  model</q-card-section
+                >
+              </q-card>
             </q-tab-panel>
             <q-tab-panel name="metadata">
               <q-markup-table>
