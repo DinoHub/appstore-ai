@@ -38,6 +38,34 @@ async def get_inference_engine_service(
     return service
 
 
+@router.get("/{service_name}/status")
+def get_inference_engine_service_status(
+    service_name: str, k8s_client: ApiClient = Depends(get_k8s_client)
+):
+    # Sync endpoint to allow for concurrent request
+    try:
+        with k8s_client as client:
+            api = CustomObjectsApi(client)
+            result = api.get_namespaced_custom_object(
+                group="serving.knative.dev",
+                version="v1",
+                namespace=config.IE_NAMESPACE,
+                plural="services",
+                name=service_name,
+            )
+            return result["status"]
+    except K8sAPIException as e:
+        if e.status == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Service {service_name} not found",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error getting service status",
+        )
+
+
 @router.get("/")
 async def get_available_inference_engine_services(
     k8s_client: ApiClient = Depends(get_k8s_client),
@@ -79,7 +107,6 @@ async def create_inference_engine_service(
     service_name = k8s_safe_name(
         f"{user.user_id}-{service.model_id}-{uuid4()}"
     )
-    print(service.image_uri)
     deployment_template = safe_load(
         template.render(
             {
@@ -141,29 +168,6 @@ async def create_inference_engine_service(
             async with await mongo_client.start_session() as session:
                 async with session.start_transaction():
                     await db["services"].insert_one(service_metadata)
-
-                    # Query status of latest revision of service
-                    service_ready = False
-                    for attempt in range(5):
-                        # TODO Get status of revision
-                        service_status = (
-                            api.get_namespaced_custom_object_status(
-                                group="serving.knative.dev",
-                                version="v1",
-                                plural="services",
-                                name=service_name,
-                                namespace=config.IE_NAMESPACE,
-                            )
-                        )
-                        return service_status
-                        service_ready = True
-
-                    if not service_ready:
-                        session.abort_transaction()
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Failed to create service",
-                        )
             return service_metadata
         except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
