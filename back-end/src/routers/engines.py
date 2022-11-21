@@ -229,8 +229,59 @@ async def delete_inference_engine_service(
 
 
 @router.delete("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_orphan_services(db=Depends(get_db)):
-    raise NotImplementedError
+async def delete_orphan_services(
+    db=Depends(get_db), k8s_client: ApiClient = Depends(get_k8s_client)
+):
+    db, mongo_client = db
+    # Get all model cards
+    model_services = await db["models"].find(
+        {}, {"inferenceServiceName": 1}  # include only service names
+    )
+    # Do a search of all services NOT IN modelServices
+    orphaned_services = db["services"].find(
+        {
+            "serviceName": {
+                "$nin": [x["inferenceServiceName"] for x in model_services]
+            }
+        },
+        {"serviceName": 1},
+    )
+    with k8s_client as client:
+        api = CustomObjectsApi(client)
+        async with await mongo_client.start_session() as session:
+            async for service in orphaned_services:
+                # Remove service
+                service_name = service["serviceName"]
+                async with session.start_transaction():
+                    await db["services"].delete_one(
+                        {"serviceName": service_name}
+                    )
+                    try:
+                        api.delete_namespaced_custom_object(
+                            group="serving.knative.dev",
+                            version="v1",
+                            plural="services",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name,
+                        )
+                    except (K8sAPIException, HTTPError) as e:
+                        session.abort_transaction()  # if failed to remove in k8s, rollback db change
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error when deleting inference engine: {e}",
+                        )
+                    except TypeError:
+                        session.abort_transaction()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="API has no access to the K8S cluster",
+                        )
+                    except Exception as e:
+                        session.abort_transaction()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error when deleting inference engine: {e}",
+                        )
 
 
 @router.patch("/{service_name}")
