@@ -48,6 +48,8 @@
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.experimentPlatforms"
               label="Experiment Platform (Optional)"
+              map-options
+              emit-value
             />
             <q-input
               outlined
@@ -65,6 +67,8 @@
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.datasetPlatforms"
               label="Dataset Platform (Optional)"
+              map-options
+              emit-value
             />
             <q-input
               outlined
