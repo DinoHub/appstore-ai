@@ -110,7 +110,6 @@ async def refresh_token(
     csrf: CsrfProtect = Depends(),
 ):
     try:
-        csrf.validate_csrf_in_cookies(request)
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
             rs = request.cookies["refresh_token"]
