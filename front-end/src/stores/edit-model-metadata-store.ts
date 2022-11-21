@@ -32,7 +32,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
 
       const original_data = await modelStore.getModelById(
         authStore.user?.userId ?? '',
-        modelId
+        modelId,
       );
 
       // Load the data
@@ -80,7 +80,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
             'experimentPlatform',
             'modelOwner',
             'modelPOC',
-          ].includes(item)
+          ].includes(item),
       );
       if (this.$state.tags.length == 0 || this.$state.frameworks.length == 0) {
         return false;
@@ -135,31 +135,8 @@ export const useEditMetadataStore = defineStore('editMetadata', {
           pointOfContact: this.modelPOC,
         },
         authStore.user?.userId ?? '',
-        modelId
+        modelId,
       );
     },
-  },
-  persist: {
-    storage: localStorage,
-    paths: [
-      'step',
-      'tags',
-      'frameworks',
-      'modelPath',
-      'experimentPlatform',
-      'experimentID',
-      'datasetPlatform',
-      'datasetID',
-      'modelName',
-      'modelTask',
-      'modelOwner',
-      'modelPOC',
-      'modelDesc',
-      'modelExplain',
-      'modelUsage',
-      'modelLimitations',
-      'markdownContent',
-      'performanceMarkdown',
-    ],
   },
 });

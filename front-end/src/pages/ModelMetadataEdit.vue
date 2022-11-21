@@ -402,9 +402,6 @@
           </q-card-section>
           <q-card-section class="q-pt-none">
             Are you sure you want to exit the model creation process? <br />
-            <span class="text-bold"
-              >(Saving will override any previous creations)</span
-            >
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -418,21 +415,11 @@
             <q-space />
             <q-btn
               rounded
-              outline
               label="Quit"
-              color="secondary"
-              v-close-popup
-              to="/"
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              label="Save & Quit"
               color="primary"
               padding="sm xl"
               to="/"
               v-close-popup
-              v-if="prevSave"
             />
           </q-card-actions>
         </q-card>
@@ -453,35 +440,6 @@
               color="primary"
               v-close-popup
               @click="populateEditor(editMetadataStore)"
-            />
-          </q-card-actions>
-        </q-card>
-      </q-dialog>
-      <q-dialog v-model="prevSave" persistent>
-        <q-card>
-          <q-card-section>
-            <div class="text-h6">Previous Draft</div>
-          </q-card-section>
-          <q-card-section class="q-pt-none">
-            There was a previous draft found, continue editing draft or reset
-            back to original content?
-          </q-card-section>
-          <q-card-actions align="right">
-            <q-btn
-              outline
-              rounded
-              label="Reset"
-              color="error"
-              padding="sm xl"
-              v-close-popup
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              padding="sm xl"
-              label="Continue"
-              color="primary"
-              v-close-popup
             />
           </q-card-actions>
         </q-card>
@@ -513,9 +471,6 @@ const route = useRoute();
 const router = useRouter();
 const modelId = route.params.modelId as string;
 
-// const for checking whether previous draft exist
-const prevSave = ref(localStorage.getItem(editMetadataStore.$id) !== null);
-
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
 const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
@@ -524,12 +479,6 @@ const replaceContent: Ref<boolean> = ref(false); // indicator to replace content
 const cancel = ref(false);
 const popupContent = ref(false);
 const buttonDisable = ref(false);
-
-function flushDraft() {
-  editMetadataStore.$reset();
-  localStorage.removeItem(`${editMetadataStore.$id}`);
-  editMetadataStore.loadFromMetadata(modelId); // we want to reset the store to the original model
-}
 
 async function checkMetadata(reference) {
   const metadataIsDone = editMetadataStore.checkMetadataValues();
@@ -643,9 +592,7 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
 }
 
 onMounted(() => {
-  if (!prevSave.value) {
-    editMetadataStore.loadFromMetadata(modelId);
-  }
+  editMetadataStore.loadFromMetadata(modelId);
   watch(editMetadataStore, setStateFromExperimentDetails);
 });
 </script>
