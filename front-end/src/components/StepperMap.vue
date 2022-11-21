@@ -261,7 +261,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -293,12 +293,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -319,7 +319,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -475,10 +475,7 @@
               <q-btn
                 v-if="creationStore.step > 1"
                 color="primary"
-                @click="
-                  $refs.stepper.previous();
-                  retrieveExperimentDetails();
-                "
+                @click="$refs.stepper.previous()"
                 no-caps
                 outline
                 rounded
@@ -673,10 +670,10 @@ function retrieveExperimentDetails() {
       .then((data) => {
         // TODO: Move this logic to the store
         creationStore.tags = Array.from(
-          new Set([...creationStore.tags, ...data.tags])
+          new Set([...creationStore.tags, ...data.tags]),
         );
         creationStore.frameworks = Array.from(
-          new Set([...creationStore.frameworks, ...data.frameworks])
+          new Set([...creationStore.frameworks, ...data.frameworks]),
         );
         loadingExp.value = false;
         buttonDisable.value = false;
