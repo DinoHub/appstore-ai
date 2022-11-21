@@ -275,12 +275,6 @@
               Please remove the example content and style your own content
             </div>
             <!-- Button to populate markdown with text from previous step-->
-            <q-btn
-              label="Populate card description"
-              rounded
-              color="secondary"
-              @click="popupContent = true"
-            />
 
             <tiptap-editor
               editable
@@ -288,7 +282,16 @@
               :replace-content="replaceContent"
               @update:content="editMetadataStore.markdownContent = $event"
               @replaced-content="replaceContent = false"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Populate card description"
+                  rounded
+                  color="secondary"
+                  @click="popupContent = true"
+                />
+              </template>
+            </tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -433,9 +436,17 @@
             Replace example content with your own values?
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="No" color="red" v-close-popup />
             <q-btn
-              flatv
+              outline
+              rounded
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+            />
+            <q-btn
+              rounded
+              padding="sm xl"
               label="Replace"
               color="primary"
               v-close-popup

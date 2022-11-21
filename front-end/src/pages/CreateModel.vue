@@ -1,5 +1,5 @@
 <template>
-  <q-page class="row justify-center text-center q-pt-lg">
+  <q-page padding>
     <stepper-map></stepper-map>
   </q-page>
 </template>

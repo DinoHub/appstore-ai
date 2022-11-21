@@ -150,6 +150,7 @@
           </q-card-section>
         </q-card>
       </q-dialog>
+      <slot name="toolbar"></slot>
     </q-toolbar>
     <main>
       <editor-content

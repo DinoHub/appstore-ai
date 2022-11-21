@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md col-9">
+  <div>
     <q-stepper
       v-model="creationStore.step"
       ref="stepper"
@@ -7,7 +7,6 @@
       done-color="primary"
       error-color="error"
       active-color="secondary"
-      class="shadow-0 justify-center text-center full-height"
       header-class="no-border q-px-xl"
     >
       <q-step
@@ -269,20 +268,22 @@
               Please remove the example content and style your own content
             </div>
             <!-- Button to populate markdown with text from previous step-->
-            <q-btn
-              label="Populate card description"
-              rounded
-              color="secondary"
-              @click="popupContent = true"
-            />
-
             <tiptap-editor
               editable
               :content="creationStore.markdownContent"
               :replace-content="replaceContent"
               @update:content="creationStore.markdownContent = $event"
               @replaced-content="replaceContent = false"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Populate card description"
+                  rounded
+                  color="secondary"
+                  @click="popupContent = true"
+                />
+              </template>
+            </tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -574,9 +575,17 @@
             Replace example content with your own values?
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="No" color="red" v-close-popup />
             <q-btn
-              flatv
+              outline
+              rounded
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+            />
+            <q-btn
+              rounded
+              padding="sm xl"
               label="Replace"
               color="primary"
               v-close-popup
