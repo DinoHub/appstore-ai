@@ -59,6 +59,10 @@
               label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              @update:model-value="
+                setStateFromExperimentDetails(editMetadataStore)
+              "
+              debounce="1000"
             >
             </q-input>
             <q-select
@@ -498,7 +502,6 @@
               padding="sm xl"
               label="Add plots"
               color="primary"
-              v-close-popup
               @click="addExpPlots(editMetadataStore)"
             />
           </q-card-actions>
@@ -523,6 +526,9 @@ import { useRoute, useRouter } from 'vue-router';
 
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
+
+const emit = defineEmits(['update-exp']);
+
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
 const experimentStore = useExpStore();
@@ -644,7 +650,7 @@ function populateEditor(store: typeof editMetadataStore) {
 function setStateFromExperimentDetails(state: typeof editMetadataStore) {
   if (state.experimentID) {
     experimentStore
-      .getExperimentByID(state.experimentID, true)
+      .getExperimentByID(state.experimentID)
       .then((data) => {
         editMetadataStore.tags = Array.from(
           new Set([...editMetadataStore.tags, ...data.tags]),
@@ -652,10 +658,6 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
         editMetadataStore.frameworks = Array.from(
           new Set([...editMetadataStore.frameworks, ...data.frameworks]),
         );
-        editMetadataStore.plots = [
-          ...(data.plots ?? []),
-          ...(data.scalars ?? []),
-        ];
       })
       .catch((err) => {
         console.error('Failed to retrieve experiment details');
@@ -665,14 +667,21 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
 }
 
 function addExpPlots(store: typeof editMetadataStore) {
-  try {
-    replacePerformanceContent.value = true;
-    let newPerformance = store.performanceMarkdown;
-
-    // Get all plots from experiment
-    for (const chart of store.plots) {
-      try {
-        newPerformance += `
+  replacePerformanceContent.value = true;
+  let newPerformance = store.performanceMarkdown;
+  if (store.experimentID) {
+    experimentStore
+      .getExperimentByID(store.experimentID, true)
+      .then((data) => {
+        editMetadataStore.plots = [
+          ...(data.plots ?? []),
+          ...(data.scalars ?? []),
+        ];
+      })
+      .then(() => {
+        for (const chart of store.plots) {
+          try {
+            newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
             '&quot;',
@@ -682,26 +691,24 @@ function addExpPlots(store: typeof editMetadataStore) {
           )}"></chart>
           <p></p>
         `;
-        console.log(newPerformance);
-      } catch (err) {
-        console.log('Failed to retrieve chart');
-        console.log(err);
-        continue;
-      }
-    }
-    store.performanceMarkdown = newPerformance;
-  } catch (err) {
-    console.error(err);
-  } finally {
-    showPlotModal.value = false;
+          } catch (err) {
+            console.log('Failed to retrieve chart');
+            continue;
+          }
+        }
+        store.performanceMarkdown = newPerformance;
+        showPlotModal.value = false;
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to insert plots',
+          color: 'error',
+        });
+      });
   }
 }
 
 onMounted(() => {
   editMetadataStore.loadFromMetadata(modelId);
-  watchDebounced(editMetadataStore, setStateFromExperimentDetails, {
-    debounce: 2000,
-    maxWait: 5000,
-  });
 });
 </script>
