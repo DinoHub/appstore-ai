@@ -13,8 +13,26 @@ export const useCreationPreset = defineStore('createPreset', {
         'Reinforcement Learning',
         'Tabular',
       ] as string[],
-      datasetPlatforms: ['', 'ClearML'] as string[],
-      experimentPlatforms: ['', 'ClearML'] as string[],
+      datasetPlatforms: [
+        {
+          label: 'None',
+          value: '',
+        },
+        {
+          label: 'ClearML',
+          value: 'clearml',
+        },
+      ] as Record<string, string>[],
+      experimentPlatforms: [
+        {
+          label: 'None',
+          value: '',
+        },
+        {
+          label: 'ClearML',
+          value: 'clearml',
+        },
+      ] as Record<string, string>[],
     };
   },
   getters: {},
