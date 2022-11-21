@@ -44,6 +44,8 @@
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.experimentPlatforms"
               label="Experiment Platform (Optional)"
+              emit-value
+              map-options
             />
             <q-input
               outlined
@@ -61,6 +63,8 @@
               class="q-ml-md q-pb-xl"
               :options="creatorPreset.datasetPlatforms"
               label="Dataset Platform (Optional)"
+              emit-value
+              map-options
             />
             <q-input
               v-if="creationStore.datasetPlatform != ''"
@@ -279,6 +283,7 @@
                 <q-btn
                   label="Populate card description"
                   rounded
+                  no-caps
                   color="secondary"
                   @click="popupContent = true"
                 />
@@ -330,9 +335,25 @@
             </div>
             <tiptap-editor
               editable
+              :replace-content="replacePerformanceContent"
+              @replaced-content="replacePerformanceContent = false"
               :content="creationStore.performanceMarkdown"
               @update:content="creationStore.performanceMarkdown = $event"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Retrieve plots from experiment"
+                  rounded
+                  no-caps
+                  color="secondary"
+                  @click="showPlotModal = true"
+                  v-if="
+                    creationStore.experimentPlatform != '' &&
+                    creationStore.experimentID != ''
+                  "
+                />
+              </template>
+            </tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -594,6 +615,40 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
+      <q-dialog v-model="showPlotModal" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Retrieve Experiment Plots</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Retrieve any plots from your experiment?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              outline
+              rounded
+              no-caps
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+              :disable="buttonDisable"
+            />
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              label="Add plots"
+              color="primary"
+              @click="addExpPlots(creationStore)"
+              :disable="buttonDisable"
+            />
+          </q-card-actions>
+          <q-inner-loading :showing="buttonDisable">
+            <q-spinner-gears size="50px" color="primary" />
+          </q-inner-loading>
+        </q-card>
+      </q-dialog>
       <q-dialog v-model="prevSave" persistent>
         <q-card>
           <q-card-section>
@@ -657,6 +712,7 @@ const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
 const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
 
 // variables for inference submit
 const displayImageSubmit = ref(false);
@@ -666,6 +722,7 @@ const serviceName = ref('');
 // variables for popup exits
 const cancel = ref(false);
 const popupContent = ref(false);
+const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
 // function for triggering events that should happen when next step is triggered
@@ -675,7 +732,7 @@ function retrieveExperimentDetails() {
     loadingExp.value = true;
     buttonDisable.value = true;
     expStore
-      .getExperimentByID(creationStore.experimentID)
+      .getExperimentByID(creationStore.experimentID, true)
       .then((data) => {
         // TODO: Move this logic to the store
         creationStore.tags = Array.from(
@@ -684,6 +741,7 @@ function retrieveExperimentDetails() {
         creationStore.frameworks = Array.from(
           new Set([...creationStore.frameworks, ...data.frameworks]),
         );
+        creationStore.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
         loadingExp.value = false;
         buttonDisable.value = false;
       })
@@ -864,5 +922,47 @@ function populateEditor(store: typeof creationStore) {
   <p>&nbsp;</p>
   `),
     (popupContent.value = false);
+}
+
+function addExpPlots(store: typeof creationStore) {
+  buttonDisable.value = true;
+  let newPerformance = store.performanceMarkdown;
+  if (store.experimentID) {
+    expStore
+      .getExperimentByID(store.experimentID, true)
+      .then((data) => {
+        store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
+      })
+      .then(() => {
+        for (const chart of store.plots) {
+          try {
+            newPerformance += `
+          <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
+            /["]/g,
+            '&quot;',
+          )}" data-data="${JSON.stringify(chart.data).replace(
+            /["]/g,
+            '&quot;',
+          )}"></chart>
+          <p></p>
+        `;
+          } catch (err) {
+            console.log('Failed to retrieve chart');
+            continue;
+          }
+        }
+        replacePerformanceContent.value = true;
+        store.performanceMarkdown = newPerformance;
+        showPlotModal.value = false;
+        buttonDisable.value = false;
+      })
+      .catch((err) => {
+        buttonDisable.value = false;
+        Notify.create({
+          message: 'Failed to insert plots',
+          color: 'error',
+        });
+      });
+  }
 }
 </script>

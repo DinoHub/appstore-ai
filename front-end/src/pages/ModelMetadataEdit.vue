@@ -671,6 +671,7 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
   }
 }
 
+// TODO: Extract this common function and put in external store
 function addExpPlots(store: typeof editMetadataStore) {
   buttonDisable.value = true;
   let newPerformance = store.performanceMarkdown;
@@ -678,10 +679,7 @@ function addExpPlots(store: typeof editMetadataStore) {
     experimentStore
       .getExperimentByID(store.experimentID, true)
       .then((data) => {
-        editMetadataStore.plots = [
-          ...(data.plots ?? []),
-          ...(data.scalars ?? []),
-        ];
+        store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
       })
       .then(() => {
         for (const chart of store.plots) {
