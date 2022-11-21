@@ -773,21 +773,27 @@ function submitImage(reference) {
   var response = ieStore
     .createService(creationStore.modelName, creationStore.inferenceImage)
     .then((data) => {
-      buttonDisable.value = false;
-      loadingExp.value = false;
-      appURI.value = data.inferenceUrl;
-      serviceName.value = data.serviceName;
-      Notify.create({
-        message:
-          'Initializing service for testing. You may have to wait a while for the service to start...',
-        color: 'primary',
-        position: 'top-right',
+      ieStore.getServiceReady(data.serviceName, 5, 10).then((ready) => {
+        if (ready) {
+          appURI.value = data.inferenceUrl;
+          serviceName.value = data.serviceName;
+          Notify.create({
+            message:
+              'Initializing service for testing. You may have to wait a while for the service to start...',
+            color: 'primary',
+            position: 'top-right',
+          });
+          reference.next();
+        } else {
+          Notify.create({
+            message: 'Service did not sucessfully start',
+            position: 'top-right',
+            color: 'error',
+          });
+        }
       });
-      reference.next();
     })
     .catch(() => {
-      buttonDisable.value = false;
-      loadingExp.value = false;
       console.error('Error in retrieving experiment details');
 
       Notify.create({
@@ -805,6 +811,10 @@ function submitImage(reference) {
           },
         ],
       });
+    })
+    .finally(() => {
+      buttonDisable.value = false;
+      loadingExp.value = false;
     });
 }
 

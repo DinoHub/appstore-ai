@@ -87,7 +87,9 @@
                 color="primary"
                 label="Continue"
                 padding="sm xl"
-                :disable="editInferenceServiceStore.imageUri === ''"
+                :disable="
+                  editInferenceServiceStore.imageUri === '' && buttonDisable
+                "
               />
               <q-btn
                 v-if="
@@ -106,6 +108,9 @@
           </div>
         </q-stepper-navigation>
       </template>
+      <q-inner-loading :showing="loading"
+        ><q-spinner-gears size="50px" color="primary"></q-spinner-gears
+      ></q-inner-loading>
     </q-stepper>
     <dialog>
       <q-dialog v-model="cancel" persistent>
@@ -164,8 +169,11 @@ const previewUrl: Ref<string | null> = ref(null);
 const cancel = ref(false);
 const popupContent = ref(false);
 const buttonDisable = ref(false);
+const loading = ref(false);
 
 function launchPreview(stepper: QStepper) {
+  buttonDisable.value = true;
+  loading.value = true;
   inferenceServiceStore
     .createService(
       modelId,
@@ -173,17 +181,41 @@ function launchPreview(stepper: QStepper) {
       editInferenceServiceStore.containerPort,
     )
     .then((data) => {
-      editInferenceServiceStore.previewServiceName = data.serviceName;
-      previewUrl.value = data.inferenceUrl;
-      stepper.next();
+      // Check for status
+      inferenceServiceStore
+        .getServiceReady(data.serviceName, 5, 10)
+        .then((ready) => {
+          if (ready) {
+            editInferenceServiceStore.previewServiceName = data.serviceName;
+            previewUrl.value = data.inferenceUrl;
+            stepper.next();
+          } else {
+            Notify.create({
+              message: 'Service did not sucessfully start',
+              position: 'top-right',
+              color: 'error',
+            });
+          }
+        })
+        .catch((err) => {
+          Notify.create({
+            message: 'Failed to create service',
+            position: 'top-right',
+            color: 'error',
+          });
+        });
     })
     .catch(() => {
       Notify.create({
         message: 'Failed to launch preview of inference engine',
-        position: 'bottom',
+        position: 'top-right',
         icon: 'check',
         color: 'error',
       });
+    })
+    .finally(() => {
+      loading.value = false;
+      buttonDisable.value = false;
     });
 }
 

@@ -99,9 +99,9 @@ export const useCreationStore = defineStore('creationStore', {
             'experimentID',
             'datasetPlatform',
             'experimentPlatform',
-            'inferenceImage',
             'modelOwner',
             'modelPOC',
+            'plots',
           ].includes(item),
       );
       if (this.$state.tags.length == 0 || this.$state.frameworks.length == 0) {
@@ -116,6 +116,7 @@ export const useCreationStore = defineStore('creationStore', {
       for (const key of keys) {
         if (this.$state[key] == '') {
           console.log(this.$state);
+          console.log(key);
           return false;
         }
       }

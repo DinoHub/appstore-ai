@@ -11,10 +11,46 @@ export interface InferenceEngineService {
   containerPort?: number;
 }
 
+export interface InferenceServiceStatus {
+  conditions: {
+    lastTransitionTime: string;
+    status: string;
+    type: string;
+  }[];
+  url: string;
+}
+
 export const useInferenceServiceStore = defineStore('service', {
   state: () => ({}),
   getters: {},
   actions: {
+    async getServiceReady(
+      serviceName: string,
+      maxRetries = 1,
+      backoffSeconds = 10,
+    ): Promise<boolean> {
+      try {
+        for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
+          let ready = true;
+          const res = await api.get(`engines/${serviceName}/status`);
+          const data: InferenceServiceStatus = res.data;
+          console.log(data);
+          for (const status of data.conditions) {
+            if (status.status !== 'True') {
+              ready = false;
+            }
+          }
+          if (ready) {
+            return true;
+          }
+          // Sleep for backoffSeconds
+          await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
+        }
+        return false;
+      } catch (error) {
+        return Promise.reject(false);
+      }
+    },
     async getServiceByName(
       serviceName: string,
     ): Promise<InferenceEngineService> {
