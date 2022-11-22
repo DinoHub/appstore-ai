@@ -230,7 +230,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        })
+        }),
       );
       tasks.splice(
         0,
@@ -240,7 +240,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        })
+        }),
       );
     })
     .catch(() => {
@@ -248,7 +248,6 @@ if (props.showFilter) {
       Notify.create({
         message: 'Failed to retrieve filter options from database',
         color: 'error',
-         ,
       });
     });
 }
