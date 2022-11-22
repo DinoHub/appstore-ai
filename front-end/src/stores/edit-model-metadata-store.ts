@@ -1,6 +1,7 @@
 import { Chart } from 'src/components/models';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
+import { useExperimentStore } from './experiment-store';
 import { useModelStore } from './model-store';
 
 export const useEditMetadataStore = defineStore('editMetadata', {
@@ -25,8 +26,63 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     performanceMarkdown: '' as string,
     plots: [] as Chart[],
   }),
-  getters: {},
+  getters: {
+    metadataValid(): boolean {
+      const keys = Object.keys(this).filter(
+        (item) =>
+          ![
+            'step',
+            'tags',
+            'frameworks',
+            'performanceMarkdown',
+            'markdownContent',
+            'datasetID',
+            'experimentID',
+            'datasetPlatform',
+            'experimentPlatform',
+            'modelOwner',
+            'modelPOC',
+            'plots',
+          ].includes(item),
+      );
+      if (this.tags.length == 0 || this.frameworks.length == 0) {
+        return false;
+      }
+      if (
+        (this.datasetID == '' && this.datasetPlatform != '') ||
+        (this.experimentID == '' && this.experimentPlatform != '')
+      ) {
+        return false;
+      }
+      for (const key of keys) {
+        if (this[key] == '') {
+          console.log(this);
+          console.log(key);
+          return false;
+        }
+      }
+      return true;
+    },
+  },
   actions: {
+    async loadMetadataFromExperiment(): Promise<void> {
+      if (!this.experimentID || !this.experimentPlatform) {
+        return Promise.reject();
+      }
+      const experimentStore = useExperimentStore();
+      try {
+        const metadata = await experimentStore.getExperimentByID(
+          this.experimentID,
+          this.experimentPlatform,
+        );
+        this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
+        this.frameworks = Array.from(
+          new Set([...this.frameworks, ...metadata.frameworks]),
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
     async loadFromMetadata(modelId: string): Promise<void> {
       // Get User ID
       const authStore = useAuthStore();
@@ -67,44 +123,17 @@ export const useEditMetadataStore = defineStore('editMetadata', {
         }
       }
     },
-    async checkMetadataValues() {
-      const keys = Object.keys(this.$state).filter(
-        (item) =>
-          ![
-            'step',
-            'tags',
-            'frameworks',
-            'performanceMarkdown',
-            'markdownContent',
-            'datasetID',
-            'experimentID',
-            'datasetPlatform',
-            'experimentPlatform',
-            'modelOwner',
-            'modelPOC',
-          ].includes(item),
-      );
-      if (this.$state.tags.length == 0 || this.$state.frameworks.length == 0) {
-        return false;
-      }
-      if (
-        (this.$state.datasetID == '' && this.$state.datasetPlatform != '') ||
-        (this.$state.experimentID == '' && this.$state.experimentPlatform != '')
-      ) {
-        return false;
-      }
-      for (const key of keys) {
-        if (this.$state[key] == '') {
-          console.log(this.$state);
-          return false;
-        }
-      }
-      return true;
-    },
     async submitEdit(modelId: string) {
       const authStore = useAuthStore();
       const modelStore = useModelStore();
-
+      if (authStore.user?.name) {
+        if (this.modelOwner == '') {
+          this.modelOwner = authStore.user.name;
+        }
+        if (this.modelPOC == '') {
+          this.modelPOC = authStore.user.name;
+        }
+      }
       modelStore.updateModel(
         {
           title: this.modelName,

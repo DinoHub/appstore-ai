@@ -46,7 +46,7 @@
               outlined
               v-model="editMetadataStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.experimentPlatforms"
+              :options="experimentStore.experimentConnectors"
               label="Experiment Platform (Optional)"
               map-options
               emit-value
@@ -59,9 +59,7 @@
               label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
-              @update:model-value="
-                setStateFromExperimentDetails(editMetadataStore)
-              "
+              @update:model-value="setStateFromExperimentDetails()"
               debounce="1000"
             >
             </q-input>
@@ -69,7 +67,7 @@
               outlined
               v-model="editMetadataStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.datasetPlatforms"
+              :options="datasetStore.datasetConnectors"
               label="Dataset Platform (Optional)"
               map-options
               emit-value
@@ -120,7 +118,7 @@
               outlined
               v-model="editMetadataStore.modelTask"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.tasksList"
+              :options="modelStore.tasks"
               label="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
@@ -517,26 +515,25 @@
 </template>
 
 <script setup lang="ts">
-// TODO: Refactor model creation and editing code
-// as the way it is currently handled is not ideal
-// e.g. Repetitive Code
 import { onMounted, ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { Notify, QStepper } from 'quasar';
-import { useExpStore } from 'src/stores/experiment-store';
+import { useExperimentStore } from 'src/stores/experiment-store';
 import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
-import { useCreationPreset } from 'src/stores/creation-preset';
 import { useRoute, useRouter } from 'vue-router';
 
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
+import { useModelStore } from 'src/stores/model-store';
+import { useDatasetStore } from 'src/stores/dataset-store';
 
 const emit = defineEmits(['update-exp']);
 
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
-const experimentStore = useExpStore();
-const creatorPreset = useCreationPreset();
+const experimentStore = useExperimentStore();
+const datasetStore = useDatasetStore();
+const modelStore = useModelStore();
 const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
@@ -553,9 +550,8 @@ const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
-const checkMetadata = async (stepper: QStepper) => {
-  const metadataIsDone = editMetadataStore.checkMetadataValues();
-  if ((await metadataIsDone) == true) {
+const checkMetadata = (stepper: QStepper) => {
+  if (editMetadataStore.metadataValid) {
     stepper.next();
   } else {
     Notify.create({
@@ -565,16 +561,7 @@ const checkMetadata = async (stepper: QStepper) => {
     });
   }
 };
-
 const saveEdit = () => {
-  if (authStore.user?.name) {
-    if (editMetadataStore.modelOwner == '') {
-      editMetadataStore.modelOwner = authStore.user.name;
-    }
-    if (editMetadataStore.modelPOC == '') {
-      editMetadataStore.modelPOC = authStore.user.name;
-    }
-  }
   editMetadataStore
     .submitEdit(modelId)
     .then(
@@ -622,37 +609,14 @@ const populateEditor = (store: typeof editMetadataStore) => {
     (popupContent.value = false);
 };
 
-const setStateFromExperimentDetails = (state: typeof editMetadataStore) => {
-  if (state.experimentID) {
-    buttonDisable.value = true;
-    loadingExp.value = true;
-    experimentStore
-      .getExperimentByID(state.experimentID, state.experimentPlatform)
-      .then((data) => {
-        editMetadataStore.tags = Array.from(
-          new Set([...editMetadataStore.tags, ...data.tags]),
-        );
-        editMetadataStore.frameworks = Array.from(
-          new Set([...editMetadataStore.frameworks, ...data.frameworks]),
-        );
-        Notify.create({
-          message: 'Retrieved metadata from experiment!',
-          color: 'primary',
-        });
-      })
-      .catch((err) => {
-        console.error('Failed to retrieve experiment details');
-        console.error(err);
-        Notify.create({
-          message: 'Failed to get metadata from experiment',
-          color: 'error',
-        });
-      })
-      .finally(() => {
-        buttonDisable.value = false;
-        loadingExp.value = false;
-      });
-  }
+const setStateFromExperimentDetails = () => {
+  buttonDisable.value = true;
+  loadingExp.value = true;
+
+  editMetadataStore.loadMetadataFromExperiment().finally(() => {
+    buttonDisable.value = false;
+    loadingExp.value = false;
+  });
 };
 
 // TODO: Extract this common function and put in external store

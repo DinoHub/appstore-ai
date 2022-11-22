@@ -158,7 +158,6 @@ export const useModelStore = defineStore('model', {
     },
     async createModel(metadata: CreateModelCard): Promise<ModelCard> {
       try {
-        // Clean data
         const res = await api.post('models/', metadata);
         const data: ModelCard = res.data;
         return data;

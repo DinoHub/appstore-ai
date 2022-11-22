@@ -20,7 +20,7 @@ export interface Experiment {
   plots?: Chart[];
 }
 
-export const useExpStore = defineStore('experiment', {
+export const useExperimentStore = defineStore('experiment', {
   state: () => ({
     experimentConnectors: [
       {

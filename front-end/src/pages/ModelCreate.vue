@@ -42,7 +42,7 @@
               outlined
               v-model="creationStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.experimentPlatforms"
+              :options="experimentStore.experimentConnectors"
               label="Experiment Platform (Optional)"
               emit-value
               map-options
@@ -55,13 +55,14 @@
               label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              @update:model-value="retrieveExperimentDetails()"
             >
             </q-input>
             <q-select
               outlined
               v-model="creationStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.datasetPlatforms"
+              :options="datasetStore.datasetConnectors"
               label="Dataset Platform (Optional)"
               emit-value
               map-options
@@ -111,7 +112,7 @@
               outlined
               v-model="creationStore.modelTask"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.tasksList"
+              :options="modelStore.tasks"
               label="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
@@ -367,10 +368,7 @@
       >
         <div
           class="row justify-center"
-          v-if="
-            creationStore.modelTask != 'Reinforcement Learning' &&
-            displayImageSubmit == false
-          "
+          v-if="creationStore.modelTask != 'Reinforcement Learning'"
         >
           <div class="q-pa-md q-gutter-sm col-4 shadow-1">
             <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
@@ -410,7 +408,7 @@
               class="q-pb-xl q-mr-sm"
               autogrow
               hint="Image URI"
-              v-model="creationStore.inferenceImage"
+              v-model="creationStore.imageUri"
               :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
@@ -456,7 +454,12 @@
       <q-step :name="8" title="Confirm" icon="task">
         <div class="row justify-center">
           <div class="col-5">
-            <gradio-frame class="shadow-2" :url="appURI"> </gradio-frame>
+            <gradio-frame
+              class="shadow-2"
+              :v-show="creationStore.previewServiceUrl"
+              :url="creationStore.previewServiceUrl ?? ''"
+            >
+            </gradio-frame>
           </div>
           <div
             class="q-ml-xl col-3 shadow-2 rounded-borders q-my-auto"
@@ -508,10 +511,7 @@
               />
               <q-btn
                 v-if="creationStore.step < 6"
-                @click="
-                  $refs.stepper.next();
-                  retrieveExperimentDetails();
-                "
+                @click="$refs.stepper.next()"
                 no-caps
                 rounded
                 color="primary"
@@ -521,10 +521,8 @@
               />
 
               <q-btn
-                v-if="
-                  creationStore.step == 7 && creationStore.inferenceImage != ''
-                "
-                @click="submitImage($refs.stepper)"
+                v-if="creationStore.step == 7 && creationStore.imageUri != ''"
+                @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
                 color="primary"
@@ -682,9 +680,8 @@
 </template>
 
 <script setup lang="ts">
-import { useExpStore } from 'src/stores/experiment-store';
-import { useCreationStore } from 'src/stores/creation-store';
-import { useCreationPreset } from 'src/stores/creation-preset';
+import { useExperimentStore } from 'src/stores/experiment-store';
+import { useCreationStore } from 'src/stores/create-model-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { ModelCard, useModelStore } from 'src/stores/model-store';
@@ -695,14 +692,14 @@ import GradioFrame from 'src/components/content/GradioFrame.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 
 import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
+import { useDatasetStore } from 'src/stores/dataset-store';
 
 const router = useRouter();
 // constants for stores
-const expStore = useExpStore();
+const experimentStore = useExperimentStore();
+const datasetStore = useDatasetStore();
 const authStore = useAuthStore();
 const creationStore = useCreationStore();
-const creatorPreset = useCreationPreset();
-const ieStore = useInferenceServiceStore();
 const modelStore = useModelStore();
 
 // const for checking whether previous saves exist
@@ -713,11 +710,6 @@ const loadingExp = ref(false);
 const replaceContent = ref(false); // indicator to replace content with model desc data
 const replacePerformanceContent = ref(false); // indicator to replace content with model desc data
 
-// variables for inference submit
-const displayImageSubmit = ref(false);
-const appURI = ref('');
-const serviceName = ref('');
-
 // variables for popup exits
 const cancel = ref(false);
 const popupContent = ref(false);
@@ -726,40 +718,12 @@ const buttonDisable = ref(false);
 
 // function for triggering events that should happen when next step is triggered
 const retrieveExperimentDetails = () => {
-  if (creationStore.step === 2 && creationStore.experimentID !== '') {
-    loadingExp.value = true;
-    buttonDisable.value = true;
-    expStore
-      .getExperimentByID(
-        creationStore.experimentID,
-        creationStore.experimentPlatform,
-        true,
-      )
-      .then((data) => {
-        // TODO: Move this logic to the store
-        creationStore.tags = Array.from(
-          new Set([...creationStore.tags, ...data.tags]),
-        );
-        creationStore.frameworks = Array.from(
-          new Set([...creationStore.frameworks, ...data.frameworks]),
-        );
-        creationStore.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
-        Notify.create({
-          message: 'Retrieved metadata from experiment!',
-          color: 'primary',
-        });
-      })
-      .catch(() => {
-        Notify.create({
-          message: 'Failed to get metadata from experiment',
-          color: 'error',
-        });
-      })
-      .finally(() => {
-        loadingExp.value = false; // don't lock user out when error
-        buttonDisable.value = false;
-      });
-  }
+  loadingExp.value = true;
+  buttonDisable.value = true;
+  creationStore.loadMetadataFromExperiment().finally(() => {
+    loadingExp.value = false; // don't lock user out when error
+    buttonDisable.value = false;
+  });
 };
 
 const flushCreator = () => {
@@ -767,35 +731,17 @@ const flushCreator = () => {
   localStorage.removeItem(`${creationStore.$id}`);
 };
 
-const submitImage = (stepper: QStepper) => {
+const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;
   loadingExp.value = true;
-  ieStore
-    .createService(creationStore.modelName, creationStore.inferenceImage)
-    .then((data) => {
-      ieStore.getServiceReady(data.serviceName, 5, 10).then((ready) => {
-        if (ready) {
-          appURI.value = data.inferenceUrl;
-          serviceName.value = data.serviceName;
-          Notify.create({
-            message:
-              'Initializing service for testing. You may have to wait a while for the service to start...',
-            color: 'primary',
-          });
-          stepper.next();
-        } else {
-          Notify.create({
-            message: 'Service did not sucessfully start',
-            color: 'error',
-          });
-        }
-      });
+  creationStore
+    .launchPreviewService(creationStore.modelName)
+    .then(() => {
+      stepper.next();
     })
     .catch(() => {
-      console.error('Error in retrieving experiment details');
       Notify.create({
-        message: 'Failed to deploy image and create service. Please try again.',
-        icon: 'warning',
+        message: 'Failed to launch preview!',
         color: 'error',
       });
     })
@@ -805,9 +751,8 @@ const submitImage = (stepper: QStepper) => {
     });
 };
 
-const checkMetadata = async (stepper: QStepper) => {
-  const metadataIsDone = creationStore.checkMetadataValues();
-  if ((await metadataIsDone) == true) {
+const checkMetadata = (stepper: QStepper) => {
+  if (creationStore.metadataValid) {
     stepper.next();
   } else {
     Notify.create({
@@ -819,66 +764,11 @@ const checkMetadata = async (stepper: QStepper) => {
 };
 
 const finalSubmit = () => {
-  if (authStore.user?.name) {
-    if (creationStore.modelOwner == '') {
-      creationStore.modelOwner = authStore.user.name;
+  creationStore.createModel().then((data) => {
+    if (data) {
+      router.push(`/model/${data.modelId}/${data.creatorUserId}`);
     }
-    if (creationStore.modelPOC == '') {
-      creationStore.modelPOC = authStore.user.name;
-    }
-  }
-  const cardPackage = {
-    title: creationStore.modelName,
-    task: creationStore.modelTask,
-    tags: creationStore.tags,
-    frameworks: creationStore.frameworks,
-    owner: creationStore.modelOwner,
-    pointOfContact: creationStore.modelPOC,
-    inferenceServiceName: serviceName.value,
-    markdown: creationStore.markdownContent,
-    performance: creationStore.performanceMarkdown,
-    artifacts: [
-      { name: 'model', artifactType: 'model', url: creationStore.modelPath },
-    ],
-    description: creationStore.modelDesc,
-    explanation: creationStore.modelExplain,
-    usage: creationStore.modelUsage,
-    limitations: creationStore.modelLimitations,
-  } as ModelCard;
-
-  if (
-    creationStore.experimentID != '' &&
-    creationStore.experimentPlatform != ''
-  ) {
-    cardPackage.experiment = {
-      connector: creationStore.experimentPlatform,
-      experimentId: creationStore.experimentID,
-    };
-  }
-
-  if (creationStore.datasetID != '' && creationStore.datasetPlatform != '') {
-    cardPackage.dataset = {
-      connector: creationStore.datasetPlatform,
-      datasetId: creationStore.datasetID,
-    };
-  }
-  modelStore
-    .createModel(cardPackage)
-    .then((data) => {
-      Notify.create({
-        message: 'Sucessfully created',
-        icon: 'success',
-        color: 'secondary',
-      });
-      router.push('/');
-    })
-    .catch((err) => {
-      Notify.create({
-        message: 'Something went wrong in the creation process. Try again.',
-        icon: 'warning',
-        color: 'error',
-      });
-    });
+  });
 };
 
 // function for populating editor with values from previous step
@@ -909,7 +799,7 @@ const addExpPlots = (store: typeof creationStore) => {
   buttonDisable.value = true;
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
-    expStore
+    experimentStore
       .getExperimentByID(store.experimentID, store.experimentPlatform, true)
       .then((data) => {
         store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];

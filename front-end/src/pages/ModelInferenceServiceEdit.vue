@@ -48,7 +48,10 @@
         icon="mdi-server-network"
         done-editable
       >
-        <gradio-frame :v-show="previewUrl" :url="previewUrl"></gradio-frame>
+        <gradio-frame
+          :v-show="editInferenceServiceStore.previewServiceUrl"
+          :url="editInferenceServiceStore.previewServiceUrl ?? ''"
+        ></gradio-frame>
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -152,7 +155,6 @@ import GradioFrame from 'src/components/content/GradioFrame.vue';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
 import { useAuthStore } from 'src/stores/auth-store';
-import { useModelStore } from 'src/stores/model-store';
 import { useRoute, useRouter } from 'vue-router';
 import { ref, Ref, onMounted } from 'vue';
 import { Notify, QStepper } from 'quasar';
@@ -162,53 +164,22 @@ const router = useRouter();
 const authStore = useAuthStore();
 const inferenceServiceStore = useInferenceServiceStore();
 const editInferenceServiceStore = useEditInferenceServiceStore();
-const modelStore = useModelStore();
 const modelId = route.params.modelId as string;
-const previewUrl: Ref<string | null> = ref(null);
 
-const cancel = ref(false);
-const popupContent = ref(false);
 const buttonDisable = ref(false);
 const loading = ref(false);
 
 const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;
   loading.value = true;
-  inferenceServiceStore
-    .createService(
-      modelId,
-      editInferenceServiceStore.imageUri,
-      editInferenceServiceStore.containerPort,
-    )
-    .then((data) => {
-      // Check for status
-      inferenceServiceStore
-        .getServiceReady(data.serviceName, 5, 10)
-        .then((ready) => {
-          if (ready) {
-            editInferenceServiceStore.previewServiceName = data.serviceName;
-            previewUrl.value = data.inferenceUrl;
-            stepper.next();
-          } else {
-            Notify.create({
-              message: 'Service did not sucessfully start',
-              color: 'error',
-            });
-          }
-        })
-        .catch((err) => {
-          Notify.create({
-            message: 'Failed to create service',
-            color: 'error',
-          });
-        });
+
+  editInferenceServiceStore
+    .launchPreviewService(modelId)
+    .then(() => {
+      stepper.next();
     })
-    .catch(() => {
-      Notify.create({
-        message: 'Failed to launch preview of inference engine',
-        icon: 'check',
-        color: 'error',
-      });
+    .catch((err) => {
+      console.error(err);
     })
     .finally(() => {
       loading.value = false;
@@ -218,21 +189,14 @@ const launchPreview = (stepper: QStepper) => {
 
 const updateService = () => {
   const previewServiceName = editInferenceServiceStore.previewServiceName;
-  inferenceServiceStore
-    .updateService(
-      editInferenceServiceStore.serviceName,
-      editInferenceServiceStore.imageUri,
-      editInferenceServiceStore.containerPort,
-    )
-    .then((data) => {
-      console.log('Inference service updated');
-      Notify.create({
-        message: 'Inference Service updated',
-        icon: 'check',
-        color: 'primary',
-      });
-      router.push(`/model/${authStore.user?.userId}/${modelId}`);
+  editInferenceServiceStore.updateInferenceService().then(() => {
+    Notify.create({
+      message: 'Inference Service updated',
+      icon: 'check',
+      color: 'primary',
     });
+    router.push(`/model/${authStore.user?.userId}/${modelId}`);
+  });
   if (previewServiceName) {
     // Remove preview service
     inferenceServiceStore.deleteService(previewServiceName);
