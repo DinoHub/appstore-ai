@@ -8,34 +8,14 @@ packages = [{include = "inference_engine"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-fastapi = "^0.85.0"
-python-multipart = "^0.0.5"
-uvicorn = "^0.18.3"
-PyYAML = "^6.0"
-click = "^8.1.3"
-questionary = "^1.10.0"
-filetype = "^1.1.0"
-
+gradio = "^3.10.1"
+tritonclient = {extras = ["all"], version = "^2.27.0"}
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"
 isort = "^5.10.1"
 bandit = "^1.7.4"
 pytest = "^7.1.3"
-Sphinx = "^5.2.3"
-sphinx-copybutton = "^0.5.0"
-furo = "^2022.9.29"
-sphinx-inline-tabs = "^2022.1.2b11"
-myst-parser = "^0.18.1"
-sphinxcontrib-apidoc = "^0.3.0"
-sphinx_design = "^0.3.0"
-MarkupSafe = "^2.1.1"
-sphinx-jsonschema = "^1.19.1"
-pytest-cov = "^4.0.0"
-
-
-[tool.poetry.group.triton.dependencies]
-tritonclient = {extras = ["grpc"], version = "^2.25.0"}
 
 [build-system]
 requires = ["poetry-core"]

@@ -35,17 +35,3 @@ RUN poetry export -f requirements.txt | venv/bin/pip install -r /dev/stdin
 
 # [OPTIONAL] Validate the project is properly configured
 RUN poetry check
-
-# Copy Application
-COPY . /app
-
-# Build application
-RUN poetry build && venv/bin/pip install install dist/*.whl
-
-# Predefine ENVs
-ENV PORT=4001
-ENV HOSTNAME=0.0.0.0
-
-EXPOSE ${PORT}
-
-CMD [ "venv/bin/python", "main.py" ]
