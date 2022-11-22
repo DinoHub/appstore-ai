@@ -27,7 +27,11 @@
           <JSONEditorVue v-model="layout"></JSONEditorVue>
         </q-tab-panel>
         <q-tab-panel name="preview">
-          <plotly-chart :data="data" :layout="layout"></plotly-chart>
+          <plotly-chart
+            v-if="tab == Tabs.preview"
+            :data="data"
+            :layout="layout"
+          ></plotly-chart>
         </q-tab-panel>
       </q-tab-panels>
     </q-card-section>
