@@ -27,7 +27,7 @@ module.exports = configure(function (ctx) {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['axios'],
+    boot: ['axios', 'notify-defaults'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#css
     css: ['app.scss', 'theme.css'],
@@ -64,7 +64,7 @@ module.exports = configure(function (ctx) {
       // analyze: true,
       env: {
         backendAPI: ctx.dev
-          ? 'http://localhost:7070'
+          ? 'http://127.0.0.1:8080'
           : 'http://api.appstore.ai',
       },
       // rawDefine: {}
