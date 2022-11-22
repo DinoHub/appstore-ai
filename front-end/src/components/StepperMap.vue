@@ -264,7 +264,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)',
+                  '(Example Text to Replace)'
                 ) != false
               "
             >
@@ -299,12 +299,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) != false
         "
       >
@@ -325,7 +325,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
                 ) != false
               "
             >
@@ -736,17 +736,17 @@ function retrieveExperimentDetails() {
       .then((data) => {
         // TODO: Move this logic to the store
         creationStore.tags = Array.from(
-          new Set([...creationStore.tags, ...data.tags]),
+          new Set([...creationStore.tags, ...data.tags])
         );
         creationStore.frameworks = Array.from(
-          new Set([...creationStore.frameworks, ...data.frameworks]),
+          new Set([...creationStore.frameworks, ...data.frameworks])
         );
         creationStore.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
         loadingExp.value = false;
         buttonDisable.value = false;
         Notify.create({
+          type: 'positive',
           message: 'Retrieved metadata from experiment!',
-          color: 'primary',
           position: 'top-right',
         });
       })
@@ -754,8 +754,8 @@ function retrieveExperimentDetails() {
         loadingExp.value = false; // don't lock user out when error
         buttonDisable.value = false;
         Notify.create({
+          type: 'negative',
           message: 'Failed to get metadata from experiment',
-          color: 'error',
           position: 'top-right',
         });
       });
@@ -954,11 +954,11 @@ function addExpPlots(store: typeof creationStore) {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;',
+            '&quot;'
           )}" data-data="${JSON.stringify(chart.data).replace(
-            /["]/g,
-            '&quot;',
-          )}"></chart>
+              /["]/g,
+              '&quot;'
+            )}"></chart>
           <p></p>
         `;
           } catch (err) {
