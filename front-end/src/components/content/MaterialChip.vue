@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-export interface Props {
+export interface MaterialChipProps {
   type: 'task' | 'framework' | 'tag';
   label?: string;
   icon?: string;
@@ -22,5 +22,7 @@ const colorMapping = {
   tag: 'secondary',
 };
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<MaterialChipProps>(), {
+  type: 'tag',
+});
 </script>

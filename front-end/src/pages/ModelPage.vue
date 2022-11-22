@@ -211,6 +211,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute } from 'vue-router';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import { Notify } from 'quasar';
 
 enum Tabs {
   inference = 'inference',
@@ -262,6 +263,10 @@ modelStore
       });
   })
   .catch((err) => {
+    Notify.create({
+      message: 'Failed to retrieve model card information',
+      color: 'error',
+    });
     console.error(err);
   });
 

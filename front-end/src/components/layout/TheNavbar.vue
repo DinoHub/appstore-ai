@@ -27,10 +27,10 @@
     <div class="q-pl-sm">
       <quick-search-modal v-if="loggedIn"></quick-search-modal>
     </div>
-    <div class="q-pl-sm">
-      <!-- Notifications -->
-      <notifications-menu v-if="loggedIn"></notifications-menu>
-    </div>
+    <!-- <div class="q-pl-sm"> -->
+    <!-- Notifications -->
+    <!-- <notifications-menu v-if="loggedIn"></notifications-menu> -->
+    <!-- </div> -->
     <!-- <div class="q-pl-sm">
           <q-btn flat round color="white" icon="account_box" v-if="loggedIn" />
         </div> -->
@@ -57,9 +57,9 @@ import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import QuickSearchModal from 'src/components/QuickSearchModal.vue';
-import NotificationsMenu from 'src/components/NotificationsMenu.vue';
+// import NotificationsMenu from 'src/components/NotificationsMenu.vue';
 import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
-import DarkModeToggle from './DarkModeToggle.vue'; 
+import DarkModeToggle from './DarkModeToggle.vue';
 
 export interface Props {
   navRailOpen?: boolean;
@@ -72,15 +72,9 @@ const props = withDefaults(defineProps<Props>(), {
 const authStore = useAuthStore();
 const emit = defineEmits(['toggle-nav-rail']);
 
-const loggedIn = computed(() => {
-  return authStore.user && authStore.user !== null;
-});
+const loggedIn = computed(() => authStore.user && authStore.user !== null);
 
-const isCreatePage = computed(() => {
-  return useRoute().name != 'Create Model';
-});
+const isCreatePage = computed(() => useRoute().name != 'Create Model');
 
-function onLogout() {
-  authStore.logout();
-}
+const onLogout = () => authStore.logout();
 </script>

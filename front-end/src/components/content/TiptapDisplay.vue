@@ -27,7 +27,7 @@ import { lowlight } from 'lowlight';
 
 import { ref, watch } from 'vue';
 
-export interface Props {
+export interface TiptapDisplayProps {
   content?: string;
 }
 
@@ -38,7 +38,7 @@ lowlight.registerLanguage('ts', ts);
 lowlight.registerLanguage('html', html);
 lowlight.registerLanguage('python', python);
 
-const props = defineProps<Props>();
+const props = defineProps<TiptapDisplayProps>();
 const content = ref(props.content ?? '');
 const editor = useEditor({
   extensions: [
@@ -70,6 +70,6 @@ watch(
       content.value = newContent ?? '';
       editor.value?.chain().setContent(content.value).run();
     }
-  }
+  },
 );
 </script>

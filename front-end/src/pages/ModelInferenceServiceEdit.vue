@@ -171,7 +171,7 @@ const popupContent = ref(false);
 const buttonDisable = ref(false);
 const loading = ref(false);
 
-function launchPreview(stepper: QStepper) {
+const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;
   loading.value = true;
   inferenceServiceStore
@@ -192,7 +192,6 @@ function launchPreview(stepper: QStepper) {
           } else {
             Notify.create({
               message: 'Service did not sucessfully start',
-              position: 'top-right',
               color: 'error',
             });
           }
@@ -200,7 +199,6 @@ function launchPreview(stepper: QStepper) {
         .catch((err) => {
           Notify.create({
             message: 'Failed to create service',
-            position: 'top-right',
             color: 'error',
           });
         });
@@ -208,7 +206,6 @@ function launchPreview(stepper: QStepper) {
     .catch(() => {
       Notify.create({
         message: 'Failed to launch preview of inference engine',
-        position: 'top-right',
         icon: 'check',
         color: 'error',
       });
@@ -217,9 +214,9 @@ function launchPreview(stepper: QStepper) {
       loading.value = false;
       buttonDisable.value = false;
     });
-}
+};
 
-function updateService() {
+const updateService = () => {
   const previewServiceName = editInferenceServiceStore.previewServiceName;
   inferenceServiceStore
     .updateService(
@@ -231,18 +228,8 @@ function updateService() {
       console.log('Inference service updated');
       Notify.create({
         message: 'Inference Service updated',
-        position: 'bottom',
         icon: 'check',
         color: 'primary',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              //
-            },
-          },
-        ],
       });
       router.push(`/model/${authStore.user?.userId}/${modelId}`);
     });
@@ -250,7 +237,7 @@ function updateService() {
     // Remove preview service
     inferenceServiceStore.deleteService(previewServiceName);
   }
-}
+};
 
 onMounted(() => {
   editInferenceServiceStore.loadFromInferenceService(modelId);

@@ -687,13 +687,13 @@ import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
-import { useModelStore } from 'src/stores/model-store';
+import { ModelCard, useModelStore } from 'src/stores/model-store';
 import { Ref, ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 
-import { Cookies, useQuasar, Notify } from 'quasar';
+import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
 import TiptapEditor from './editor/TiptapEditor.vue';
 
 const router = useRouter();
@@ -711,8 +711,8 @@ const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
-const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
-const replacePerformanceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+const replaceContent = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent = ref(false); // indicator to replace content with model desc data
 
 // variables for inference submit
 const displayImageSubmit = ref(false);
@@ -726,8 +726,7 @@ const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
 // function for triggering events that should happen when next step is triggered
-function retrieveExperimentDetails() {
-  // TODO: if invalid experiment id, should warn user
+const retrieveExperimentDetails = () => {
   if (creationStore.step === 2 && creationStore.experimentID !== '') {
     loadingExp.value = true;
     buttonDisable.value = true;
@@ -742,35 +741,33 @@ function retrieveExperimentDetails() {
           new Set([...creationStore.frameworks, ...data.frameworks]),
         );
         creationStore.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
-        loadingExp.value = false;
-        buttonDisable.value = false;
         Notify.create({
           message: 'Retrieved metadata from experiment!',
           color: 'primary',
-          position: 'top-right',
         });
       })
       .catch(() => {
-        loadingExp.value = false; // don't lock user out when error
-        buttonDisable.value = false;
         Notify.create({
           message: 'Failed to get metadata from experiment',
           color: 'error',
-          position: 'top-right',
         });
+      })
+      .finally(() => {
+        loadingExp.value = false; // don't lock user out when error
+        buttonDisable.value = false;
       });
   }
-}
+};
 
-function flushCreator() {
+const flushCreator = () => {
   creationStore.$reset();
   localStorage.removeItem(`${creationStore.$id}`);
-}
+};
 
-function submitImage(reference) {
+const submitImage = (stepper: QStepper) => {
   buttonDisable.value = true;
   loadingExp.value = true;
-  var response = ieStore
+  ieStore
     .createService(creationStore.modelName, creationStore.inferenceImage)
     .then((data) => {
       ieStore.getServiceReady(data.serviceName, 5, 10).then((ready) => {
@@ -781,13 +778,11 @@ function submitImage(reference) {
             message:
               'Initializing service for testing. You may have to wait a while for the service to start...',
             color: 'primary',
-            position: 'top-right',
           });
-          reference.next();
+          stepper.next();
         } else {
           Notify.create({
             message: 'Service did not sucessfully start',
-            position: 'top-right',
             color: 'error',
           });
         }
@@ -795,53 +790,32 @@ function submitImage(reference) {
     })
     .catch(() => {
       console.error('Error in retrieving experiment details');
-
       Notify.create({
         message: 'Failed to deploy image and create service. Please try again.',
-        position: 'top-right',
         icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
+        color: 'error',
       });
     })
     .finally(() => {
       buttonDisable.value = false;
       loadingExp.value = false;
     });
-}
+};
 
-async function checkMetadata(reference) {
+const checkMetadata = async (stepper: QStepper) => {
   const metadataIsDone = creationStore.checkMetadataValues();
   if ((await metadataIsDone) == true) {
-    reference.next();
+    stepper.next();
   } else {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
-      position: 'top',
       icon: 'warning',
-      color: 'negative',
-      actions: [
-        {
-          label: 'Dismiss',
-          color: 'white',
-          handler: () => {
-            /* ... */
-          },
-        },
-      ],
+      color: 'error',
     });
   }
-}
+};
 
-function finalSubmit() {
+const finalSubmit = () => {
   if (authStore.user?.name) {
     if (creationStore.modelOwner == '') {
       creationStore.modelOwner = authStore.user.name;
@@ -850,7 +824,7 @@ function finalSubmit() {
       creationStore.modelPOC = authStore.user.name;
     }
   }
-  var cardPackage = {
+  const cardPackage = {
     title: creationStore.modelName,
     task: creationStore.modelTask,
     tags: creationStore.tags,
@@ -867,7 +841,7 @@ function finalSubmit() {
     explanation: creationStore.modelExplain,
     usage: creationStore.modelUsage,
     limitations: creationStore.modelLimitations,
-  };
+  } as ModelCard;
 
   if (
     creationStore.experimentID != '' &&
@@ -885,48 +859,27 @@ function finalSubmit() {
       datasetId: creationStore.datasetID,
     };
   }
-  console.log(cardPackage);
   modelStore
     .createModel(cardPackage)
     .then((data) => {
       Notify.create({
         message: 'Sucessfully created',
-        position: 'top-right',
         icon: 'success',
         color: 'secondary',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
       });
       router.push('/');
     })
     .catch((err) => {
       Notify.create({
         message: 'Something went wrong in the creation process. Try again.',
-        position: 'top-right',
         icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
+        color: 'error',
       });
     });
-}
+};
 
 // function for populating editor with values from previous step
-function populateEditor(store: typeof creationStore) {
+const populateEditor = (store: typeof creationStore) => {
   replaceContent.value = true;
   (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
@@ -947,9 +900,9 @@ function populateEditor(store: typeof creationStore) {
   <p>&nbsp;</p>
   `),
     (popupContent.value = false);
-}
+};
 
-function addExpPlots(store: typeof creationStore) {
+const addExpPlots = (store: typeof creationStore) => {
   buttonDisable.value = true;
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
@@ -982,19 +935,17 @@ function addExpPlots(store: typeof creationStore) {
         Notify.create({
           message: 'Successfully inserted plots from experiment',
           color: 'primary',
-          position: 'top-right',
         });
       })
       .catch((err) => {
         Notify.create({
           message: 'Failed to insert plots',
           color: 'error',
-          position: 'top-right',
         });
       })
       .finally(() => {
         buttonDisable.value = false;
       });
   }
-}
+};
 </script>

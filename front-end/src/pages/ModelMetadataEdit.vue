@@ -523,7 +523,7 @@
 import { onMounted, Ref, ref } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useAuthStore } from 'src/stores/auth-store';
-import { Notify } from 'quasar';
+import { Notify, QStepper } from 'quasar';
 import { useExpStore } from 'src/stores/exp-store';
 import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
@@ -545,8 +545,8 @@ const modelId = route.params.modelId as string;
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
-const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
-const replacePerformanceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+const replaceContent = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent = ref(false); // indicator to replace content with model desc data
 
 // variables for popup exits
 const cancel = ref(false);
@@ -554,29 +554,20 @@ const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
-async function checkMetadata(reference) {
+const checkMetadata = async (stepper: QStepper) => {
   const metadataIsDone = editMetadataStore.checkMetadataValues();
   if ((await metadataIsDone) == true) {
-    reference.next();
+    stepper.next();
   } else {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
-      position: 'top',
       icon: 'warning',
-      color: 'negative',
-      actions: [
-        {
-          label: 'Dismiss',
-          color: 'white',
-          handler: () => {
-            /* ... */
-          },
-        },
-      ],
+      color: 'error',
     });
   }
-}
-function saveEdit() {
+};
+
+const saveEdit = () => {
   if (authStore.user?.name) {
     if (editMetadataStore.modelOwner == '') {
       editMetadataStore.modelOwner = authStore.user.name;
@@ -592,18 +583,8 @@ function saveEdit() {
       () => {
         Notify.create({
           message: 'Model successfully edited',
-          position: 'bottom',
           icon: 'check',
           color: 'primary',
-          actions: [
-            {
-              label: 'Dismiss',
-              color: 'white',
-              handler: () => {
-                /* ... */
-              },
-            },
-          ],
         });
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
@@ -613,23 +594,13 @@ function saveEdit() {
     .catch(() => {
       Notify.create({
         message: 'Error editing model',
-        position: 'bottom',
         icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
+        color: 'error',
       });
     });
-}
+};
 
-function populateEditor(store: typeof editMetadataStore) {
+const populateEditor = (store: typeof editMetadataStore) => {
   replaceContent.value = true;
   (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
@@ -650,9 +621,9 @@ function populateEditor(store: typeof editMetadataStore) {
   <p>&nbsp;</p>
   `),
     (popupContent.value = false);
-}
+};
 
-function setStateFromExperimentDetails(state: typeof editMetadataStore) {
+const setStateFromExperimentDetails = (state: typeof editMetadataStore) => {
   if (state.experimentID) {
     buttonDisable.value = true;
     loadingExp.value = true;
@@ -668,7 +639,6 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
         Notify.create({
           message: 'Retrieved metadata from experiment!',
           color: 'primary',
-          position: 'top-right',
         });
       })
       .catch((err) => {
@@ -677,7 +647,6 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
         Notify.create({
           message: 'Failed to get metadata from experiment',
           color: 'error',
-          position: 'top-right',
         });
       })
       .finally(() => {
@@ -685,10 +654,10 @@ function setStateFromExperimentDetails(state: typeof editMetadataStore) {
         loadingExp.value = false;
       });
   }
-}
+};
 
 // TODO: Extract this common function and put in external store
-function addExpPlots(store: typeof editMetadataStore) {
+const addExpPlots = (store: typeof editMetadataStore) => {
   buttonDisable.value = true;
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
@@ -721,21 +690,19 @@ function addExpPlots(store: typeof editMetadataStore) {
         Notify.create({
           message: 'Successfully inserted plots from experiment',
           color: 'primary',
-          position: 'top-right',
         });
       })
       .catch((err) => {
         Notify.create({
           message: 'Failed to insert plots',
           color: 'error',
-          position: 'top-right',
         });
       })
       .finally(() => {
         buttonDisable.value = false;
       });
   }
-}
+};
 
 onMounted(() => {
   editMetadataStore.loadFromMetadata(modelId);
