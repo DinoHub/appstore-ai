@@ -1,9 +1,6 @@
-import * as Plotly from 'plotly.js-dist';
-
 import { Node, mergeAttributes } from '@tiptap/core';
 
 import ChartDisplay from 'src/components/editor/TiptapChart.vue';
-import { Node as ProseMirrorNode } from 'prosemirror-model';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 
 export interface ChartOptions {
@@ -38,8 +35,8 @@ export const Chart = Node.create<ChartOptions>({
       data: {
         default: [
           {
-            x: [1, 2],
-            y: [3, 4],
+            x: [],
+            y: [],
             type: 'lines',
           },
         ],

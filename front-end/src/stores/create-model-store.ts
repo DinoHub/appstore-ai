@@ -1,7 +1,13 @@
-import { Chart } from 'src/components/models';
-import { defineStore } from 'pinia';
+import { ModelCard, useModelStore } from './model-store';
 
-export const useCreationStore = defineStore('creationStore', {
+import { Chart } from 'src/components/models';
+import { Notify } from 'quasar';
+import { defineStore } from 'pinia';
+import { useAuthStore } from './auth-store';
+import { useExperimentStore } from './experiment-store';
+import { useInferenceServiceStore } from './inference-service-store';
+
+export const useCreationStore = defineStore('createModel', {
   state: () => {
     return {
       step: 1 as number,
@@ -20,7 +26,6 @@ export const useCreationStore = defineStore('creationStore', {
       modelExplain: '' as string,
       modelUsage: '' as string,
       modelLimitations: '' as string,
-      inferenceImage: '' as string,
       markdownContent: `<h3>Description <a id="description"></a></h3>
       <hr>
       <p><strong>EXAMPLE:</strong></p>
@@ -82,12 +87,16 @@ export const useCreationStore = defineStore('creationStore', {
       performanceMarkdown:
         '<h3>Performance</h3><hr><ul><li><p>This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button! </p></li></ul><chart data-layout="{&quot;title&quot;:{&quot;text&quot;:&quot;Example Graph&quot;},&quot;xaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[0.6391275611368142,7.360872438863185],&quot;autorange&quot;:true},&quot;yaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[5.6050955414012735,74.39490445859873],&quot;autorange&quot;:true}}" data-data="[{&quot;x&quot;:[1,2,3,4,5,6,7,8,9,10],&quot;y&quot;:[10,20,30,40,50,60,70],&quot;type&quot;:&quot;scatter&quot;}]"></chart>' as string,
       plots: [] as Chart[],
+      imageUri: '' as string,
+      containerPort: undefined as number | undefined,
+      serviceName: '' as string,
+      previewServiceName: null as string | null,
+      previewServiceUrl: null as string | null,
     };
   },
-  getters: {},
-  actions: {
-    async checkMetadataValues() {
-      const keys = Object.keys(this.$state).filter(
+  getters: {
+    metadataValid(): boolean {
+      const keys = Object.keys(this).filter(
         (item) =>
           ![
             'step',
@@ -99,27 +108,141 @@ export const useCreationStore = defineStore('creationStore', {
             'experimentID',
             'datasetPlatform',
             'experimentPlatform',
-            'inferenceImage',
             'modelOwner',
             'modelPOC',
+            'plots',
+            'imageUri',
+            'containerPort',
+            'serviceName',
+            'previewServiceName',
           ].includes(item),
       );
-      if (this.$state.tags.length == 0 || this.$state.frameworks.length == 0) {
+      if (this.tags.length == 0 || this.frameworks.length == 0) {
         return false;
       }
       if (
-        (this.$state.datasetID == '' && this.$state.datasetPlatform != '') ||
-        (this.$state.experimentID == '' && this.$state.experimentPlatform != '')
+        (this.datasetID == '' && this.datasetPlatform != '') ||
+        (this.experimentID == '' && this.experimentPlatform != '')
       ) {
         return false;
       }
       for (const key of keys) {
-        if (this.$state[key] == '') {
-          console.log(this.$state);
+        if (this[key] == '') {
+          console.log(this);
+          console.log(key);
           return false;
         }
       }
       return true;
+    },
+  },
+  actions: {
+    async loadMetadataFromExperiment(): Promise<void> {
+      if (!this.experimentID || !this.experimentPlatform) {
+        return Promise.reject();
+      }
+      const experimentStore = useExperimentStore();
+      try {
+        const metadata = await experimentStore.getExperimentByID(
+          this.experimentID,
+          this.experimentPlatform,
+        );
+        this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
+        this.frameworks = Array.from(
+          new Set([...this.frameworks, ...metadata.frameworks]),
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    async launchPreviewService(modelId: string): Promise<void> {
+      const inferenceServiceStore = useInferenceServiceStore();
+      try {
+        const { serviceName, inferenceUrl } =
+          await inferenceServiceStore.launchPreviewService(
+            modelId,
+            this.imageUri,
+            this.containerPort,
+          );
+        this.previewServiceUrl = inferenceUrl;
+        this.previewServiceName = serviceName; // save so we know what to clean up
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    async createModel() {
+      try {
+        const authStore = useAuthStore();
+
+        if (authStore.user?.name) {
+          if (this.modelOwner == '') {
+            this.modelOwner = authStore.user.name;
+          }
+          if (this.modelPOC == '') {
+            this.modelPOC = authStore.user.name;
+          }
+        }
+        const cardPackage = {
+          title: this.modelName,
+          task: this.modelTask,
+          tags: this.tags,
+          frameworks: this.frameworks,
+          owner: this.modelOwner,
+          pointOfContact: this.modelPOC,
+          markdown: this.markdownContent,
+          performance: this.performanceMarkdown,
+          artifacts: [
+            {
+              name: 'model',
+              artifactType: 'model',
+              url: this.modelPath,
+            },
+          ],
+          description: this.modelDesc,
+          explanation: this.modelExplain,
+          usage: this.modelUsage,
+          limitations: this.modelLimitations,
+        } as ModelCard;
+
+        if (this.experimentID != '' && this.experimentPlatform != '') {
+          cardPackage.experiment = {
+            connector: this.experimentPlatform,
+            experimentId: this.experimentID,
+          };
+        }
+
+        if (this.datasetID != '' && this.datasetPlatform != '') {
+          cardPackage.dataset = {
+            connector: this.datasetPlatform,
+            datasetId: this.datasetID,
+          };
+        }
+        // Create Inference Service
+        const inferenceServiceStore = useInferenceServiceStore();
+        const { serviceName } = await inferenceServiceStore.createService(
+          this.modelName,
+          this.imageUri,
+          this.containerPort,
+        );
+        cardPackage.inferenceServiceName = serviceName;
+        // Submit Model
+        const modelStore = useModelStore();
+        const { modelId, creatorUserId } = await modelStore.createModel(
+          cardPackage,
+        );
+        Notify.create({
+          message: 'Successfully created model',
+          icon: 'success',
+          color: 'secondary',
+        });
+        return { modelId, creatorUserId };
+      } catch (error) {
+        Notify.create({
+          message: 'Failed to create model',
+          icon: 'warning',
+          color: 'error',
+        });
+      }
     },
   },
   persist: {
@@ -144,6 +267,11 @@ export const useCreationStore = defineStore('creationStore', {
       'markdownContent',
       'inferenceImage',
       'performanceMarkdown',
+      'imageUri',
+      'containerPort',
+      'serviceName',
+      'previewServiceName',
+      'previewServiceUrl',
     ],
   },
 });

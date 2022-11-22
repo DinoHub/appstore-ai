@@ -1,11 +1,12 @@
-import CreateModel from 'pages/CreateModel.vue';
+import CreateModel from 'src/pages/ModelCreate.vue';
 import DashboardLayout from 'layouts/DashboardLayout.vue';
 import DashboardPage from 'pages/DashboardPage.vue';
 import ErrorNotFound from 'pages/ErrorNotFound.vue';
+import LoginLayout from 'layouts/LoginLayout.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
-import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
 import ModelInferenceServiceEdit from 'src/pages/ModelInferenceServiceEdit.vue';
+import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
 import SearchLayout from 'layouts/SearchLayout.vue';
@@ -14,7 +15,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
-    component: MainLayout,
+    component: LoginLayout,
     children: [{ path: '', name: 'Login', component: LoginPage }],
     beforeEnter: (to) => {
       const auth = useAuthStore();

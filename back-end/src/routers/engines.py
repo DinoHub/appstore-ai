@@ -38,6 +38,34 @@ async def get_inference_engine_service(
     return service
 
 
+@router.get("/{service_name}/status")
+def get_inference_engine_service_status(
+    service_name: str, k8s_client: ApiClient = Depends(get_k8s_client)
+):
+    # Sync endpoint to allow for concurrent request
+    try:
+        with k8s_client as client:
+            api = CustomObjectsApi(client)
+            result = api.get_namespaced_custom_object(
+                group="serving.knative.dev",
+                version="v1",
+                namespace=config.IE_NAMESPACE,
+                plural="services",
+                name=service_name,
+            )
+            return result["status"]
+    except K8sAPIException as e:
+        if e.status == 404:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Service {service_name} not found",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error getting service status",
+        )
+
+
 @router.get("/")
 async def get_available_inference_engine_services(
     k8s_client: ApiClient = Depends(get_k8s_client),
@@ -79,7 +107,6 @@ async def create_inference_engine_service(
     service_name = k8s_safe_name(
         f"{user.user_id}-{service.model_id}-{uuid4()}"
     )
-    print(service.image_uri)
     deployment_template = safe_load(
         template.render(
             {
@@ -97,11 +124,11 @@ async def create_inference_engine_service(
     # Deploy Service on K8S
     with k8s_client as client:
         # Get KNative Serving Ext Ip
-        kn_api = CoreV1Api(client)
-        kn = kn_api.read_namespaced_service(
+        core_api = CoreV1Api(client)
+        kourier_ingress = core_api.read_namespaced_service(
             name="kourier", namespace="knative-serving"
         )
-        lb_ip = kn.status.load_balancer.ingress[0].ip
+        lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip
         if service.external_dns:
             # TODO: Support for https
             url = f"http://{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
@@ -141,6 +168,29 @@ async def create_inference_engine_service(
             async with await mongo_client.start_session() as session:
                 async with session.start_transaction():
                     await db["services"].insert_one(service_metadata)
+
+                    # Query status of latest revision of service
+                    service_ready = False
+                    for attempt in range(5):
+                        # TODO Get status of revision
+                        service_status = (
+                            api.get_namespaced_custom_object_status(
+                                group="serving.knative.dev",
+                                version="v1",
+                                plural="services",
+                                name=service_name,
+                                namespace=config.IE_NAMESPACE,
+                            )
+                        )
+                        return service_status
+                        service_ready = True
+
+                    if not service_ready:
+                        session.abort_transaction()
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Failed to create service",
+                        )
             return service_metadata
         except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
@@ -162,6 +212,66 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
+
+
+@router.delete("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_orphan_services(
+    db=Depends(get_db), k8s_client: ApiClient = Depends(get_k8s_client)
+):
+    db, mongo_client = db
+    # Get all model cards
+    model_services = await (
+        db["models"].find(
+            {}, {"inferenceServiceName": 1}  # include only service names
+        )
+    ).to_list(length=None)
+    # Do a search of all services NOT IN modelServices
+    orphaned_services = db["services"].find(
+        {
+            "serviceName": {
+                "$nin": [x["inferenceServiceName"] for x in model_services]
+            }
+        },
+        {"serviceName": 1},
+    )
+    with k8s_client as client:
+        api = CustomObjectsApi(client)
+        async with await mongo_client.start_session() as session:
+            async for service in orphaned_services:
+                # Remove service
+                service_name = service["serviceName"]
+                async with session.start_transaction():
+
+                    try:
+                        await db["services"].delete_one(
+                            {"serviceName": service_name}
+                        )
+                        api.delete_namespaced_custom_object(
+                            group="serving.knative.dev",
+                            version="v1",
+                            plural="services",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name,
+                        )
+                    except K8sAPIException as e:
+                        if e.status == 404:
+                            # Service not present
+                            continue
+                    except HTTPError as e:
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error when deleting inference engine: {e}",
+                        )
+                    except TypeError:
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="API has no access to the K8S cluster",
+                        )
+                    except Exception as e:
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail=f"Error when deleting inference engine: {e}",
+                        )
 
 
 @router.delete("/{service_name}", status_code=status.HTTP_204_NO_CONTENT)
@@ -226,62 +336,6 @@ async def delete_inference_engine_service(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"Error when deleting inference engine: {e}",
                     )
-
-
-@router.delete("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_orphan_services(
-    db=Depends(get_db), k8s_client: ApiClient = Depends(get_k8s_client)
-):
-    db, mongo_client = db
-    # Get all model cards
-    model_services = await db["models"].find(
-        {}, {"inferenceServiceName": 1}  # include only service names
-    )
-    # Do a search of all services NOT IN modelServices
-    orphaned_services = db["services"].find(
-        {
-            "serviceName": {
-                "$nin": [x["inferenceServiceName"] for x in model_services]
-            }
-        },
-        {"serviceName": 1},
-    )
-    with k8s_client as client:
-        api = CustomObjectsApi(client)
-        async with await mongo_client.start_session() as session:
-            async for service in orphaned_services:
-                # Remove service
-                service_name = service["serviceName"]
-                async with session.start_transaction():
-                    await db["services"].delete_one(
-                        {"serviceName": service_name}
-                    )
-                    try:
-                        api.delete_namespaced_custom_object(
-                            group="serving.knative.dev",
-                            version="v1",
-                            plural="services",
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name,
-                        )
-                    except (K8sAPIException, HTTPError) as e:
-                        session.abort_transaction()  # if failed to remove in k8s, rollback db change
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Error when deleting inference engine: {e}",
-                        )
-                    except TypeError:
-                        session.abort_transaction()
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="API has no access to the K8S cluster",
-                        )
-                    except Exception as e:
-                        session.abort_transaction()
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Error when deleting inference engine: {e}",
-                        )
 
 
 @router.patch("/{service_name}")

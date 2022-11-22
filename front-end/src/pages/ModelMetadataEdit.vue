@@ -46,7 +46,7 @@
               outlined
               v-model="editMetadataStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.experimentPlatforms"
+              :options="experimentStore.experimentConnectors"
               label="Experiment Platform (Optional)"
               map-options
               emit-value
@@ -59,9 +59,7 @@
               label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
-              @update:model-value="
-                setStateFromExperimentDetails(editMetadataStore)
-              "
+              @update:model-value="setStateFromExperimentDetails()"
               debounce="1000"
             >
             </q-input>
@@ -69,7 +67,7 @@
               outlined
               v-model="editMetadataStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.datasetPlatforms"
+              :options="datasetStore.datasetConnectors"
               label="Dataset Platform (Optional)"
               map-options
               emit-value
@@ -120,7 +118,7 @@
               outlined
               v-model="editMetadataStore.modelTask"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.tasksList"
+              :options="modelStore.tasks"
               label="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
@@ -517,27 +515,25 @@
 </template>
 
 <script setup lang="ts">
-// TODO: Refactor model creation and editing code
-// as the way it is currently handled is not ideal
-// e.g. Repetitive Code
-import { onMounted, Ref, ref } from 'vue';
-import { watchDebounced } from '@vueuse/core';
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
-import { Notify } from 'quasar';
-import { useExpStore } from 'src/stores/exp-store';
+import { Notify, QStepper } from 'quasar';
+import { useExperimentStore } from 'src/stores/experiment-store';
 import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
-import { useCreationPreset } from 'src/stores/creation-preset';
 import { useRoute, useRouter } from 'vue-router';
 
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
+import { useModelStore } from 'src/stores/model-store';
+import { useDatasetStore } from 'src/stores/dataset-store';
 
 const emit = defineEmits(['update-exp']);
 
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
-const experimentStore = useExpStore();
-const creatorPreset = useCreationPreset();
+const experimentStore = useExperimentStore();
+const datasetStore = useDatasetStore();
+const modelStore = useModelStore();
 const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
@@ -545,8 +541,8 @@ const modelId = route.params.modelId as string;
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
-const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
-const replacePerformanceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+const replaceContent = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent = ref(false); // indicator to replace content with model desc data
 
 // variables for popup exits
 const cancel = ref(false);
@@ -554,37 +550,18 @@ const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
-async function checkMetadata(reference) {
-  const metadataIsDone = editMetadataStore.checkMetadataValues();
-  if ((await metadataIsDone) == true) {
-    reference.next();
+const checkMetadata = (stepper: QStepper) => {
+  if (editMetadataStore.metadataValid) {
+    stepper.next();
   } else {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
-      position: 'top',
       icon: 'warning',
-      color: 'negative',
-      actions: [
-        {
-          label: 'Dismiss',
-          color: 'white',
-          handler: () => {
-            /* ... */
-          },
-        },
-      ],
+      color: 'error',
     });
   }
-}
-function saveEdit() {
-  if (authStore.user?.name) {
-    if (editMetadataStore.modelOwner == '') {
-      editMetadataStore.modelOwner = authStore.user.name;
-    }
-    if (editMetadataStore.modelPOC == '') {
-      editMetadataStore.modelPOC = authStore.user.name;
-    }
-  }
+};
+const saveEdit = () => {
   editMetadataStore
     .submitEdit(modelId)
     .then(
@@ -592,18 +569,8 @@ function saveEdit() {
       () => {
         Notify.create({
           message: 'Model successfully edited',
-          position: 'bottom',
           icon: 'check',
           color: 'primary',
-          actions: [
-            {
-              label: 'Dismiss',
-              color: 'white',
-              handler: () => {
-                /* ... */
-              },
-            },
-          ],
         });
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
@@ -613,23 +580,13 @@ function saveEdit() {
     .catch(() => {
       Notify.create({
         message: 'Error editing model',
-        position: 'bottom',
         icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
+        color: 'error',
       });
     });
-}
+};
 
-function populateEditor(store: typeof editMetadataStore) {
+const populateEditor = (store: typeof editMetadataStore) => {
   replaceContent.value = true;
   (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
@@ -650,50 +607,25 @@ function populateEditor(store: typeof editMetadataStore) {
   <p>&nbsp;</p>
   `),
     (popupContent.value = false);
-}
+};
 
-function setStateFromExperimentDetails(state: typeof editMetadataStore) {
-  if (state.experimentID) {
-    buttonDisable.value = true;
-    loadingExp.value = true;
-    experimentStore
-      .getExperimentByID(state.experimentID)
-      .then((data) => {
-        editMetadataStore.tags = Array.from(
-          new Set([...editMetadataStore.tags, ...data.tags]),
-        );
-        editMetadataStore.frameworks = Array.from(
-          new Set([...editMetadataStore.frameworks, ...data.frameworks]),
-        );
-        Notify.create({
-          message: 'Retrieved metadata from experiment!',
-          color: 'primary',
-          position: 'top-right',
-        });
-      })
-      .catch((err) => {
-        console.error('Failed to retrieve experiment details');
-        console.error(err);
-        Notify.create({
-          message: 'Failed to get metadata from experiment',
-          color: 'error',
-          position: 'top-right',
-        });
-      })
-      .finally(() => {
-        buttonDisable.value = false;
-        loadingExp.value = false;
-      });
-  }
-}
+const setStateFromExperimentDetails = () => {
+  buttonDisable.value = true;
+  loadingExp.value = true;
+
+  editMetadataStore.loadMetadataFromExperiment().finally(() => {
+    buttonDisable.value = false;
+    loadingExp.value = false;
+  });
+};
 
 // TODO: Extract this common function and put in external store
-function addExpPlots(store: typeof editMetadataStore) {
+const addExpPlots = (store: typeof editMetadataStore) => {
   buttonDisable.value = true;
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
     experimentStore
-      .getExperimentByID(store.experimentID, true)
+      .getExperimentByID(store.experimentID, store.experimentPlatform, true)
       .then((data) => {
         store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
       })
@@ -721,21 +653,19 @@ function addExpPlots(store: typeof editMetadataStore) {
         Notify.create({
           message: 'Successfully inserted plots from experiment',
           color: 'primary',
-          position: 'top-right',
         });
       })
       .catch((err) => {
         Notify.create({
           message: 'Failed to insert plots',
           color: 'error',
-          position: 'top-right',
         });
       })
       .finally(() => {
         buttonDisable.value = false;
       });
   }
-}
+};
 
 onMounted(() => {
   editMetadataStore.loadFromMetadata(modelId);

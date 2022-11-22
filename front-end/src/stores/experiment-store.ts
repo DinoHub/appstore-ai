@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios';
 import { Chart } from 'src/components/models';
+import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
@@ -19,21 +20,30 @@ export interface Experiment {
   plots?: Chart[];
 }
 
-export const useExpStore = defineStore('exp', {
+export const useExperimentStore = defineStore('experiment', {
   state: () => ({
-    experimentConnectors: ['', 'ClearML'] as string[],
+    experimentConnectors: [
+      {
+        label: 'None',
+        value: '',
+      },
+      {
+        label: 'ClearML',
+        value: 'clearml',
+      },
+    ] as Record<string, string>[],
   }),
-  getters: {},
   actions: {
     async getExperimentByID(
-      exp_id: string,
+      experimentId: string,
+      connector: string,
       returnPlots = false,
       returnArtifacts = false,
     ): Promise<Experiment> {
       try {
-        const res = await api.get(`experiments/${exp_id}`, {
+        const res = await api.get(`experiments/${experimentId}`, {
           params: {
-            connector: 'clearml',
+            connector: connector,
             return_plots: returnPlots,
             return_artifacts: returnArtifacts,
           },
@@ -42,10 +52,12 @@ export const useExpStore = defineStore('exp', {
         return data;
       } catch (error) {
         const errRes = error as AxiosError;
-        console.error(errRes.response?.data);
         if (errRes.response?.status === 404) {
           console.error('Experiment Not Found');
-          // TODO: Notify reject
+          Notify.create({
+            message: `${connector} Experiment with ID: ${experimentId} not found`,
+            color: 'error',
+          });
         }
         return Promise.reject('Unable to get experiment');
       }
