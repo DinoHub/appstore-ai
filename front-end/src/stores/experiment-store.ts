@@ -3,7 +3,7 @@ import { Chart } from 'src/components/models';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
-
+import { Notify } from 'quasar';
 export interface Config {
   [key: string]: string;
 }
@@ -49,6 +49,11 @@ export const useExperimentStore = defineStore('experiment', {
           },
         });
         const data: Experiment = res.data;
+        Notify.create({
+          type: 'positive',
+          position: 'top',
+          message: 'Experiment found and successfully pulled!',
+        });
         return data;
       } catch (error) {
         const errRes = error as AxiosError;
@@ -59,6 +64,11 @@ export const useExperimentStore = defineStore('experiment', {
             color: 'error',
           });
         }
+        Notify.create({
+          type: 'negative',
+          position: 'top',
+          message: 'Experiment could not be found or there was an issue pulling experiments',
+        })
         return Promise.reject('Unable to get experiment');
       }
     },
