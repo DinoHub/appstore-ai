@@ -39,11 +39,6 @@ export const useExpStore = defineStore('exp', {
           },
         });
         const data: Experiment = res.data;
-        Notify.create({
-          type: 'positive',
-          position: 'top',
-          message: 'Experiment found and successfully pulled!',
-        });
         return data;
       } catch (error) {
         const errRes = error as AxiosError;
@@ -52,11 +47,6 @@ export const useExpStore = defineStore('exp', {
           console.error('Experiment Not Found');
           // TODO: Notify reject
         }
-        Notify.create({
-          type: 'negative',
-          position: 'top',
-          message: 'Experiment could not be found or there was an issue pulling experiments',
-        })
         return Promise.reject('Unable to get experiment');
       }
     },
