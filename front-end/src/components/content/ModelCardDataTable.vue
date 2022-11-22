@@ -233,7 +233,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        }),
+        })
       );
       tasks.splice(
         0,
@@ -243,7 +243,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        }),
+        })
       );
     })
     .catch(() => {
