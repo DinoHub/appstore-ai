@@ -2,7 +2,7 @@
   <q-toolbar class="bg-dark">
     <!-- Button to open  navrail -->
     <q-btn
-      v-if="navRailOpen"
+      v-if="loggedIn"
       flat
       round
       dense
@@ -20,10 +20,6 @@
           class="q-py-lg"
         ></q-img></router-link
     ></q-toolbar-title>
-    <q-tabs v-if="loggedIn && !navRailOpen" shrink stretch>
-      <q-route-tab label="Dashboard" to="/" exact no-caps></q-route-tab>
-      <q-route-tab label="Models" to="/models" exact no-caps></q-route-tab>
-    </q-tabs>
     <div class="q-pl-sm">
       <quick-search-modal v-if="loggedIn"></quick-search-modal>
     </div>
@@ -61,20 +57,9 @@ import QuickSearchModal from 'src/components/layout/QuickSearchModal.vue';
 import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 import DarkModeToggle from './DarkModeToggle.vue';
 
-export interface Props {
-  navRailOpen?: boolean;
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  navRailOpen: false,
-});
-
 const authStore = useAuthStore();
 const emit = defineEmits(['toggle-nav-rail']);
 
 const loggedIn = computed(() => authStore.user && authStore.user !== null);
-
-const isCreatePage = computed(() => useRoute().name != 'Create Model');
-
 const onLogout = () => authStore.logout();
 </script>

@@ -21,7 +21,7 @@
     <q-page-sticky position="bottom-right" :offset="[18, 5]">
       <q-btn
         fab-mini
-        icon="filter_alt"
+        :icon="filterDrawer ? 'filter_list_off' : 'filter_list'"
         color="tertiary"
         @click="filterDrawer = !filterDrawer"
       ></q-btn>

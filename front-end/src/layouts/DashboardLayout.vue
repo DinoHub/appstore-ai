@@ -2,7 +2,6 @@
   <q-layout view="hHh lpR fff">
     <q-header elevated>
       <the-navbar
-        nav-rail-open
         @toggle-nav-rail="navSidebarOpen = !navSidebarOpen"
       ></the-navbar>
     </q-header>
@@ -29,7 +28,7 @@ import TheNavbar from 'src/components/layout/TheNavbar.vue';
 import TheFooter from 'src/components/layout/TheFooter.vue';
 import NavRail from 'src/components/layout/NavRail.vue';
 
-import { ref, Ref } from 'vue';
+import { ref } from 'vue';
 const activitiesDrawerOpen = ref(false);
 const navSidebarOpen = ref(true);
 </script>

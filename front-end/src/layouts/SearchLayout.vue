@@ -2,7 +2,6 @@
   <q-layout view="hHh Lpr fff">
     <q-header elevated>
       <the-navbar
-        nav-rail-open
         @toggle-nav-rail="navSidebarOpen = !navSidebarOpen"
       ></the-navbar>
     </q-header>
@@ -24,7 +23,6 @@ import TheNavbar from 'src/components/layout/TheNavbar.vue';
 import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 import NavRail from 'src/components/layout/NavRail.vue';
 
-import { ref, Ref } from 'vue';
-const activitiesDrawerOpen = ref(false);
+import { ref } from 'vue';
 const navSidebarOpen = ref(true);
 </script>
