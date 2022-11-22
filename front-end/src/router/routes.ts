@@ -1,11 +1,11 @@
-import CreateModel from 'pages/CreateModel.vue';
+import CreateModel from 'src/pages/ModelCreate.vue';
 import DashboardLayout from 'layouts/DashboardLayout.vue';
 import DashboardPage from 'pages/DashboardPage.vue';
 import ErrorNotFound from 'pages/ErrorNotFound.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
-import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
 import ModelInferenceServiceEdit from 'src/pages/ModelInferenceServiceEdit.vue';
+import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
 import SearchLayout from 'layouts/SearchLayout.vue';

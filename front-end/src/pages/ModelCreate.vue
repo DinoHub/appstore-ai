@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <q-page padding>
     <q-stepper
       v-model="creationStore.step"
       ref="stepper"
@@ -678,7 +678,7 @@
         </q-card>
       </q-dialog>
     </dialog>
-  </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
@@ -688,16 +688,15 @@ import { useCreationPreset } from 'src/stores/creation-preset';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { ModelCard, useModelStore } from 'src/stores/model-store';
-import { Ref, ref } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import GradioFrame from 'src/components/content/GradioFrame.vue';
+import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 
 import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
-import TiptapEditor from './editor/TiptapEditor.vue';
 
 const router = useRouter();
-
 // constants for stores
 const expStore = useExpStore();
 const authStore = useAuthStore();
