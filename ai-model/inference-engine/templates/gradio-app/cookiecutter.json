@@ -1,0 +1,9 @@
+{
+  "project_name": "Inference Service",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_').replace('-', '_') }}",
+  "short_description": "Inference service for AI App Store",
+  "version": "1.0",
+  "inference_backend": ["None", "Triton"],
+  "example_task": ["None", "Image Classification", "Fill-Mask"],
+  "python_version": "3.9.7"
+}
