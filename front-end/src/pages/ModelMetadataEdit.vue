@@ -520,11 +520,10 @@
 // TODO: Refactor model creation and editing code
 // as the way it is currently handled is not ideal
 // e.g. Repetitive Code
-import { onMounted, Ref, ref } from 'vue';
-import { watchDebounced } from '@vueuse/core';
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { Notify, QStepper } from 'quasar';
-import { useExpStore } from 'src/stores/exp-store';
+import { useExpStore } from 'src/stores/experiment-store';
 import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 import { useRoute, useRouter } from 'vue-router';
@@ -628,7 +627,7 @@ const setStateFromExperimentDetails = (state: typeof editMetadataStore) => {
     buttonDisable.value = true;
     loadingExp.value = true;
     experimentStore
-      .getExperimentByID(state.experimentID)
+      .getExperimentByID(state.experimentID, state.experimentPlatform)
       .then((data) => {
         editMetadataStore.tags = Array.from(
           new Set([...editMetadataStore.tags, ...data.tags]),
@@ -662,7 +661,7 @@ const addExpPlots = (store: typeof editMetadataStore) => {
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
     experimentStore
-      .getExperimentByID(store.experimentID, true)
+      .getExperimentByID(store.experimentID, store.experimentPlatform, true)
       .then((data) => {
         store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
       })

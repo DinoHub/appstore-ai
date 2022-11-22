@@ -682,7 +682,7 @@
 </template>
 
 <script setup lang="ts">
-import { useExpStore } from 'src/stores/exp-store';
+import { useExpStore } from 'src/stores/experiment-store';
 import { useCreationStore } from 'src/stores/creation-store';
 import { useCreationPreset } from 'src/stores/creation-preset';
 import { useAuthStore } from 'src/stores/auth-store';
@@ -730,7 +730,11 @@ const retrieveExperimentDetails = () => {
     loadingExp.value = true;
     buttonDisable.value = true;
     expStore
-      .getExperimentByID(creationStore.experimentID, true)
+      .getExperimentByID(
+        creationStore.experimentID,
+        creationStore.experimentPlatform,
+        true,
+      )
       .then((data) => {
         // TODO: Move this logic to the store
         creationStore.tags = Array.from(
@@ -906,7 +910,7 @@ const addExpPlots = (store: typeof creationStore) => {
   let newPerformance = store.performanceMarkdown;
   if (store.experimentID) {
     expStore
-      .getExperimentByID(store.experimentID, true)
+      .getExperimentByID(store.experimentID, store.experimentPlatform, true)
       .then((data) => {
         store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
       })
