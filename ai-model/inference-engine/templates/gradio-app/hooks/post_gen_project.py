@@ -6,5 +6,12 @@ REMOVE_PATHS = [
 ]
 
 for path in REMOVE_PATHS:
+    path = path.strip()
+    if path == '':
+        continue
     path = Path(path.strip())
-    path.unlink(missing_ok=True)
+    if path.exists():
+        if path.is_dir():
+            path.rmdir()
+        else:
+            path.unlink()

@@ -19,9 +19,10 @@ if __name__ == "__main__":
     {%- elif cookiecutter.example_task == "Fill-Mask" -%}
     inputs = "text"
     outputs = "text"
-    {%- else -%}
+    {% else %}
     inputs = None
     outputs = None
+
     {% endif %}
 
     app = gr.Interface(
