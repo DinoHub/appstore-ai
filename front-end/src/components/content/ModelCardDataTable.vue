@@ -44,7 +44,8 @@
         </q-form>
       </aside>
     </q-drawer>
-
+    <!-- <q-page-container> -->
+    <!-- <q-page padding> -->
     <main class="col">
       <q-table
         grid
@@ -112,6 +113,8 @@
         </template>
       </q-table>
     </main>
+    <!-- </q-page> -->
+    <!-- </q-page-container> -->
   </div>
 </template>
 

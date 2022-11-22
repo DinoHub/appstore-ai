@@ -1,19 +1,23 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <model-card-data-table
-      :filter="filter"
-      :filter-drawer="filterDrawer"
-      :pagination="pagination"
-      show-filter
-      card-container-class="col-12 q-pa-sm"
-      card-class="bg-surface-variant"
-      title="Models"
-    >
-      <template #top-left>
-        <div class="display-medium">Models</div>
-      </template>
-    </model-card-data-table>
+    <q-layout view="hHh lpr fff">
+      <q-page-container>
+        <model-card-data-table
+          :filter="filter"
+          :filter-drawer="filterDrawer"
+          :pagination="pagination"
+          show-filter
+          card-container-class="col-12 q-pa-sm"
+          card-class="bg-surface-variant"
+          title="Models"
+        >
+          <template #top-left>
+            <div class="display-medium">Models</div>
+          </template>
+        </model-card-data-table>
+      </q-page-container>
+    </q-layout>
     <q-page-sticky position="bottom-right" :offset="[18, 5]">
       <q-btn
         fab-mini

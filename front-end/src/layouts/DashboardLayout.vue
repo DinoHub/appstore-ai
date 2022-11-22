@@ -10,7 +10,7 @@
     <q-drawer v-model="activitiesDrawerOpen" side="right">
       <!-- drawer content -->
     </q-drawer>
-    <q-drawer width="120" v-model="navSidebarOpen" show-if-above side="left">
+    <q-drawer :width="120" v-model="navSidebarOpen" show-if-above side="left">
       <nav-rail></nav-rail>
     </q-drawer>
 
