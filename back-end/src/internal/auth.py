@@ -89,7 +89,7 @@ async def get_current_user(
             raise CREDENTIALS_EXCEPTION
     except ExpiredSignatureError:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Access Token Expired",
         )
     except (JWTError, CsrfProtectError):
