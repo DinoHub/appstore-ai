@@ -168,29 +168,6 @@ async def create_inference_engine_service(
             async with await mongo_client.start_session() as session:
                 async with session.start_transaction():
                     await db["services"].insert_one(service_metadata)
-
-                    # Query status of latest revision of service
-                    service_ready = False
-                    for attempt in range(5):
-                        # TODO Get status of revision
-                        service_status = (
-                            api.get_namespaced_custom_object_status(
-                                group="serving.knative.dev",
-                                version="v1",
-                                plural="services",
-                                name=service_name,
-                                namespace=config.IE_NAMESPACE,
-                            )
-                        )
-                        return service_status
-                        service_ready = True
-
-                    if not service_ready:
-                        session.abort_transaction()
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Failed to create service",
-                        )
             return service_metadata
         except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
