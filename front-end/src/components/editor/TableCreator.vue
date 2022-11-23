@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { Notify } from 'quasar';
 import { ref } from 'vue';
 
 const noRows = ref(3);
@@ -41,12 +42,15 @@ const noCols = ref(3);
 
 const emit = defineEmits(['createTable']);
 
-function createTable() {
+const createTable = () => {
   if (noRows.value < 1 || noCols.value < 1) {
-    console.error('Cannot create table!');
+    Notify.create({
+      message: 'Unable to create table',
+      color: 'error',
+    });
     return;
   } else {
     emit('createTable', noRows.value, noCols.value);
   }
-}
+};
 </script>

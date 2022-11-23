@@ -21,8 +21,8 @@ def loadModel(
     )
 
     # load model in triton, not needed if mode = 'polling'
-    if loading == "EXPLICIT":
-        triton_client.load_model(model_name)
+    # if loading == "EXPLICIT":
+    #     triton_client.load_model(model_name)
     if not triton_client.is_model_ready(model_name):
         print(
             f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Load Model'
@@ -145,7 +145,7 @@ try:
     TRITON_HOSTNAME = os.environ.get("TRITON_HOSTNAME", "172.20.0.4")
     TRITON_PORT = str(os.environ.get("TRITON_PORT", "8001"))
     TRITON_URL = f"{TRITON_HOSTNAME}:{TRITON_PORT}"
-    TRITON_MODE = os.environ.get("TRITON_MODE", "EXPLICIT")
+    TRITON_MODE = os.environ.get("TRITON_MODE", "POLLING")
     HOSTNAME = os.environ.get("HOSTNAME", "127.0.0.1")
     # get Triton client and load model in Triton
     client = loadModel(MODEL_NAME, MODEL_VERSION, TRITON_URL, TRITON_MODE)

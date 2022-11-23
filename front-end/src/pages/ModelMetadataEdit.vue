@@ -46,8 +46,10 @@
               outlined
               v-model="editMetadataStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.experimentPlatforms"
+              :options="experimentStore.experimentConnectors"
               label="Experiment Platform (Optional)"
+              map-options
+              emit-value
             />
             <q-input
               outlined
@@ -57,14 +59,18 @@
               label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              @update:model-value="setStateFromExperimentDetails()"
+              debounce="1000"
             >
             </q-input>
             <q-select
               outlined
               v-model="editMetadataStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.datasetPlatforms"
+              :options="datasetStore.datasetConnectors"
               label="Dataset Platform (Optional)"
+              map-options
+              emit-value
             />
             <q-input
               outlined
@@ -112,7 +118,7 @@
               outlined
               v-model="editMetadataStore.modelTask"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.tasksList"
+              :options="modelStore.tasks"
               label="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
@@ -275,12 +281,6 @@
               Please remove the example content and style your own content
             </div>
             <!-- Button to populate markdown with text from previous step-->
-            <q-btn
-              label="Populate card description"
-              rounded
-              color="secondary"
-              @click="popupContent = true"
-            />
 
             <tiptap-editor
               editable
@@ -288,7 +288,17 @@
               :replace-content="replaceContent"
               @update:content="editMetadataStore.markdownContent = $event"
               @replaced-content="replaceContent = false"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Populate card description"
+                  rounded
+                  no-caps
+                  color="secondary"
+                  @click="popupContent = true"
+                />
+              </template>
+            </tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -335,9 +345,23 @@
             </div>
             <tiptap-editor
               editable
+              :replace-content="replacePerformanceContent"
+              @replaced-content="replacePerformanceContent = false"
               :content="editMetadataStore.performanceMarkdown"
               @update:content="editMetadataStore.performanceMarkdown = $event"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Retrieve plots from experiment"
+                  rounded
+                  no-caps
+                  color="secondary"
+                  @click="showPlotModal = true"
+                  v-if="
+                    editMetadataStore.experimentPlatform != '' &&
+                    editMetadataStore.experimentID != ''
+                  " /></template
+            ></tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -402,9 +426,6 @@
           </q-card-section>
           <q-card-section class="q-pt-none">
             Are you sure you want to exit the model creation process? <br />
-            <span class="text-bold"
-              >(Saving will override any previous creations)</span
-            >
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
@@ -418,21 +439,11 @@
             <q-space />
             <q-btn
               rounded
-              outline
               label="Quit"
-              color="secondary"
-              v-close-popup
-              to="/"
-              @click="flushDraft()"
-            />
-            <q-btn
-              rounded
-              label="Save & Quit"
               color="primary"
               padding="sm xl"
               to="/"
               v-close-popup
-              v-if="prevSave"
             />
           </q-card-actions>
         </q-card>
@@ -446,9 +457,17 @@
             Replace example content with your own values?
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="No" color="red" v-close-popup />
             <q-btn
-              flatv
+              outline
+              rounded
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+            />
+            <q-btn
+              rounded
+              padding="sm xl"
               label="Replace"
               color="primary"
               v-close-popup
@@ -457,33 +476,38 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
-      <q-dialog v-model="prevSave" persistent>
+      <q-dialog v-model="showPlotModal" persistent>
         <q-card>
           <q-card-section>
-            <div class="text-h6">Previous Draft</div>
+            <div class="text-h6">Retrieve Experiment Plots</div>
           </q-card-section>
           <q-card-section class="q-pt-none">
-            There was a previous draft found, continue editing draft or reset
-            back to original content?
+            Retrieve any plots from your experiment?
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
               outline
               rounded
-              label="Reset"
+              no-caps
+              label="No"
               color="error"
               padding="sm xl"
               v-close-popup
-              @click="flushDraft()"
+              :disable="buttonDisable"
             />
             <q-btn
               rounded
+              no-caps
               padding="sm xl"
-              label="Continue"
+              label="Add plots"
               color="primary"
-              v-close-popup
+              @click="addExpPlots(editMetadataStore)"
+              :disable="buttonDisable"
             />
           </q-card-actions>
+          <q-inner-loading :showing="buttonDisable">
+            <q-spinner-gears size="50px" color="primary" />
+          </q-inner-loading>
         </q-card>
       </q-dialog>
     </dialog>
@@ -491,77 +515,53 @@
 </template>
 
 <script setup lang="ts">
-// TODO: Refactor model creation and editing code
-// as the way it is currently handled is not ideal
-// e.g. Repetitive Code
-import { onMounted, Ref, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
-import { Notify } from 'quasar';
-import { useExpStore } from 'src/stores/exp-store';
+import { Notify, QStepper } from 'quasar';
+import { useExperimentStore } from 'src/stores/experiment-store';
 import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
-import { useCreationPreset } from 'src/stores/creation-preset';
 import { useRoute, useRouter } from 'vue-router';
 
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
+import { useModelStore } from 'src/stores/model-store';
+import { useDatasetStore } from 'src/stores/dataset-store';
+
+const emit = defineEmits(['update-exp']);
+
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
-const experimentStore = useExpStore();
-const creatorPreset = useCreationPreset();
+const experimentStore = useExperimentStore();
+const datasetStore = useDatasetStore();
+const modelStore = useModelStore();
 const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const modelId = route.params.modelId as string;
 
-// const for checking whether previous draft exist
-const prevSave = ref(localStorage.getItem(editMetadataStore.$id) !== null);
-
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
-const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
+const replaceContent = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent = ref(false); // indicator to replace content with model desc data
 
 // variables for popup exits
 const cancel = ref(false);
 const popupContent = ref(false);
+const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
-function flushDraft() {
-  editMetadataStore.$reset();
-  localStorage.removeItem(`${editMetadataStore.$id}`);
-  editMetadataStore.loadFromMetadata(modelId); // we want to reset the store to the original model
-}
-
-async function checkMetadata(reference) {
-  const metadataIsDone = editMetadataStore.checkMetadataValues();
-  if ((await metadataIsDone) == true) {
-    reference.next();
+const checkMetadata = (stepper: QStepper) => {
+  if (editMetadataStore.metadataValid) {
+    stepper.next();
   } else {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
-      position: 'top',
       icon: 'warning',
-      color: 'negative',
-      actions: [
-        {
-          label: 'Dismiss',
-          color: 'white',
-          handler: () => {
-            /* ... */
-          },
-        },
-      ],
+      color: 'error',
     });
   }
-}
-function saveEdit() {
-  if (authStore.user?.name) {
-    if (editMetadataStore.modelOwner == '') {
-      editMetadataStore.modelOwner = authStore.user.name;
-    }
-    if (editMetadataStore.modelPOC == '') {
-      editMetadataStore.modelPOC = authStore.user.name;
-    }
-  }
+};
+const saveEdit = () => {
   editMetadataStore
     .submitEdit(modelId)
     .then(
@@ -569,18 +569,8 @@ function saveEdit() {
       () => {
         Notify.create({
           message: 'Model successfully edited',
-          position: 'bottom',
           icon: 'check',
           color: 'primary',
-          actions: [
-            {
-              label: 'Dismiss',
-              color: 'white',
-              handler: () => {
-                /* ... */
-              },
-            },
-          ],
         });
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
@@ -590,23 +580,13 @@ function saveEdit() {
     .catch(() => {
       Notify.create({
         message: 'Error editing model',
-        position: 'bottom',
         icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
+        color: 'error',
       });
     });
-}
+};
 
-function populateEditor(store: typeof editMetadataStore) {
+const populateEditor = (store: typeof editMetadataStore) => {
   replaceContent.value = true;
   (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
@@ -627,25 +607,67 @@ function populateEditor(store: typeof editMetadataStore) {
   <p>&nbsp;</p>
   `),
     (popupContent.value = false);
-}
+};
 
-function setStateFromExperimentDetails(state: typeof editMetadataStore) {
-  if (state.experimentID !== editMetadataStore.experimentID) {
-    experimentStore.getExperimentByID(state.experimentID).then((data) => {
-      editMetadataStore.tags = Array.from(
-        new Set([...editMetadataStore.tags, ...data.tags]),
-      );
-      editMetadataStore.frameworks = Array.from(
-        new Set([...editMetadataStore.frameworks, ...data.frameworks]),
-      );
-    });
+const setStateFromExperimentDetails = () => {
+  buttonDisable.value = true;
+  loadingExp.value = true;
+
+  editMetadataStore.loadMetadataFromExperiment().finally(() => {
+    buttonDisable.value = false;
+    loadingExp.value = false;
+  });
+};
+
+// TODO: Extract this common function and put in external store
+const addExpPlots = (store: typeof editMetadataStore) => {
+  buttonDisable.value = true;
+  let newPerformance = store.performanceMarkdown;
+  if (store.experimentID) {
+    experimentStore
+      .getExperimentByID(store.experimentID, store.experimentPlatform, true)
+      .then((data) => {
+        store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
+      })
+      .then(() => {
+        for (const chart of store.plots) {
+          try {
+            newPerformance += `
+          <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
+            /["]/g,
+            '&quot;',
+          )}" data-data="${JSON.stringify(chart.data).replace(
+            /["]/g,
+            '&quot;',
+          )}"></chart>
+          <p></p>
+        `;
+          } catch (err) {
+            console.log('Failed to retrieve chart');
+            continue;
+          }
+        }
+        replacePerformanceContent.value = true;
+        store.performanceMarkdown = newPerformance;
+        showPlotModal.value = false;
+        Notify.create({
+          message: 'Successfully inserted plots from experiment',
+          color: 'primary',
+        });
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to insert plots',
+          color: 'error',
+        });
+      })
+      .finally(() => {
+        buttonDisable.value = false;
+      });
   }
-}
+};
 
 onMounted(() => {
-  if (!prevSave.value) {
-    editMetadataStore.loadFromMetadata(modelId);
-  }
-  watch(editMetadataStore, setStateFromExperimentDetails);
+  editMetadataStore.loadFromMetadata(modelId);
 });
 </script>

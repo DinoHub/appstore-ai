@@ -19,20 +19,31 @@
       <q-tab-panels v-model="tab" animated>
         <q-tab-panel name="data">
           <div class="text-h6">Data</div>
-          <JSONEditorVue :onRenderValue="onRenderValueData" v-model="data"></JSONEditorVue>
+          <JSONEditorVue
+            :onRenderValue="onRenderValueData"
+            v-model="data"
+          ></JSONEditorVue>
           <div class="text-h6">Layout</div>
           <JSONEditorVue v-model="layout"></JSONEditorVue>
         </q-tab-panel>
         <q-tab-panel name="preview">
-          <plotly-chart :data="data" :layout="layout"></plotly-chart>
+          <plotly-chart
+            v-if="tab == Tabs.preview"
+            :data="data"
+            :layout="layout"
+          ></plotly-chart>
         </q-tab-panel>
       </q-tab-panels>
     </q-card-section>
     <q-card-actions>
-      <q-btn color="primary" v-if="props.update" v-close-popup @click="update"
+      <q-btn
+        color="primary"
+        v-if="props.update"
+        v-close-popup
+        @click="updateChart"
         >Update Chart</q-btn
       >
-      <q-btn color="primary" v-else v-close-popup @click="insert"
+      <q-btn color="primary" v-else v-close-popup @click="insertChart"
         >Create Chart</q-btn
       >
       <q-btn color="red" v-close-popup>Close without saving</q-btn>
@@ -43,19 +54,32 @@
 <script setup lang="ts">
 import PlotlyChart from '../content/PlotlyChart.vue';
 import JSONEditorVue from 'json-editor-vue';
-import { renderJSONSchemaEnum, renderValue } from 'vanilla-jsoneditor'
+import {
+  renderJSONSchemaEnum,
+  renderValue,
+  RenderValueProps,
+} from 'vanilla-jsoneditor';
 import { Ref, ref, watch } from 'vue';
 
-export interface Props {
+export interface PlotlyEditorProps {
   data?: Record<string, any>[];
   layout?: Record<string, any>;
   update?: boolean;
 }
 
-const props = defineProps<Props>();
+enum Tabs {
+  data = 'data',
+  preview = 'preview',
+}
+
+const props = withDefaults(defineProps<PlotlyEditorProps>(), {
+  update: false,
+});
+
 const emit = defineEmits(['updatePlot', 'newPlot']);
 
-const tab = ref('data');
+const tab: Ref<Tabs> = ref(Tabs.data);
+
 const data: Ref<Record<string, any>[]> = ref(
   props.data ?? [
     {
@@ -63,8 +87,9 @@ const data: Ref<Record<string, any>[]> = ref(
       y: [],
       type: 'scatter',
     },
-  ]
+  ],
 );
+
 const layout: Ref<Record<string, any>> = ref(
   props.layout ?? {
     title: 'New Chart',
@@ -74,22 +99,12 @@ const layout: Ref<Record<string, any>> = ref(
     yaxis: {
       title: 'Y Axis Label',
     },
-  }
+  },
 );
 
-function update() {
-  console.log('Updating Plot');
-  emit('updatePlot', data.value, layout.value);
-}
-
-function insert() {
-  console.log('Creating Plot');
-  emit('newPlot', data.value, layout.value);
-}
-
-function onRenderValueData(props) {
-  return renderValue(props)
-}
+const updateChart = () => emit('updatePlot', data.value, layout.value);
+const insertChart = () => emit('newPlot', data.value, layout.value);
+const onRenderValueData = (props: RenderValueProps) => renderValue(props);
 
 watch(data, (newData) => {
   // Sometimes new data is a string, so we need to parse it

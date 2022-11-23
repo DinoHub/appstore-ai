@@ -1,6 +1,8 @@
+import { Store, defineStore } from 'pinia';
+
 import { AxiosError } from 'axios';
+import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
-import { defineStore } from 'pinia';
 
 export interface InferenceEngineService {
   serviceName: string;
@@ -11,10 +13,45 @@ export interface InferenceEngineService {
   containerPort?: number;
 }
 
+export interface InferenceServiceStatus {
+  conditions: {
+    lastTransitionTime: string;
+    status: string;
+    type: string;
+  }[];
+  url: string;
+}
+
 export const useInferenceServiceStore = defineStore('service', {
   state: () => ({}),
   getters: {},
   actions: {
+    async getServiceReady(
+      serviceName: string,
+      maxRetries = 1,
+      backoffSeconds = 10,
+    ): Promise<boolean> {
+      try {
+        for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
+          let ready = true;
+          const res = await api.get(`engines/${serviceName}/status`);
+          const data: InferenceServiceStatus = res.data;
+          for (const status of data.conditions) {
+            if (status.status !== 'True') {
+              ready = false;
+            }
+          }
+          if (ready) {
+            return true;
+          }
+          // Sleep for backoffSeconds
+          await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
+        }
+        return false;
+      } catch (error) {
+        return Promise.reject('Unable to get status of KNative service');
+      }
+    },
     async getServiceByName(
       serviceName: string,
     ): Promise<InferenceEngineService> {
@@ -25,7 +62,7 @@ export const useInferenceServiceStore = defineStore('service', {
       } catch (error) {
         const errRes = error as AxiosError;
         if (errRes.response?.status === 404) {
-          console.error('Inference Engine Not Found');
+          console.warn('Inference Engine Not Found');
         }
         return Promise.reject('Unable to get inference engine');
       }
@@ -45,6 +82,31 @@ export const useInferenceServiceStore = defineStore('service', {
         return data;
       } catch (error) {
         return Promise.reject('Unable to create inference engine');
+      }
+    },
+    async launchPreviewService(
+      modelId: string,
+      imageUri: string,
+      port?: number,
+    ) {
+      Notify.create({
+        message: 'Creating service, please wait...',
+      });
+      const { serviceName, inferenceUrl } = await this.createService(
+        modelId,
+        imageUri,
+        port,
+      );
+      const ready = await this.getServiceReady(serviceName, 10, 10);
+      if (ready) {
+        return { serviceName, inferenceUrl };
+      } else {
+        Notify.create({
+          message: 'Failed to create service',
+          color: 'error',
+        });
+        await this.deleteService(serviceName); // Cleanup
+        return Promise.reject('Failed to launch preview service');
       }
     },
     async updateService(

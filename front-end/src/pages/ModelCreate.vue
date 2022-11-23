@@ -1,5 +1,5 @@
 <template>
-  <div class="q-pa-md col-9">
+  <q-page padding>
     <q-stepper
       v-model="creationStore.step"
       ref="stepper"
@@ -7,7 +7,6 @@
       done-color="primary"
       error-color="error"
       active-color="secondary"
-      class="shadow-0 justify-center text-center full-height"
       header-class="no-border q-px-xl"
     >
       <q-step
@@ -43,8 +42,10 @@
               outlined
               v-model="creationStore.experimentPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.experimentPlatforms"
+              :options="experimentStore.experimentConnectors"
               label="Experiment Platform (Optional)"
+              emit-value
+              map-options
             />
             <q-input
               outlined
@@ -54,14 +55,17 @@
               label="Experiment ID"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              @update:model-value="retrieveExperimentDetails()"
             >
             </q-input>
             <q-select
               outlined
               v-model="creationStore.datasetPlatform"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.datasetPlatforms"
+              :options="datasetStore.datasetConnectors"
               label="Dataset Platform (Optional)"
+              emit-value
+              map-options
             />
             <q-input
               v-if="creationStore.datasetPlatform != ''"
@@ -108,7 +112,7 @@
               outlined
               v-model="creationStore.modelTask"
               class="q-ml-md q-pb-xl"
-              :options="creatorPreset.tasksList"
+              :options="modelStore.tasks"
               label="Task"
               :rules="[(val) => !!val || 'Field is required']"
             />
@@ -269,20 +273,23 @@
               Please remove the example content and style your own content
             </div>
             <!-- Button to populate markdown with text from previous step-->
-            <q-btn
-              label="Populate card description"
-              rounded
-              color="secondary"
-              @click="popupContent = true"
-            />
-
             <tiptap-editor
               editable
               :content="creationStore.markdownContent"
               :replace-content="replaceContent"
               @update:content="creationStore.markdownContent = $event"
               @replaced-content="replaceContent = false"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Populate card description"
+                  rounded
+                  no-caps
+                  color="secondary"
+                  @click="popupContent = true"
+                />
+              </template>
+            </tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -329,9 +336,25 @@
             </div>
             <tiptap-editor
               editable
+              :replace-content="replacePerformanceContent"
+              @replaced-content="replacePerformanceContent = false"
               :content="creationStore.performanceMarkdown"
               @update:content="creationStore.performanceMarkdown = $event"
-            />
+            >
+              <template #toolbar>
+                <q-btn
+                  label="Retrieve plots from experiment"
+                  rounded
+                  no-caps
+                  color="secondary"
+                  @click="showPlotModal = true"
+                  v-if="
+                    creationStore.experimentPlatform != '' &&
+                    creationStore.experimentID != ''
+                  "
+                />
+              </template>
+            </tiptap-editor>
           </div>
         </div>
       </q-step>
@@ -345,10 +368,7 @@
       >
         <div
           class="row justify-center"
-          v-if="
-            creationStore.modelTask != 'Reinforcement Learning' &&
-            displayImageSubmit == false
-          "
+          v-if="creationStore.modelTask != 'Reinforcement Learning'"
         >
           <div class="q-pa-md q-gutter-sm col-4 shadow-1">
             <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
@@ -388,7 +408,7 @@
               class="q-pb-xl q-mr-sm"
               autogrow
               hint="Image URI"
-              v-model="creationStore.inferenceImage"
+              v-model="creationStore.imageUri"
               :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
@@ -434,7 +454,12 @@
       <q-step :name="8" title="Confirm" icon="task">
         <div class="row justify-center">
           <div class="col-5">
-            <gradio-frame class="shadow-2" :url="appURI"> </gradio-frame>
+            <gradio-frame
+              class="shadow-2"
+              :v-show="creationStore.previewServiceUrl"
+              :url="creationStore.previewServiceUrl ?? ''"
+            >
+            </gradio-frame>
           </div>
           <div
             class="q-ml-xl col-3 shadow-2 rounded-borders q-my-auto"
@@ -475,10 +500,7 @@
               <q-btn
                 v-if="creationStore.step > 1"
                 color="primary"
-                @click="
-                  $refs.stepper.previous();
-                  retrieveExperimentDetails();
-                "
+                @click="$refs.stepper.previous()"
                 no-caps
                 outline
                 rounded
@@ -489,10 +511,7 @@
               />
               <q-btn
                 v-if="creationStore.step < 6"
-                @click="
-                  $refs.stepper.next();
-                  retrieveExperimentDetails();
-                "
+                @click="$refs.stepper.next()"
                 no-caps
                 rounded
                 color="primary"
@@ -502,10 +521,8 @@
               />
 
               <q-btn
-                v-if="
-                  creationStore.step == 7 && creationStore.inferenceImage != ''
-                "
-                @click="submitImage($refs.stepper)"
+                v-if="creationStore.step == 7 && creationStore.imageUri != ''"
+                @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
                 color="primary"
@@ -577,15 +594,57 @@
             Replace example content with your own values?
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn flat label="No" color="red" v-close-popup />
             <q-btn
-              flatv
+              outline
+              rounded
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+            />
+            <q-btn
+              rounded
+              padding="sm xl"
               label="Replace"
               color="primary"
               v-close-popup
               @click="populateEditor(creationStore)"
             />
           </q-card-actions>
+        </q-card>
+      </q-dialog>
+      <q-dialog v-model="showPlotModal" persistent>
+        <q-card>
+          <q-card-section>
+            <div class="text-h6">Retrieve Experiment Plots</div>
+          </q-card-section>
+          <q-card-section class="q-pt-none">
+            Retrieve any plots from your experiment?
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              outline
+              rounded
+              no-caps
+              label="No"
+              color="error"
+              padding="sm xl"
+              v-close-popup
+              :disable="buttonDisable"
+            />
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              label="Add plots"
+              color="primary"
+              @click="addExpPlots(creationStore)"
+              :disable="buttonDisable"
+            />
+          </q-card-actions>
+          <q-inner-loading :showing="buttonDisable">
+            <q-spinner-gears size="50px" color="primary" />
+          </q-inner-loading>
         </q-card>
       </q-dialog>
       <q-dialog v-model="prevSave" persistent>
@@ -617,32 +676,30 @@
         </q-card>
       </q-dialog>
     </dialog>
-  </div>
+  </q-page>
 </template>
 
 <script setup lang="ts">
-import { useExpStore } from 'src/stores/exp-store';
-import { useCreationStore } from 'src/stores/creation-store';
-import { useCreationPreset } from 'src/stores/creation-preset';
+import { useExperimentStore } from 'src/stores/experiment-store';
+import { useCreationStore } from 'src/stores/create-model-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
-import { useModelStore } from 'src/stores/model-store';
-import { Ref, ref } from 'vue';
+import { ModelCard, useModelStore } from 'src/stores/model-store';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
 import GradioFrame from 'src/components/content/GradioFrame.vue';
+import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 
-import { Cookies, useQuasar, Notify } from 'quasar';
-import TiptapEditor from './editor/TiptapEditor.vue';
+import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
+import { useDatasetStore } from 'src/stores/dataset-store';
 
 const router = useRouter();
-
 // constants for stores
-const expStore = useExpStore();
+const experimentStore = useExperimentStore();
+const datasetStore = useDatasetStore();
 const authStore = useAuthStore();
 const creationStore = useCreationStore();
-const creatorPreset = useCreationPreset();
-const ieStore = useInferenceServiceStore();
 const modelStore = useModelStore();
 
 // const for checking whether previous saves exist
@@ -650,194 +707,72 @@ const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
-const replaceContent: Ref<boolean> = ref(false); // indicator to replace content with model desc data
-
-// variables for inference submit
-const displayImageSubmit = ref(false);
-const appURI = ref('');
-const serviceName = ref('');
+const replaceContent = ref(false); // indicator to replace content with model desc data
+const replacePerformanceContent = ref(false); // indicator to replace content with model desc data
 
 // variables for popup exits
 const cancel = ref(false);
 const popupContent = ref(false);
+const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
 // function for triggering events that should happen when next step is triggered
-function retrieveExperimentDetails() {
-  // TODO: if invalid experiment id, should warn user
-  if (creationStore.step === 2 && creationStore.experimentID !== '') {
-    loadingExp.value = true;
-    buttonDisable.value = true;
-    expStore
-      .getExperimentByID(creationStore.experimentID)
-      .then((data) => {
-        // TODO: Move this logic to the store
-        creationStore.tags = Array.from(
-          new Set([...creationStore.tags, ...data.tags])
-        );
-        creationStore.frameworks = Array.from(
-          new Set([...creationStore.frameworks, ...data.frameworks])
-        );
-        loadingExp.value = false;
-        buttonDisable.value = false;
-      })
-      .catch(() => {
-        loadingExp.value = false; // don't lock user out when error
-        buttonDisable.value = false;
-        console.error('Error in retrieving experiment details');
-      });
-  }
-}
+const retrieveExperimentDetails = () => {
+  loadingExp.value = true;
+  buttonDisable.value = true;
+  creationStore.loadMetadataFromExperiment().finally(() => {
+    loadingExp.value = false; // don't lock user out when error
+    buttonDisable.value = false;
+  });
+};
 
-function flushCreator() {
+const flushCreator = () => {
   creationStore.$reset();
   localStorage.removeItem(`${creationStore.$id}`);
-}
+};
 
-function submitImage(reference) {
+const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;
   loadingExp.value = true;
-  var response = ieStore
-    .createService(creationStore.modelName, creationStore.inferenceImage)
-    .then((data) => {
-      buttonDisable.value = false;
-      loadingExp.value = false;
-      appURI.value = data.inferenceUrl;
-      serviceName.value = data.serviceName;
-      reference.next();
+  creationStore
+    .launchPreviewService(creationStore.modelName)
+    .then(() => {
+      stepper.next();
     })
     .catch(() => {
+      Notify.create({
+        message: 'Failed to launch preview!',
+        color: 'error',
+      });
+    })
+    .finally(() => {
       buttonDisable.value = false;
       loadingExp.value = false;
-      console.error('Error in retrieving experiment details');
-
-      Notify.create({
-        message: 'Failed to deploy image and create service. Please try again.',
-        position: 'top',
-        icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
-      });
     });
-}
+};
 
-async function checkMetadata(reference) {
-  const metadataIsDone = creationStore.checkMetadataValues();
-  if ((await metadataIsDone) == true) {
-    reference.next();
+const checkMetadata = (stepper: QStepper) => {
+  if (creationStore.metadataValid) {
+    stepper.next();
   } else {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
-      position: 'top',
       icon: 'warning',
-      color: 'negative',
-      actions: [
-        {
-          label: 'Dismiss',
-          color: 'white',
-          handler: () => {
-            /* ... */
-          },
-        },
-      ],
+      color: 'error',
     });
   }
-}
+};
 
-function finalSubmit() {
-  if (authStore.user?.name) {
-    if (creationStore.modelOwner == '') {
-      creationStore.modelOwner = authStore.user.name;
+const finalSubmit = () => {
+  creationStore.createModel().then((data) => {
+    if (data) {
+      router.push(`/model/${data.modelId}/${data.creatorUserId}`);
     }
-    if (creationStore.modelPOC == '') {
-      creationStore.modelPOC = authStore.user.name;
-    }
-  }
-  var cardPackage = {
-    title: creationStore.modelName,
-    task: creationStore.modelTask,
-    tags: creationStore.tags,
-    frameworks: creationStore.frameworks,
-    owner: creationStore.modelOwner,
-    pointOfContact: creationStore.modelPOC,
-    inferenceServiceName: serviceName.value,
-    markdown: creationStore.markdownContent,
-    performance: creationStore.performanceMarkdown,
-    artifacts: [
-      { name: 'model', artifactType: 'model', url: creationStore.modelPath },
-    ],
-    description: creationStore.modelDesc,
-    explanation: creationStore.modelExplain,
-    usage: creationStore.modelUsage,
-    limitations: creationStore.modelLimitations,
-  };
-
-  if (
-    creationStore.experimentID != '' &&
-    creationStore.experimentPlatform != ''
-  ) {
-    cardPackage.experiment = {
-      connector: creationStore.experimentPlatform,
-      experimentId: creationStore.experimentID,
-    };
-  }
-
-  if (creationStore.datasetID != '' && creationStore.datasetPlatform != '') {
-    cardPackage.dataset = {
-      connector: creationStore.datasetPlatform,
-      datasetId: creationStore.datasetID,
-    };
-  }
-  console.log(cardPackage);
-  modelStore
-    .createModel(cardPackage)
-    .then((data) => {
-      Notify.create({
-        message: 'Sucessfully created',
-        position: 'top',
-        icon: 'success',
-        color: 'secondary',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
-      });
-      router.push('/');
-    })
-    .catch((err) => {
-      Notify.create({
-        message: 'Something went wrong in the creation process. Try again.',
-        position: 'top',
-        icon: 'warning',
-        color: 'negative',
-        actions: [
-          {
-            label: 'Dismiss',
-            color: 'white',
-            handler: () => {
-              /* ... */
-            },
-          },
-        ],
-      });
-    });
-}
+  });
+};
 
 // function for populating editor with values from previous step
-function populateEditor(store: typeof creationStore) {
+const populateEditor = (store: typeof creationStore) => {
   replaceContent.value = true;
   (store.markdownContent = `
   <h3>Description <a id="description"></a></h3>
@@ -858,5 +793,52 @@ function populateEditor(store: typeof creationStore) {
   <p>&nbsp;</p>
   `),
     (popupContent.value = false);
-}
+};
+
+const addExpPlots = (store: typeof creationStore) => {
+  buttonDisable.value = true;
+  let newPerformance = store.performanceMarkdown;
+  if (store.experimentID) {
+    experimentStore
+      .getExperimentByID(store.experimentID, store.experimentPlatform, true)
+      .then((data) => {
+        store.plots = [...(data.plots ?? []), ...(data.scalars ?? [])];
+      })
+      .then(() => {
+        for (const chart of store.plots) {
+          try {
+            newPerformance += `
+          <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
+            /["]/g,
+            '&quot;'
+          )}" data-data="${JSON.stringify(chart.data).replace(
+              /["]/g,
+              '&quot;'
+            )}"></chart>
+          <p></p>
+        `;
+          } catch (err) {
+            console.log('Failed to retrieve chart');
+            continue;
+          }
+        }
+        replacePerformanceContent.value = true;
+        store.performanceMarkdown = newPerformance;
+        showPlotModal.value = false;
+        Notify.create({
+          message: 'Successfully inserted plots from experiment',
+          color: 'primary',
+        });
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to insert plots',
+          color: 'error',
+        });
+      })
+      .finally(() => {
+        buttonDisable.value = false;
+      });
+  }
+};
 </script>

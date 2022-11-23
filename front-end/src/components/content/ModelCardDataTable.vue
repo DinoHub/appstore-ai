@@ -44,7 +44,8 @@
         </q-form>
       </aside>
     </q-drawer>
-
+    <!-- <q-page-container> -->
+    <!-- <q-page padding> -->
     <main class="col">
       <q-table
         grid
@@ -112,11 +113,13 @@
         </template>
       </q-table>
     </main>
+    <!-- </q-page> -->
+    <!-- </q-page-container> -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { QTableProps } from 'quasar';
+import { QTable, QTableColumn, QTableProps, Notify } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -128,7 +131,7 @@ import {
   SortOption,
 } from './models';
 
-export interface Props {
+export interface ModelCardDataTableProps {
   rows?: ModelCardSummary[];
   cardClass?: string;
   cardContainerClass?: string;
@@ -144,12 +147,12 @@ const router = useRouter();
 
 // Stores
 const modelStore = useModelStore();
-const props = defineProps<Props>();
+const props = defineProps<ModelCardDataTableProps>();
 
 // Data Table
-const tableRef = ref();
+const tableRef: Ref<QTable | undefined> = ref();
 const rows: Ref<ModelCardSummary[]> = ref([]); // store data in table
-const columns = [
+const columns: QTableColumn[] = [
   {
     name: 'title',
     required: true,
@@ -172,6 +175,8 @@ const columns = [
   {
     name: 'modelId',
     required: true,
+    label: 'Model ID',
+    field: 'modelId',
   },
   {
     name: 'description',
@@ -186,6 +191,7 @@ const columns = [
     field: 'tags',
   },
 ];
+
 const loading = ref(false);
 const filter: SearchFilter = reactive(props.filter);
 
@@ -227,7 +233,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        }),
+        })
       );
       tasks.splice(
         0,
@@ -237,28 +243,24 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        }),
+        })
       );
     })
     .catch(() => {
       console.error('Failed to get filter options');
-      // TODO: Show notification?
+      Notify.create({
+        message: 'Failed to retrieve filter options from database',
+        color: 'error',
+      });
     });
 }
 
-function compositeId(row: ModelCardSummary): string {
-  return `${row.creatorUserId}/${row.modelId}`;
-}
+const compositeId = (row: ModelCardSummary) =>
+  `${row.creatorUserId}/${row.modelId}`;
+const sortLabel = (option: SortOption) => option.label;
+const sortValue = (option: SortOption) => option;
 
-function sortLabel(option: SortOption): string {
-  return option.label;
-}
-
-function sortValue(option: SortOption): SortOption {
-  return option;
-}
-
-function onSearchRequest(props: QTableProps): void {
+const onSearchRequest = (props: QTableProps) => {
   if (!props.pagination) {
     return;
   }
@@ -287,9 +289,10 @@ function onSearchRequest(props: QTableProps): void {
       pagination.value.descending = sortBy?.desc ?? true;
       loading.value = false;
     });
-}
+};
 
 onMounted(() => {
+  // TODO: overhaul this?
   // If URL contains filter params, auto add
   if (props.showFilter) {
     const params = route.query;
@@ -327,6 +330,6 @@ onMounted(() => {
     router.replace({ query: undefined });
   }
   // Update table with latest value from Server
-  tableRef.value.requestServerInteraction();
+  tableRef.value?.requestServerInteraction();
 });
 </script>

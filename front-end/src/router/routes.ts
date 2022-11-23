@@ -1,14 +1,15 @@
-import CreateModel from 'pages/CreateModel.vue';
+import CreateModel from 'src/pages/ModelCreate.vue';
 import DashboardLayout from 'layouts/DashboardLayout.vue';
 import DashboardPage from 'pages/DashboardPage.vue';
 import AdminDashboardPage from 'pages/AdminDashboardPage.vue';
 import ErrorNotFound from 'pages/ErrorNotFound.vue';
 import AdminLoginPage from 'pages/AdminLoginPage.vue';
+import LoginLayout from 'layouts/LoginLayout.vue';
 import LoginPage from 'pages/LoginPage.vue';
 import MainLayout from 'layouts/MainLayout.vue';
 import AdminDashboardLayout from 'layouts/AdminDashboardLayout.vue';
-import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
 import ModelInferenceServiceEdit from 'src/pages/ModelInferenceServiceEdit.vue';
+import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
 import SearchLayout from 'layouts/SearchLayout.vue';
@@ -18,7 +19,7 @@ import { Notify } from 'quasar';
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
-    component: MainLayout,
+    component: LoginLayout,
     children: [
       {
         path: '',

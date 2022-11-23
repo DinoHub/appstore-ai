@@ -50,11 +50,12 @@ async def get_experiment(
     except ValueError as e:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
-            content=f"Task was not found or values are incorrect",
+            content=f"Task was not found or values are incorrect\n{e}",
         )
     except Exception as e:
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, content=f"Error"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content=f"Error: {e}",
         )
 
 

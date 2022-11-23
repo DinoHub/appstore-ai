@@ -8,30 +8,34 @@
 </style>
 <template>
   <q-card class="gradio-container bg-white">
-    <!-- <gradio-app src="https://stabilityai-stable-diffusion.hf.space/"></gradio-app> -->
-    <q-card-section>
-      <q-inner-loading
-        :showing="loading"
-        label="Loading Inference App..."
-      ></q-inner-loading>
-    </q-card-section>
     <q-card-section>
       <iframe
         @load="loading = false"
         v-show="!loading"
-        :src="props.url + '?__theme=light'"
+        :src="iframeUrl"
       ></iframe>
     </q-card-section>
+    <q-inner-loading :showing="loading" label="Loading Inference App...">
+      <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+    </q-inner-loading>
   </q-card>
 </template>
 
 <script setup lang="ts">
-import { defineProps, Ref, ref } from 'vue';
+import { defineProps, Ref, ref, computed, ComputedRef } from 'vue';
 
-interface Props {
+interface GradioFrameProps {
   url: string;
+  dark?: boolean;
 }
 
-const props = defineProps<Props>();
-const loading: Ref<boolean> = ref(true);
+const props = defineProps<GradioFrameProps>();
+
+const loading = ref(true);
+
+const iframeUrl: ComputedRef<string | undefined> = computed(() => {
+  return props.url
+    ? `${props.url}?__theme=${props.dark ? 'dark' : 'light'}`
+    : undefined;
+});
 </script>

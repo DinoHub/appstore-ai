@@ -150,6 +150,7 @@
           </q-card-section>
         </q-card>
       </q-dialog>
+      <slot name="toolbar"></slot>
     </q-toolbar>
     <main>
       <editor-content
@@ -368,10 +369,10 @@ import python from 'highlight.js/lib/languages/python';
 
 import { lowlight } from 'lowlight';
 
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 
-export interface Props {
+export interface TiptapEditorProps {
   content?: string;
   editable?: boolean;
   replaceContent?: boolean;
@@ -385,7 +386,7 @@ lowlight.registerLanguage('ts', ts);
 lowlight.registerLanguage('html', html);
 lowlight.registerLanguage('python', python);
 
-const props = defineProps<Props>();
+const props = defineProps<TiptapEditorProps>();
 const emit = defineEmits(['update:content', 'replaced-content']);
 const content = ref(props.content ?? '');
 const editor = useEditor({
@@ -420,19 +421,15 @@ const chartEditor = ref(false);
 const tableCreator = ref(false);
 const imageUploader = ref(false);
 
-function _buttonBg(condition: boolean) {
-  return condition ? 'primary' : 'white';
-}
+const _buttonBg = (condition: boolean) => (condition ? 'primary' : 'white');
 
-function _iconFill(condition: boolean) {
-  return condition ? 'white' : 'black';
-}
+const _iconFill = (condition: boolean) => (condition ? 'white' : 'black');
 
-function insertChart(
+const insertChart = (
   editor: Editor,
   data: Record<string, any>[],
   layout: Record<string, any>,
-) {
+) =>
   editor
     ?.chain()
     .focus()
@@ -444,9 +441,8 @@ function insertChart(
       },
     })
     .run();
-}
 
-function insertTable(editor: Editor, noRows: number, noCols: number) {
+const insertTable = (editor: Editor, noRows: number, noCols: number) => {
   if (noRows < 1 || noCols < 1) {
     throw RangeError;
   }
@@ -459,9 +455,9 @@ function insertTable(editor: Editor, noRows: number, noCols: number) {
       withHeaderRow: true,
     })
     .run();
-}
+};
 
-function uploadMedia(file) {
+const uploadMedia = (file) => {
   return new Promise((resolve, reject) => {
     // Get Token
     const authStore = useAuthStore();
@@ -474,12 +470,12 @@ function uploadMedia(file) {
       withCredentials: true,
     });
   });
-}
+};
 
-function addMedia({ files, xhr }) {
+const addMedia = ({ files, xhr }) => {
   // Add uploaded images to Editor
   // TODO
-}
+};
 
 watch(props, (newVal) => {
   // ensure that we can replace the content from outside

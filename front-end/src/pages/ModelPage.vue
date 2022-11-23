@@ -74,7 +74,16 @@
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
-              <gradio-frame :url="inferenceUrl"></gradio-frame>
+              <gradio-frame
+                :url="inferenceUrl"
+                v-show="inferenceUrl"
+              ></gradio-frame>
+              <q-card v-show="!inferenceUrl">
+                <q-card-section class="headline-small"
+                  >Inference service is not available for this
+                  model</q-card-section
+                >
+              </q-card>
             </q-tab-panel>
             <q-tab-panel name="metadata">
               <q-markup-table>
@@ -202,6 +211,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute } from 'vue-router';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import { Notify } from 'quasar';
 
 enum Tabs {
   inference = 'inference',
@@ -253,6 +263,10 @@ modelStore
       });
   })
   .catch((err) => {
+    Notify.create({
+      message: 'Failed to retrieve model card information',
+      color: 'error',
+    });
     console.error(err);
   });
 

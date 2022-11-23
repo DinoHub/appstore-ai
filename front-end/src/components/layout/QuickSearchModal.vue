@@ -34,8 +34,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import ModelCardDataTable from './content/ModelCardDataTable.vue';
-import { Pagination } from './models';
+import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
+import { Pagination, SearchFilter } from '../models';
 
 const search = ref(false);
 const filter: SearchFilter = {};
@@ -44,7 +44,7 @@ const pagination: Pagination = {
   sortBy: {
     label: 'Latest Models (Last Updated)',
     value: 'lastModified',
-    desc: true
+    desc: true,
   },
   descending: false,
   page: 1,

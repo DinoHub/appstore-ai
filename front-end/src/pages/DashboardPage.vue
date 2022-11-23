@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, Ref } from 'vue';
+import { ref } from 'vue';
 import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
@@ -62,9 +62,3 @@ const pagination: Pagination = {
   rowsNumber: 1,
 };
 </script>
-
-<style>
-.underline {
-  text-decoration: underline;
-}
-</style>

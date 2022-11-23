@@ -8,7 +8,7 @@ export interface Artifact {
   name: string;
   artifactType: string;
   url: string;
-  timestamp?: string
+  timestamp?: string;
 }
 
 export interface LinkedExperiment {
@@ -119,14 +119,6 @@ export const useModelStore = defineStore('model', {
       'Reinforcement Learning',
       'Tabular',
     ],
-    frameworks: [
-      'Keras',
-      'PyTorch',
-    ],
-    tags: [
-      'Example',
-      'Keras', 
-    ],
   }),
   getters: {},
   actions: {
@@ -173,10 +165,17 @@ export const useModelStore = defineStore('model', {
         return Promise.reject('Failed to create model card');
       }
     },
-    async updateModel(metadata: UpdateModelCard, userId: string, modelId: string): Promise<void> {
+    async updateModel(
+      metadata: UpdateModelCard,
+      userId: string,
+      modelId: string,
+    ): Promise<void> {
       try {
+        console.warn(metadata);
         await api.put(`models/${userId}/${modelId}`, metadata);
       } catch (error) {
+        const errRes = error as AxiosError;
+        console.error(errRes.response?.data);
         return Promise.reject('Failed to edit model card');
       }
     },

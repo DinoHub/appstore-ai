@@ -55,9 +55,9 @@ const userId: Ref<string | null> = ref(null);
 const password: Ref<string | null> = ref(null);
 const authStore = useAuthStore();
 
-async function onSubmit() {
+const onSubmit = async () => {
   if (userId.value && password.value) {
     await authStore.login(userId.value, password.value);
   }
-}
+};
 </script>

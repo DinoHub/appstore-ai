@@ -60,7 +60,7 @@ import { useAuthStore } from 'src/stores/auth-store';
 import { computed, defineProps } from 'vue';
 import MaterialChip from './MaterialChip.vue';
 
-export interface Props {
+export interface ModelCardProps {
   creatorUserId: string;
   modelId: string;
   title: string;
@@ -70,8 +70,10 @@ export interface Props {
   frameworks: string[];
   cardClass: string;
 }
+
 const authStore = useAuthStore();
-const props = defineProps<Props>();
+
+const props = defineProps<ModelCardProps>();
 
 const isModelOwner = computed(() => {
   return props.creatorUserId == authStore.user?.userId;

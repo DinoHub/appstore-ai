@@ -10,19 +10,36 @@
           color="error"
           @click="deleteChart = true"
         >
-        <q-dialog v-model="deleteChart">
-          <q-card>
-            <q-card-section class="row items-center">
-              <q-icon name="warning" color="warning" />
-              <span class="q-ml-sm">Are you sure you want to delete this chart?</span>
-            </q-card-section>
-            <q-card-actions align="right">
-              <q-btn no-caps rounded outline flat label="Cancel" color="primary" v-close-popup />
-              <q-btn no-caps rounded label="Delete" color="error" v-close-popup @click="props.deleteNode()" />
-            </q-card-actions>
-          </q-card>
-        </q-dialog>
-      </q-btn>
+          <q-dialog v-model="deleteChart">
+            <q-card>
+              <q-card-section class="row items-center">
+                <q-icon name="warning" color="warning" />
+                <span class="q-ml-sm"
+                  >Are you sure you want to delete this chart?</span
+                >
+              </q-card-section>
+              <q-card-actions align="right">
+                <q-btn
+                  no-caps
+                  rounded
+                  outline
+                  flat
+                  label="Cancel"
+                  color="primary"
+                  v-close-popup
+                />
+                <q-btn
+                  no-caps
+                  rounded
+                  label="Delete"
+                  color="error"
+                  v-close-popup
+                  @click="props.deleteNode()"
+                />
+              </q-card-actions>
+            </q-card>
+          </q-dialog>
+        </q-btn>
         <q-btn
           v-if="props.editor.isEditable"
           round
@@ -31,7 +48,7 @@
           color="primary"
           @click="chartEditor = true"
         >
-      </q-btn>
+        </q-btn>
       </q-card-actions>
       <q-dialog persistent full-width full-height v-model="chartEditor">
         <plotly-editor
@@ -62,10 +79,10 @@ const props = defineProps(nodeViewProps);
 const chartEditor = ref(false);
 const deleteChart = ref(false);
 
-function update(data: Record<string, any>[], layout: Record<string, any>) {
+const update = (data: Record<string, any>[], layout: Record<string, any>) => {
   props.updateAttributes({
     layout: JSON.stringify(layout),
     data: JSON.stringify(data),
   });
-}
+};
 </script>
