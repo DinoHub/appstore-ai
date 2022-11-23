@@ -28,7 +28,9 @@ export const useInferenceServiceStore = defineStore('service', {
   actions: {
     async getServiceReady(
       serviceName: string,
-      maxRetries = 5,
+      maxRetries = 10,
+      initialWaitSeconds = 10,
+      maxDeadlineSeconds = 300,
     ): Promise<boolean> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
@@ -44,7 +46,12 @@ export const useInferenceServiceStore = defineStore('service', {
             return true;
           }
           // Sleep for backoffSeconds
-          const backoffSeconds = Math.pow(2, noRetries) + Math.random();
+          const backoffSeconds =
+            Math.pow(2, noRetries) + Math.random() + initialWaitSeconds;
+          console.warn(`Backing off for ${backoffSeconds} seconds`);
+          if (backoffSeconds > maxDeadlineSeconds) {
+            return false;
+          }
           await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
         }
         return false;
