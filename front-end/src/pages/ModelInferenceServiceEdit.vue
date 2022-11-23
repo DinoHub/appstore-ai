@@ -83,6 +83,7 @@
                   icon="delete"
                   color="error"
                   @click="deleteField(idx)"
+                  class="col-1 q-mb-md"
                 ></q-btn>
               </div>
             </div>
