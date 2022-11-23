@@ -17,8 +17,6 @@ policy = PasswordPolicy.from_names(
 )
 
 
-
-
 class UserRoles(str, Enum):
     user = "user"
     admin = "admin"
@@ -79,9 +77,16 @@ class UserInDB(User):
 
 
 class UserPage(BaseModel):
+    page_num: int
     user_num: int
     name: str = ""
     admin_priv: int = 2
+
+    @validator("page_num")
+    def page_number_check(cls,v):
+        if v <= 0:
+            raise ValueError("Page number should be above one")
+        return v
 
     @validator("user_num")
     def num_of_user_more_than_one(cls, v):
