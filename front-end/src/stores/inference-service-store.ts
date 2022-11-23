@@ -11,6 +11,7 @@ export interface InferenceEngineService {
   imageUri: string;
   inferenceUrl: string;
   containerPort?: number;
+  env?: Record<string, any>;
 }
 
 export interface InferenceServiceStatus {

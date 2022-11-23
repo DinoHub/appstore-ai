@@ -113,6 +113,7 @@ async def create_inference_engine_service(
                 "engine_name": service_name,
                 "image_name": service.image_uri,
                 "port": service.container_port,
+                "env": service.env,
             }
         )
     )
@@ -152,6 +153,7 @@ async def create_inference_engine_service(
                 InferenceEngineService(
                     image_uri=service.image_uri,
                     container_port=service.container_port,
+                    env=service.env,
                     external_dns=service.external_dns,
                     owner_id=user.user_id,
                     model_id=uncased_to_snake_case(
@@ -373,6 +375,7 @@ async def update_inference_engine_service(
                             "engine_name": service_name,
                             "image_name": updated_service["imageUri"],
                             "port": updated_service["containerPort"],
+                            "env": updated_service["env"],
                         }
                     )
                 )

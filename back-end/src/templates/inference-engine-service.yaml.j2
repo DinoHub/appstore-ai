@@ -13,3 +13,9 @@ spec:
           ports:
             - containerPort: {{ port }}
           {% endif %}
+          {% if env %}
+          env:
+          {% for key, value in env.items()  %}
+            - name: {{ key }}
+              value: {{ value }}
+          {% endif%}
