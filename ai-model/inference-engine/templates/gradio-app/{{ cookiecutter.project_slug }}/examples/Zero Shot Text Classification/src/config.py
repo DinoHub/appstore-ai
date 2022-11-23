@@ -49,7 +49,7 @@ class Config(BaseSettings):
     )
 
     # Model Settings
-    model_name: str = Field(default="inception_graphdef", env="MODEL_NAME")
+    model_name: str = Field(default="xlm_roberta_zsl", env="MODEL_NAME")
     model_version: str = Field(default="1", env="MODEL_VERSION")
 
 
