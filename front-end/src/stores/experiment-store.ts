@@ -3,7 +3,7 @@ import { Chart } from 'src/components/models';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
-import { Notify } from 'quasar';
+
 export interface Config {
   [key: string]: string;
 }
