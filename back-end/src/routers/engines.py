@@ -389,6 +389,7 @@ async def update_inference_engine_service(
                             name=service_name,
                             body=deployment_template,
                         )
+                        return updated_service
                     except (K8sAPIException, HTTPError) as e:
                         session.abort_transaction()
                         raise HTTPException(
