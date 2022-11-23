@@ -123,6 +123,7 @@ async def get_users(
         # dont skip if 1st page
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
+                total_rows = await (db["users"].count_documents(lookup))
                 if skips <= 0:
                     # find from users in MongodDB exclude ObjectID and convert to list
                     cursor = await (
@@ -141,7 +142,9 @@ async def get_users(
                     ).to_list(length=pages_user.user_num)
                 # return documents
 
-        return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK, content=(cursor, total_rows)
+        )
     except ValueError:
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=f""
