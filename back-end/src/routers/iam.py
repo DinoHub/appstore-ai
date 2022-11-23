@@ -31,8 +31,8 @@ async def add_user(
                         "name": item.name,
                         "password": item.password,
                         "adminPriv": item.admin_priv,
-                        "lastModified": datetime.datetime.now(),
-                        "created": datetime.datetime.now(),
+                        "lastModified": str(datetime.datetime.now()),
+                        "created": str(datetime.datetime.now()),
                     }
                 )
                 add_user = await db["users"].find_one(
@@ -90,7 +90,7 @@ async def update_user(
                             "name": user.name,
                             "password": user.password,
                             "adminPriv": user.admin_priv,
-                            "lastModified": datetime.datetime.now(),
+                            "lastModified": str(datetime.datetime.now()),
                         }
                     },
                 )
@@ -113,6 +113,7 @@ async def get_users(
     try:
         # check number of documents to skip past
         skips = pages_user.user_num * (pages_user.page_num - 1)
+        print(skips)
         # lookups for name and admin priv matching
         lookup = {}
         if pages_user.name != None:
@@ -139,6 +140,7 @@ async def get_users(
                         .limit(pages_user.user_num)
                     ).to_list(length=pages_user.user_num)
                 # return documents
+
         return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
     except ValueError:
         return JSONResponse(
