@@ -1,8 +1,13 @@
-import { Notify } from 'quasar';
+import { Dialog } from 'quasar';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useInferenceServiceStore } from './inference-service-store';
 import { useModelStore } from './model-store';
+
+export interface EnvField {
+  key: string;
+  value: string;
+}
 
 export const useEditInferenceServiceStore = defineStore(
   'editInferenceService',
@@ -11,6 +16,7 @@ export const useEditInferenceServiceStore = defineStore(
       step: 1 as number,
       imageUri: '' as string,
       containerPort: undefined as number | undefined,
+      env: [] as EnvField[],
       serviceName: '' as string,
       previewServiceName: null as string | null,
       previewServiceUrl: null as string | null,
@@ -18,6 +24,13 @@ export const useEditInferenceServiceStore = defineStore(
     getters: {
       metadataValid(): boolean {
         return this.imageUri !== '' && this.serviceName !== '';
+      },
+      uniqueEnv(): Record<string, string> {
+        const uniqueEnvs: Record<string, string> = {};
+        this.env.forEach(({ key, value }) => {
+          uniqueEnvs[key] = value;
+        });
+        return uniqueEnvs;
       },
     },
     actions: {
@@ -41,6 +54,13 @@ export const useEditInferenceServiceStore = defineStore(
         this.imageUri = service.imageUri;
         this.containerPort = service.containerPort ?? undefined;
         this.serviceName = serviceName;
+
+        Object.entries(service.env ?? {}).forEach((val) => {
+          this.env.push({
+            key: val[0],
+            value: val[1],
+          });
+        });
       },
       async launchPreviewService(modelId: string) {
         const inferenceServiceStore = useInferenceServiceStore();
@@ -50,6 +70,7 @@ export const useEditInferenceServiceStore = defineStore(
               modelId,
               this.imageUri,
               this.containerPort,
+              this.uniqueEnv,
             );
           this.previewServiceName = serviceName;
           this.previewServiceUrl = inferenceUrl;
@@ -63,6 +84,7 @@ export const useEditInferenceServiceStore = defineStore(
           this.serviceName,
           this.imageUri,
           this.containerPort,
+          this.uniqueEnv,
         );
         // Check status of updated service
         const ready = await inferenceServiceStore.getServiceReady(serviceName);

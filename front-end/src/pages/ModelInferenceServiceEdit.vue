@@ -19,7 +19,7 @@
         :error="editInferenceServiceStore.imageUri == ''"
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
-          <div class="col-4 q-pr-md shadow-2 rounded">
+          <div class="col-6 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Inference Service</h6>
             <!-- modelPath? -->
             <q-input
@@ -39,6 +39,53 @@
               type="number"
               autogrow
             ></q-input>
+            <!-- Define Environment Variables -->
+            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
+              Define Environment Variables
+            </h6>
+            <!-- Add field button-->
+
+            <q-btn
+              rounded
+              outline
+              no-caps
+              color="primary"
+              label="Add Environment Variable"
+              icon="add"
+              class="q-ml-md"
+              padding="sm xl"
+              @click="addField"
+            ></q-btn>
+            <!-- Form fields -->
+            <div
+              v-for="idx in Array(editInferenceServiceStore.env.length).keys()"
+              :key="idx"
+            >
+              <div class="row q-gutter-md q-ma-md">
+                <q-input
+                  outlined
+                  label="Key"
+                  v-model="editInferenceServiceStore.env[idx].key"
+                  class="col"
+                  reactive-rules
+                  :rules="[(val) => !checkDuplicateKey(val)]"
+                ></q-input>
+                <q-input
+                  outlined
+                  class="col"
+                  label="Value"
+                  v-model="editInferenceServiceStore.env[idx].value"
+                >
+                </q-input>
+                <q-btn
+                  rounded
+                  flat
+                  icon="delete"
+                  color="error"
+                  @click="deleteField(idx)"
+                ></q-btn>
+              </div>
+            </div>
           </div>
         </div>
       </q-step>
@@ -168,6 +215,18 @@ const modelId = route.params.modelId as string;
 
 const buttonDisable = ref(false);
 const loading = ref(false);
+
+const addField = () =>
+  editInferenceServiceStore.env.push({
+    key: '',
+    value: '',
+  });
+
+const deleteField = (idx: number) =>
+  editInferenceServiceStore.env.splice(idx, 1);
+
+const checkDuplicateKey = (val: string) =>
+  editInferenceServiceStore.env.filter(({ key }) => key == val).length > 1;
 
 const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;

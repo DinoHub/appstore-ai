@@ -79,12 +79,14 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
+      env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.post('/engines/', {
           modelId: modelId,
           imageUri: imageUri,
           port: port,
+          env: env,
         });
         const data: InferenceEngineService = res.data;
         return data;
@@ -96,6 +98,7 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
+      env?: Record<string, any>,
     ) {
       Notify.create({
         message: 'Creating service, please wait...',
@@ -104,6 +107,7 @@ export const useInferenceServiceStore = defineStore('service', {
         modelId,
         imageUri,
         port,
+        env,
       );
       const ready = await this.getServiceReady(serviceName);
       if (ready) {
@@ -121,11 +125,13 @@ export const useInferenceServiceStore = defineStore('service', {
       serviceName: string,
       imageUri?: string,
       port?: number,
+      env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.patch(`/engines/${serviceName}`, {
           imageUri: imageUri,
           port: port,
+          env: env,
         });
         const data: InferenceEngineService = res.data;
         return data;
