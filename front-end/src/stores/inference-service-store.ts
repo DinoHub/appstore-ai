@@ -28,8 +28,7 @@ export const useInferenceServiceStore = defineStore('service', {
   actions: {
     async getServiceReady(
       serviceName: string,
-      maxRetries = 1,
-      backoffSeconds = 10,
+      maxRetries = 5,
     ): Promise<boolean> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
@@ -45,6 +44,7 @@ export const useInferenceServiceStore = defineStore('service', {
             return true;
           }
           // Sleep for backoffSeconds
+          const backoffSeconds = Math.pow(2, noRetries) + Math.random();
           await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
         }
         return false;
@@ -97,7 +97,7 @@ export const useInferenceServiceStore = defineStore('service', {
         imageUri,
         port,
       );
-      const ready = await this.getServiceReady(serviceName, 10, 10);
+      const ready = await this.getServiceReady(serviceName);
       if (ready) {
         return { serviceName, inferenceUrl };
       } else {

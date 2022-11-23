@@ -65,11 +65,7 @@ export const useEditInferenceServiceStore = defineStore(
           this.containerPort,
         );
         // Check status of updated service
-        const ready = await inferenceServiceStore.getServiceReady(
-          serviceName,
-          5,
-          10,
-        );
+        const ready = await inferenceServiceStore.getServiceReady(serviceName);
         if (ready) {
           return Promise.resolve();
         } else {
