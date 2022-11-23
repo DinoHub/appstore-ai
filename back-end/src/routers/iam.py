@@ -113,7 +113,6 @@ async def get_users(
     try:
         # check number of documents to skip past
         skips = pages_user.user_num * (pages_user.page_num - 1)
-        print(skips)
         # lookups for name and admin priv matching
         lookup = {}
         if pages_user.name != None:
@@ -143,7 +142,8 @@ async def get_users(
                 # return documents
 
         return JSONResponse(
-            status_code=status.HTTP_200_OK, content=(cursor, total_rows)
+            status_code=status.HTTP_200_OK,
+            content={"results": cursor, "rows": total_rows},
         )
     except ValueError:
         return JSONResponse(
