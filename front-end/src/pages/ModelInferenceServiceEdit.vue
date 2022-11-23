@@ -91,7 +91,7 @@
                 label="Continue"
                 padding="sm xl"
                 :disable="
-                  editInferenceServiceStore.imageUri === '' && buttonDisable
+                  editInferenceServiceStore.imageUri === '' || buttonDisable
                 "
               />
               <q-btn
