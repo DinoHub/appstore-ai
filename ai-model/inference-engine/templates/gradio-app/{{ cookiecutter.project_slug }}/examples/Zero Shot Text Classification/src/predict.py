@@ -16,6 +16,7 @@ inputs = [
     ),
 ]
 outputs = gr.Label(num_top_classes=config.top_k)
+examples = [["Hello world", "greeting,insult"]]
 
 tokenizer = XLMRobertaTokenizer.from_pretrained(
     "joeddav/xlm-roberta-large-xnli"

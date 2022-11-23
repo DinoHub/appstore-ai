@@ -3,7 +3,7 @@ import logging
 import gradio as gr
 
 from .config import config
-from .predict import inputs, outputs, predict
+from .predict import examples, inputs, outputs, predict
 
 if __name__ == "__main__":
     logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s")
@@ -13,5 +13,6 @@ if __name__ == "__main__":
         outputs=outputs,
         title="{{ cookiecutter.project_name }}",
         description="{{ cookiecutter.short_description }}",
+        examples=examples,
     )
     app.queue().launch(server_port=config.port)

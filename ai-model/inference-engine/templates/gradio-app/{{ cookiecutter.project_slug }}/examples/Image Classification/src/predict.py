@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Any, Dict, List, Optional, Union
 
 import gradio as gr
 import numpy as np
@@ -10,6 +10,7 @@ from .triton_utils import get_client, load_model, unload_model
 
 inputs = gr.Image(shape=(config.img_width, config.img_height))
 outputs = gr.Label(num_top_classes=config.top_k)
+examples: Optional[Union[List[Any], List[List[Any]], str]] = None
 
 
 def predict(image: np.ndarray) -> Dict[str, float]:
