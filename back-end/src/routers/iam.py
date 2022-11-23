@@ -1,5 +1,5 @@
 from typing import List
-
+import datetime
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 from fastapi.responses import JSONResponse, Response
 from pymongo import errors as pyerrs
@@ -31,6 +31,8 @@ async def add_user(
                         "name": item.name,
                         "password": item.password,
                         "adminPriv": item.admin_priv,
+                        "lastModified": datetime.datetime.now(),
+                        "created": datetime.datetime.now(),
                     }
                 )
                 add_user = await db["users"].find_one(
@@ -67,9 +69,7 @@ async def delete_user(
                 await db["users"].delete_many({"userId": {"$in": userid}})
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found")
 
 
 @router.put("/edit", dependencies=[Depends(check_is_admin)])
@@ -90,6 +90,7 @@ async def update_user(
                             "name": user.name,
                             "password": user.password,
                             "adminPriv": user.admin_priv,
+                            "lastModified": datetime.datetime.now(),
                         }
                     },
                 )
@@ -98,23 +99,20 @@ async def update_user(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
         )
     except:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found")
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # list users with pagination
-@router.post("/{page_num}", dependencies=[Depends(check_is_admin)])
+@router.post("/", dependencies=[Depends(check_is_admin)])
 async def get_users(
     pages_user: UserPage,
-    page_num: int = Path(ge=1),
     db=Depends(get_db),
 ):
     db, mongo_client = db
     try:
         # check number of documents to skip past
-        skips = pages_user.user_num * (page_num - 1)
+        skips = pages_user.user_num * (pages_user.page_num - 1)
         # lookups for name and admin priv matching
         lookup = {}
         if pages_user.name != None:
