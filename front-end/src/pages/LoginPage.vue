@@ -5,7 +5,7 @@
       <section class="col-5">
         <q-card tag="form" class="bg-surface">
           <q-card-section>
-            <div class="text-h5">Welcome back</div>
+            <div class="text-h5">Login</div>
           </q-card-section>
           <q-card-section>
             <q-form @submit="onSubmit" class="q-gutter-md">
