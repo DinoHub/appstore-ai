@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import AnyUrl, BaseSettings, Field
+from pydantic import BaseSettings, Field
 
 {% if cookiecutter.inference_backend == "Triton" %}
 class TritonMode(str, Enum):
@@ -18,7 +18,7 @@ class Config(BaseSettings):
     port: int = Field(default=8080, env="PORT",description="Gradio App Server Port")
 
     {% if cookiecutter.inference_backend == "Triton" %}
-    triton_url: AnyUrl = Field(default="localhost:8001", env="TRITON_URL")
+    triton_url: str = Field(default="localhost:8001", env="TRITON_URL")
     triton_mode: TritonMode = Field(
         default=TritonMode.polling,
         env="TRITON_MODE",

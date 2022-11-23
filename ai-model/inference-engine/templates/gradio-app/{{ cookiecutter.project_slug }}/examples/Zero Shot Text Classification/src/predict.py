@@ -4,10 +4,9 @@ from typing import Dict, Optional
 import gradio as gr
 import numpy as np
 import tritonclient.grpc as tr
+from config import config
 from transformers import XLMRobertaTokenizer
-
-from .config import config
-from .triton_utils import get_client, load_model, unload_model
+from triton_utils import get_client, load_model, unload_model
 
 inputs = [
     gr.Text(placeholder="Text to classify", label="Text"),
@@ -52,7 +51,7 @@ def get_probability(logits: np.ndarray) -> float:
     # entailment is the probability that a statement supports
     # a hypothesis (e.g hypo = This example is {label})
     entail_contradiction_logits = logits[:, [0, 2]]
-    probs = softmax(entail_contradiction_logits, axis=2)
+    probs = softmax(entail_contradiction_logits)
     true_prob = probs[:, 1].item()  # Entailment prob
     return true_prob
 

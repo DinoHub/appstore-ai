@@ -4,9 +4,8 @@ from typing import Any, Dict, List, Optional, Union
 import gradio as gr
 import numpy as np
 import tritonclient.grpc as tr
-
-from .config import TensorFormat, config
-from .triton_utils import get_client, load_model, unload_model
+from config import TensorFormat, config
+from triton_utils import get_client, load_model, unload_model
 
 inputs = gr.Image(shape=(config.img_width, config.img_height))
 outputs = gr.Label(num_top_classes=config.top_k)

@@ -2,8 +2,7 @@ import logging
 from typing import Any, List, Optional, Union
 
 import gradio as gr
-
-from .config import config
+from config import config
 
 inputs: List[Union[str, gr.components.Component]] = []
 outputs: List[Union[str, gr.components.Component]] = []
