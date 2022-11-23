@@ -1,5 +1,5 @@
 from pathlib import Path
-from shutil import copytree
+from shutil import copytree, rmtree
 
 # Remove paths depending on options
 REMOVE_PATHS = [
@@ -25,3 +25,6 @@ task_folder = Path(f"examples/{example_task}")
 if task_folder.exists():
     # If exists, copy over example script
     copytree(str(task_folder), ".", dirs_exist_ok=True)
+
+# Remove examples folder
+rmtree("examples", ignore_errors=True)
