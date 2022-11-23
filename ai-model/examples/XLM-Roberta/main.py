@@ -35,7 +35,7 @@ def send_inference(
 
     tokens = np.array(tokens, dtype=np.int32)
     mask = tokens != 1
-    mask = np.array(tokens, dtype=np.int32)
+    mask = np.array(mask, dtype=np.int32)
     mask = mask.reshape(1, 256)
     tokens = tokens.reshape(1, 256)
 
