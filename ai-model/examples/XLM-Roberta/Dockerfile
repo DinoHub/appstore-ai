@@ -1,10 +1,6 @@
-FROM python:3.9-slim
-
+# TODO: replace FROM
+FROM tiencheng/inference-engine:latest
 COPY requirements.txt .
-
-RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
-RUN pip install -Ur requirements.txt
-
+RUN pip install -r requirements.txt
 COPY . .
-CMD [ "python", "main.py" ]
+CMD ["python", "src/app.py"]

@@ -1,0 +1,19 @@
+name: "xlm_roberta_zsl"
+platform: "pytorch_libtorch"
+input [
+ {
+    name: "input__0"
+    data_type: TYPE_INT32
+    dims: [1, 256]
+  } ,
+{
+    name: "input__1"
+    data_type: TYPE_INT32
+    dims: [1, 256]
+  }
+]
+output {
+    name: "output__0"
+    data_type: TYPE_FP32
+    dims: [1, 3]
+  }
