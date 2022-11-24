@@ -23,7 +23,6 @@
       v-model:selected="selected"
       selection="multiple"
       @request="onSearchRequest"
-      @selection="test"
     />
   </div>
 </template>
@@ -102,46 +101,30 @@ const columns: QTableColumn[] = [
   },
 ];
 
-function test() {
-  console.log('hello');
-}
-
 const onSearchRequest = (props: QTableProps) => {
   if (!props.pagination) {
     return;
   }
-  const { page, rowsPerPage, sortBy } =
+  const { page, rowsPerPage, sortBy, descending } =
     props.pagination as unknown as Pagination;
   loading.value = true;
   userStore
-    .getUsersPaginated(page, rowsPerPage, '', 2)
-    .then(({ results, total }) => {
+    .getUsersPaginated(page, rowsPerPage, '', 2, sortBy, descending)
+    .then(({ results, total_rows }) => {
       results.map((obj) => {
         if (obj.adminPriv == true) {
           obj.adminPriv = 'Admin';
         } else {
           obj.adminPriv = 'User';
         }
-        // var createdDate = new Date(obj.created);
-        // obj.created = `${createdDate.getDate()}/${
-        //   createdDate.getMonth() + 1
-        // }/${createdDate.getFullYear()}, ${createdDate.toLocaleTimeString(
-        //   'en-US',
-        //   { hour12: false }
-        // )}`;
-        // var modifiedDate = new Date(obj.lastModified);
-        // obj.lastModified = `${modifiedDate.getDate()}/${
-        //   modifiedDate.getMonth() + 1
-        // }/${modifiedDate.getFullYear()}, ${modifiedDate.toLocaleTimeString(
-        //   'en-US',
-        //   { hour12: false }
-        // )}`;
 
         return obj;
       });
       rows.value.splice(0, rows.value.length, ...results);
-      pagination.value.rowsNumber = total;
+      pagination.value.rowsNumber = total_rows;
       pagination.value.page = page ?? 1;
+      pagination.value.sortBy = sortBy;
+      pagination.value.descending = descending;
       pagination.value.rowsPerPage = rowsPerPage ?? 0;
       loading.value = false;
     });
