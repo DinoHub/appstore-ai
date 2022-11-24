@@ -35,7 +35,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'admin',
-        name: 'Admin',
+        name: 'Admin Login',
         beforeEnter: (to) => {
           const auth = useAuthStore();
           if (auth.user?.role == 'admin') {
