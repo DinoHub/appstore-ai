@@ -39,7 +39,6 @@ async def add_user(
                     {"_id": user.inserted_id},
                     {"_id": False, "password": False},
                 )
-        print(add_user)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content=f"User of ID: {add_user['userId']} created",
@@ -50,7 +49,6 @@ async def add_user(
             content=f"User with ID of {item.user_id} already exists",
         )
     except Exception as e:
-        print(e)
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content="An error occurred",
@@ -143,7 +141,7 @@ async def get_users(
 
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"results": cursor, "rows": total_rows},
+            content={"results": cursor, "total_rows": total_rows},
         )
     except ValueError:
         return JSONResponse(
