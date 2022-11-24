@@ -1,5 +1,4 @@
 import { AxiosError } from 'axios';
-import { Chart } from 'src/components/models';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
@@ -21,7 +20,7 @@ export interface Users {
 
 export interface UsersPaginated {
   results: Users[];
-  total: number;
+  total_rows: number;
 }
 
 export const useUsersStore = defineStore('users', {
@@ -31,17 +30,19 @@ export const useUsersStore = defineStore('users', {
       pageNumber: number,
       userNumber: number,
       nameSearch: string,
-      privilegeSearch: number
+      privilegeSearch: number,
+      sortBy: string,
+      descending: boolean
     ): Promise<UsersPaginated> {
       try {
-        const res = await api.post(`iam/`, {
+        const res = await api.post(`iam/?desc=${descending}&sort=${sortBy}`, {
           page_num: pageNumber,
           user_num: userNumber,
           name: nameSearch,
           admin_priv: privilegeSearch,
         });
-        const { results, total }: UsersPaginated = res.data;
-        return { results, total };
+        const { results, total_rows }: UsersPaginated = res.data;
+        return { results, total_rows };
       } catch (error) {
         const errRes = error as AxiosError;
         Notify.create({
@@ -50,6 +51,55 @@ export const useUsersStore = defineStore('users', {
           icon: 'error',
         });
         return Promise.reject('Unable to query for users');
+      }
+    },
+    async createUser(
+      name: string,
+      adminPriv: string,
+      password: string,
+      confirmPassword: string
+    ): Promise<void> {
+      try {
+        if (
+          name.trim() == '' ||
+          adminPriv.toLowerCase() != 'admin' ||
+          adminPriv.toLowerCase() != 'user' ||
+          password.trim() == '' ||
+          confirmPassword.trim() == ''
+        ) {
+          Notify.create({
+            type: 'error',
+            position: 'top',
+            message: `Fill in all required fields`,
+          });
+        } else {
+          let priv;
+          if (adminPriv.toLowerCase() == 'admin') {
+            priv = true;
+          } else {
+            priv = false;
+          }
+          const res = await api.post('iam/add', {
+            user_id: '',
+            name: name,
+            password: password,
+            password_confirm: confirmPassword,
+            admin_priv: priv,
+          });
+          console.log(res.headers);
+          Notify.create({
+            type: 'positive',
+            position: 'top',
+            message: `Successfully created user`,
+          });
+        }
+      } catch (err) {
+        Notify.create({
+          message: `Error occurred while creating user`,
+          color: 'error',
+          position: 'top',
+          icon: 'error',
+        });
       }
     },
   },
