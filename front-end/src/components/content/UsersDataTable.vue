@@ -28,8 +28,7 @@
 </template>
 <script setup lang="ts">
 import { useUsersStore, Users } from 'src/stores/users-store';
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { onMounted, Ref, ref } from 'vue';
 import { QTable, QTableColumn, QTableProps, Notify } from 'quasar';
 import { Pagination, SearchFilter } from './models';
 
