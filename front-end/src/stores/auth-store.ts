@@ -114,7 +114,7 @@ export const useAuthStore = defineStore('auth', {
         this.user = null;
         localStorage.removeItem('auth');
         localStorage.removeItem('creationStore');
-        this.router.push({ name: 'adminLogin' });
+        this.router.push({ name: 'Admin Login' });
       } catch (err) {
         console.warn('Logout failed');
       }
