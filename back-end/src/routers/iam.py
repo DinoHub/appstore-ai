@@ -1,8 +1,9 @@
 from typing import List
 import datetime
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status, Query
 from fastapi.responses import JSONResponse, Response
 from pymongo import errors as pyerrs
+from pymongo import ASCENDING, DESCENDING
 
 from ..internal.auth import check_is_admin, get_password_hash
 from ..internal.db import get_db
@@ -105,6 +106,8 @@ async def update_user(
 @router.post("/", dependencies=[Depends(check_is_admin)])
 async def get_users(
     pages_user: UserPage,
+    descending: bool = Query(default=False, alias="desc"),
+    sort_by: str = Query(default="userId", alias="sort"),
     db=Depends(get_db),
 ):
     db, mongo_client = db
@@ -126,6 +129,7 @@ async def get_users(
                     cursor = await (
                         db["users"]
                         .find(lookup, {"_id": False, "password": False})
+                        .sort(sort_by, DESCENDING if descending else ASCENDING)
                         .limit(pages_user.user_num)
                     ).to_list(length=pages_user.user_num)
                 # else call cursor with skips
@@ -134,6 +138,7 @@ async def get_users(
                     cursor = await (
                         db["users"]
                         .find(lookup, {"_id": False, "password": False})
+                        .sort(sort_by, DESCENDING if descending else ASCENDING)
                         .skip(skips)
                         .limit(pages_user.user_num)
                     ).to_list(length=pages_user.user_num)
