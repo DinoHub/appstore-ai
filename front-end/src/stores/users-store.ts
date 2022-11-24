@@ -35,6 +35,10 @@ export const useUsersStore = defineStore('users', {
       descending: boolean
     ): Promise<UsersPaginated> {
       try {
+        if (typeof sortBy != 'string') {
+          sortBy = 'lastModified';
+          descending = true;
+        }
         const res = await api.post(`iam/?desc=${descending}&sort=${sortBy}`, {
           page_num: pageNumber,
           user_num: userNumber,
