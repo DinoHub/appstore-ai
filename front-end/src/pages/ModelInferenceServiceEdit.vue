@@ -30,9 +30,9 @@
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-            <!-- Below inputs do not do anything atm -->
             <q-input
               outlined
+              v-model="editInferenceServiceStore.containerPort"
               class="q-ml-md q-pb-xl"
               label="Container Port (Optional)"
               hint="If not specified, container will listen on $PORT environment variable"
@@ -40,53 +40,12 @@
               autogrow
             ></q-input>
             <!-- Define Environment Variables -->
-            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">
-              Define Environment Variables
-            </h6>
-            <!-- Add field button-->
-
-            <q-btn
-              rounded
-              outline
-              no-caps
-              color="primary"
-              label="Add Environment Variable"
-              icon="add"
-              class="q-ml-md"
-              padding="sm xl"
-              @click="addField"
-            ></q-btn>
-            <!-- Form fields -->
-            <div
-              v-for="idx in Array(editInferenceServiceStore.env.length).keys()"
-              :key="idx"
+            <env-var-editor
+              mode="edit"
+              title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
+              fieldset-class="q-ml-md"
             >
-              <div class="row q-gutter-md q-ma-md">
-                <q-input
-                  outlined
-                  label="Key"
-                  v-model="editInferenceServiceStore.env[idx].key"
-                  class="col"
-                  reactive-rules
-                  :rules="[(val) => !checkDuplicateKey(val)]"
-                ></q-input>
-                <q-input
-                  outlined
-                  class="col"
-                  label="Value"
-                  v-model="editInferenceServiceStore.env[idx].value"
-                >
-                </q-input>
-                <q-btn
-                  rounded
-                  flat
-                  icon="delete"
-                  color="error"
-                  @click="deleteField(idx)"
-                  class="col-1 q-mb-md"
-                ></q-btn>
-              </div>
-            </div>
+            </env-var-editor>
           </div>
         </div>
       </q-step>
@@ -200,11 +159,12 @@
 <script setup lang="ts">
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
+import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useRoute, useRouter } from 'vue-router';
-import { ref, Ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Notify, QStepper } from 'quasar';
 
 const route = useRoute();
@@ -216,18 +176,6 @@ const modelId = route.params.modelId as string;
 
 const buttonDisable = ref(false);
 const loading = ref(false);
-
-const addField = () =>
-  editInferenceServiceStore.env.push({
-    key: '',
-    value: '',
-  });
-
-const deleteField = (idx: number) =>
-  editInferenceServiceStore.env.splice(idx, 1);
-
-const checkDuplicateKey = (val: string) =>
-  editInferenceServiceStore.env.filter(({ key }) => key == val).length > 1;
 
 const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;

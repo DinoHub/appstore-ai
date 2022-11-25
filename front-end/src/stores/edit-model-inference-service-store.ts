@@ -3,11 +3,7 @@ import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useInferenceServiceStore } from './inference-service-store';
 import { useModelStore } from './model-store';
-
-export interface EnvField {
-  key: string;
-  value: string;
-}
+import { EnvField } from 'src/components/models';
 
 export const useEditInferenceServiceStore = defineStore(
   'editInferenceService',

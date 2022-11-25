@@ -412,6 +412,21 @@
               :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
+            <q-input
+              outlined
+              v-model="creationStore.containerPort"
+              class="q-ml-md q-pb-xl"
+              label="Container Port (Optional)"
+              hint="If not specified, container will listen on $PORT environment variable"
+              type="number"
+              :loading="loadingExp"
+              autogrow
+            ></q-input>
+            <env-var-editor
+              mode="create"
+              title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
+              fieldset-class="q-ml-md"
+            ></env-var-editor>
             <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
             <p class="text-left">
               Note that the image provided should be an application that can be
@@ -569,10 +584,12 @@
               outline
               label="Quit"
               color="secondary"
+              padding="sm xl"
               v-close-popup
               to="/"
               @click="flushCreator()"
             />
+            <q-space />
             <q-btn
               rounded
               label="Save & Quit"
@@ -580,7 +597,6 @@
               padding="sm xl"
               to="/"
               v-close-popup
-              v-if="prevSave == true"
             />
           </q-card-actions>
         </q-card>
@@ -690,6 +706,7 @@ import { useRouter } from 'vue-router';
 
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
+import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
 
 import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
 import { useDatasetStore } from 'src/stores/dataset-store';
