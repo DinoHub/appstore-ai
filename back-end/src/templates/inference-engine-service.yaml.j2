@@ -18,4 +18,5 @@ spec:
           {% for key, value in env.items()  %}
             - name: {{ key }}
               value: {{ value }}
-          {% endif%}
+          {% endfor %}
+          {% endif %}
