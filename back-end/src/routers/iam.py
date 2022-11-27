@@ -106,8 +106,8 @@ async def update_user(
 @router.post("/", dependencies=[Depends(check_is_admin)])
 async def get_users(
     pages_user: UserPage,
-    descending: bool = Query(default=False, alias="desc"),
-    sort_by: str = Query(default="userId", alias="sort"),
+    descending: bool = Query(default=True, alias="desc"),
+    sort_by: str = Query(default="lastModified", alias="sort"),
     db=Depends(get_db),
 ):
     db, mongo_client = db
