@@ -24,7 +24,21 @@ export interface UsersPaginated {
 }
 
 export const useUsersStore = defineStore('users', {
-  state: () => ({}),
+  state: () => ({
+    privilegeOptions: [
+      { value: 2, label: 'All' },
+      {
+        value: 1,
+        label: 'Admin',
+      },
+      {
+        value: 0,
+        label: 'User',
+      },
+    ],
+    privilege: { value: 2, label: 'All' },
+    createdDateRage: null as null,
+  }),
   actions: {
     async getUsersPaginated(
       pageNumber: number,
@@ -35,15 +49,14 @@ export const useUsersStore = defineStore('users', {
       descending: boolean
     ): Promise<UsersPaginated> {
       try {
-        let desc
-        let sort
+        let desc;
+        let sort;
         if (typeof sortBy != 'string') {
-          desc = ''
-          sort = ''
-        }
-        else {
-          desc = `?desc=${descending}`
-          sort = `&sort=${sortBy}`
+          desc = '';
+          sort = '';
+        } else {
+          desc = `?desc=${descending}`;
+          sort = `&sort=${sortBy}`;
         }
         const res = await api.post(`iam/${desc}${sort}`, {
           page_num: pageNumber,
@@ -73,7 +86,7 @@ export const useUsersStore = defineStore('users', {
         if (
           name.trim() == '' ||
           (adminPriv.toLowerCase() != 'admin' &&
-          adminPriv.toLowerCase() != 'user' ) ||
+            adminPriv.toLowerCase() != 'user') ||
           password.trim() == '' ||
           confirmPassword.trim() == ''
         ) {
