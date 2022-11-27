@@ -35,11 +35,17 @@ export const useUsersStore = defineStore('users', {
       descending: boolean
     ): Promise<UsersPaginated> {
       try {
+        let desc
+        let sort
         if (typeof sortBy != 'string') {
-          sortBy = 'lastModified';
-          descending = true;
+          desc = ''
+          sort = ''
         }
-        const res = await api.post(`iam/?desc=${descending}&sort=${sortBy}`, {
+        else {
+          desc = `?desc=${descending}`
+          sort = `&sort=${sortBy}`
+        }
+        const res = await api.post(`iam/${desc}${sort}`, {
           page_num: pageNumber,
           user_num: userNumber,
           name: nameSearch,
@@ -66,13 +72,13 @@ export const useUsersStore = defineStore('users', {
       try {
         if (
           name.trim() == '' ||
-          adminPriv.toLowerCase() != 'admin' ||
-          adminPriv.toLowerCase() != 'user' ||
+          (adminPriv.toLowerCase() != 'admin' &&
+          adminPriv.toLowerCase() != 'user' ) ||
           password.trim() == '' ||
           confirmPassword.trim() == ''
         ) {
           Notify.create({
-            type: 'error',
+            type: 'negative',
             position: 'top',
             message: `Fill in all required fields`,
           });
