@@ -1,13 +1,26 @@
 <template>
-  <q-drawer show-if-above>
-    <aside class="col col-sm-3 q-pt-md">
-      <q-form class="q-px-md">
-        <div class="text-h6">Query Filters</div>
-      </q-form>
-    </aside>
-  </q-drawer>
   <div class="row">
-    <div class="col-8 q-ml-md q-mb-lg"></div>
+    <q-drawer show-if-above :model-value="props.filterDrawer">
+      <aside class="col-4 q-pt-md">
+        <q-form class="q-px-md">
+          <div class="text-h6">Query Filters</div>
+          <q-expansion-item default-opened icon="account_box" label="User Type">
+            <q-select
+              v-model="userStore.privilege"
+              :options="userStore.privilegeOptions"
+              outlined
+              hint="Select user privilege you want to view"
+              class="q-ma-sm"
+              color="primary"
+            />
+          </q-expansion-item>
+          <q-expansion-item icon="calendar_month" label="Creation Date">
+            <!-- ensure that then date display is fixed so it doenst look out of place -->
+            <q-date v-model="userStore.createdDateRage" range color="primary" />
+          </q-expansion-item>
+        </q-form>
+      </aside>
+    </q-drawer>
   </div>
   <div class="row">
     <q-table
@@ -30,15 +43,13 @@
 import { useUsersStore, Users } from 'src/stores/users-store';
 import { onMounted, Ref, ref } from 'vue';
 import { QTable, QTableColumn, QTableProps, Notify } from 'quasar';
-import { Pagination, SearchFilter } from './models';
+import { Pagination, UsersSearchFilter } from './models';
 
 export interface UsersDataTableProps {
   rows?: Users[];
-  cardClass?: string;
-  cardContainerClass?: string;
   showFilter?: boolean;
   filterDrawer?: boolean;
-  filter: SearchFilter;
+  filter: UsersSearchFilter;
   pagination: Pagination;
 }
 
