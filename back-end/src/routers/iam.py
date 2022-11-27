@@ -21,6 +21,16 @@ async def add_user(
     item: UserInsert,
     db=Depends(get_db),
 ):
+    """
+    Function to add a user to the MongoDB after reciveing a POST call to the endpoint
+
+    Args:
+        item (UserInsert): The item that contains the user information to be sent to the database for storage
+        db (Any = Depends(get_db)): This retieves the client that is connected to the database.
+
+    Returns:
+        JSONResponse: A Response object with a corresponding code depending on the success of the call or a failure for whatever reason.
+    """
     db, mongo_client = db
     try:
         item.password = get_password_hash(item.password)
