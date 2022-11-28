@@ -1,6 +1,6 @@
 import { ModelCard, useModelStore } from './model-store';
 
-import { Chart } from 'src/components/models';
+import { Chart, EnvField } from 'src/components/models';
 import { Notify } from 'quasar';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
@@ -92,6 +92,7 @@ export const useCreationStore = defineStore('createModel', {
       serviceName: '' as string,
       previewServiceName: null as string | null,
       previewServiceUrl: null as string | null,
+      env: [] as EnvField[],
     };
   },
   getters: {
@@ -115,8 +116,11 @@ export const useCreationStore = defineStore('createModel', {
             'containerPort',
             'serviceName',
             'previewServiceName',
+            'env',
+            'metadataValid',
           ].includes(item),
       );
+      console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (this.tags.length == 0 || this.frameworks.length == 0) {
         return false;
       }
@@ -128,12 +132,17 @@ export const useCreationStore = defineStore('createModel', {
       }
       for (const key of keys) {
         if (this[key] == '') {
-          console.log(this);
-          console.log(key);
           return false;
         }
       }
       return true;
+    },
+    uniqueEnv(): Record<string, string> {
+      const uniqueEnvs: Record<string, string> = {};
+      this.env.forEach(({ key, value }) => {
+        uniqueEnvs[key] = value;
+      });
+      return uniqueEnvs;
     },
   },
   actions: {
@@ -163,6 +172,7 @@ export const useCreationStore = defineStore('createModel', {
             modelId,
             this.imageUri,
             this.containerPort,
+            this.uniqueEnv,
           );
         this.previewServiceUrl = inferenceUrl;
         this.previewServiceName = serviceName; // save so we know what to clean up
@@ -223,6 +233,7 @@ export const useCreationStore = defineStore('createModel', {
           this.modelName,
           this.imageUri,
           this.containerPort,
+          this.uniqueEnv,
         );
         cardPackage.inferenceServiceName = serviceName;
         // Submit Model
@@ -272,6 +283,7 @@ export const useCreationStore = defineStore('createModel', {
       'serviceName',
       'previewServiceName',
       'previewServiceUrl',
+      'env',
     ],
   },
 });

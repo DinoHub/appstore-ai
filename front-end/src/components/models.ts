@@ -48,3 +48,8 @@ export interface Chart {
     [key: string]: any;
   };
 }
+
+export interface EnvField {
+  key: string;
+  value: string;
+}

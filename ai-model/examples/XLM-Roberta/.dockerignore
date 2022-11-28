@@ -1,5 +1,6 @@
 # Ignore any automated tests
 tests
+model
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 

@@ -1,4 +1,0 @@
-triton_url: 172.20.0.4:8001
-triton_mode: POLLING
-model_name: xlm_roberta_zsl
-model_version: "1"

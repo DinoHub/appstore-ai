@@ -113,6 +113,7 @@ async def create_inference_engine_service(
                 "engine_name": service_name,
                 "image_name": service.image_uri,
                 "port": service.container_port,
+                "env": service.env,
             }
         )
     )
@@ -152,6 +153,7 @@ async def create_inference_engine_service(
                 InferenceEngineService(
                     image_uri=service.image_uri,
                     container_port=service.container_port,
+                    env=service.env,
                     external_dns=service.external_dns,
                     owner_id=user.user_id,
                     model_id=uncased_to_snake_case(
@@ -168,29 +170,6 @@ async def create_inference_engine_service(
             async with await mongo_client.start_session() as session:
                 async with session.start_transaction():
                     await db["services"].insert_one(service_metadata)
-
-                    # Query status of latest revision of service
-                    service_ready = False
-                    for attempt in range(5):
-                        # TODO Get status of revision
-                        service_status = (
-                            api.get_namespaced_custom_object_status(
-                                group="serving.knative.dev",
-                                version="v1",
-                                plural="services",
-                                name=service_name,
-                                namespace=config.IE_NAMESPACE,
-                            )
-                        )
-                        return service_status
-                        service_ready = True
-
-                    if not service_ready:
-                        session.abort_transaction()
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="Failed to create service",
-                        )
             return service_metadata
         except (K8sAPIException, HTTPError) as e:
             raise HTTPException(
@@ -396,6 +375,7 @@ async def update_inference_engine_service(
                             "engine_name": service_name,
                             "image_name": updated_service["imageUri"],
                             "port": updated_service["containerPort"],
+                            "env": updated_service["env"],
                         }
                     )
                 )
@@ -412,6 +392,7 @@ async def update_inference_engine_service(
                             name=service_name,
                             body=deployment_template,
                         )
+                        return updated_service
                     except (K8sAPIException, HTTPError) as e:
                         session.abort_transaction()
                         raise HTTPException(

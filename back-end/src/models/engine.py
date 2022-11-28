@@ -13,6 +13,7 @@ class CreateInferenceEngineService(BaseModel):
     image_uri: str
     container_port: Optional[int]
     external_dns: Optional[str]
+    env: Optional[dict]
 
     class Config:
         alias_generator = to_camel_case
@@ -36,6 +37,7 @@ class InferenceEngineService(CreateInferenceEngineService):
 class UpdateInferenceEngineService(BaseModel):
     image_uri: str
     container_port: Optional[int]
+    env: Optional[dict]
 
     class Config:
         alias_generator = to_camel_case

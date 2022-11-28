@@ -11,6 +11,7 @@ export interface InferenceEngineService {
   imageUri: string;
   inferenceUrl: string;
   containerPort?: number;
+  env?: Record<string, any>;
 }
 
 export interface InferenceServiceStatus {
@@ -28,8 +29,9 @@ export const useInferenceServiceStore = defineStore('service', {
   actions: {
     async getServiceReady(
       serviceName: string,
-      maxRetries = 1,
-      backoffSeconds = 10,
+      maxRetries = 10,
+      initialWaitSeconds = 10,
+      maxDeadlineSeconds = 300,
     ): Promise<boolean> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
@@ -45,6 +47,12 @@ export const useInferenceServiceStore = defineStore('service', {
             return true;
           }
           // Sleep for backoffSeconds
+          const backoffSeconds =
+            Math.pow(2, noRetries) + Math.random() + initialWaitSeconds;
+          console.warn(`Backing off for ${backoffSeconds} seconds`);
+          if (backoffSeconds > maxDeadlineSeconds) {
+            return false;
+          }
           await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
         }
         return false;
@@ -71,12 +79,14 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
+      env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.post('/engines/', {
           modelId: modelId,
           imageUri: imageUri,
           port: port,
+          env: env,
         });
         const data: InferenceEngineService = res.data;
         return data;
@@ -88,6 +98,7 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
+      env?: Record<string, any>,
     ) {
       Notify.create({
         message: 'Creating service, please wait...',
@@ -96,8 +107,9 @@ export const useInferenceServiceStore = defineStore('service', {
         modelId,
         imageUri,
         port,
+        env,
       );
-      const ready = await this.getServiceReady(serviceName, 10, 10);
+      const ready = await this.getServiceReady(serviceName);
       if (ready) {
         return { serviceName, inferenceUrl };
       } else {
@@ -113,11 +125,13 @@ export const useInferenceServiceStore = defineStore('service', {
       serviceName: string,
       imageUri?: string,
       port?: number,
+      env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.patch(`/engines/${serviceName}`, {
           imageUri: imageUri,
           port: port,
+          env: env,
         });
         const data: InferenceEngineService = res.data;
         return data;

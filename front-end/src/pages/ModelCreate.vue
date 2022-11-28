@@ -265,7 +265,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -300,12 +300,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -326,7 +326,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -412,6 +412,21 @@
               :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
+            <q-input
+              outlined
+              v-model="creationStore.containerPort"
+              class="q-ml-md q-pb-xl"
+              label="Container Port (Optional)"
+              hint="If not specified, container will listen on $PORT environment variable"
+              type="number"
+              :loading="loadingExp"
+              autogrow
+            ></q-input>
+            <env-var-editor
+              mode="create"
+              title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
+              fieldset-class="q-ml-md"
+            ></env-var-editor>
             <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
             <p class="text-left">
               Note that the image provided should be an application that can be
@@ -569,10 +584,12 @@
               outline
               label="Quit"
               color="secondary"
+              padding="sm xl"
               v-close-popup
               to="/"
               @click="flushCreator()"
             />
+            <q-space />
             <q-btn
               rounded
               label="Save & Quit"
@@ -581,7 +598,6 @@
               outline
               to="/"
               v-close-popup
-              v-if="local.getItem(creationStore.$id) != null"
             />
           </q-card-actions>
         </q-card>
@@ -691,6 +707,7 @@ import { useRouter } from 'vue-router';
 
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
+import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
 
 import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
 import { useDatasetStore } from 'src/stores/dataset-store';
@@ -814,11 +831,11 @@ const addExpPlots = (store: typeof creationStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;'
+            '&quot;',
           )}" data-data="${JSON.stringify(chart.data).replace(
-              /["]/g,
-              '&quot;'
-            )}"></chart>
+            /["]/g,
+            '&quot;',
+          )}"></chart>
           <p></p>
         `;
           } catch (err) {

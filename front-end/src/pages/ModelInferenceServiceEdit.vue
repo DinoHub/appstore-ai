@@ -19,7 +19,7 @@
         :error="editInferenceServiceStore.imageUri == ''"
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
-          <div class="col-4 q-pr-md shadow-2 rounded">
+          <div class="col-6 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Inference Service</h6>
             <!-- modelPath? -->
             <q-input
@@ -30,15 +30,22 @@
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-            <!-- Below inputs do not do anything atm -->
             <q-input
               outlined
+              v-model="editInferenceServiceStore.containerPort"
               class="q-ml-md q-pb-xl"
               label="Container Port (Optional)"
               hint="If not specified, container will listen on $PORT environment variable"
               type="number"
               autogrow
             ></q-input>
+            <!-- Define Environment Variables -->
+            <env-var-editor
+              mode="edit"
+              title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
+              fieldset-class="q-ml-md"
+            >
+            </env-var-editor>
           </div>
         </div>
       </q-step>
@@ -91,7 +98,7 @@
                 label="Continue"
                 padding="sm xl"
                 :disable="
-                  editInferenceServiceStore.imageUri === '' && buttonDisable
+                  editInferenceServiceStore.imageUri === '' || buttonDisable
                 "
               />
               <q-btn
@@ -152,11 +159,12 @@
 <script setup lang="ts">
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
+import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useRoute, useRouter } from 'vue-router';
-import { ref, Ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Notify, QStepper } from 'quasar';
 
 const route = useRoute();
