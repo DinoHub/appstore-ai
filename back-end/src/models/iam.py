@@ -1,6 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
+import secrets
 
 from bson import ObjectId
 from password_strength import PasswordPolicy
@@ -17,19 +18,24 @@ policy = PasswordPolicy.from_names(
 )
 
 
-
-
 class UserRoles(str, Enum):
     user = "user"
     admin = "admin"
 
 
 class UserInsert(BaseModel):
-    user_id: str
     name: str
+    user_id: str
     password: str
     password_confirm: str
     admin_priv: bool = False
+
+    @validator("user_id")
+    def generate_if_empty(cls, v, values, **kwargs):
+        name_string = "".join(values["name"].lower().split())
+        if v == None or v == "":
+            new_id = f"{name_string[0:7]}-{secrets.token_hex(8)}"
+            return new_id
 
     @validator("password_confirm")
     def match_passwords(cls, v, values, **kwargs):
@@ -79,9 +85,16 @@ class UserInDB(User):
 
 
 class UserPage(BaseModel):
+    page_num: int
     user_num: int
     name: str = ""
     admin_priv: int = 2
+
+    @validator("page_num")
+    def page_number_check(cls, v):
+        if v <= 0:
+            raise ValueError("Page number should be above one")
+        return v
 
     @validator("user_num")
     def num_of_user_more_than_one(cls, v):

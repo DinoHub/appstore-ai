@@ -595,6 +595,7 @@
               label="Save & Quit"
               color="primary"
               padding="sm xl"
+              outline
               to="/"
               v-close-popup
             />
@@ -719,8 +720,11 @@ const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const modelStore = useModelStore();
 
+// for accessing localstorage
+const local = localStorage;
+
 // const for checking whether previous saves exist
-const prevSave = ref(localStorage.getItem(creationStore.$id) !== null);
+const prevSave = ref(localStorage.getItem(`${creationStore.$id}`) != null);
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);

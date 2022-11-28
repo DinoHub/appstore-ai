@@ -26,6 +26,14 @@ export interface SearchFilter {
   frameworks?: string[] | LocationQueryValue[];
 }
 
+export interface UsersSearchFilter {
+  name?: string;
+  userId?: string;
+  privilege?: number;
+  dateCreatedRange?: string[];
+  dateModifiedRange?: string[];
+}
+
 export interface FormOptionValue {
   label: string;
   value: string;

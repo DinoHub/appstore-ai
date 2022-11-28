@@ -1,11 +1,11 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <main class="row justify-center items-center">
+    <div class="row justify-center items-center">
       <section class="col-5">
         <q-card tag="form" class="bg-surface">
           <q-card-section>
-            <div class="text-h5">Login</div>
+            <div class="text-h5">Admin Login</div>
           </q-card-section>
           <q-card-section>
             <q-form @submit="onSubmit" class="q-gutter-md">
@@ -44,7 +44,24 @@
           </q-card-section>
         </q-card>
       </section>
-    </main>
+    </div>
+    <div class="row justify-center items-center q-mt-xl">
+      <q-card class="q-mt-xl col-4 bg-dark"
+        ><q-card-section class="q-py-sm text-white">
+          <div class="row justify-between">
+            <span class="col-6">
+              <p class="q-my-sm">Looking for the main website?</p></span
+            >
+            <q-btn
+              flat
+              align="right"
+              class="text-red-6 col-6"
+              label="GO TO APP STORE"
+              to="/login"
+            ></q-btn>
+          </div> </q-card-section
+      ></q-card>
+    </div>
   </q-page>
 </template>
 
@@ -55,9 +72,9 @@ const userId: Ref<string | null> = ref(null);
 const password: Ref<string | null> = ref(null);
 const authStore = useAuthStore();
 
-const onSubmit = async () => {
+async function onSubmit() {
   if (userId.value && password.value) {
-    await authStore.login(userId.value, password.value);
+    await authStore.admin_login(userId.value, password.value);
   }
-};
+}
 </script>

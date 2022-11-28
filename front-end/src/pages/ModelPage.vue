@@ -252,6 +252,17 @@ modelStore
   .getModelById(userId, modelId)
   .then((card) => {
     Object.assign(model, card);
+
+    // set up datetime to appear nicer in the frontend
+    var dateCreated = new Date(model.created);
+    var dateLastModified = new Date(model.lastModified);
+    model.created = `${dateCreated.getDate()}/${
+      dateCreated.getMonth() + 1
+    }/${dateCreated.getFullYear()}, ${dateCreated.toLocaleTimeString()}`;
+    model.lastModified = `${dateLastModified.getDate()}/${
+      dateLastModified.getMonth() + 1
+    }/${dateLastModified.getFullYear()}, ${dateLastModified.toLocaleTimeString()}`;
+
     if (!model.inferenceServiceName) {
       tab.value = Tabs.metadata; // if inference not available, hide
       return;
