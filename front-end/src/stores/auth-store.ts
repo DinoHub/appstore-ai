@@ -87,6 +87,7 @@ export const useAuthStore = defineStore('auth', {
         } as User;
         this.router.push('/admin');
       } catch (err) {
+        this.admin_logout();
         Notify.create({
           type: 'negative',
           position: 'top',
@@ -134,7 +135,8 @@ export const useAuthStore = defineStore('auth', {
     },
   },
   persist: {
+    // add returnURL path back if you fix this
     storage: localStorage,
-    paths: ['user', 'returnUrl'],
+    paths: ['user'],
   },
 });
