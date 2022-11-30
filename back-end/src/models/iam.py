@@ -1,11 +1,12 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 import secrets
 
 from bson import ObjectId
 from password_strength import PasswordPolicy
 from pydantic import BaseModel, Field, validator
+from typing import Union
 
 from ..internal.utils import to_camel_case
 from .common import PyObjectId
@@ -23,6 +24,11 @@ class UserRoles(str, Enum):
     admin = "admin"
 
 
+class UsersEdit(BaseModel):
+    users: List[str] = []
+    priv: bool = False
+
+
 class UserInsert(BaseModel):
     name: str
     user_id: str
@@ -36,6 +42,7 @@ class UserInsert(BaseModel):
         if v == None or v == "":
             new_id = f"{name_string[0:7]}-{secrets.token_hex(8)}"
             return new_id
+        return v
 
     @validator("password_confirm")
     def match_passwords(cls, v, values, **kwargs):
@@ -84,11 +91,18 @@ class UserInDB(User):
     hashed_password: str
 
 
+class UserRemoval(BaseModel):
+    users: List[str]
+
+
 class UserPage(BaseModel):
-    page_num: int
-    user_num: int
+    page_num: int = 1
+    user_num: int = 5
     name: str = ""
+    userId: str = ""
     admin_priv: int = 2
+    last_modified_range: Union[str, dict, None] = {"from": "", "to": ""}
+    date_created_range: Union[str, dict, None] = {"from": "", "to": ""}
 
     @validator("page_num")
     def page_number_check(cls, v):
@@ -108,6 +122,12 @@ class UserPage(BaseModel):
             return None
         return v
 
+    @validator("userId")
+    def id_is_empty(cls, v):
+        if v.strip() == "":
+            return None
+        return v
+
     @validator("admin_priv")
     def admin_priv_check(cls, v):
         if v == 0:
@@ -116,3 +136,15 @@ class UserPage(BaseModel):
             return True
         else:
             return None
+
+    @validator("last_modified_range")
+    def last_modified_check(cls, v):
+        if v["from"] == "" or v["to"] == "" or v == "":
+            return None
+        return v
+
+    @validator("date_created_range")
+    def date_created_check(cls, v):
+        if v["from"] == "" or v["to"] == "" or v == "":
+            return None
+        return v
