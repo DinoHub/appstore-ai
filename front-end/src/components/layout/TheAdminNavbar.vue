@@ -1,7 +1,7 @@
 <template>
   <q-toolbar class="bg-dark">
     <q-toolbar-title
-      ><router-link to="/" class="text-h6">
+      ><router-link to="/admin" class="text-h6">
         <q-img
           src="../../assets/aas_logo.png"
           height="0"
