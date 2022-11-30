@@ -41,7 +41,7 @@ const filter: SearchFilter = {
   frameworks: [],
 };
 
-const filterDrawer = ref(false);
+const filterDrawer = ref(true);
 
 const pagination: Pagination = {
   sortBy: {
