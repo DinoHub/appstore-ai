@@ -29,12 +29,11 @@
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-4 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Links</h6>
-            <!-- modelPath? -->
             <q-input
               outlined
               v-model="creationStore.modelPath"
               class="q-ml-md q-pb-xl"
-              label="Model Path"
+              label="Model URL"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
@@ -52,7 +51,12 @@
               v-if="creationStore.experimentPlatform != ''"
               v-model="creationStore.experimentID"
               class="q-ml-md q-pb-xl"
-              label="Experiment ID"
+              :label="`${
+                experimentStore.experimentConnectors.find(
+                  (connector) =>
+                    connector.value === creationStore.experimentPlatform,
+                )?.label + ' ' ?? ''
+              }Experiment ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
               @update:model-value="retrieveExperimentDetails()"
@@ -68,10 +72,16 @@
               map-options
             />
             <q-input
+              outlined
               v-if="creationStore.datasetPlatform != ''"
               v-model="creationStore.datasetID"
               class="q-ml-md q-pb-xl"
-              hint="Dataset ID"
+              :label="`${
+                datasetStore.datasetConnectors.find(
+                  (connector) =>
+                    connector.value === creationStore.datasetPlatform,
+                )?.label + ' ' ?? ''
+              }Dataset ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             >
