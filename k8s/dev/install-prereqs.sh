@@ -8,10 +8,12 @@ helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
 kubectl wait --for=condition=Ready pod --all -n metallb-system
 kubectl apply -f metallb-config.yaml -n metallb-system
-
+# 
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 # Set up KNative
-kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.7.1/operator.yaml
+kubectl apply -f https://github.com/knative/operator/releases/download/knative-v1.8.1/operator.yaml
 kubectl create namespace knative-serving
+kubectl create namespace inference-engine
 # kubectl apply -f knative/knative-serving.yaml
 
 # Set up Magic DNS

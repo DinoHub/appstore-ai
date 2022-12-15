@@ -19,7 +19,7 @@ $ helm dependency update
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: { { include "common.names.fullname" . } }
+  name: {{ include "common.names.fullname" . }}
 data:
   myvalue: "Hello World"
 ```
@@ -258,12 +258,12 @@ When we store sensitive data for a deployment in a secret, some times we want to
 apiVersion: v1
 kind: Secret
 metadata:
-  name: { { include "common.names.fullname" . } }
+  name: {{ include "common.names.fullname" . }}
   labels:
-    app: { { include "common.names.fullname" . } }
+    app: {{ include "common.names.fullname" . }}
 type: Opaque
 data:
-  password: { { .Values.password | b64enc | quote } }
+  password: {{ .Values.password | b64enc | quote }}
 
 # templates/dpl.yaml
 ---
