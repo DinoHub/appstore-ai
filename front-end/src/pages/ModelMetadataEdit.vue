@@ -51,16 +51,22 @@
               map-options
               emit-value
             />
+            <!-- Dynamic append platform name to label -->
             <q-input
               outlined
               v-if="editMetadataStore.experimentPlatform != ''"
               v-model="editMetadataStore.experimentID"
               class="q-ml-md q-pb-xl"
-              label="Experiment ID"
+              :label="`${
+                experimentStore.experimentConnectors.find(
+                  (connector) =>
+                    connector.value === editMetadataStore.experimentPlatform,
+                )?.label + ' ' ?? ''
+              }Experiment ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
               @update:model-value="setStateFromExperimentDetails()"
-              debounce="1000"
+              debounce="2000"
             >
             </q-input>
             <q-select
@@ -77,7 +83,12 @@
               v-if="editMetadataStore.datasetPlatform != ''"
               v-model="editMetadataStore.datasetID"
               class="q-ml-md q-pb-xl"
-              hint="Dataset ID"
+              :label="`${
+                datasetStore.datasetConnectors.find(
+                  (connector) =>
+                    connector.value === editMetadataStore.datasetPlatform,
+                )?.label + ' ' ?? ''
+              }Dataset ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             >
@@ -139,6 +150,7 @@
               :loading="loadingExp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
+              placeholder="Image Classification"
             />
             <q-select
               outlined
@@ -156,6 +168,7 @@
               :rules="[
                 (val) => val.length >= 1 || 'One or more frameworks required',
               ]"
+              placeholder="PyTorch"
             />
           </div>
           <div class="col q-pl-md q-ml-xl shadow-2 rounded">
@@ -166,6 +179,7 @@
               autogrow
               class="q-mr-md q-pb-xl"
               label="Model Owner (Optional)"
+              hint="This is the person in charge of the model."
             ></q-input>
             <q-input
               outlined
@@ -173,13 +187,14 @@
               autogrow
               class="q-mr-md q-pb-xl"
               label="Point of Contact (Optional)"
+              hint="This is the person to contact for enquiries on the model."
             ></q-input>
           </div>
         </div>
       </q-step>
       <q-step
         :name="3"
-        title="Model Description"
+        title="Model Card Description"
         icon="person"
         :done="
           editMetadataStore.modelDesc != '' &&
@@ -201,7 +216,7 @@
               v-model="editMetadataStore.modelDesc"
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              outlined
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -213,7 +228,7 @@
               v-model="editMetadataStore.modelExplain"
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              outlined
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -225,7 +240,7 @@
               v-model="editMetadataStore.modelUsage"
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              outlined
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -237,7 +252,7 @@
               v-model="editMetadataStore.modelLimitations"
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              outlined
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
           </div>
@@ -262,12 +277,9 @@
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
             <h6 class="text-left q-ml-md q-mb-sm">Card Markdown</h6>
             <p class="text-left q-ml-md q-mb-sm">
-              This is the HTML markdown that will shown in the model page.<br />
-              Style it to your liking and display whatever additional
-              information you would like, such as tables, lists, code samples or
-              images. <br />
-              You can follow the example content structure or come up with
-              something else.
+              This is the content that will be displayed on the model card page.
+              You can use the "Populate card description" button to populate the
+              markdown with the information you entered in the previous step.
             </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
@@ -324,12 +336,14 @@
               Performance Metrics
             </h6>
             <p class="text-left q-ml-md q-mb-sm">
-              This is a editor section for performance metrics to be inserted.
-              <br />
-              If a ClearML experiment ID was given, the scalars will be inserted
-              here.<br />
-              Style the performance metrics and insert any relevant descriptions
-              to your liking to let users know the performance of the model.
+              This is where you can add performance metrics for your model which
+              will be displayed on the model card page. If you have supplied a
+              linked experiment in the first step which includes logged metrics,
+              you can use the "Retrieve plots from experiment" button to
+              automatically generate plots for the logged metrics. If you have
+              not supplied a linked experiment, you can use the "Add plot"
+              button to manually add plots. You can also edit preexisting plots
+              using the edit button.
             </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
@@ -462,6 +476,7 @@
             <q-btn
               outline
               rounded
+              no-caps
               label="No"
               color="error"
               padding="sm xl"
@@ -469,6 +484,7 @@
             />
             <q-btn
               rounded
+              no-caps
               padding="sm xl"
               label="Replace"
               color="primary"

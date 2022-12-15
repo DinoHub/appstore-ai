@@ -59,6 +59,7 @@
               emit-value
               map-options
             />
+            <!-- Dynamic append platform name to label -->
             <q-input
               outlined
               v-if="creationStore.experimentPlatform != ''"
@@ -202,7 +203,7 @@
       </q-step>
       <q-step
         :name="3"
-        title="Model Description"
+        title="Model Card Attributes"
         icon="person"
         :done="
           creationStore.modelDesc != '' &&
