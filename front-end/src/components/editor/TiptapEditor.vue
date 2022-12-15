@@ -1,6 +1,7 @@
 <template>
   <!-- Editor Toolbar -->
   <!-- TODO: Make each button+dialog menu a component-->
+  <!-- TODO: Move logic e.g add table to component. See HyperlinkEditor component for example on how this is to be done-->
   <div v-if="editor" style="overflow: none">
     <q-toolbar v-if="props.editable" class="q-gutter-sm row">
       <!-- Bold -->
