@@ -64,7 +64,7 @@ module.exports = configure(function (ctx) {
       // analyze: true,
       env: {
         backendAPI: ctx.dev
-          ? 'http://localhost:7070'
+          ? 'http://127.0.0.1:8080'
           : 'http://api.appstore.ai',
       },
       // rawDefine: {}

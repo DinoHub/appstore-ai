@@ -4,7 +4,7 @@ kubectl apply -f dashboard/admin.yaml
 sh dashboard/generate-token.sh
 # Set up MetalLB
 kubectl create namespace metallb-system
-# helm repo add metallb https://metallb.github.io/metallb
+helm repo add metallb https://metallb.github.io/metallb
 helm install metallb metallb/metallb -n metallb-system
 kubectl wait --for=condition=Ready pod --all -n metallb-system
 kubectl apply -f metallb-config.yaml -n metallb-system
