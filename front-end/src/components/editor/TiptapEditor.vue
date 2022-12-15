@@ -1,5 +1,6 @@
 <template>
   <!-- Editor Toolbar -->
+  <!-- TODO: Make each button+dialog menu a component-->
   <div v-if="editor" style="overflow: none">
     <q-toolbar v-if="props.editable" class="q-gutter-sm row">
       <!-- Bold -->
@@ -34,6 +35,15 @@
         icon="format_strikethrough"
         @click="editor?.chain().focus().toggleStrike().run()"
       />
+      <!-- Hyperlink-->
+      <q-btn
+        dense
+        :text-color="_iconFill(editor?.isActive('link') ?? true)"
+        :color="_buttonBg(editor?.isActive('link') ?? true)"
+        icon="link"
+        @click="hyperlink = true"
+      ></q-btn>
+
       <!-- Code Block -->
       <q-btn
         dense
@@ -150,6 +160,10 @@
           </q-card-section>
         </q-card>
       </q-dialog>
+      <!-- Hyperlink Editor -->
+      <q-dialog v-model="hyperlink">
+        <hyperlink-editor :editor="editor"></hyperlink-editor>
+      </q-dialog>
       <slot name="toolbar"></slot>
     </q-toolbar>
     <main>
@@ -197,6 +211,15 @@
           icon="format_strikethrough"
           @click="editor?.chain().focus().toggleStrike().run()"
         />
+
+        <!-- Hyperlink-->
+        <q-btn
+          dense
+          :text-color="_iconFill(editor?.isActive('link') ?? true)"
+          :color="_buttonBg(editor?.isActive('link') ?? true)"
+          icon="link"
+          @click="hyperlink = true"
+        ></q-btn>
         <!-- Code Block -->
         <q-btn
           dense
@@ -347,6 +370,7 @@ import {
 
 import PlotlyEditor from './PlotlyEditor.vue';
 import TableCreator from './TableCreator.vue';
+import HyperlinkEditor from './HyperlinkEditor.vue';
 
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -357,6 +381,7 @@ import TableHeader from '@tiptap/extension-table-header';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
 import Chart from 'src/plugins/tiptap-charts';
 
 import 'highlight.js/lib/common';
@@ -407,6 +432,7 @@ const editor = useEditor({
     Image.configure({
       allowBase64: true,
     }),
+    Link,
   ],
   content: props.content ?? 'Type here...',
   onUpdate({ editor }) {
@@ -420,6 +446,7 @@ const showSource = ref(false);
 const chartEditor = ref(false);
 const tableCreator = ref(false);
 const imageUploader = ref(false);
+const hyperlink = ref(false);
 
 const _buttonBg = (condition: boolean) => (condition ? 'primary' : 'white');
 
