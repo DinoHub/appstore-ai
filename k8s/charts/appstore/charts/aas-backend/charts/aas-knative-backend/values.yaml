@@ -1,0 +1,4 @@
+# Configure KNative
+global:
+  knative-namespace: knative-serving
+  knative-version: 1.8.3
