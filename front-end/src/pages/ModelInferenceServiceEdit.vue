@@ -133,6 +133,7 @@
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
+              no-caps
               rounded
               outline
               label="Cancel"
@@ -142,6 +143,7 @@
             />
             <q-space />
             <q-btn
+              no-caps
               rounded
               outline
               label="Quit"
