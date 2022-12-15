@@ -28,7 +28,12 @@
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-4 q-pr-md shadow-2 rounded">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-lg">Links</h6>
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Links</h6>
+            <p class="text-left q-ml-md q-mb-lg">
+              To start, please provide us with some metadata about your model,
+              such as the URL to the model (e.g a Git Repository), and any
+              experiment or dataset that you would like to associate with it.
+            </p>
             <q-input
               outlined
               v-model="creationStore.modelPath"
@@ -37,6 +42,14 @@
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
+            <span class="text-h6 text-left q-ml-md q-mb-sm"
+              >Linked Experiments & Datasets</span
+            >
+            <p class="text-left q-ml-md q-mb-lg">
+              When you supply us with a linked experiment, we will automatically
+              retrieve data from the experiment and populate the model card
+              fields with them.
+            </p>
             <q-select
               outlined
               v-model="creationStore.experimentPlatform"
@@ -60,6 +73,7 @@
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
               @update:model-value="retrieveExperimentDetails()"
+              debounce="2000"
             >
             </q-input>
             <q-select
@@ -84,6 +98,7 @@
               }Dataset ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              debounce="2000"
             >
             </q-input>
           </div>
@@ -143,6 +158,7 @@
               :loading="loadingExp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
+              placeholder="Image Classification"
             />
             <q-select
               outlined
@@ -160,6 +176,7 @@
               :rules="[
                 (val) => val.length >= 1 || 'One or more frameworks required',
               ]"
+              placeholder="PyTorch"
             />
           </div>
           <div class="col q-pl-md q-ml-xl shadow-2 rounded">
@@ -170,6 +187,7 @@
               autogrow
               class="q-mr-md q-pb-xl"
               label="Model Owner (Optional)"
+              hint="This is the person in charge of the model."
             ></q-input>
             <q-input
               outlined
@@ -177,6 +195,7 @@
               autogrow
               class="q-mr-md q-pb-xl"
               label="Point of Contact (Optional)"
+              hint="This is the person to contact for enquiries on the model."
             ></q-input>
           </div>
         </div>
@@ -198,54 +217,56 @@
           creationStore.modelLimitations == ''
         "
       >
-        <div class="row justify-center full-height" style="min-height: 9rem">
-          <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
+        <q-card>
+          <q-card-section>
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">
+              Model Card Attributes
+            </h6>
+            <p class="text-left q-mt-md q-ml-md q-mb-sm">
+              As part of the model card creation process, we'll need you to
+              write out some information pertaining to the model in the below
+              sections. As this information is to be stored in a human-readable
+              format, any images, tables, or other data should be included in
+              the next part of the model card creation process.
+            </p>
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Description</h6>
             <q-input
+              outlined
               v-model="creationStore.modelDesc"
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              placeholder="This is a model that does X, Y, Z."
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-          </div>
-        </div>
-        <div class="row justify-center full-height" style="min-height: 9rem">
-          <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Explanation</h6>
             <q-input
+              outlined
+              placeholder="This model works by doing..."
               v-model="creationStore.modelExplain"
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-          </div>
-        </div>
-        <div class="row justify-center full-height" style="min-height: 9rem">
-          <div class="col-9 q-pr-md q-mb-lg shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Usage</h6>
             <q-input
               v-model="creationStore.modelUsage"
+              placeholder="This model can be used for..."
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              outlined
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-          </div>
-        </div>
-        <div class="row justify-center full-height" style="min-height: 9rem">
-          <div class="col-9 q-pr-md shadow-2 rounded">
             <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Model Limitations</h6>
             <q-input
               v-model="creationStore.modelLimitations"
+              placeholder="This model has the following limitations..."
               class="q-ml-md q-mb-lg"
               type="textarea"
-              filled
+              outlined
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-          </div>
-        </div>
+          </q-card-section>
+        </q-card>
       </q-step>
       <q-step
         :name="4"
@@ -264,12 +285,9 @@
           <div class="q-pa-md q-gutter-sm col-10 shadow-1">
             <h6 class="text-left q-ml-md q-mb-sm">Card Markdown</h6>
             <p class="text-left q-ml-md q-mb-sm">
-              This is the HTML markdown that will shown in the model page.<br />
-              Style it to your liking and display whatever additional
-              information you would like, such as tables, lists, code samples or
-              images. <br />
-              You can follow the example content structure or come up with
-              something else.
+              This is the content that will be displayed on the model card page.
+              You can use the "Populate card description" button to populate the
+              markdown with the information you entered in the previous step.
             </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
@@ -325,12 +343,14 @@
               Performance Metrics
             </h6>
             <p class="text-left q-ml-md q-mb-sm">
-              This is a editor section for performance metrics to be inserted.
-              <br />
-              If a ClearML experiment ID was given, the scalars will be inserted
-              here.<br />
-              Style the performance metrics and insert any relevant descriptions
-              to your liking to let users know the performance of the model.
+              This is where you can add performance metrics for your model which
+              will be displayed on the model card page. If you have supplied a
+              linked experiment in the first step which includes logged metrics,
+              you can use the "Retrieve plots from experiment" button to
+              automatically generate plots for the logged metrics. If you have
+              not supplied a linked experiment, you can use the "Add plot"
+              button to manually add plots. You can also edit preexisting plots
+              using the edit button.
             </p>
             <div
               class="text-left q-ml-md q-mb-md text-italic text-negative"
@@ -381,11 +401,22 @@
           v-if="creationStore.modelTask != 'Reinforcement Learning'"
         >
           <div class="q-pa-md q-gutter-sm col-4 shadow-1">
-            <h6 class="text-left q-mb-md">Setting Up Inference Engine</h6>
+            <h6 class="text-left q-mb-md">Setting Up an Inference Service</h6>
+            <p class="text-left q-mb-md">
+              To allow users to interact with your model, you will need to set
+              up an inference service. This is a application (e.g Gradio,
+              Streamlit) which provides a front-end inference interface for your
+              model, which we will host and deploy for you.
+            </p>
+            <p class="text-left q-mb-md">
+              If you have not already set up an inference service for your
+              model, you can do so by clicking the button below. If you have
+              already set up an inference service, you can skip this step.
+            </p>
             <q-btn
               icon="check"
               color="secondary"
-              label="I have set up an Inference Engine API Image"
+              label="I have set up an inference service application for my model"
               no-caps
               align="left"
               class="q-mb-sm float-left"
@@ -402,6 +433,8 @@
               class="float-left"
               style="width: 95.6%"
               unelevated
+              href="https://github.com/DinoHub/appstore-ai/blob/main/ai-model/inference-engine/README.md"
+              target="_blank"
             />
           </div>
         </div>
@@ -621,12 +654,13 @@
             <div class="text-h6">Markdown</div>
           </q-card-section>
           <q-card-section class="q-pt-none">
-            Replace example content with your own values?
+            Populate markdown with your model card attributes?
           </q-card-section>
           <q-card-actions align="right">
             <q-btn
               outline
               rounded
+              no-caps
               label="No"
               color="error"
               padding="sm xl"
@@ -634,6 +668,7 @@
             />
             <q-btn
               rounded
+              no-caps
               padding="sm xl"
               label="Replace"
               color="primary"
@@ -689,6 +724,7 @@
             <q-btn
               outline
               rounded
+              no-caps
               label="Delete"
               color="error"
               padding="sm xl"
@@ -697,6 +733,7 @@
             />
             <q-btn
               rounded
+              no-caps
               padding="sm xl"
               label="Continue"
               color="primary"
