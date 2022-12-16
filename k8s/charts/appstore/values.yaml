@@ -10,6 +10,7 @@
 tags:
   front-end: true
   back-end: true
+  nginx: true
 aas-backend:
   image:
     repository: aas-backend
@@ -130,3 +131,27 @@ mongodb:
     insertUsers.js: |
       use admin
       db.createUser({user:"SysAdmin",pwd:"SystemAccess2@",roles:[{role:"readWrite",db:"appStoreProdDB"}]})
+
+# Note, the setting here was required to get it to work with a Kind cluster, but not sure if it's necessary for other providers
+ingress-nginx:
+  controller:
+    updateStrategy:
+      type: "RollingUpdate"
+      rollingUpdate:
+        maxUnavailable: 1
+    hostPort:
+      enabled: true
+    terminationGracePeriodSeconds: 0
+    service:
+      type: "NodePort"
+    watchIngressWithoutClass: true
+    nodeSelector:
+      ingress-ready: "true"
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Equal"
+        effect: "NoSchedule"
+    publishService:
+      enabled: false
+    extraArgs:
+      publish-status-address: "localhost"
