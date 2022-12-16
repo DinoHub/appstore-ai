@@ -27,20 +27,22 @@ class ModelCardModelIn(BaseModel):  # Input spec
     markdown: str
     performance: str
     task: str  # a task is a tag
-    inference_service_name: str
+    inference_service_name: Optional[str]
+    video_path: Optional[str]
     tags: List[str]  # for all other tags
     frameworks: List[str]
     description: Optional[str]
     explanation: Optional[str]
     usage: Optional[str]
     limitations: Optional[str]
-    owner: Optional[str] # NOTE: This is different from creator_user_id
+    owner: Optional[str]  # NOTE: This is different from creator_user_id
     point_of_contact: Optional[str]
     artifacts: Optional[
         List[Artifact]
     ]  # will need to use GET /experiments/{exp_id} to get this
     experiment: Optional[LinkedExperiment]
     dataset: Optional[LinkedDataset]
+
     class Config:
         alias_generator = to_camel_case
 
