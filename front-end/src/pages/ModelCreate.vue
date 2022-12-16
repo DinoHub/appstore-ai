@@ -397,11 +397,14 @@
         </div>
       </q-step>
 
-      <q-step :name="7" title="Submission" icon="publish">
-        <div
-          class="row justify-center"
-          v-if="creationStore.modelTask != 'Reinforcement Learning'"
-        >
+      <q-step
+        :name="7"
+        title="Submission"
+        icon="publish"
+        :done="creationStore.step > 7"
+        v-if="creationStore.modelTask != 'Reinforcement Learning'"
+      >
+        <div class="row justify-center">
           <div class="q-pa-md q-gutter-sm col-4 shadow-1">
             <h6 class="text-left q-mb-md q-mr-sm">Inference Engine</h6>
             <q-input
@@ -436,6 +439,14 @@
             </p>
           </div>
         </div>
+      </q-step>
+      <q-step
+        :name="7"
+        title="Submission"
+        icon="publish"
+        :done="creationStore.step > 7"
+        v-if="creationStore.modelTask == 'Reinforcement Learning'"
+      >
         <div
           class="row justify-center"
           v-if="creationStore.modelTask == 'Reinforcement Learning'"
@@ -444,30 +455,47 @@
             <h6 class="text-left q-mb-sm">
               Reinforcement Learning Example Video
             </h6>
-            <span class="text-left">
+            <p class="text-left">
               As a Reinforcement Learning algorithm showcase requires an
               environment, it may not be possible for a interactable demo to be
               displayed. In substitution, a video can be submitted in it's place
               that shows the agent's performance in the environment.
-            </span>
-            <p class="text-negative text-italic">
-              <q-icon class="" name="priority_high" size="1.5rem" />
-              The video should be under 10MB
-              <q-icon class="" name="priority_high" size="1.5rem" />
             </p>
-            <q-uploader
-              class="q-mx-auto"
-              url=""
-              label="Submit video here"
-              accept="video/*"
-              max-total-size="10000000"
-              @rejected="onRejected"
-            />
+            <div class="row justify-center text-center">
+              <span class="text-negative text-italic q-pl-auto">
+                <q-icon class="" name="priority_high" size="1.5rem" />
+                The video should be under 10MB
+                <q-icon class="" name="priority_high" size="1.5rem" />
+              </span>
+            </div>
+            <div class="row justify-center text-center">
+              <q-file
+                v-model="creationStore.exampleVideo"
+                label="Pick Video"
+                filled
+                counter
+                max-file-size="10485760"
+                accept="video/*"
+                :counter-label="counterLabelFn"
+                max-files="1"
+                multiple
+                :clearable="true"
+                style="max-width: 100%; width: 60%"
+                @update:model-value="createViewableVideo()"
+              >
+                <template v-slot:prepend>
+                  <q-icon name="video_call" />
+                </template>
+              </q-file>
+            </div>
           </div>
         </div>
       </q-step>
       <q-step :name="8" title="Confirm" icon="task">
-        <div class="row justify-center">
+        <div
+          class="row justify-center"
+          v-if="creationStore.modelTask != 'Reinforcement Learning'"
+        >
           <div class="col-5">
             <gradio-frame
               class="shadow-2"
@@ -493,6 +521,15 @@
               information will be published.
             </p>
           </div>
+        </div>
+        <div
+          class="row justify-center"
+          v-if="creationStore.modelTask == 'Reinforcement Learning'"
+        >
+          <vue-plyr
+            ><video controls playsinline>
+              <source size="1080" :src="videoExample" /></video
+          ></vue-plyr>
         </div>
       </q-step>
       <template v-slot:navigation>
@@ -545,8 +582,20 @@
                 :disable="buttonDisable"
               />
               <q-btn
+                v-if="
+                  creationStore.step == 7 && creationStore.exampleVideo != null
+                "
+                @click="$refs.stepper.next()"
+                no-caps
+                rounded
+                color="primary"
+                label="Submit Video"
+                :disable="buttonDisable"
+              />
+
+              <q-btn
                 v-if="creationStore.step == 8"
-                @click="finalSubmit()"
+                @click="finalSubmit($refs.stepper)"
                 no-caps
                 rounded
                 color="primary"
@@ -720,6 +769,8 @@ const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const modelStore = useModelStore();
 
+const videoExample = ref();
+
 // for accessing localstorage
 const local = localStorage;
 
@@ -745,6 +796,16 @@ const retrieveExperimentDetails = () => {
     loadingExp.value = false; // don't lock user out when error
     buttonDisable.value = false;
   });
+};
+
+const createViewableVideo = () => {
+  try {
+    videoExample.value = URL.createObjectURL(creationStore.exampleVideo[0]);
+  } catch {}
+};
+
+const counterLabelFn = ({ totalSize, filesNumber, maxFiles }: any) => {
+  return `${filesNumber}/${maxFiles} File | ${totalSize}`;
 };
 
 const flushCreator = () => {
@@ -784,12 +845,26 @@ const checkMetadata = (stepper: QStepper) => {
   }
 };
 
-const finalSubmit = () => {
-  creationStore.createModel().then((data) => {
-    if (data) {
-      router.push(`/model/${data.modelId}/${data.creatorUserId}`);
+const finalSubmit = (stepper: QStepper) => {
+  if (creationStore.modelTask != 'Reinforcement Learning') {
+    creationStore.createModel().then((data) => {
+      if (data) {
+        router.push(`/model/${data.modelId}/${data.creatorUserId}`);
+      }
+    });
+  } else {
+    if (creationStore.noServiceMetadataValid) {
+      stepper.next();
+      creationStore.createModelWithVideo();
+    } else {
+      Notify.create({
+        message:
+          'Enter all values into required fields first before proceeding',
+        icon: 'warning',
+        color: 'error',
+      });
     }
-  });
+  }
 };
 
 // function for populating editor with values from previous step
@@ -862,4 +937,11 @@ const addExpPlots = (store: typeof creationStore) => {
       });
   }
 };
+
+if (
+  creationStore.step == 8 &&
+  creationStore.modelTask == 'Reinforcement Learning'
+) {
+  creationStore.$patch({ step: 7 });
+}
 </script>
