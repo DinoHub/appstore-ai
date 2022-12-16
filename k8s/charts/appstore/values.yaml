@@ -10,7 +10,7 @@
 tags:
   front-end: true
   back-end: true
-back-end:
+aas-backend:
   image:
     repository: aas-backend
     pullPolicy: Never
@@ -53,48 +53,12 @@ back-end:
     minReplicas: 1
     maxReplicas: 10
     targetCPUUtilizationPercentage: 80
-  mongodb:
-    nameOverride: "aas-mongodb"
-    fullnameOverride: "aas-mongodb"
-    auth:
-      enabled: true
-      rootUser: "aasRootDBUser"
-      rootPassword: "TempPassword1234"
-    initdbScripts:
-      init-db.js: |
-        mongo = db.getSiblingDB('appStoreProdDB');
-        mongo.createCollection('users');
-        mongo.users.createIndex({'userId': 1}, {unique:true}) 
-        mongo.models.createIndex({ modelId: 1, creatorUserId: 1 }, { unique: true });
-        mongo.services.createIndex({ serviceName: 1 }, { unique: true });
-        mongo.users.insertMany([
-          {
-            userId: 'master',
-            name: 'Master User',
-            password: '$2b$12$dJgAk/YGHoGH203M2H0Fvu.XL3A1BulreQS1NZTRcZ9XHhUHfkU.K',
-            adminPriv: true,
-            created: '2022-11-24 11:27:52.118503',
-            lastModified: '2022-11-25 11:27:52.118503'
-          },
-          {
-            userId: 'dev1',
-            name: 'Developer One',
-            password: '$2b$12$coDQnalKv3kw8kzuwztyc.l6gfveM/ERMVQioVYN9OQq6KheDG3ae',
-            adminPriv: false,
-            created: '2022-11-24 11:27:52.118503',
-            lastModified: '2022-11-25 11:27:52.118503'
-          },
-        ]);
-      insertUsers.js: |
-        use admin
-        db.createUser({user:"SysAdmin",pwd:"SystemAccess2@",roles:[{role:"readWrite",db:"appStoreProdDB"}]})
-
   tags:
     knative-backend: true
-front-end:
+aas-frontend:
   image:
     repository: aas-frontend
-    pullPolicy: never
+    pullPolicy: Never
     # overrides the image tag whose default is the chart appversion.
     tag: "latest"
   replicaCount: 1
@@ -122,3 +86,39 @@ front-end:
     maxReplicas: 10
     targetCPUUtilizationPercentage: 80
     # targetMemoryUtilizationPercentage: 80
+
+mongodb:
+  nameOverride: "aas-mongodb"
+  fullnameOverride: "aas-mongodb"
+  auth:
+    enabled: true
+    rootUser: "aasRootDBUser"
+    rootPassword: "TempPassword1234"
+  initdbScripts:
+    init-db.js: |
+      mongo = db.getSiblingDB('appStoreProdDB');
+      mongo.createCollection('users');
+      mongo.users.createIndex({'userId': 1}, {unique:true}) 
+      mongo.models.createIndex({ modelId: 1, creatorUserId: 1 }, { unique: true });
+      mongo.services.createIndex({ serviceName: 1 }, { unique: true });
+      mongo.users.insertMany([
+        {
+          userId: 'master',
+          name: 'Master User',
+          password: '$2b$12$dJgAk/YGHoGH203M2H0Fvu.XL3A1BulreQS1NZTRcZ9XHhUHfkU.K',
+          adminPriv: true,
+          created: '2022-11-24 11:27:52.118503',
+          lastModified: '2022-11-25 11:27:52.118503'
+        },
+        {
+          userId: 'dev1',
+          name: 'Developer One',
+          password: '$2b$12$coDQnalKv3kw8kzuwztyc.l6gfveM/ERMVQioVYN9OQq6KheDG3ae',
+          adminPriv: false,
+          created: '2022-11-24 11:27:52.118503',
+          lastModified: '2022-11-25 11:27:52.118503'
+        },
+      ]);
+    insertUsers.js: |
+      use admin
+      db.createUser({user:"SysAdmin",pwd:"SystemAccess2@",roles:[{role:"readWrite",db:"appStoreProdDB"}]})

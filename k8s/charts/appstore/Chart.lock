@@ -1,0 +1,12 @@
+dependencies:
+- name: aas-backend
+  repository: ""
+  version: 1.0.0
+- name: aas-frontend
+  repository: ""
+  version: 1.0.0
+- name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 13.6.1
+digest: sha256:a303e9ef9766457e9d28f1cc6b657b6e91c1ba59690e85b6e6dfe2931f951845
+generated: "2022-12-16T14:52:51.347382683+08:00"
