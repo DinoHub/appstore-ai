@@ -99,98 +99,100 @@ async def create_inference_engine_service(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    # First check that model actually exists in DB
-    # Create Deployment Template
-    if not user.user_id:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    template = template_env.get_template("inference-engine-service.yaml.j2")
-    service_name = k8s_safe_name(
-        f"{user.user_id}-{service.model_id}-{uuid4()}"
-    )
-    deployment_template = safe_load(
-        template.render(
-            {
-                "engine_name": service_name,
-                "image_name": service.image_uri,
-                "port": service.container_port,
-                "env": service.env,
-            }
+    try:
+        # First check that model actually exists in DB
+        # Create Deployment Template
+        if not user.user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+        template = template_env.get_template("inference-engine-service.yaml.j2")
+        service_name = k8s_safe_name(f"{user.user_id}-{service.model_id}-{uuid4()}")
+        deployment_template = safe_load(
+            template.render(
+                {
+                    "engine_name": service_name,
+                    "image_name": service.image_uri,
+                    "port": service.container_port,
+                    "env": service.env,
+                }
+            )
         )
-    )
-    if not config.IE_NAMESPACE:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="No Namespace specified",
-        )
-    # Deploy Service on K8S
-    with k8s_client as client:
-        # Get KNative Serving Ext Ip
-        core_api = CoreV1Api(client)
-        kourier_ingress = core_api.read_namespaced_service(
-            name="kourier", namespace="knative-serving"
-        )
-        lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip
-        if service.external_dns:
-            # TODO: Support for https
-            url = f"http://{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
-        else:
-            url = (
-                f"http://{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io"
-            )
-        # Create instance of API class
-        api = CustomObjectsApi(client)
-        try:
-            api.create_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                plural="services",
-                namespace=config.IE_NAMESPACE,
-                body=deployment_template,
-            )
-            # Save info into DB
-            db, mongo_client = db
-            service_metadata = jsonable_encoder(
-                InferenceEngineService(
-                    image_uri=service.image_uri,
-                    container_port=service.container_port,
-                    env=service.env,
-                    external_dns=service.external_dns,
-                    owner_id=user.user_id,
-                    model_id=uncased_to_snake_case(
-                        service.model_id
-                    ),  # conver title to ID
-                    created=datetime.datetime.now(),
-                    last_modified=datetime.datetime.now(),
-                    inference_url=url,
-                    service_name=service_name,
-                ),
-                by_alias=True,  # convert snake_case to camelCase
-            )
-
-            async with await mongo_client.start_session() as session:
-                async with session.start_transaction():
-                    await db["services"].insert_one(service_metadata)
-            return service_metadata
-        except (K8sAPIException, HTTPError) as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when creating inference engine: {e}",
-            )
-        except TypeError as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"API has no access to the K8S cluster: {e}",
-            )
-        except DuplicateKeyError:
+        if not config.IE_NAMESPACE:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to add duplicate service",
+                detail="No Namespace specified",
             )
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when creating inference engine: {e}",
+        # Deploy Service on K8S
+        with k8s_client as client:
+            # Get KNative Serving Ext Ip
+            core_api = CoreV1Api(client)
+            kourier_ingress = core_api.read_namespaced_service(
+                name="kourier", namespace="knative-serving"
             )
+            lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip
+            if service.external_dns:
+                # TODO: Support for https
+                url = f"http://{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
+            else:
+                url = f"http://{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io"
+            # Create instance of API class
+            api = CustomObjectsApi(client)
+            try:
+                api.create_namespaced_custom_object(
+                    group="serving.knative.dev",
+                    version="v1",
+                    plural="services",
+                    namespace=config.IE_NAMESPACE,
+                    body=deployment_template,
+                )
+                # Save info into DB
+                db, mongo_client = db
+                service_metadata = jsonable_encoder(
+                    InferenceEngineService(
+                        image_uri=service.image_uri,
+                        container_port=service.container_port,
+                        env=service.env,
+                        external_dns=service.external_dns,
+                        owner_id=user.user_id,
+                        model_id=uncased_to_snake_case(
+                            service.model_id
+                        ),  # conver title to ID
+                        created=datetime.datetime.now(),
+                        last_modified=datetime.datetime.now(),
+                        inference_url=url,
+                        service_name=service_name,
+                    ),
+                    by_alias=True,  # convert snake_case to camelCase
+                )
+
+                async with await mongo_client.start_session() as session:
+                    async with session.start_transaction():
+                        await db["services"].insert_one(service_metadata)
+                return service_metadata
+            except (K8sAPIException, HTTPError) as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error when creating inference engine: {e}",
+                )
+            except TypeError as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"API has no access to the K8S cluster: {e}",
+                )
+            except DuplicateKeyError:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Unable to add duplicate service",
+                )
+            except Exception as e:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error when creating inference engine: {e}",
+                )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error when creating inference engine: {e}",
+        )
 
 
 @router.delete("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
@@ -200,17 +202,11 @@ async def delete_orphan_services(
     db, mongo_client = db
     # Get all model cards
     model_services = await (
-        db["models"].find(
-            {}, {"inferenceServiceName": 1}  # include only service names
-        )
+        db["models"].find({}, {"inferenceServiceName": 1})  # include only service names
     ).to_list(length=None)
     # Do a search of all services NOT IN modelServices
     orphaned_services = db["services"].find(
-        {
-            "serviceName": {
-                "$nin": [x["inferenceServiceName"] for x in model_services]
-            }
-        },
+        {"serviceName": {"$nin": [x["inferenceServiceName"] for x in model_services]}},
         {"serviceName": 1},
     )
     with k8s_client as client:
@@ -222,9 +218,7 @@ async def delete_orphan_services(
                 async with session.start_transaction():
 
                     try:
-                        await db["services"].delete_one(
-                            {"serviceName": service_name}
-                        )
+                        await db["services"].delete_one({"serviceName": service_name})
                         api.delete_namespaced_custom_object(
                             group="serving.knative.dev",
                             version="v1",
@@ -366,9 +360,7 @@ async def update_inference_engine_service(
                 if result.modified_count != 1:
                     # Not necessary to update service?
                     return updated_service
-                template = template_env.get_template(
-                    "inference-engine-service.yaml.j2"
-                )
+                template = template_env.get_template("inference-engine-service.yaml.j2")
                 deployment_template = safe_load(
                     template.render(
                         {
