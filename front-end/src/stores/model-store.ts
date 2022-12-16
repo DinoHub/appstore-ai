@@ -47,6 +47,20 @@ export interface ModelCard extends ModelCardSummary {
   dataset?: LinkedDataset;
 }
 
+export interface ModelCardNoInference extends ModelCardSummary {
+  owner?: string;
+  pointOfContact?: string;
+  videoLocation: string;
+  explanation: string;
+  usage: string;
+  limitations: string;
+  markdown: string;
+  performance: string;
+  artifacts: Artifact[];
+  experiment?: LinkedExperiment;
+  dataset?: LinkedDataset;
+}
+
 export interface CreateModelCard {
   title: string;
   task: string;
@@ -168,7 +182,7 @@ export const useModelStore = defineStore('model', {
     async updateModel(
       metadata: UpdateModelCard,
       userId: string,
-      modelId: string,
+      modelId: string
     ): Promise<void> {
       try {
         console.warn(metadata);
