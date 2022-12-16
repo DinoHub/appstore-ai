@@ -39,8 +39,8 @@ kubectl apply -f https://github.com/knative/operator/releases/download/knative-v
 # kubectl create namespace knative-serving
 
 # Load in images
-kind load docker-image aas-backend:latest
-kind load docker-image aas-frontend:latest
+kind load docker-image aas-backend:1.0.0
+kind load docker-image aas-frontend:1.0.0
 # Set up helm charts
 helm install appstore k8s/charts/appstore
 # helm install ai-mongodb charts/mongodb/ --values charts/mongodb/values.yaml
