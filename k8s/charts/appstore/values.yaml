@@ -14,7 +14,8 @@ aas-backend:
   image:
     repository: aas-backend
     pullPolicy: Never
-    tag: "latest"
+    # # overrides the image tag whose default is the chart appversion.
+    # tag: "1.0"
   environment: prod
   inference-engine-namespace: inference-engine
   replicaCount: 1
@@ -53,14 +54,18 @@ aas-backend:
     minReplicas: 1
     maxReplicas: 10
     targetCPUUtilizationPercentage: 80
+  resources:
+    limits:
+      cpu: 4
+      memory: "8G"
   tags:
     knative-backend: true
 aas-frontend:
   image:
     repository: aas-frontend
     pullPolicy: Never
-    # overrides the image tag whose default is the chart appversion.
-    tag: "latest"
+    # # overrides the image tag whose default is the chart appversion.
+    # tag: "1.0"
   replicaCount: 1
   ingress:
     enabled: true
@@ -86,7 +91,10 @@ aas-frontend:
     maxReplicas: 10
     targetCPUUtilizationPercentage: 80
     # targetMemoryUtilizationPercentage: 80
-
+  resources:
+    limits:
+      cpu: 4
+      memory: "4G"
 mongodb:
   nameOverride: "aas-mongodb"
   fullnameOverride: "aas-mongodb"

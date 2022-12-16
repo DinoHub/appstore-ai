@@ -7,8 +7,6 @@ replicaCount: 1
 image:
   repository: aas-frontend
   pullPolicy: Never
-  # overrides the image tag whose default is the chart appversion.
-  tag: "latest"
 
 imagePullSecrets: []
 nameOverride: "aas-frontend"
@@ -52,7 +50,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: appstore.ai
+    - host: <PLACEHOLDER>
       paths:
         - path: /(.*)
           pathType: Prefix
