@@ -114,6 +114,7 @@ async def create_inference_engine_service(
                 "image_name": service.image_uri,
                 "port": service.container_port,
                 "env": service.env,
+                "resource_limits": service.resource_limits.dict(),
             }
         )
     )

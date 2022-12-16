@@ -2,15 +2,28 @@ from datetime import datetime
 from typing import Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from ..internal.utils import to_camel_case
 from .common import PyObjectId
 
 
+class ResourceLimits(BaseModel):
+    cpu_cores: float = Field(
+        default=1, gt=0, lt=16, description="CPU cores (0.5, 1, 2, 4, 8, 16)"
+    )
+    memory_gb: int = Field(
+        default=2,
+        gt=0,
+        lt=32,
+        description="Memory in GB (1, 2, 4, 8, 16, 32)",
+    )
+
+
 class CreateInferenceEngineService(BaseModel):
     model_id: str  # NOTE: actually model title, will convert to model id in backend
     image_uri: str
+    resource_limits: ResourceLimits
     container_port: Optional[int]
     external_dns: Optional[str]
     env: Optional[dict]
