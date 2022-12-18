@@ -164,6 +164,7 @@ async def create_inference_engine_service(
                     last_modified=datetime.datetime.now(),
                     inference_url=url,
                     service_name=service_name,
+                    resource_limits=service.resource_limits,
                 ),
                 by_alias=True,  # convert snake_case to camelCase
             )
