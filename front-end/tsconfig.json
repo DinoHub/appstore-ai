@@ -1,4 +1,6 @@
 {
+  "noImplicitAny": false,
+  "allowJs": true,
   "extends": "@quasar/app-vite/tsconfig-preset",
   "compilerOptions": {
     "baseUrl": "."

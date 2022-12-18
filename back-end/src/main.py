@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config.config import config
 from .internal.auth import check_is_admin, get_current_user
-from .routers import auth, datasets, engines, experiments, iam, models
+from .routers import auth, datasets, engines, experiments, iam, models, uploader
 
 with open(Path(__file__).parent.parent.joinpath("README.md"), "r") as f:
     description = f.read()
@@ -35,6 +35,10 @@ tags_metadata = [
         "name": "Authentication",
         "description": "APIs to allow end users to login to the system",
     },
+    {
+        "name": "Uploads",
+        "description": "APIs to allow for uploads of media, mostly images or videos for now",
+    },
 ]
 app = FastAPI(title="Model Zoo", description=description, openapi_tags=tags_metadata)
 app.add_middleware(
@@ -62,6 +66,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(uploader.router)
 app.include_router(models.router, dependencies=[Depends(get_current_user)])
 app.include_router(experiments.router, dependencies=[Depends(get_current_user)])
 app.include_router(datasets.router, dependencies=[Depends(get_current_user)])

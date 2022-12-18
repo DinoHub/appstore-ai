@@ -1,4 +1,4 @@
-import { ModelCard, useModelStore } from './model-store';
+import { ModelCard, ModelCardNoInference, useModelStore } from './model-store';
 
 import { Chart, EnvField } from 'src/components/models';
 import { Notify } from 'quasar';
@@ -6,6 +6,7 @@ import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
 import { useInferenceServiceStore } from './inference-service-store';
+import { useUploadStore } from './upload-store';
 
 export const useCreationStore = defineStore('createModel', {
   state: () => {
@@ -94,40 +95,29 @@ export const useCreationStore = defineStore('createModel', {
       serviceName: '' as string,
       previewServiceName: null as string | null,
       previewServiceUrl: null as string | null,
+      exampleVideo: undefined as File | undefined,
       env: [] as EnvField[],
     };
   },
   getters: {
-    metadataValid(): boolean {
-      const keys = Object.keys(this).filter(
-        (item) =>
-          ![
-            'step',
-            'tags',
-            'frameworks',
-            'performanceMarkdown',
-            'markdownContent',
-            'datasetID',
-            'experimentID',
-            'datasetPlatform',
-            'experimentPlatform',
-            'modelOwner',
-            'modelPOC',
-            'plots',
-            'imageUri',
-            'containerCPUCores',
-            'containerMemoryGB',
-            'containerPort',
-            'serviceName',
-            'previewServiceName',
-            'env',
-            'metadataValid',
-          ].includes(item),
+    noServiceMetadataValid(): boolean {
+      const keys = Object.keys(this).filter((item) =>
+        [
+          'tags',
+          'frameworks',
+          'performanceMarkdown',
+          'markdownContent',
+          'modelName',
+          'modelPath',
+          'modelTask',
+          'modelDesc',
+          'modelExplain',
+          'modelUsage',
+          'modelLimitations',
+          'exampleVideo',
+        ].includes(item),
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
-      if (this.tags.length == 0 || this.frameworks.length == 0) {
-        return false;
-      }
       if (
         (this.datasetID == '' && this.datasetPlatform != '') ||
         (this.experimentID == '' && this.experimentPlatform != '')
@@ -135,8 +125,50 @@ export const useCreationStore = defineStore('createModel', {
         return false;
       }
       for (const key of keys) {
-        if (this[key] == '') {
-          return false;
+        if (typeof this[key] == 'object') {
+          if (this[key].length == 0) {
+            return false;
+          }
+        } else if (typeof this[key] == 'string') {
+          if (this[key] == '') {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+    metadataValid(): boolean {
+      const keys = Object.keys(this).filter((item) =>
+        [
+          'tags',
+          'frameworks',
+          'performanceMarkdown',
+          'markdownContent',
+          'modelName',
+          'modelPath',
+          'modelTask',
+          'modelDesc',
+          'modelExplain',
+          'modelUsage',
+          'modelLimitations',
+        ].includes(item),
+      );
+      console.warn(`Keys: ${JSON.stringify(keys)}`);
+      if (
+        (this.datasetID == '' && this.datasetPlatform != '') ||
+        (this.experimentID == '' && this.experimentPlatform != '')
+      ) {
+        return false;
+      }
+      for (const key of keys) {
+        if (typeof this[key] == 'object') {
+          if (this[key].length == 0) {
+            return false;
+          }
+        } else if (typeof this[key] == 'string') {
+          if (this[key] == '') {
+            return false;
+          }
         }
       }
       return true;
@@ -260,6 +292,22 @@ export const useCreationStore = defineStore('createModel', {
           message: 'Failed to create model',
           icon: 'warning',
           color: 'error',
+        });
+      }
+    },
+    async createModelWithVideo() {
+      try {
+        const authStore = useAuthStore();
+        const uploadStore = useUploadStore();
+        uploadStore.uploadVideo(this.exampleVideo);
+        Notify.create({
+          message: 'Successfully created model',
+          type: 'positive',
+        });
+      } catch (error) {
+        Notify.create({
+          message: 'Failed to create model',
+          type: 'negative',
         });
       }
     },

@@ -186,7 +186,7 @@ async def create_inference_engine_service(
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to add duplicate service",
+                detail="No Namespace specified",
             )
         except Exception as e:
             raise HTTPException(
@@ -203,8 +203,8 @@ async def delete_orphan_services(
     # Get all model cards
     model_services = await (
         db["models"].find(
-            {}, {"inferenceServiceName": 1}  # include only service names
-        )
+            {}, {"inferenceServiceName": 1}
+        )  # include only service names
     ).to_list(length=None)
     # Do a search of all services NOT IN modelServices
     orphaned_services = db["services"].find(
