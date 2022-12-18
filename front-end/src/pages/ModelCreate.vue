@@ -450,6 +450,7 @@
             <h6 class="text-left q-mb-md q-mr-sm">Inference Engine</h6>
             <q-input
               class="q-pb-xl q-mr-sm"
+              outlined
               autogrow
               hint="Image URI"
               v-model="creationStore.imageUri"
@@ -466,24 +467,6 @@
               :loading="loadingExp"
               autogrow
             ></q-input>
-            <q-select
-              outlined
-              class="q-ml-md q-pb-xl"
-              label="Container CPU Cores Limit"
-              v-model="creationStore.containerCPUCores"
-              :options="inferenceServiceStore.cpuCoreOptions"
-              map-options
-              emit-value
-            />
-            <q-select
-              outlined
-              class="q-ml-md q-pb-xl"
-              label="Container Memory Limit"
-              v-model="creationStore.containerMemoryGB"
-              :options="inferenceServiceStore.memoryOptions"
-              map-options
-              emit-value
-            />
             <env-var-editor
               mode="create"
               title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
@@ -784,7 +767,6 @@ import { useDatasetStore } from 'src/stores/dataset-store';
 const router = useRouter();
 // constants for stores
 const experimentStore = useExperimentStore();
-const inferenceServiceStore = useInferenceServiceStore();
 const datasetStore = useDatasetStore();
 const authStore = useAuthStore();
 const creationStore = useCreationStore();
