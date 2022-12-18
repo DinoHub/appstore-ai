@@ -24,3 +24,6 @@ spec:
             limits:
               cpu: {{ resource_limits["cpu_cores"] }}
               memory: {{ resource_limits["memory_gb"] }}G
+            requests:
+              cpu: 500m
+              memory: 1G
