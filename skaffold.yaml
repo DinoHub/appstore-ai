@@ -1,0 +1,40 @@
+apiVersion: skaffold/v3
+kind: Config
+metadata:
+  name: aas
+
+build:
+  artifacts:
+    - image: aas-backend
+      context: back-end
+      docker:
+        dockerfile: Dockerfile
+    - image: aas-frontend
+      context: front-end
+      docker:
+        dockerfile: Dockerfile
+
+manifests: {} # TODO
+
+deploy:
+  helm:
+    releases: [] # TODO
+
+profiles:
+  - name: dev
+    activation:
+      - command: dev
+      - kubeContext: kind-(.*)
+    patches:
+      - op: add
+        path: /manifests/rawYaml/-
+        value: k8s/dev/metallb-config.yaml
+      - op: add
+        path: /deploy/helm/releases/-
+        value:
+          name: metallb
+          repo: https://metallb.github.io/metallb
+          remoteChart: metallb
+          namespace: metallb-system
+          createNamespace: true
+          wait: true
