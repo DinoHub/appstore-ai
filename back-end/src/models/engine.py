@@ -50,6 +50,7 @@ class InferenceEngineService(CreateInferenceEngineService):
 class UpdateInferenceEngineService(BaseModel):
     image_uri: str
     container_port: Optional[int]
+    resource_limits: ResourceLimits
     env: Optional[dict]
 
     class Config:
