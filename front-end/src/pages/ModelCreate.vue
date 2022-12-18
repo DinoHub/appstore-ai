@@ -449,6 +449,7 @@
           <div class="q-pa-md q-gutter-sm col-4 shadow-1">
             <h6 class="text-left q-mb-md q-mr-sm">Inference Engine</h6>
             <q-input
+              outlined
               class="q-pb-xl q-mr-sm"
               outlined
               autogrow
