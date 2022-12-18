@@ -26,5 +26,3 @@ appVersion: "1.0.0"
 dependencies:
   - name: aas-knative-backend
     version: ">=1.0.0"
-    tags:
-      - knative-backend

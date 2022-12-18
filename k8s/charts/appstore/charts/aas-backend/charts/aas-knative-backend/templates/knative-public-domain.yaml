@@ -16,12 +16,12 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: default-domain
-  namespace: {{ .Values.global.knativeNamespace }}
+  namespace: knative-serving
   labels:
     app: "default-domain"
     app.kubernetes.io/component: default-domain-job
     app.kubernetes.io/name: knative-serving
-    app.kubernetes.io/version: {{ .Values.global.knativeVersion }}
+    app.kubernetes.io/version: 1.7.2
 spec:
   template:
     metadata:
@@ -31,7 +31,7 @@ spec:
         app: "default-domain"
         app.kubernetes.io/component: default-domain-job
         app.kubernetes.io/name: knative-serving
-        app.kubernetes.io/version: {{ .Values.global.knativeVersion }}
+        app.kubernetes.io/version: 1.7.2
     spec:
       serviceAccountName: controller
       containers:
@@ -77,12 +77,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: default-domain-service
-  namespace: {{ .Values.global.knativeNamespace }}
+  namespace: knative-serving
   labels:
     app: default-domain
     app.kubernetes.io/component: default-domain-job
     app.kubernetes.io/name: knative-serving
-    app.kubernetes.io/version: {{ .Values.global.knativeVersion }}
+    app.kubernetes.io/version: 1.7.2
 spec:
   selector:
     app: default-domain

@@ -1,4 +1,3 @@
-{{ if .Values.tags.knativeBackend }}
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -14,11 +13,11 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: manage-inference-engine
-  namespace: {{ .Values.inferenceEngineNamespace }} #
+  namespace: inference-engine
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.serviceAccount.name }}
-    namespace: {{ .Release.Namespace }}
+    name: { { .Values.serviceAccount.name } }
+    namespace: { { .Release.Namespace } }
 roleRef:
   kind: ClusterRole
   name: inference-engine-manager
@@ -39,13 +38,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: read-kourier-dns
-  namespace: {{ .Values.global.knativeNamespace }}
+  namespace: knative-serving
 subjects:
   - kind: ServiceAccount
-    name: {{ .Values.serviceAccount.name }}
+    name: { { .Values.serviceAccount.name } }
     namespace: default
 roleRef:
   kind: ClusterRole
   name: read-kourier-dns
   apiGroup: rbac.authorization.k8s.io
-{{ end }}

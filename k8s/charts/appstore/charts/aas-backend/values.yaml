@@ -112,6 +112,3 @@ tolerations: []
 affinity: {}
 
 inference-engine-namespace: inference-engine
-
-tags:
-  knative-backend: true

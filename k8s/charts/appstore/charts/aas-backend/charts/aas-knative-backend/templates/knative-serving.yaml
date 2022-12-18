@@ -2,9 +2,8 @@ apiVersion: operator.knative.dev/v1beta1
 kind: KnativeServing
 metadata:
   name: knative-serving
-  namespace: {{ .Values.global.knativeNamespace }}
+  namespace: knative-serving
 spec:
-  version: {{ .Values.global.knativeVersion }}
   ingress:
     kourier:
       enabled: true
