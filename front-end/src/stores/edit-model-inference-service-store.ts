@@ -11,6 +11,8 @@ export const useEditInferenceServiceStore = defineStore(
     state: () => ({
       step: 1 as number,
       imageUri: '' as string,
+      containerCPUCores: 1 as number,
+      containerMemoryGB: 1 as number,
       containerPort: undefined as number | undefined,
       env: [] as EnvField[],
       serviceName: '' as string,
@@ -50,7 +52,10 @@ export const useEditInferenceServiceStore = defineStore(
         this.imageUri = service.imageUri;
         this.containerPort = service.containerPort ?? undefined;
         this.serviceName = serviceName;
+        this.containerCPUCores = service.resourceLimits.cpu_cores;
+        this.containerMemoryGB = service.resourceLimits.memory_gb;
 
+        // Load the env vars
         Object.entries(service.env ?? {}).forEach((val) => {
           this.env.push({
             key: val[0],
@@ -65,6 +70,8 @@ export const useEditInferenceServiceStore = defineStore(
             await inferenceServiceStore.launchPreviewService(
               modelId,
               this.imageUri,
+              this.containerCPUCores,
+              this.containerMemoryGB,
               this.containerPort,
               this.uniqueEnv,
             );
@@ -79,6 +86,8 @@ export const useEditInferenceServiceStore = defineStore(
         const { serviceName } = await inferenceServiceStore.updateService(
           this.serviceName,
           this.imageUri,
+          this.containerCPUCores,
+          this.containerMemoryGB,
           this.containerPort,
           this.uniqueEnv,
         );

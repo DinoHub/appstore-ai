@@ -10,6 +10,10 @@ export interface InferenceEngineService {
   ownerId: string;
   imageUri: string;
   inferenceUrl: string;
+  resourceLimits: {
+    cpu_cores: number;
+    memory_gb: number;
+  };
   containerPort?: number;
   env?: Record<string, any>;
 }
@@ -24,7 +28,24 @@ export interface InferenceServiceStatus {
 }
 
 export const useInferenceServiceStore = defineStore('service', {
-  state: () => ({}),
+  state: () => ({
+    cpuCoreOptions: [
+      { label: '0.5', value: 0.5 },
+      { label: '1', value: 1 },
+      { label: '2', value: 2 },
+      { label: '4', value: 4 },
+      { label: '8', value: 8 },
+      { label: '16', value: 16 },
+    ],
+    memoryOptions: [
+      { label: '1GB', value: 1 },
+      { label: '2GB', value: 2 },
+      { label: '4GB', value: 4 },
+      { label: '8GB', value: 8 },
+      { label: '16GB', value: 16 },
+      { label: '32GB', value: 32 },
+    ],
+  }),
   getters: {},
   actions: {
     async getServiceReady(
@@ -78,6 +99,8 @@ export const useInferenceServiceStore = defineStore('service', {
     async createService(
       modelId: string,
       imageUri: string,
+      containerCPUCores: number,
+      containerMemoryGB: number,
       port?: number,
       env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
@@ -87,6 +110,10 @@ export const useInferenceServiceStore = defineStore('service', {
           imageUri: imageUri,
           port: port,
           env: env,
+          resourceLimits: {
+            cpu_cores: containerCPUCores,
+            memory_gb: containerMemoryGB,
+          },
         });
         const data: InferenceEngineService = res.data;
         return data;
@@ -97,6 +124,8 @@ export const useInferenceServiceStore = defineStore('service', {
     async launchPreviewService(
       modelId: string,
       imageUri: string,
+      containerCPUCores: number,
+      containerMemoryGB: number,
       port?: number,
       env?: Record<string, any>,
     ) {
@@ -106,6 +135,8 @@ export const useInferenceServiceStore = defineStore('service', {
       const { serviceName, inferenceUrl } = await this.createService(
         modelId,
         imageUri,
+        containerCPUCores,
+        containerMemoryGB,
         port,
         env,
       );
@@ -124,14 +155,30 @@ export const useInferenceServiceStore = defineStore('service', {
     async updateService(
       serviceName: string,
       imageUri?: string,
+      containerCPUCores?: number,
+      containerMemoryGB?: number,
       port?: number,
       env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
+        // set resourceLimits to undefined if not provided
+        // else, make a dictionary with non-undefined values
+        let resourceLimits: Record<string, number> | undefined = {};
+
+        if (containerCPUCores !== undefined) {
+          resourceLimits['cpu_cores'] = containerCPUCores;
+        }
+        if (containerMemoryGB !== undefined) {
+          resourceLimits['memory_gb'] = containerMemoryGB;
+        }
+        if (Object.keys(resourceLimits).length === 0) {
+          resourceLimits = undefined;
+        }
         const res = await api.patch(`/engines/${serviceName}`, {
           imageUri: imageUri,
           port: port,
           env: env,
+          resourceLimits: resourceLimits,
         });
         const data: InferenceEngineService = res.data;
         return data;

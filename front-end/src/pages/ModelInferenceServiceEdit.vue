@@ -30,6 +30,24 @@
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
+            <q-select
+              outlined
+              class="q-ml-md q-pb-xl"
+              label="Container CPU Cores Limit"
+              v-model="editInferenceServiceStore.containerCPUCores"
+              :options="inferenceServiceStore.cpuCoreOptions"
+              map-options
+              emit-value
+            />
+            <q-select
+              outlined
+              class="q-ml-md q-pb-xl"
+              label="Container Memory Limit"
+              v-model="editInferenceServiceStore.containerMemoryGB"
+              :options="inferenceServiceStore.memoryOptions"
+              map-options
+              emit-value
+            />
             <q-input
               outlined
               v-model="editInferenceServiceStore.containerPort"
