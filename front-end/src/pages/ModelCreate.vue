@@ -858,7 +858,7 @@ const checkMetadata = (stepper: QStepper) => {
 const finalSubmit = () => {
   creationStore.createModel().then((data) => {
     if (data) {
-      router.push(`/model/${data.modelId}/${data.creatorUserId}`);
+      router.push(`/model/${data.creatorUserId}/${data.modelId}/`);
     }
   });
 };
