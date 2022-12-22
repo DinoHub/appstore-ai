@@ -26,6 +26,7 @@ kubernetes = "^24.2.0"
 Jinja2 = "^3.1.2"
 fastapi-csrf-protect = "^0.2.2"
 lxml = "^4.9.1"
+minio = "^7.1.12"
 
 [tool.poetry.scripts]
 boot = "main:start"
