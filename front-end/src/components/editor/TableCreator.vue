@@ -5,6 +5,7 @@
     </q-card-section>
     <q-card-section>
       <q-input
+        rounded
         outlined
         v-model="noRows"
         type="number"
@@ -13,6 +14,7 @@
         min="0"
       ></q-input>
       <q-input
+        rounded
         outlined
         v-model="noCols"
         type="number"
@@ -23,12 +25,22 @@
     </q-card-section>
     <q-card-actions>
       <q-btn
+        no-caps
+        rounded
+        padding="sm xl"
         label="Create Table"
         color="primary"
         @click="createTable"
         v-close-popup
       ></q-btn>
-      <q-btn label="Cancel" color="red" v-close-popup></q-btn>
+      <q-btn
+        no-caps
+        rounded
+        padding="sm xl"
+        label="Cancel"
+        color="red"
+        v-close-popup
+      ></q-btn>
     </q-card-actions>
   </q-card>
 </template>

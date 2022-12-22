@@ -37,16 +37,28 @@
     </q-card-section>
     <q-card-actions>
       <q-btn
+        no-caps
+        rounded
+        padding="sm xl"
         color="primary"
         v-if="props.update"
         v-close-popup
         @click="updateChart"
         >Update Chart</q-btn
       >
-      <q-btn color="primary" v-else v-close-popup @click="insertChart"
+      <q-btn
+        no-caps
+        rounded
+        padding="sm xl"
+        color="primary"
+        v-else
+        v-close-popup
+        @click="insertChart"
         >Create Chart</q-btn
       >
-      <q-btn color="red" v-close-popup>Close without saving</q-btn>
+      <q-btn rounded no-caps padding="sm xl" color="red" v-close-popup
+        >Close without saving</q-btn
+      >
     </q-card-actions>
   </q-card>
 </template>
