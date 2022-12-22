@@ -140,8 +140,8 @@
       <!-- Show Source Code -->
       <q-btn
         icon="html"
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        :text-color="_iconFill(showSource)"
+        :color="_buttonBg(showSource)"
         dense
         @click="showSource = true"
       ></q-btn>
