@@ -20,10 +20,12 @@ spec:
               value: {{ value }}
           {% endfor %}
           {% endif %}
-          resources:
-            limits:
-              cpu: {{ resource_limits["cpu_cores"] }}
-              memory: {{ resource_limits["memory_gb"] }}G
-            requests:
-              cpu: 500m
-              memory: 1G
+          # {% if resource_limits %}
+          # resources:
+          #   limits:
+          #     cpu: {{ resource_limits["cpu_cores"] }}
+          #     memory: {{ resource_limits["memory_gb"] }}G
+          #   requests:
+          #     cpu: 500m
+          #     memory: 1G
+          # {% endif %}

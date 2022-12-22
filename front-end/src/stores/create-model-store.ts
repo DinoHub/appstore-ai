@@ -89,8 +89,6 @@ export const useCreationStore = defineStore('createModel', {
         '<h3>Performance</h3><hr><ul><li><p>This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button! </p></li></ul><chart data-layout="{&quot;title&quot;:{&quot;text&quot;:&quot;Example Graph&quot;},&quot;xaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[0.6391275611368142,7.360872438863185],&quot;autorange&quot;:true},&quot;yaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[5.6050955414012735,74.39490445859873],&quot;autorange&quot;:true}}" data-data="[{&quot;x&quot;:[1,2,3,4,5,6,7,8,9,10],&quot;y&quot;:[10,20,30,40,50,60,70],&quot;type&quot;:&quot;scatter&quot;}]"></chart>' as string,
       plots: [] as Chart[],
       imageUri: '' as string,
-      containerCPUCores: 2 as number,
-      containerMemoryGB: 4 as number,
       containerPort: undefined as number | undefined,
       serviceName: '' as string,
       previewServiceName: null as string | null,
@@ -101,6 +99,7 @@ export const useCreationStore = defineStore('createModel', {
   },
   getters: {
     noServiceMetadataValid(): boolean {
+      // Redundant?
       const keys = Object.keys(this).filter((item) =>
         [
           'tags',
@@ -207,8 +206,6 @@ export const useCreationStore = defineStore('createModel', {
           await inferenceServiceStore.launchPreviewService(
             modelId,
             this.imageUri,
-            this.containerCPUCores,
-            this.containerMemoryGB,
             this.containerPort,
             this.uniqueEnv,
           );
@@ -270,8 +267,6 @@ export const useCreationStore = defineStore('createModel', {
         const { serviceName } = await inferenceServiceStore.createService(
           this.modelName,
           this.imageUri,
-          this.containerCPUCores,
-          this.containerMemoryGB,
           this.containerPort,
           this.uniqueEnv,
         );
@@ -335,8 +330,6 @@ export const useCreationStore = defineStore('createModel', {
       'inferenceImage',
       'performanceMarkdown',
       'imageUri',
-      'containerCPUCores',
-      'containerMemoryGB',
       'containerPort',
       'serviceName',
       'previewServiceName',

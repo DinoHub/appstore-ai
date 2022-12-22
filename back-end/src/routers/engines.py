@@ -114,7 +114,7 @@ async def create_inference_engine_service(
                 "image_name": service.image_uri,
                 "port": service.container_port,
                 "env": service.env,
-                "resource_limits": service.resource_limits.dict(),
+                # "resource_limits": service.resource_limits.dict(),
             }
         )
     )
@@ -164,7 +164,7 @@ async def create_inference_engine_service(
                     last_modified=datetime.datetime.now(),
                     inference_url=url,
                     service_name=service_name,
-                    resource_limits=service.resource_limits,
+                    # resource_limits=service.resource_limits,
                 ),
                 by_alias=True,  # convert snake_case to camelCase
             )
