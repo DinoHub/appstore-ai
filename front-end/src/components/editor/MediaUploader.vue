@@ -81,5 +81,7 @@ const onUpload = () => {
         .run();
     });
   });
+
+  uploadStore.clearFiles();
 };
 </script>
