@@ -30,9 +30,9 @@ CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
 MAX_UPLOAD_SIZE_GB = config.MAX_UPLOAD_SIZE_GB
 file_validator = ValidateFileUpload(
-    max_upload_size=MAX_UPLOAD_SIZE_GB
+    max_upload_size=None
     if MAX_UPLOAD_SIZE_GB is None
-    else BytesPerGB * MAX_UPLOAD_SIZE_GB,
+    else int(BytesPerGB * MAX_UPLOAD_SIZE_GB),
 )  # Note, cannot validate file type here as content-type will be multipart form upload
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
