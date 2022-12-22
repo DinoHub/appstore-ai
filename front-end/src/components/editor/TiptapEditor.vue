@@ -106,17 +106,17 @@
         @click="imageUploader = true"
       ></q-btn>
       <q-dialog v-model="imageUploader">
-        <q-uploader
-          label="Upload Image (up to 5mb)"
-          accept=".jpg, image/*"
-          max-total-size="5242880"
-          :factory="uploadMedia"
-          @uploaded="addMedia"
-        >
-        </q-uploader>
+        <media-uploader :editor="editor"> </media-uploader>
       </q-dialog>
       <!-- Table Editor -->
-      <q-btn dense icon="table_chart" @click="tableCreator = true"> </q-btn>
+      <q-btn
+        :text-color="_iconFill(editor?.isActive('table') ?? true)"
+        :color="_buttonBg(editor?.isActive('table') ?? true)"
+        dense
+        icon="table_chart"
+        @click="tableCreator = true"
+      >
+      </q-btn>
       <q-dialog v-model="tableCreator">
         <table-creator
           @create-table="
@@ -126,8 +126,8 @@
       </q-dialog>
       <!-- Chart Editor -->
       <q-btn
-        :text-color="_iconFill(editor?.isActive('image') ?? true)"
-        :color="_buttonBg(editor?.isActive('image') ?? true)"
+        :text-color="_iconFill(editor?.isActive('chart') ?? true)"
+        :color="_buttonBg(editor?.isActive('chart') ?? true)"
         dense
         icon="insert_chart"
         @click="chartEditor = true"
@@ -372,6 +372,7 @@ import {
 import PlotlyEditor from './PlotlyEditor.vue';
 import TableCreator from './TableCreator.vue';
 import HyperlinkEditor from './HyperlinkEditor.vue';
+import MediaUploader from './MediaUploader.vue';
 
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -483,26 +484,6 @@ const insertTable = (editor: Editor, noRows: number, noCols: number) => {
       withHeaderRow: true,
     })
     .run();
-};
-
-const uploadMedia = (file) => {
-  return new Promise((resolve, reject) => {
-    // Get Token
-    const authStore = useAuthStore();
-    resolve({
-      url: process.env.backendAPI + '/media/upload',
-      method: 'POST',
-      headers: [
-        { name: 'Authorization', value: `Bearer ${authStore.access_token}` },
-      ],
-      withCredentials: true,
-    });
-  });
-};
-
-const addMedia = ({ files, xhr }) => {
-  // Add uploaded images to Editor
-  // TODO
 };
 
 watch(props, (newVal) => {
