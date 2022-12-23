@@ -28,6 +28,8 @@ class GlobalConfig(BaseSettings):
     CLEARML_API_ACCESS_KEY: Optional[str] = None
     CLEARML_API_SECRET_KEY: Optional[str] = None
     MINIO_DSN: Optional[str] = None
+    MINIO_BUCKET_NAME: Optional[str] = Field(default="model-zoo")
+    MINIO_TLS: Optional[bool] = Field(default=True)
     MINIO_API_ACCESS_KEY: Optional[str] = None
     MINIO_API_SECRET_KEY: Optional[str] = None
 
