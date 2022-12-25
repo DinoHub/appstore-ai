@@ -16,10 +16,19 @@ export const useUploadStore = defineStore('users', {
   }),
   actions: {
     async uploadVideo(videoFile: File) {
-      console.log(videoFile[0]);
       const form = new FormData();
       form.append('video', videoFile[0]);
-      api.post('/upload/video', form);
+      await api
+        .post('/buckets/video', form)
+        .then((data) => {
+          console.log(data.data.video_location);
+        })
+        .catch((err) => {
+          Notify.create({
+            message: 'Video upload failed.',
+            type: 'negative',
+          });
+        });
     },
     async uploadMedia(
       url: string,

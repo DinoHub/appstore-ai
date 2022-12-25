@@ -705,6 +705,18 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "minio"
+version = "7.1.12"
+description = "MinIO Python SDK for Amazon S3 Compatible Cloud Storage"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+certifi = "*"
+urllib3 = "*"
+
+[[package]]
 name = "mongoengine"
 version = "0.24.2"
 description = "MongoEngine is a Python Object-Document Mapper for working with MongoDB."
@@ -1567,7 +1579,7 @@ test = ["websockets"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "0eb67bd24c77372b3ae822851e69009948ad72c0464a8c888c7d45aab11cd846"
+content-hash = "89f69bd27ed92bdf3198b25143e4943f6b3a06e0000b929ef40f76ad1415d6ad"
 
 [metadata.files]
 aiosqlite = [
@@ -2115,6 +2127,10 @@ MarkupSafe = [
     {file = "MarkupSafe-2.1.1-cp39-cp39-win32.whl", hash = "sha256:d4306c36ca495956b6d568d276ac11fdd9c30a36f1b6eb928070dc5360b22e1c"},
     {file = "MarkupSafe-2.1.1-cp39-cp39-win_amd64.whl", hash = "sha256:46d00d6cfecdde84d40e572d63735ef81423ad31184100411e6e3388d405e247"},
     {file = "MarkupSafe-2.1.1.tar.gz", hash = "sha256:7f91197cc9e48f989d12e4e6fbc46495c446636dfc81b9ccf50bb0ec74b91d4b"},
+]
+minio = [
+    {file = "minio-7.1.12-py3-none-any.whl", hash = "sha256:c8ab8646f93d47b9aefbf4db76aaba5ac54c87454b922a3d6c1423aed050aad5"},
+    {file = "minio-7.1.12.tar.gz", hash = "sha256:63111fedf67e07c5a4c8948b3a4e5ecbb372b522ea562bfa4d484194ec6a2b99"},
 ]
 mongoengine = [
     {file = "mongoengine-0.24.2-py3-none-any.whl", hash = "sha256:f5c4e1b206b2ccffe4adc7a6283ed26dd799bd115a5fb1d2e885a075132cdb88"},
