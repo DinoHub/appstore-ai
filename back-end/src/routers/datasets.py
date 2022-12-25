@@ -1,4 +1,5 @@
 import tempfile
+from datetime import datetime
 from os import remove
 from pathlib import Path
 from shutil import unpack_archive
@@ -84,6 +85,7 @@ async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
         tags=dataset.tags,
         files=dataset.file_entries,
         default_remote=dataset.default_remote,
+        created=None,
     )
 
 
@@ -121,6 +123,7 @@ async def create_dataset(
     # First determine max file size
     max_file_size = determine_safe_file_size("/", clearance=5)
     file_size_validator = MaxFileSizeValidator(max_size=max_file_size)
+    path = None
     # TODO: Refactor code to make it more readable
     with tempfile.TemporaryDirectory(
         dataset_name, "clearml-dataset"
@@ -142,19 +145,22 @@ async def create_dataset(
             if content_type not in ACCEPTED_CONTENT_TYPES:
                 raise ValueError
         except MaxFileSizeException:
-            remove(path)
+            if path:
+                remove(path)
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail="Dataset uploaded was too large for the server to handle.",
             )
         except ValueError:
-            remove(path)
+            if path:
+                remove(path)
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail=f"File type of compressed file {file.filename} is not supported.",
             )
         except Exception:
-            remove(path)
+            if path:
+                remove(path)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="There was an error reading the file",
@@ -190,4 +196,6 @@ async def create_dataset(
         tags=dataset.tags,
         project=dataset.project,
         files=dataset.file_entries,
+        default_remote=dataset.default_remote,
+        created=datetime.now(),
     )
