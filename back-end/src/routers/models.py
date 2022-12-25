@@ -16,7 +16,8 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
-from ..internal.utils import sanitize_html, uncased_to_snake_case
+from ..internal.preprocess_html import preprocess_html
+from ..internal.utils import uncased_to_snake_case
 from ..models.iam import TokenData
 from ..models.model import (
     ModelCardModelDB,
@@ -161,8 +162,8 @@ async def create_model_card_metadata(
     card.frameworks = set(card.frameworks)
 
     # Sanitize html
-    card.markdown = sanitize_html(card.markdown)
-    card.performance = sanitize_html(card.performance)
+    card.markdown = preprocess_html(card.markdown)
+    card.performance = preprocess_html(card.performance)
     print(card.dict())
     card = jsonable_encoder(
         ModelCardModelDB(
@@ -199,9 +200,10 @@ async def update_model_card_metadata_by_id(
     card = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
 
     if "markdown" in card:
-        card["markdown"] = sanitize_html(card["markdown"])
+        # Upload base64 encoded image to S3
+        card["markdown"] = preprocess_html(card["markdown"])
     if "performance" in card:
-        card["performance"] = sanitize_html(card["performance"])
+        card["performance"] = preprocess_html(card["performance"])
 
     if len(card) > 0:
         card["lastModified"] = str(datetime.datetime.now())

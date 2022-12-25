@@ -1,8 +1,5 @@
 import re
 
-from lxml.etree import ParserError
-from lxml.html.clean import Cleaner
-
 
 def uncased_to_snake_case(string: str) -> str:
     return "_".join(string.lower().split(" "))
@@ -36,30 +33,3 @@ def to_camel_case(string: str) -> str:
     return string_split[0] + "".join(
         word.capitalize() for word in string_split[1:]
     )
-
-
-def sanitize_html(html: str) -> str:
-    cleaner = Cleaner(
-        comments=True,
-        meta=True,
-        page_structure=True,
-        processing_instructions=True,
-        forms=True,
-        add_nofollow=True,
-        whitelist_tags=[
-            "chart",
-            "embed",
-            "iframe"
-        ],
-        safe_attrs_only=False,
-        remove_unknown_tags=False
-    )
-    try:
-        cleaned: str = cleaner.clean_html(html)
-        if type(cleaned) != str:
-            raise TypeError
-        return cleaned
-    except ParserError as e:
-        return "Error!"
-    except TypeError as e:
-        return "Error!"
