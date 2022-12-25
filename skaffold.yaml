@@ -1,25 +1,51 @@
 apiVersion: skaffold/v3
 kind: Config
-metadata:
-  name: aas
+metadata: 
+  name: aas-dependencies
 
-build:
-  artifacts:
-    - image: aas-backend
-      context: back-end
-      docker:
-        dockerfile: Dockerfile
-    - image: aas-frontend
-      context: front-end
-      docker:
-        dockerfile: Dockerfile
-
-manifests: {} # TODO
+manifests:
+  rawYaml:
+      - k8s/knative-operator.yaml
+      - k8s/namespaces.yaml
 
 deploy:
   helm:
-    releases: [] # TODO
-
+    releases:
+      - name: metallb
+        repo: https://metallb.github.io/metallb
+        remoteChart: metallb
+        namespace: metallb-system
+        createNamespace: true
+        wait: true
+      - name: ingress-nginx
+        version: 4.4.0
+        upgradeOnChange: false
+        chartPath: k8s/charts/dependencies/ingress-nginx
+        repo: https://kubernetes.github.io/ingress-nginx
+        wait: true
+        valuesFiles:
+          - k8s/environments/development/cluster/ingress_nginx_values.yaml
+      - name: mongodb
+        repo: https://charts.bitnami.com/bitnami
+        chartPath: k8s/charts/dependencies/mongodb
+        upgradeOnChange: false
+        version: 13.6.1
+        namespace: ai-appstore
+        createNamespace: true
+        valuesFiles:
+          - k8s/environments/development/mongodb_values.yaml
+        setValues:
+          nameOverride: "aas-mongodb"
+          fullnameOverride: "aas-mongodb"
+        wait: true
+      - name: minio
+        repo: https://charts.bitnami.com/bitnami
+        chartPath: k8s/charts/dependencies/minio
+        upgradeOnChange: false
+        version: 11.10.24
+        namespace: ai-appstore
+        wait: true
+  kubectl: {}
 profiles:
   - name: dev
     activation:
@@ -28,13 +54,66 @@ profiles:
     patches:
       - op: add
         path: /manifests/rawYaml/-
-        value: k8s/dev/metallb-config.yaml
+        value: k8s/environments/development/dashboard/dashboard.yaml
       - op: add
-        path: /deploy/helm/releases/-
-        value:
-          name: metallb
-          repo: https://metallb.github.io/metallb
-          remoteChart: metallb
-          namespace: metallb-system
-          createNamespace: true
-          wait: true
+        path: /manifests/rawYaml/-
+        value: k8s/environments/development/dashboard/admin.yaml
+      - op: add
+        path: /manifests/rawYaml/-
+        value: k8s/environments/development/cluster/metallb-config.yaml
+---
+apiVersion: skaffold/v3
+kind: Config
+metadata:
+  name: aas-main
+requires:
+  - configs: ["aas-dependencies"]
+    activeProfiles:
+      - name: dev  
+        activatedBy: [dev]
+build:
+  local: {}
+  artifacts:
+    - image: aas-backend
+      context: back-end
+      docker:
+        dockerfile: Dockerfile
+        buildArgs:
+          ENV_STATE: prod
+    - image: aas-frontend
+      context: front-end
+      docker:
+        dockerfile: Dockerfile
+
+manifests: {} 
+
+deploy:
+  helm:
+    releases:
+      - name: aas-frontend
+        chartPath: k8s/charts/aas-frontend
+        namespace: ai-appstore
+        setValueTemplates:
+          image.repository: "{{ .IMAGE_REPO_aas_frontend }}"
+          image.tag: "{{ .IMAGE_TAG_aas_frontend }}"
+        setValues:
+          image.pullPolicy: "IfNotPresent"
+        wait: true
+      - name: aas-backend
+        chartPath: k8s/charts/aas-backend
+        namespace: ai-appstore
+        setValueTemplates:
+          image.repository: "{{ .IMAGE_REPO_aas_backend }}"
+          image.tag: "{{ .IMAGE_TAG_aas_backend }}"
+        setValues:
+          image.pullPolicy: "IfNotPresent"
+        wait: true
+      - name: aas-knative-backend
+        chartPath: k8s/charts/aas-knative-backend
+        namespace: inference-engine
+        wait: true
+profiles:
+  - name: dev
+    activation:
+      - command: dev
+      - kubeContext: kind-(.*)
