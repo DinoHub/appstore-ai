@@ -902,13 +902,16 @@ const finalSubmit = (stepper: QStepper) => {
   if (creationStore.modelTask != 'Reinforcement Learning') {
     creationStore.createModel().then((data) => {
       if (data) {
-        router.push(`/model/${data.modelId}/${data.creatorUserId}`);
+        router.push(`/model/${data.creatorUserId}/${data.modelId}`);
       }
     });
   } else {
     if (creationStore.noServiceMetadataValid) {
       stepper.next();
-      creationStore.createModelWithVideo();
+      creationStore.createModelWithVideo().then(() => {
+        // router.push(`/model/${creationStore.creatorUserId}/${creationStore.modelId}`);
+        // TODO: call backend to send metadata
+      });
     } else {
       Notify.create({
         message:
