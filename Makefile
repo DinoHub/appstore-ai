@@ -10,7 +10,6 @@ k8s-run:
 	skaffold run --force
 generate-k8s-dashboard-token:
 	kubectl -n kubernetes-dashboard create token admin-user --duration=488h > token.txt
-
 install-precommit:
 	@echo "Installing precommit hook"
 	pre-commit install
