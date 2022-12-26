@@ -114,10 +114,6 @@ manifests: {}
 deploy:
   helm:
     releases:
-      # - name: aas-knative-backend
-      #   chartPath: k8s/charts/aas-knative-backend
-      #   namespace: inference-engine
-      #   wait: true
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore
