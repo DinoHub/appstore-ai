@@ -74,4 +74,4 @@ def upload_data(
     )
 
     # NOTE: if bucket policy is not set to download, then this URL will not work
-    return f"{config.MINIO_DSN}/{bucket_name}/{object_name}"
+    return f"{config.MINIO_API_HOST}/{bucket_name}/{object_name}"
