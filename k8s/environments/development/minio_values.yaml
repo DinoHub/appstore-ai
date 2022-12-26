@@ -1,6 +1,32 @@
-auth:
-  rootUser: root # accessKey
-  rootPassword: <REPLACE_IN_PROD>
+rootUser: root 
+rootPassword: RootTempPassword1234 # Replace in prod
+replicas: 1
+mode: standalone
+
+users:
+  - accessKey: ai-appstore
+    secretKey: TempPassword1234 # Replace in prod
+    policy: readwrite
+svcaccts:
+  - accessKey: aas-minio-uploader
+    secretKey: TempPassword1234 # Replace in prod
+    user: ai-appstore
+
 ingress:
   enabled: true
-  hostname: storage.appstore.ai
+  hosts: 
+    - storage.appstore.ai
+
+# consoleService:
+#   type: LoadBalancer
+
+buckets:
+  - name: model-zoo
+    policy: download
+
+persistence:
+  size: 10Gi
+
+resources:
+  requests:
+    memory: 512Mi
