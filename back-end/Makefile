@@ -21,7 +21,7 @@ install_precommit:
 	source ./venv/bin/activate
 	cd .. & pre-commit install
 
-setup: create_venv install install_precommit
+setup: create_venv install 
 
 init_server: 
 	. venv/bin/activate && mlaunch init --single --port 4051 --name "app_store";\

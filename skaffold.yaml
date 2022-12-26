@@ -1,22 +1,15 @@
 apiVersion: skaffold/v3
 kind: Config
-metadata: 
+metadata:
   name: aas-dependencies
 
 manifests:
   rawYaml:
-      - k8s/knative-operator.yaml
-      - k8s/namespaces.yaml
-
+    - k8s/namespaces.yaml
+    - k8s/knative-operator.yaml
 deploy:
   helm:
     releases:
-      - name: metallb
-        repo: https://metallb.github.io/metallb
-        remoteChart: metallb
-        namespace: metallb-system
-        createNamespace: true
-        wait: true
       - name: ingress-nginx
         version: 4.4.0
         upgradeOnChange: false
@@ -45,13 +38,25 @@ deploy:
         version: 11.10.24
         namespace: ai-appstore
         wait: true
+        valuesFiles:
+          - k8s/environments/development/minio_values.yaml
   kubectl: {}
 profiles:
   - name: dev
     activation:
       - command: dev
       - kubeContext: kind-(.*)
+      - kubeContext: minikube
     patches:
+      - op: add
+        path: /deploy/helm/releases/0
+        value:
+          name: metallb
+          repo: https://metallb.github.io/metallb
+          remoteChart: metallb
+          namespace: metallb-system
+          createNamespace: true
+          wait: true
       - op: add
         path: /manifests/rawYaml/-
         value: k8s/environments/development/dashboard/dashboard.yaml
@@ -65,11 +70,30 @@ profiles:
 apiVersion: skaffold/v3
 kind: Config
 metadata:
+  name: aas-knative-backend
+deploy:
+  helm:
+    releases:
+      - name: aas-knative-backend
+        chartPath: k8s/charts/aas-knative-backend
+        namespace: inference-engine
+        upgradeOnChange: false
+        
+profiles:
+  - name: dev
+    activation:
+      - command: dev
+      - kubeContext: kind-(.*)
+      - kubeContext: minikube
+---
+apiVersion: skaffold/v3
+kind: Config
+metadata:
   name: aas-main
 requires:
-  - configs: ["aas-dependencies"]
+  - configs: ["aas-dependencies", "aas-knative-backend"]
     activeProfiles:
-      - name: dev  
+      - name: dev
         activatedBy: [dev]
 build:
   local: {}
@@ -85,11 +109,15 @@ build:
       docker:
         dockerfile: Dockerfile
 
-manifests: {} 
+manifests: {}
 
 deploy:
   helm:
     releases:
+      # - name: aas-knative-backend
+      #   chartPath: k8s/charts/aas-knative-backend
+      #   namespace: inference-engine
+      #   wait: true
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore
@@ -98,6 +126,8 @@ deploy:
           image.tag: "{{ .IMAGE_TAG_aas_frontend }}"
         setValues:
           image.pullPolicy: "IfNotPresent"
+        valuesFiles:
+          - k8s/environments/development/aas_frontend_values.yaml
         wait: true
       - name: aas-backend
         chartPath: k8s/charts/aas-backend
@@ -107,13 +137,12 @@ deploy:
           image.tag: "{{ .IMAGE_TAG_aas_backend }}"
         setValues:
           image.pullPolicy: "IfNotPresent"
-        wait: true
-      - name: aas-knative-backend
-        chartPath: k8s/charts/aas-knative-backend
-        namespace: inference-engine
+        valuesFiles:
+          - k8s/environments/development/aas_backend_values.yaml
         wait: true
 profiles:
   - name: dev
     activation:
       - command: dev
       - kubeContext: kind-(.*)
+      - kubeContext: minikube

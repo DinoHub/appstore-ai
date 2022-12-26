@@ -1,0 +1,6 @@
+auth:
+  rootUser: root # accessKey
+  rootPassword: <REPLACE_IN_PROD>
+ingress:
+  enabled: true
+  hostname: storage.appstore.ai

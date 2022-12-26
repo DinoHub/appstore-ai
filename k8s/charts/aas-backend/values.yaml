@@ -30,14 +30,14 @@ env:
   PROD_MONGO_DSN: mongodb://aas-mongodb
   PROD_DB_NAME: appStoreProdDB
   PROD_MAX_UPLOAD_SIZE_GB: "10"
-  PROD_MONGO_USERNAME: aasRootDBUser
-  PROD_MONGO_PASSWORD: TempPassword1234
+  PROD_MONGO_USERNAME: <TO-REPLACE>
+  PROD_MONGO_PASSWORD: <TO-REPLACE>
   PROD_IE_NAMESPACE: inference-engine
-  CLEARML_WEB_HOST: https://app.clear.ml
-  CLEARML_API_HOST: https://api.clear.ml
-  CLEARML_FILES_HOST: https://files.clear.ml
-  CLEARML_API_ACCESS_KEY: 5BGFOYCD786OFPFP3M9F
-  CLEARML_API_SECRET_KEY: HHqILZP4YZqOeTKneHUEc4oG6VosVEfDtVQV2ySheRLFVq9aSn
+  CLEARML_WEB_HOST:  <TO-REPLACE> # https://app.clear.ml
+  CLEARML_API_HOST:  <TO-REPLACE> # https://api.clear.ml
+  CLEARML_FILES_HOST: <TO-REPLACE>  # https://files.clear.ml
+  CLEARML_API_ACCESS_KEY: <TO-REPLACE>
+  CLEARML_API_SECRET_KEY: <TO-REPLACE>
 
 environment: prod
 
@@ -57,7 +57,7 @@ securityContext:
   # runAsUser: 1000
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 8080
 
 probe:
@@ -70,21 +70,19 @@ readinessProbe:
   failureThreshold: 6
   successThreshold: 1
 
+
 ingress:
-  enabled: true
-  className: "nginx"
+  enabled: false
+  className: ""
   annotations:
-    kubernetes.io/ingress.allow-http: "true"
+    # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-      # Note for local dev, set the following in the hostfile
-      # 127.0.0.1 api.appstore.ai
-      # 127.0.0.1 appstore.ai
-    - host: "api.appstore.ai"
+    - host: api.appstore.local
       paths:
         - path: /
-          pathType: Prefix
-  # tls: []
+          pathType: ImplementationSpecific
+  tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
@@ -114,4 +112,3 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-

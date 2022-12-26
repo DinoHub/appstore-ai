@@ -21,4 +21,3 @@ controller:
     publish-status-address: "localhost"
   admissionWebhooks:
     enabled: false
-
