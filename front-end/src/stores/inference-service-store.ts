@@ -38,12 +38,18 @@ export const useInferenceServiceStore = defineStore('service', {
           let ready = true;
           const res = await api.get(`engines/${serviceName}/status`);
           const data: InferenceServiceStatus = res.data;
+
           for (const status of data.conditions) {
             if (status.status !== 'True') {
               ready = false;
+              console.error('Service not ready, retrying...');
+              console.error(data);
+              break;
             }
           }
           if (ready) {
+            console.log('Service is ready');
+            console.log(data);
             return true;
           }
           // exponential backoff algo to wait for service to be ready
@@ -52,6 +58,8 @@ export const useInferenceServiceStore = defineStore('service', {
             Math.pow(2, noRetries) + Math.random() + initialWaitSeconds;
           console.warn(`Backing off for ${backoffSeconds} seconds`);
           if (backoffSeconds > maxDeadlineSeconds) {
+            console.error('Service not ready, max retries exceeded');
+            console.error(data);
             return false;
           }
           await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
