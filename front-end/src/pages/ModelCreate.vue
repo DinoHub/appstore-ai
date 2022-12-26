@@ -453,7 +453,7 @@
             <h6 class="text-left q-mb-md q-mr-sm">Inference Engine</h6>
             <q-input
               outlined
-              class="q-pb-xl q-mr-sm"
+              class="q-ml-md q-pb-xl"
               autogrow
               hint="Image URI"
               v-model="creationStore.imageUri"
