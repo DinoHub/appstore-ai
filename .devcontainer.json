@@ -1,0 +1,87 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/kubernetes-helm-minikube
+{
+  "name": "AI App Store Dev Container",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/base:bullseye",
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "enableNonRootDocker": "true",
+      "moby": "true"
+    },
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "latest"
+    },
+    "ghcr.io/devcontainers/features/common-utils:2": {},
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/nvidia-cuda:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.9"
+    },
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {},
+    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {},
+    "ghcr.io/mpriscella/features/kind:1": {},
+    "ghcr.io/devcontainers-contrib/features/bandit:1": {},
+    "ghcr.io/devcontainers-contrib/features/black:1": {},
+    "ghcr.io/devcontainers-contrib/features/cookiecutter:1": {},
+    "ghcr.io/devcontainers-contrib/features/isort:1": {},
+    "ghcr.io/devcontainers-contrib/features/poetry:1": {},
+    "ghcr.io/devcontainers-contrib/features/pre-commit:1": {},
+    "ghcr.io/devcontainers-contrib/features/pylint:1": {},
+    "ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
+    "ghcr.io/guiyomh/features/vim:0": {},
+    "ghcr.io/rio/features/kustomize:1": {},
+    "ghcr.io/rio/features/skaffold": {}
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "kubectl version",
+
+  // Use 'postStartCommand' to run commands after the container is created like starting minikube.
+  "postStartCommand": "make start-dev-cluster && make install-precommit",
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
+      "extensions": [
+        "njpwerner.autodocstring",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.python",
+        "redhat.vscode-yaml",
+        "jvalecillos.gpg",
+        "samuelcolvin.jinjahtml",
+        "bungcip.better-toml",
+        "googlecloudtools.cloudcode",
+        "ms-vscode-remote.remote-containers",
+        "ms-azuretools.vscode-docker",
+        "dbaeumer.vscode-eslint",
+        "github.copilot",
+        "eamodio.gitlens",
+        "ecmel.vscode-html-css",
+        "wholroyd.jinja",
+        "redhat.vscode-knative",
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "ms-kubernetes-tools.kind-vscode",
+        "ipedrazas.kubernetes-snippets",
+        "yzhang.markdown-all-in-one",
+        "esbenp.prettier-vscode",
+        "octref.vetur",
+        // "vscodevim.vim",
+        "vue.volar",
+        "redhat.vscode-xml"
+      ]
+    }
+  }
+}

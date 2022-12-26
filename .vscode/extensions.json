@@ -1,10 +1,30 @@
 {
-    "recommendations": [
-        "njpwerner.autodocstring",
-        "ms-python.black-formatter",
-        "ms-python.isort",
-        "ms-python.python",
-        "redhat.vscode-yaml",
-        "jvalecillos.gpg"
-    ]
+  "recommendations": [
+    "njpwerner.autodocstring",
+    "ms-python.black-formatter",
+    "ms-python.isort",
+    "ms-python.python",
+    "redhat.vscode-yaml",
+    "jvalecillos.gpg",
+    "samuelcolvin.jinjahtml",
+    "bungcip.better-toml",
+    "googlecloudtools.cloudcode",
+    "ms-vscode-remote.remote-containers",
+    "ms-azuretools.vscode-docker",
+    "dbaeumer.vscode-eslint",
+    "github.copilot",
+    "eamodio.gitlens",
+    "ecmel.vscode-html-css",
+    "wholroyd.jinja",
+    "redhat.vscode-knative",
+    "ms-kubernetes-tools.vscode-kubernetes-tools",
+    "ms-kubernetes-tools.kind-vscode",
+    "ipedrazas.kubernetes-snippets",
+    "yzhang.markdown-all-in-one",
+    "esbenp.prettier-vscode",
+    "octref.vetur",
+    "vscodevim.vim",
+    "vue.volar",
+    "redhat.vscode-xml"
+  ]
 }

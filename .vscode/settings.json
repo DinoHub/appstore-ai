@@ -1,7 +1,4 @@
 {
   "autoDocstring.docstringFormat": "sphinx",
-  "yaml.schemas": {
-    "ai-model/inference-engine/inference_engine/schemas/config/v2.json": "config.yaml"
-  },
   "python.analysis.typeCheckingMode": "basic"
 }
