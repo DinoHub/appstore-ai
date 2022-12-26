@@ -36,6 +36,42 @@ spec:
           env:
             - name: ENV_STATE
               value: {{ .Values.environment }}
+            - name: PROD_MINIO_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aas-backend.fullname" . }}
+                  key: prod_minio_dsn
+                  optional: true
+            - name: PROD_MINIO_API_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aas-backend.fullname" . }}
+                  key: prod_minio_access
+                  optional: true
+            - name: PROD_MINIO_API_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aas-backend.fullname" . }}
+                  key: prod_minio_secret
+                  optional: true
+            - name: PROD_MINIO_API_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aas-backend.fullname" . }}
+                  key: prod_minio_api_host
+                  optional: true
+            - name: PROD_MINIO_TLS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aas-backend.fullname" . }}
+                  key: prod_minio_tls
+                  optional: true
+            - name: PROD_MINIO_BUCKET_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "aas-backend.fullname" . }}
+                  key: prod_minio_bucket
+                  optional: true
             - name: PROD_MAX_UPLOAD_SIZE_GB
               valueFrom: 
                 secretKeyRef:
