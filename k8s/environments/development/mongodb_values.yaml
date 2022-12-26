@@ -1,7 +1,15 @@
 auth:
   enabled: true
-  rootUser: "aasRootDBUser"
-  rootPassword: "TempPassword1234" # NOTE: Replace in production
+  rootUser: aasRootDBUser
+  rootPassword: RootTempPassword1234 # NOTE: Replace in production
+  usernames:
+    - aas-backend-serviceAcct
+  passwords: 
+    - TempPassword1234 # NOTE: Replace in production
+  databases:  
+    - appStoreProdDB
+
+
 initdbScripts:
   init-db.js: |
     mongo = db.getSiblingDB('appStoreProdDB');
