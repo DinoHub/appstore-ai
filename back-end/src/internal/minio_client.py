@@ -8,6 +8,11 @@ from ..config.config import config
 
 
 def minio_api_client() -> Optional[minio.Minio]:
+    """Function to create a connection to the MinIO instance
+
+    :return: An object that contains the MinIO client
+    :rtype: Minio
+    """
     try:
         print(
             f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Attempting to connect to MinIO instance @ {config.MINIO_API_HOST}..."
@@ -17,10 +22,11 @@ def minio_api_client() -> Optional[minio.Minio]:
             config.MINIO_API_ACCESS_KEY,
             config.MINIO_API_SECRET_KEY,
             secure=config.MINIO_TLS,
-        )
+        )  # connect to minio using provided variables
         print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  MinIO client connected!")
         bucket_name = config.MINIO_BUCKET_NAME
         found_bucket = minio_client.bucket_exists(bucket_name)
+        # create the bucket from env variables if not already created
         if not found_bucket:
             minio_client.make_bucket(bucket_name)
             print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created")
