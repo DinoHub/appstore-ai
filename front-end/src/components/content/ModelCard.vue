@@ -1,3 +1,11 @@
+<style scoped>
+.clamp-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
 <template>
   <q-card
     v-ripple
@@ -35,7 +43,7 @@
         </material-chip>
       </div>
     </q-card-section>
-    <q-card-section>
+    <q-card-section class="clamp-text">
       {{ props.description ?? 'No description provided' }}
     </q-card-section>
     <q-card-actions align="right" v-if="isModelOwner">
