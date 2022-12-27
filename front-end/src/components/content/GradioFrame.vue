@@ -15,9 +15,9 @@
         :src="iframeUrl"
       ></iframe>
     </q-card-section>
-    <q-inner-loading :showing="loading" label="Loading Inference App...">
+    <!-- <q-inner-loading :showing="loading" label="Loading Inference App...">
       <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
-    </q-inner-loading>
+    </q-inner-loading> -->
   </q-card>
 </template>
 
