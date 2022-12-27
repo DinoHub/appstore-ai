@@ -15,13 +15,14 @@ export const useUploadStore = defineStore('users', {
     files: [] as File[],
   }),
   actions: {
-    async uploadVideo(videoFile: File) {
+    async uploadVideo(videoFile: File): Promise<string> {
       const form = new FormData();
       form.append('video', videoFile[0]);
+      let videoLocation = '';
       await api
         .post('/buckets/video', form)
         .then((data) => {
-          console.log(data.data.video_location);
+          videoLocation = data.data.video_location;
         })
         .catch((err) => {
           Notify.create({
@@ -29,10 +30,11 @@ export const useUploadStore = defineStore('users', {
             type: 'negative',
           });
         });
+      return videoLocation;
     },
     async uploadMedia(
       url: string,
-      fieldName: string | ((file: File) => string),
+      fieldName: string | ((file: File) => string)
     ): Promise<MediaUploadResponse> {
       const form = new FormData();
       for (const media of this.files) {
