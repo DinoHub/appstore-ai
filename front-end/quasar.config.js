@@ -64,12 +64,12 @@ module.exports = configure(function (ctx) {
       // analyze: true,
       env: {
         backendAPI: ctx.dev
-          ? 'http://127.0.0.1:8080'
+          ? 'http://localhost:7070'
           : 'http://api.appstore.ai',
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
-      // minify: false,
+      // minify: false, 
       // polyfillModulePreload: true,
       // distDir
 
