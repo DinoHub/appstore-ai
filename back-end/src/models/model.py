@@ -28,7 +28,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     performance: str
     task: str  # a task is a tag
     inference_service_name: Optional[str]
-    video_path: Optional[str]
+    video_location: Optional[str]
     tags: List[str]  # for all other tags
     frameworks: List[str]
     description: Optional[str]
