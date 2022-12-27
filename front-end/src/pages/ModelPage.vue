@@ -63,14 +63,21 @@
               v-if="model.inferenceServiceName"
               name="inference"
               label="Inference"
+              no-caps
             ></q-tab>
-            <q-tab name="metadata" label="Metadata"></q-tab>
+            <q-tab name="metadata" label="Metadata" no-caps></q-tab>
             <q-tab
               name="artifacts"
               label="Artifacts"
               v-if="model.artifacts.length"
+              no-caps
             ></q-tab>
-            <q-tab v-if="isModelOwner" name="manage" label="Manage"></q-tab>
+            <q-tab
+              v-if="isModelOwner"
+              name="manage"
+              label="Manage"
+              no-caps
+            ></q-tab>
           </q-tabs>
           <q-tab-panels v-model="tab" animated>
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
@@ -155,6 +162,8 @@
                   :to="`/model/${userId}/${modelId}/edit/metadata`"
                   rounded
                   color="secondary"
+                  no-caps
+                  padding="sm xl"
                 ></q-btn>
               </div>
               <div class="q-py-md">
@@ -163,6 +172,8 @@
                   :to="`/model/${userId}/${modelId}/edit/inference`"
                   rounded
                   color="tertiary"
+                  no-caps
+                  padding="sm xl"
                 ></q-btn>
               </div>
               <div>
@@ -187,6 +198,8 @@
                     type="submit"
                     color="error"
                     :disable="confirmId !== confirmDeleteLabel"
+                    no-caps
+                    padding="sm xl"
                   ></q-btn>
                 </q-form>
               </div>
