@@ -10,10 +10,10 @@ from ..config.config import config
 def minio_api_client() -> Optional[minio.Minio]:
     try:
         print(
-            f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Attempting to connect to MinIO instance @ {config.MINIO_DSN}..."
+            f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Attempting to connect to MinIO instance @ {config.MINIO_API_HOST}..."
         )
         minio_client = minio.Minio(
-            config.MINIO_DSN,
+            config.MINIO_API_HOST,
             config.MINIO_API_ACCESS_KEY,
             config.MINIO_API_SECRET_KEY,
             secure=config.MINIO_TLS,
@@ -23,9 +23,7 @@ def minio_api_client() -> Optional[minio.Minio]:
         found_bucket = minio_client.bucket_exists(bucket_name)
         if not found_bucket:
             minio_client.make_bucket(bucket_name)
-            print(
-                f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created"
-            )
+            print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created")
         else:
             print(
                 f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' already exists"
