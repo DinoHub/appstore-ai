@@ -44,8 +44,6 @@
     <q-separator></q-separator>
     <main class="row">
       <section class="col col-sm-8 q-px-lg q-py-md">
-        <!-- <markdown-display :markdown="model.description"></markdown-display> -->
-        <!-- <markdown-display :markdown="model.performance"></markdown-display> -->
         <tiptap-display :content="model.markdown"></tiptap-display>
         <tiptap-display :content="model.performance"></tiptap-display>
       </section>
@@ -144,7 +142,6 @@
               </q-markup-table>
             </q-tab-panel>
             <q-tab-panel name="artifacts" v-if="model.artifacts.length">
-              <!-- TODO -->
               <artifact-card
                 v-for="artifact in model.artifacts"
                 v-bind:key="artifact.name"
@@ -153,7 +150,6 @@
               ></artifact-card>
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
-              <!-- TODO: add check that user is model owner-->
               <div class="text-h6">Manage your model</div>
 
               <div class="q-py-md">
@@ -213,7 +209,6 @@
 
 <script setup lang="ts">
 import { ModelCard } from 'src/stores/model-store';
-import MarkdownDisplay from 'src/components/content/MarkdownDisplay.vue';
 import MaterialChip from 'src/components/content/MaterialChip.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
