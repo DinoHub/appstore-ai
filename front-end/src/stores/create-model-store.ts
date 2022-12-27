@@ -7,6 +7,7 @@ import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
 import { useInferenceServiceStore } from './inference-service-store';
 import { useUploadStore } from './upload-store';
+import { create } from 'domain';
 
 export const useCreationStore = defineStore('createModel', {
   state: () => {
@@ -114,7 +115,7 @@ export const useCreationStore = defineStore('createModel', {
           'modelUsage',
           'modelLimitations',
           'exampleVideo',
-        ].includes(item),
+        ].includes(item)
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -150,7 +151,7 @@ export const useCreationStore = defineStore('createModel', {
           'modelExplain',
           'modelUsage',
           'modelLimitations',
-        ].includes(item),
+        ].includes(item)
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -189,11 +190,11 @@ export const useCreationStore = defineStore('createModel', {
       try {
         const metadata = await experimentStore.getExperimentByID(
           this.experimentID,
-          this.experimentPlatform,
+          this.experimentPlatform
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks]),
+          new Set([...this.frameworks, ...metadata.frameworks])
         );
       } catch (error) {
         return Promise.reject(error);
@@ -207,7 +208,7 @@ export const useCreationStore = defineStore('createModel', {
             modelId,
             this.imageUri,
             this.containerPort,
-            this.uniqueEnv,
+            this.uniqueEnv
           );
         this.previewServiceUrl = inferenceUrl;
         this.previewServiceName = serviceName; // save so we know what to clean up
@@ -268,13 +269,13 @@ export const useCreationStore = defineStore('createModel', {
           this.modelName,
           this.imageUri,
           this.containerPort,
-          this.uniqueEnv,
+          this.uniqueEnv
         );
         cardPackage.inferenceServiceName = serviceName;
         // Submit Model
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModel(
-          cardPackage,
+          cardPackage
         );
         Notify.create({
           message: 'Successfully created model',
@@ -294,11 +295,64 @@ export const useCreationStore = defineStore('createModel', {
       try {
         const authStore = useAuthStore();
         const uploadStore = useUploadStore();
-        uploadStore.uploadVideo(this.exampleVideo);
+        const videoUploader = uploadStore.uploadVideo(this.exampleVideo);
+        let videoLocation = '';
+        videoUploader.then((data) => {
+          videoLocation = data;
+        });
+        if (authStore.user?.name) {
+          if (this.modelOwner == '') {
+            this.modelOwner = authStore.user.name;
+          }
+          if (this.modelPOC == '') {
+            this.modelPOC = authStore.user.name;
+          }
+        }
+        const cardPackage = {
+          title: this.modelName,
+          task: this.modelTask,
+          videoLocation: videoLocation,
+          tags: this.tags,
+          frameworks: this.frameworks,
+          owner: this.modelOwner,
+          pointOfContact: this.modelPOC,
+          markdown: this.markdownContent,
+          performance: this.performanceMarkdown,
+          artifacts: [
+            {
+              name: 'model',
+              artifactType: 'model',
+              url: this.modelPath,
+            },
+          ],
+          description: this.modelDesc,
+          explanation: this.modelExplain,
+          usage: this.modelUsage,
+          limitations: this.modelLimitations,
+        } as ModelCardNoInference;
+
+        if (this.experimentID != '' && this.experimentPlatform != '') {
+          cardPackage.experiment = {
+            connector: this.experimentPlatform,
+            experimentId: this.experimentID,
+          };
+        }
+
+        if (this.datasetID != '' && this.datasetPlatform != '') {
+          cardPackage.dataset = {
+            connector: this.datasetPlatform,
+            datasetId: this.datasetID,
+          };
+        }
+        const modelStore = useModelStore();
+        const { modelId, creatorUserId } = await modelStore.createModelVideo(
+          cardPackage
+        );
         Notify.create({
           message: 'Successfully created model',
           type: 'positive',
         });
+        return { modelId, creatorUserId };
       } catch (error) {
         Notify.create({
           message: 'Failed to create model',
