@@ -159,7 +159,8 @@
               :loading="loadingExp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
-              placeholder="Image Classification"
+              placeholder="e.g. Image Classification"
+              hint="Press enter to add a new tag"
             />
             <q-select
               outlined
@@ -177,7 +178,8 @@
               :rules="[
                 (val) => val.length >= 1 || 'One or more frameworks required',
               ]"
-              placeholder="PyTorch"
+              placeholder="e.g. PyTorch"
+              hint="Press enter to add a new framework"
             />
           </div>
           <div class="col q-pl-md q-ml-xl shadow-2 rounded">
@@ -392,7 +394,7 @@
 
       <q-step
         :name="6"
-        title="Inference Engine"
+        title="Inference Service"
         icon="code"
         :done="creationStore.step > 6"
         v-if="creationStore.modelTask != 'Reinforcement Learning'"
@@ -465,7 +467,7 @@
               v-model="creationStore.containerPort"
               class="q-ml-md q-pb-xl"
               label="Container Port (Optional)"
-              hint="If not specified, container will listen on $PORT environment variable"
+              hint="If not specified, container will listen on $PORT environment variable, which is automatically set to 8080 by default. "
               type="number"
               :loading="loadingExp"
               autogrow

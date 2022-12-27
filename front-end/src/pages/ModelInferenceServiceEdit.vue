@@ -35,7 +35,7 @@
               v-model="editInferenceServiceStore.containerPort"
               class="q-ml-md q-pb-xl"
               label="Container Port (Optional)"
-              hint="If not specified, container will listen on $PORT environment variable"
+              hint="If not specified, container will listen on $PORT environment variable, which is set to 8080 by default."
               type="number"
               autogrow
             ></q-input>

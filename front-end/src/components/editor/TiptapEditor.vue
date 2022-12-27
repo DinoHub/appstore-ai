@@ -61,7 +61,7 @@
         "
         :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
         label="H1"
-        @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+        @click="editor?.chain().focus().toggleHeading({ level: 1 }).run()"
       />
       <q-btn
         dense
@@ -70,7 +70,7 @@
         "
         :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
         label="H2"
-        @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+        @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
       />
       <q-btn
         dense
@@ -79,7 +79,7 @@
         "
         :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
         label="H3"
-        @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+        @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
       />
       <!-- Bullet List -->
       <q-btn
@@ -237,7 +237,7 @@
           "
           :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
           label="H1"
-          @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+          @click="editor?.chain().focus().toggleHeading({ level: 1 }).run()"
         />
         <q-btn
           dense
@@ -246,7 +246,7 @@
           "
           :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
           label="H2"
-          @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+          @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
         />
         <q-btn
           dense
@@ -255,7 +255,7 @@
           "
           :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
           label="H3"
-          @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+          @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
         />
         <!-- Bullet List -->
         <q-btn
@@ -295,7 +295,7 @@
           "
           :color="_buttonBg(editor?.isActive('heading', { level: 1 }) ?? true)"
           label="H1"
-          @click="editor?.chain().focus().setHeading({ level: 1 }).run()"
+          @click="editor?.chain().focus().toggleHeading({ level: 1 }).run()"
         />
         <q-btn
           dense
@@ -304,7 +304,7 @@
           "
           :color="_buttonBg(editor?.isActive('heading', { level: 2 }) ?? true)"
           label="H2"
-          @click="editor?.chain().focus().setHeading({ level: 2 }).run()"
+          @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
         />
         <q-btn
           dense
@@ -313,7 +313,7 @@
           "
           :color="_buttonBg(editor?.isActive('heading', { level: 3 }) ?? true)"
           label="H3"
-          @click="editor?.chain().focus().setHeading({ level: 3 }).run()"
+          @click="editor?.chain().focus().toggleHeading({ level: 3 }).run()"
         />
         <!-- Code Block -->
         <q-btn
