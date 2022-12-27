@@ -36,3 +36,5 @@ In addition to the existing features, we aim to introduce more features somewher
 
 - [ ] 🧑‍🏭 Ability to perform transfer learning on models uploaded on the store through a GUI interface
 - [ ] 🔌 Ability to set up a dedicated inference API for integration in production pipelines
+- [ ] ✨ Ability to sort models by popularity
+- [ ] 🤖 Ability to suggest models based on user preferences
