@@ -22,6 +22,9 @@ env:
   CLEARML_API_SECRET_KEY: HHqILZP4YZqOeTKneHUEc4oG6VosVEfDtVQV2ySheRLFVq9aSn
 environment: prod
 
+service:
+  type: LoadBalancer
+
 ingress:
   enabled: true
   className: "nginx"
