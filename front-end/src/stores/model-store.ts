@@ -68,7 +68,8 @@ export interface CreateModelCard {
   frameworks: string[];
   owner?: string;
   pointOfContact?: string;
-  inferenceServiceName: string;
+  inferenceServiceName?: string;
+  videoLocation?: string;
   markdown: string;
   performance: string;
   artifacts: Artifact[];
@@ -174,6 +175,17 @@ export const useModelStore = defineStore('model', {
       try {
         const res = await api.post('models/', metadata);
         const data: ModelCard = res.data;
+        return data;
+      } catch (error) {
+        return Promise.reject('Failed to create model card');
+      }
+    },
+    async createModelVideo(
+      metadata: CreateModelCard
+    ): Promise<ModelCardNoInference> {
+      try {
+        const res = await api.post('models/', metadata);
+        const data: ModelCardNoInference = res.data;
         return data;
       } catch (error) {
         return Promise.reject('Failed to create model card');
