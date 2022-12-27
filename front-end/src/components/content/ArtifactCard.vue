@@ -10,6 +10,7 @@
         :href="props.url"
         label="View/Download"
         color="primary"
+        target="_blank"
       ></q-btn>
     </q-card-actions>
   </q-card>
