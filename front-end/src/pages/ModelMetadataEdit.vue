@@ -150,7 +150,8 @@
               :loading="loadingExp"
               class="q-ml-md q-pr-md q-pb-xl"
               :rules="[(val) => val.length >= 1 || 'One or more tags required']"
-              placeholder="Image Classification"
+              placeholder="e.g. Image Classification"
+              hint="Press enter to add a new tag"
             />
             <q-select
               outlined
@@ -168,7 +169,8 @@
               :rules="[
                 (val) => val.length >= 1 || 'One or more frameworks required',
               ]"
-              placeholder="PyTorch"
+              placeholder="e.g. PyTorch"
+              hint="Press enter to add a new framework"
             />
           </div>
           <div class="col q-pl-md q-ml-xl shadow-2 rounded">
