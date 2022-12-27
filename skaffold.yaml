@@ -54,7 +54,6 @@ profiles:
     activation:
       - command: dev
       - kubeContext: kind-(.*)
-      - kubeContext: minikube
     patches:
       - op: add
         path: /deploy/helm/releases/0
@@ -153,4 +152,3 @@ profiles:
     activation:
       - command: dev
       - kubeContext: kind-(.*)
-      - kubeContext: minikube
