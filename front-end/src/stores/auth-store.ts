@@ -24,9 +24,6 @@ export interface JWT {
   role: Role;
 }
 
-// TODO: Fix storing the access token in a secured way that Axios can use for the OAuth
-// currently have to store accesstoken in Cookie that is not secured (httponly)
-
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null as User | null,
