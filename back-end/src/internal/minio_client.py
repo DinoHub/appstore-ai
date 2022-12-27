@@ -15,10 +15,10 @@ def minio_api_client() -> Optional[minio.Minio]:
     """
     try:
         print(
-            f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Attempting to connect to MinIO instance @ {config.MINIO_API_HOST}..."
+            f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Attempting to connect to MinIO instance @ {config.MINIO_DSN}..."
         )
         minio_client = minio.Minio(
-            config.MINIO_API_HOST,
+            config.MINIO_DSN,
             config.MINIO_API_ACCESS_KEY,
             config.MINIO_API_SECRET_KEY,
             secure=config.MINIO_TLS,
