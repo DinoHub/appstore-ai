@@ -68,7 +68,7 @@
               :label="`${
                 experimentStore.experimentConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.experimentPlatform,
+                    connector.value === creationStore.experimentPlatform
                 )?.label + ' ' ?? ''
               }Experiment ID`"
               autogrow
@@ -94,7 +94,7 @@
               :label="`${
                 datasetStore.datasetConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.datasetPlatform,
+                    connector.value === creationStore.datasetPlatform
                 )?.label + ' ' ?? ''
               }Dataset ID`"
               autogrow
@@ -294,7 +294,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)',
+                  '(Example Text to Replace)'
                 ) != false
               "
             >
@@ -329,12 +329,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) != false
         "
       >
@@ -357,7 +357,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
                 ) != false
               "
             >
@@ -902,15 +902,18 @@ const finalSubmit = (stepper: QStepper) => {
   if (creationStore.modelTask != 'Reinforcement Learning') {
     creationStore.createModel().then((data) => {
       if (data) {
+        flushCreator();
         router.push(`/model/${data.creatorUserId}/${data.modelId}`);
       }
     });
   } else {
     if (creationStore.noServiceMetadataValid) {
       stepper.next();
-      creationStore.createModelWithVideo().then(() => {
-        // router.push(`/model/${creationStore.creatorUserId}/${creationStore.modelId}`);
-        // TODO: call backend to send metadata
+      creationStore.createModelWithVideo().then((data) => {
+        if (data) {
+          flushCreator();
+          router.push(`/model/${data.creatorUserId}/${data.modelId}`);
+        }
       });
     } else {
       Notify.create({
@@ -962,11 +965,11 @@ const addExpPlots = (store: typeof creationStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;',
+            '&quot;'
           )}" data-data="${JSON.stringify(chart.data).replace(
-            /["]/g,
-            '&quot;',
-          )}"></chart>
+              /["]/g,
+              '&quot;'
+            )}"></chart>
           <p></p>
         `;
           } catch (err) {
