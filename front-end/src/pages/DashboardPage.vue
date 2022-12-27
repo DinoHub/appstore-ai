@@ -2,6 +2,10 @@
 #dashboardModels .q-table__grid-content {
   justify-content: flex-start;
 }
+
+.card-height {
+  height: 17rem;
+}
 </style>
 
 <template>
@@ -17,7 +21,7 @@
           :pagination="pagination"
           :filter="filter"
           card-container-class="q-pa-md col-xs-12 col-sm-5 col-md-3"
-          card-class="bg-surface-variant"
+          card-class="bg-surface-variant card-height"
           class="q-px-sm"
         >
           <template #top-left
