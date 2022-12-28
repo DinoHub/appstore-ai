@@ -51,35 +51,3 @@ def upload_video(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=f"Something went wrong the upload",
         )
-
-
-# @router.post("/image", status_code=status.HTTP_200_OK)
-# def upload_image(image: UploadFile, s3_client: Minio = Depends(minio_api_client)):
-#     try:
-#         if "image" in image.content_type:
-#             path = upload_data(
-#                 s3_client,
-#                 image.file.read(),
-#                 f"images/{image.filename}",
-#                 BUCKET_NAME,
-#                 image.content_type,
-#             )
-#             # item_location = s3_client.get_presigned_url(
-#             #     "GET",
-#             #     bucket_name,
-#             #     f"images/{image.filename}",
-#             #     expires=timedelta(days=30),
-#             # )
-#             # print(item_location)
-#             return {"image_location": path}
-#         else:
-#             return JSONResponse(
-#                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                 content=f"Validation of image not cleared",
-#             )
-#     except Exception as e:
-#         print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {e}")
-#         return JSONResponse(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             content=f"Something went wrong the upload",
-#         )
