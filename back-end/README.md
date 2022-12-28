@@ -26,14 +26,13 @@ Back-end component of the AI App Store
 - [x] SysAdmin User Management
 - [x] Submit Test Inference API
 - [x] Deploy Inference Engine API
-- [ ] K8S Deployment (90%)
-- [ ] Endpoint Authentication (50%)
+- [x] K8S Deployment 
+- [x] Endpoint Authentication 
 
 ### v1.1
 
 - [x] Dataset CRUD APIs
 - [ ] Automated Transfer Learning APIs (10%)
-- [ ] Alternative to inference engine with simplified inference so that model owners only need to define how requests are made to the model
 
 ## Licence
 
