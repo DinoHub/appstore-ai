@@ -1,4 +1,4 @@
-import { Store, defineStore } from 'pinia';
+import { defineStore } from 'pinia';
 
 import { AxiosError } from 'axios';
 import { Notify } from 'quasar';
@@ -128,7 +128,7 @@ export const useInferenceServiceStore = defineStore('service', {
       } else {
         Notify.create({
           message: 'Failed to create service',
-          color: 'error',
+          color: 'negative',
         });
         await this.deleteService(serviceName); // Cleanup
         return Promise.reject('Failed to launch preview service');

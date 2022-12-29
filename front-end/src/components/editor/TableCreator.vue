@@ -58,7 +58,7 @@ const createTable = () => {
   if (noRows.value < 1 || noCols.value < 1) {
     Notify.create({
       message: 'Unable to create table',
-      color: 'error',
+      color: 'negative',
     });
     return;
   } else {

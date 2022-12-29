@@ -73,7 +73,7 @@
                 :options="sortOptions"
                 :option-value="sortValue"
                 :option-label="sortLabel"
-                @update:model-value="tableRef.requestServerInteraction()"
+                @update:model-value="tableRef?.requestServerInteraction()"
               >
                 <template v-slot:prepend>
                   <q-icon name="sort"></q-icon>
@@ -85,7 +85,7 @@
                 dense
                 rounded
                 outlined
-                autofocus=""
+                autofocus
                 debounce="500"
                 v-model="filter.title"
                 placeholder="Search by title"
@@ -121,7 +121,7 @@
 <script setup lang="ts">
 import { QTable, QTableColumn, QTableProps, Notify } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
-import { onMounted, reactive, Ref, ref, watch } from 'vue';
+import { onMounted, reactive, Ref, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import ModelCard from './ModelCard.vue';
 import {
@@ -233,7 +233,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        })
+        }),
       );
       tasks.splice(
         0,
@@ -243,14 +243,14 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        })
+        }),
       );
     })
     .catch(() => {
       console.error('Failed to get filter options');
       Notify.create({
         message: 'Failed to retrieve filter options from database',
-        color: 'error',
+        color: 'negative',
       });
     });
 }
@@ -287,6 +287,14 @@ const onSearchRequest = (props: QTableProps) => {
         desc: true,
       };
       pagination.value.descending = sortBy?.desc ?? true;
+      loading.value = false;
+    })
+    .catch((err) => {
+      console.error(err);
+      Notify.create({
+        message: 'Failed to retrieve models from database',
+        color: 'negative',
+      });
       loading.value = false;
     });
 };

@@ -68,7 +68,7 @@
               :label="`${
                 experimentStore.experimentConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.experimentPlatform
+                    connector.value === creationStore.experimentPlatform,
                 )?.label + ' ' ?? ''
               }Experiment ID`"
               autogrow
@@ -94,7 +94,7 @@
               :label="`${
                 datasetStore.datasetConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.datasetPlatform
+                    connector.value === creationStore.datasetPlatform,
                 )?.label + ' ' ?? ''
               }Dataset ID`"
               autogrow
@@ -296,7 +296,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -331,12 +331,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -359,7 +359,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -812,7 +812,7 @@ import GradioFrame from 'src/components/content/GradioFrame.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
 
-import { Cookies, useQuasar, Notify, QStepper } from 'quasar';
+import { Notify, QStepper } from 'quasar';
 import { useDatasetStore } from 'src/stores/dataset-store';
 
 const router = useRouter();
@@ -879,7 +879,7 @@ const launchPreview = (stepper: QStepper) => {
     .catch(() => {
       Notify.create({
         message: 'Failed to launch preview!',
-        color: 'error',
+        color: 'negative',
       });
     })
     .finally(() => {
@@ -895,34 +895,54 @@ const checkMetadata = (stepper: QStepper) => {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
       icon: 'warning',
-      color: 'error',
+      color: 'negative',
     });
   }
 };
 
 const finalSubmit = (stepper: QStepper) => {
   if (creationStore.modelTask != 'Reinforcement Learning') {
-    creationStore.createModel().then((data) => {
-      if (data) {
-        flushCreator();
-        router.push(`/model/${data.creatorUserId}/${data.modelId}`);
-      }
-    });
-  } else {
-    if (creationStore.noServiceMetadataValid) {
-      stepper.next();
-      creationStore.createModelWithVideo().then((data) => {
+    creationStore
+      .createModel()
+      .then((data) => {
         if (data) {
           flushCreator();
           router.push(`/model/${data.creatorUserId}/${data.modelId}`);
         }
+      })
+      .catch((err) => {
+        Notify.create({
+          message: err,
+          icon: 'warning',
+          color: 'negative',
+        });
+        console.error(err);
       });
+  } else {
+    if (creationStore.noServiceMetadataValid) {
+      stepper.next();
+      creationStore
+        .createModelWithVideo()
+        .then((data) => {
+          if (data) {
+            flushCreator();
+            router.push(`/model/${data.creatorUserId}/${data.modelId}`);
+          }
+        })
+        .catch((err) => {
+          Notify.create({
+            message: err,
+            icon: 'warning',
+            color: 'negative',
+          });
+          console.error(err);
+        });
     } else {
       Notify.create({
         message:
           'Enter all values into required fields first before proceeding',
         icon: 'warning',
-        color: 'error',
+        color: 'negative',
       });
     }
   }
@@ -967,11 +987,11 @@ const addExpPlots = (store: typeof creationStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;'
+            '&quot;',
           )}" data-data="${JSON.stringify(chart.data).replace(
-              /["]/g,
-              '&quot;'
-            )}"></chart>
+            /["]/g,
+            '&quot;',
+          )}"></chart>
           <p></p>
         `;
           } catch (err) {
@@ -990,8 +1010,9 @@ const addExpPlots = (store: typeof creationStore) => {
       .catch((err) => {
         Notify.create({
           message: 'Failed to insert plots',
-          color: 'error',
+          color: 'negative',
         });
+        console.error(err);
       })
       .finally(() => {
         buttonDisable.value = false;

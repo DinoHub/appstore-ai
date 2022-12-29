@@ -472,18 +472,28 @@ function exitMultiEdit() {
 }
 
 function callMultiEditUsers() {
-  if (editManyUsers.value.value != 1 && editManyUsers.value.value != 0) {
+  if (editManyUsers.value != 1 && editManyUsers.value != 0) {
     Notify.create({
-      message: `Set value for permssions to update users to!`,
+      message: 'Set value for permssions to update users to!',
       type: 'warning',
       position: 'top',
     });
   } else {
-    userStore.editUsersMulti(selected.value, editManyUsers.value).then(() => {
-      editMultiPopup.value = false;
-      editManyUsers.value = '';
-      tableRef.value?.requestServerInteraction();
-    });
+    userStore
+      .editUsersMulti(selected.value, editManyUsers.value)
+      .then(() => {
+        editMultiPopup.value = false;
+        editManyUsers.value = '';
+        tableRef.value?.requestServerInteraction();
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to update users',
+          type: 'negative',
+          position: 'top',
+        });
+        console.error(err);
+      });
   }
 }
 
@@ -498,13 +508,13 @@ function callEditUser() {
     Notify.create({
       type: 'negative',
       position: 'top',
-      message: `Fill in all required fields`,
+      message: 'Fill in all required fields',
     });
   } else if (editUser.value.password != editUser.value.confirm_password) {
     Notify.create({
       type: 'negative',
       position: 'top',
-      message: `Ensure both password fields match`,
+      message: 'Ensure both password fields match',
     });
   } else {
     userStore
@@ -513,21 +523,39 @@ function callEditUser() {
         editUser.value.name,
         editUser.value.adminPriv,
         editUser.value.password,
-        editUser.value.confirm_password
+        editUser.value.confirm_password,
       )
       .then(() => {
         clearEditUser();
         tableRef.value?.requestServerInteraction();
         editSinglePopup.value = false;
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to update user',
+          type: 'negative',
+          position: 'top',
+        });
+        console.error(err);
       });
   }
 }
 
 function callDeleteUsers() {
-  userStore.removeUsers(selected.value).then(() => {
-    selected.value = [];
-    tableRef.value?.requestServerInteraction();
-  });
+  userStore
+    .removeUsers(selected.value)
+    .then(() => {
+      selected.value = [];
+      tableRef.value?.requestServerInteraction();
+    })
+    .catch((err) => {
+      Notify.create({
+        message: 'Failed to delete users',
+        type: 'negative',
+        position: 'top',
+      });
+      console.error(err);
+    });
 }
 
 function callCreateUser() {
@@ -541,13 +569,13 @@ function callCreateUser() {
     Notify.create({
       type: 'negative',
       position: 'top',
-      message: `Fill in all required fields`,
+      message: 'Fill in all required fields',
     });
   } else if (createUser.value.password != createUser.value.confirm_password) {
     Notify.create({
       type: 'negative',
       position: 'top',
-      message: `Ensure both password fields match`,
+      message: 'Ensure both password fields match',
     });
   } else {
     userStore
@@ -555,12 +583,20 @@ function callCreateUser() {
         createUser.value.name,
         createUser.value.adminPriv,
         createUser.value.password,
-        createUser.value.confirm_password
+        createUser.value.confirm_password,
       )
       .then(() => {
         clearCreateUser();
         tableRef.value?.requestServerInteraction();
         persistent.value = false;
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to create user',
+          type: 'negative',
+          position: 'top',
+        });
+        console.error(err);
       });
   }
 }
@@ -614,7 +650,7 @@ const columns: QTableColumn[] = [
     field: 'created',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val
+        val,
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
@@ -625,7 +661,7 @@ const columns: QTableColumn[] = [
     field: 'lastModified',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val
+        val,
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
@@ -659,6 +695,14 @@ const onSearchRequest = (props: QTableProps) => {
       pagination.value.descending = descending;
       pagination.value.rowsPerPage = rowsPerPage ?? 10;
       loading.value = false;
+    })
+    .catch((err) => {
+      Notify.create({
+        message: 'Failed to get users',
+        type: 'negative',
+        position: 'top',
+      });
+      console.error(err);
     });
 };
 

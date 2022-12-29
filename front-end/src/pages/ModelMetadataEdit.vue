@@ -579,7 +579,7 @@ const checkMetadata = (stepper: QStepper) => {
     Notify.create({
       message: 'Enter all values into required fields first before proceeding',
       icon: 'warning',
-      color: 'error',
+      color: 'negative',
     });
   }
 };
@@ -603,7 +603,7 @@ const saveEdit = () => {
       Notify.create({
         message: 'Error editing model',
         icon: 'warning',
-        color: 'error',
+        color: 'negative',
       });
     });
 };
@@ -680,7 +680,7 @@ const addExpPlots = (store: typeof editMetadataStore) => {
       .catch((err) => {
         Notify.create({
           message: 'Failed to insert plots',
-          color: 'error',
+          color: 'negative',
         });
       })
       .finally(() => {

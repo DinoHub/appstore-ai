@@ -200,14 +200,24 @@ const launchPreview = (stepper: QStepper) => {
 
 const updateService = () => {
   const previewServiceName = editInferenceServiceStore.previewServiceName;
-  editInferenceServiceStore.updateInferenceService().then(() => {
-    Notify.create({
-      message: 'Inference Service updated',
-      icon: 'check',
-      color: 'primary',
+  editInferenceServiceStore
+    .updateInferenceService()
+    .then(() => {
+      Notify.create({
+        message: 'Inference Service updated',
+        icon: 'check',
+        color: 'primary',
+      });
+      router.push(`/model/${authStore.user?.userId}/${modelId}`);
+    })
+    .catch((err) => {
+      console.error(err);
+      Notify.create({
+        message: 'Failed to update Inference Service',
+        icon: 'warning',
+        color: 'negative',
+      });
     });
-    router.push(`/model/${authStore.user?.userId}/${modelId}`);
-  });
   if (previewServiceName) {
     // Remove preview service
     inferenceServiceStore.deleteService(previewServiceName);

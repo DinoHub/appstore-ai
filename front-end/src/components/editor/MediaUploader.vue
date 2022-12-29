@@ -71,15 +71,24 @@ const onUpload = () => {
     // Convert to base64
     // will store in serverside in s3 storage
     // where the src will be replaced with the s3 url
-    uploadStore.toBase64(file).then((base64) => {
-      // Add to editor
-      props.editor
-        .chain()
-        .focus()
-        .setImage({ src: base64, alt: file.name })
-        .goToNextCell()
-        .run();
-    });
+    uploadStore
+      .toBase64(file)
+      .then((base64) => {
+        // Add to editor
+        props.editor
+          .chain()
+          .focus()
+          .setImage({ src: base64, alt: file.name })
+          .goToNextCell()
+          .run();
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Error uploading file',
+          color: 'negative',
+        });
+        console.error(err);
+      });
   });
 
   uploadStore.clearFiles();

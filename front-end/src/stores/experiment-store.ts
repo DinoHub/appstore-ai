@@ -56,12 +56,12 @@ export const useExperimentStore = defineStore('experiment', {
           console.error('Experiment Not Found');
           Notify.create({
             message: `${connector} Experiment with ID: ${experimentId} not found`,
-            color: 'error',
+            color: 'negative',
           });
         } else {
           Notify.create({
             message: 'Failed to get experiment due to server error',
-            color: 'error',
+            color: 'negative',
           });
         }
         return Promise.reject('Unable to get experiment');

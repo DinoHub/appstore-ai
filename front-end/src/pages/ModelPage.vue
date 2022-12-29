@@ -87,7 +87,7 @@
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
               <gradio-frame
                 :url="inferenceUrl"
-                v-show="inferenceUrl"
+                v-if="inferenceUrl"
               ></gradio-frame>
               <q-card v-show="!inferenceUrl">
                 <q-card-section class="headline-small"
@@ -242,7 +242,6 @@ import { ModelCard } from 'src/stores/model-store';
 import MaterialChip from 'src/components/content/MaterialChip.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
-import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import TiptapDisplay from 'src/components/content/TiptapDisplay.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
@@ -315,12 +314,19 @@ modelStore
       .getServiceByName(model.inferenceServiceName)
       .then((service) => {
         inferenceUrl.value = service.inferenceUrl;
+      })
+      .catch((err) => {
+        Notify.create({
+          message: 'Failed to retrieve inference service information',
+          color: 'negative',
+        });
+        console.error(err);
       });
   })
   .catch((err) => {
     Notify.create({
       message: 'Failed to retrieve model card information',
-      color: 'error',
+      color: 'negative',
     });
     console.error(err);
   });

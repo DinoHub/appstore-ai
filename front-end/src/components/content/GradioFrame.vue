@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, Ref, ref, computed, ComputedRef } from 'vue';
+import { defineProps, ref, computed, ComputedRef } from 'vue';
 
 interface GradioFrameProps {
   url: string;

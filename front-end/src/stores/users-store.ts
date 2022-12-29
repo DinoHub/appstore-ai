@@ -47,7 +47,7 @@ export const useUsersStore = defineStore('users', {
       pageNumber: number,
       userNumber: number,
       sortBy: string,
-      descending: boolean
+      descending: boolean,
     ): Promise<UsersPaginated> {
       try {
         let desc;
@@ -86,11 +86,11 @@ export const useUsersStore = defineStore('users', {
           tempCreatedDateRange = Object.create(this.createdDateRange);
           tempCreatedDateRange.from = tempCreatedDateRange.from.replaceAll(
             '/',
-            '-'
+            '-',
           );
           tempCreatedDateRange.to = tempCreatedDateRange.to.replaceAll(
             '/',
-            '-'
+            '-',
           );
           tempCreatedDateRange.to = `${tempCreatedDateRange.to} 24:00:00`;
         }
@@ -101,7 +101,7 @@ export const useUsersStore = defineStore('users', {
           tempCreatedDateRange = { from: '', to: '' };
           tempCreatedDateRange.from = this.createdDateRange.replaceAll(
             '/',
-            '-'
+            '-',
           );
           tempCreatedDateRange.to = this.createdDateRange.replaceAll('/', '-');
           tempCreatedDateRange.to = `${tempCreatedDateRange.to} 24:00:00`;
@@ -122,7 +122,7 @@ export const useUsersStore = defineStore('users', {
         const errRes = error as AxiosError;
         Notify.create({
           message: `Error occurred while retrieving users. Ensure values have been input correctly.`,
-          color: 'error',
+          color: 'negative',
           icon: 'error',
         });
         return Promise.reject('Unable to query for users');
@@ -174,7 +174,7 @@ export const useUsersStore = defineStore('users', {
       name: string,
       adminPriv: string,
       password: string,
-      confirmPassword: string
+      confirmPassword: string,
     ): Promise<void> {
       try {
         let priv;
@@ -207,7 +207,7 @@ export const useUsersStore = defineStore('users', {
       name: string,
       adminPriv: string,
       password: string,
-      confirmPassword: string
+      confirmPassword: string,
     ): Promise<void> {
       try {
         let priv;
@@ -231,7 +231,7 @@ export const useUsersStore = defineStore('users', {
       } catch (err) {
         Notify.create({
           message: `Error occurred while creating user. Ensure values have been input correctly.`,
-          color: 'error',
+          color: 'negative',
           position: 'top',
           icon: 'error',
         });
