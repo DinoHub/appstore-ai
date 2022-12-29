@@ -30,6 +30,7 @@ ingress:
   className: "nginx"
   annotations:
     kubernetes.io/ingress.allow-http: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 10000m # Max upload size 10GB
     # kubernetes.io/tls-acme: "true"
   hosts:
     # Note for local dev, set the following in the hostfile
