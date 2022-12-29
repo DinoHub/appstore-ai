@@ -1,9 +1,7 @@
-import io
 import uuid
 
 from colorama import Fore
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Form, File
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Form
 from minio import Minio
 
 from ..config.config import config
@@ -33,25 +31,18 @@ def upload_video(
                 BUCKET_NAME,
                 video.content_type,
             )
-            # NOTE: this should be done when attemping retrieval as it is required
-            # item_location = s3_client.get_presigned_url(
-            #     "GET",
-            #     bucket_name,
-            #     f"videos/{video.filename}",
-            #     expires=timedelta(days=7),
-            # )
             return {"video_location": path}
         else:
-            return JSONResponse(
+            raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                content=f"Validation of video not cleared",
+                detail="Validation of video not cleared",
             )
-    except Exception as e:
+    except Exception as err:
         print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {e}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=f"Something went wrong the upload",
-        )
+            detail="Something went wrong the upload",
+        ) from err
 
 
 @router.put("/video", status_code=status.HTTP_200_OK)
@@ -63,7 +54,7 @@ def replace_video(
 ):
     try:
         if not user.user_id:
-            return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
         if "video" in new_video.content_type:
 
@@ -84,45 +75,13 @@ def replace_video(
             return {"video_location": path}
 
         # return this if new file is not video
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=f"Something went wrong the removal of the video",
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Wrong file type, expected video but got {new_video.content_type}",
         )
-    except Exception as e:
+    except Exception as err:
         print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {e}")
-        return JSONResponse(
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=f"Something went wrong the removal of the video",
-        )
-
-
-# @router.post("/image", status_code=status.HTTP_200_OK)
-# def upload_image(image: UploadFile, s3_client: Minio = Depends(minio_api_client)):
-#     try:
-#         if "image" in image.content_type:
-#             path = upload_data(
-#                 s3_client,
-#                 image.file.read(),
-#                 f"images/{image.filename}",
-#                 BUCKET_NAME,
-#                 image.content_type,
-#             )
-#             # item_location = s3_client.get_presigned_url(
-#             #     "GET",
-#             #     bucket_name,
-#             #     f"images/{image.filename}",
-#             #     expires=timedelta(days=30),
-#             # )
-#             # print(item_location)
-#             return {"image_location": path}
-#         else:
-#             return JSONResponse(
-#                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-#                 content=f"Validation of image not cleared",
-#             )
-#     except Exception as e:
-#         print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {e}")
-#         return JSONResponse(
-#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-#             content=f"Something went wrong the upload",
-#         )
+            detail="Something went wrong with the upload",
+        ) from err

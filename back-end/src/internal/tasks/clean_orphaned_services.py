@@ -44,8 +44,10 @@ async def delete_orphan_services():
                             namespace=config.IE_NAMESPACE,
                             name=service_name,
                         )
-                    except ApiException as e:
-                        if e.status == 404:
+                    except ApiException as err:
+                        if err.status == 404:
                             # Service not present
-                            print(f"WARN: Service {service_name} not found in cluster.")
+                            print(
+                                f"WARN: Service {service_name} not found in cluster."
+                            )
                             continue

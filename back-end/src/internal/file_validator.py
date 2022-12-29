@@ -8,12 +8,12 @@ from fastapi.exceptions import HTTPException
 from fastapi.requests import Request
 
 # https://gist.github.com/wassname/1393c4a57cfcbf03641dbc31886123b8
-VALID_FILENAME_CHARS = "-_.() %s%s" % (string.ascii_letters, string.digits)
+VALID_FILENAME_CHARS = f"-_.() {string.ascii_letters}{string.digits}"
 CHAR_LIMIT = 255
 
 
 class MaxFileSizeException(Exception):
-    def __init__(self, fs: str):
+    def __init__(self, fs: int):
         self.fs = fs
 
 
@@ -33,12 +33,12 @@ def determine_safe_file_size(
 ) -> int:
     # clearance is because we need to give space for decompression
     assert clearance > 0
-    (total, used, free) = disk_usage(path)
+    (_, _, free) = disk_usage(path)
     # we only need the free disk usage
     # let clearance=5
     # safe size = (5*file_size) < free
     # safe size = (file size) < free / 5
-    return free / clearance
+    return int(free / clearance)
 
 
 def clean_filename(
@@ -72,9 +72,7 @@ def clean_filename(
     cleaned_filename = "".join(c for c in cleaned_filename if c in whitelist)
     if len(cleaned_filename) > CHAR_LIMIT:
         print(
-            "Warning, filename truncated because it was over {}. Filenames may no longer be unique".format(
-                CHAR_LIMIT
-            )
+            f"Warning, filename truncated because it was over {CHAR_LIMIT}. Filenames may no longer be unique"
         )
     # Truncate filename to avoid possible errors with Windows
     return cleaned_filename[:CHAR_LIMIT]

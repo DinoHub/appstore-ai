@@ -4,8 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 import gradio as gr
 import numpy as np
 import tritonclient.grpc as tr
-from config import TensorFormat, config
 from triton_utils import get_client, load_model, unload_model
+
+from config import TensorFormat, config
 
 inputs = gr.Image(shape=(config.img_width, config.img_height))
 outputs = gr.Label(num_top_classes=config.top_k)
@@ -78,14 +79,11 @@ def predict(image: np.ndarray) -> Dict[str, float]:
 
         # Process output
         logging.info("Processing output")
-        processed_preds = list(
-            map(
-                lambda result: result.decode("utf-8").split(":"),
-                preds.tolist()[0],
-            )
-        )
+        processed_preds = [
+            result.decode("utf-8").split(":") for result in preds.tolist()[0]
+        ]
         results = {}
-        for confidence, class_id, class_name in processed_preds:
+        for confidence, _, class_name in processed_preds:
             results[class_name] = float(confidence)
         return results
     finally:

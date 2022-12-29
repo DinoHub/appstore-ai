@@ -29,8 +29,8 @@ class GlobalConfig(BaseSettings):
     CLEARML_API_SECRET_KEY: Optional[str] = None
     MINIO_DSN: Optional[str] = None
     MINIO_API_HOST: Optional[str] = None
-    MINIO_BUCKET_NAME: Optional[str] = Field(default="model-zoo")
-    MINIO_TLS: Optional[bool] = Field(default=False)
+    MINIO_BUCKET_NAME: str = Field(default="model-zoo")
+    MINIO_TLS: bool = Field(default=False)
     MINIO_API_ACCESS_KEY: Optional[str] = None
     MINIO_API_SECRET_KEY: Optional[str] = None
 
@@ -83,8 +83,6 @@ class FactoryConfig:
             return ProductionConfig()
         elif self.env_state == "test":
             return TestingConfig()
-        elif self.env_state is None:
-            return None
         else:
             raise ValueError(f"Unsupported config: {self.env_state}")
 

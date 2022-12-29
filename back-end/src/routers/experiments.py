@@ -47,16 +47,16 @@ async def get_experiment(
             data["artifacts"].update(exp.models)
 
         return data
-    except ValueError as e:
-        return JSONResponse(
+    except ValueError as err:
+        raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            content=f"Task was not found or values are incorrect\n{e}",
-        )
-    except Exception as e:
-        return JSONResponse(
+            detail=f"Experiment with ID {exp_id} not found.",
+        ) from err
+    except Exception as err:
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content=f"Error: {e}",
-        )
+            detail=f"Error getting experiment with ID {exp_id}.",
+        ) from err
 
 
 @router.post("/clone")

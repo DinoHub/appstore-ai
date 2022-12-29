@@ -95,19 +95,19 @@ async def auth_user(
                 else:
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail=f"Invalid password",
+                        detail="Invalid password",
                         headers={"WWW-Authenticate": "Bearer"},
                     )
             else:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"User ID does not exist",
+                    detail="User ID does not exist",
                     headers={"WWW-Authenticate": "Bearer"},
                 )
 
 
 @router.post("/refresh", response_model=Token)
-async def refresh_token(
+async def get_refresh_token(
     request: Request,
     response: Response,
     db=Depends(get_db),
@@ -117,7 +117,7 @@ async def refresh_token(
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
             rs = request.cookies["refresh_token"]
-            scheme, param = get_authorization_scheme_param(rs)
+            _, param = get_authorization_scheme_param(rs)
             if param:
                 token_data = decode_jwt(param)
             else:
@@ -164,26 +164,26 @@ async def refresh_token(
                     else:
                         raise HTTPException(
                             status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"User ID does not exist",
+                            detail="User ID does not exist",
                             headers={"WWW-Authenticate": "Bearer"},
                         )
-    except ExpiredSignatureError:
+    except ExpiredSignatureError as err:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Refresh Token Expired, you will need to logout and log back in to create a new refresh token.",
-        )
-    except JWTError as e:
-        raise CREDENTIALS_EXCEPTION
-    except CsrfProtectError:
+        ) from err
+    except JWTError as err:
+        raise CREDENTIALS_EXCEPTION from err
+    except CsrfProtectError as err:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="CSRF token was removed or tampered with",
-        )
-    except Exception as e:
+        ) from err
+    except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Wrong access method",
-        )
+        ) from err
 
 
 @router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
@@ -192,11 +192,11 @@ def logout_user(response: Response):
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")
         response.delete_cookie("fastapi-csrf-token")
-    except Exception as e:
+    except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An error occurred",
-        )
+        ) from err
 
 
 @router.get(

@@ -1,7 +1,6 @@
 import datetime
-from typing import Any, List
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse, Response
 from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
@@ -47,24 +46,24 @@ async def add_user(
                         "created": str(datetime.datetime.now()),
                     }
                 )
-                add_user = await db["users"].find_one(
+                added_user = await db["users"].find_one(
                     {"_id": user.inserted_id},
                     {"_id": False, "password": False},
                 )
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content=f"User of ID: {add_user['userId']} created",
+            content=f"User of ID: {added_user['userId']} created",
         )
-    except pyerrs.DuplicateKeyError:
-        return JSONResponse(
+    except pyerrs.DuplicateKeyError as err:
+        raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            content=f"User with ID of {item.user_id} already exists",
-        )
-    except Exception as e:
-        return JSONResponse(
+            detail=f"User with ID of {item.user_id} already exists",
+        ) from err
+    except Exception as err:
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content="An error occurred",
-        )
+            detail="An error occurred",
+        ) from err
 
 
 @router.delete("/delete", dependencies=[Depends(check_is_admin)])
@@ -80,10 +79,10 @@ async def delete_user(
                     {"userId": {"$in": userid.users}}
                 )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except:
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        ) from err
 
 
 @router.put("/edit", dependencies=[Depends(check_is_admin)])
@@ -108,14 +107,15 @@ async def update_user(
                         }
                     },
                 )
-    except ValueError:
+    except ValueError as err:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
-        )
-    except:
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to update user",
+        ) from err
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        ) from err
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -126,10 +126,10 @@ async def update_many_user(
 ):
     db, mongo_client = db
     try:
-        if user.priv == None:
+        if user.priv is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Privilege must be set properly",
+                detail="Privilege must be set properly",
             )
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
@@ -142,14 +142,15 @@ async def update_many_user(
                         }
                     },
                 )
-    except ValueError:
+    except ValueError as err:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
-        )
-    except:
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to update users",
+        ) from err
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not found"
+        ) from err
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -178,14 +179,14 @@ async def get_users(
             lookup["adminPriv"] = pages_user.admin_priv
         # narrow search by looking for users last modified within a date range given by req
         if pages_user.last_modified_range is not None:
-            if type(pages_user.last_modified_range) is dict:
+            if isinstance(pages_user.last_modified_range, dict):
                 lookup["lastModified"] = {
                     "$gte": pages_user.last_modified_range["from"],
                     "$lte": pages_user.last_modified_range["to"],
                 }
         # narrow search by looking for users created within a date range given by req
         if pages_user.date_created_range is not None:
-            if type(pages_user.date_created_range) is dict:
+            if isinstance(pages_user.date_created_range, dict):
                 lookup["created"] = {
                     "$gte": pages_user.date_created_range["from"],
                     "$lte": pages_user.date_created_range["to"],
@@ -220,10 +221,14 @@ async def get_users(
             content={"results": cursor, "total_rows": total_rows},
         )
     # triggered if req sent to this endpoint has missing headers or invalid data
-    except ValueError:
-        return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=f""
-        )
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to get users",
+        ) from err
     # triggered if all else fails
-    except Exception:
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    except Exception as err:
+        # TODO: should the status code be 404?
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cannot find users"
+        ) from err

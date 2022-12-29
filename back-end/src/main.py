@@ -5,9 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config.config import config
 from .internal.auth import check_is_admin, get_current_user
-from .routers import auth, datasets, engines, experiments, iam, models, buckets
+from .routers import auth, buckets, datasets, engines, experiments, iam, models
 
-with open(Path(__file__).parent.parent.joinpath("README.md"), "r") as f:
+with open(
+    Path(__file__).parent.parent.joinpath("README.md"), "r", encoding="utf-8"
+) as f:
     description = f.read()
 
 tags_metadata = [
@@ -40,7 +42,9 @@ tags_metadata = [
         "description": "APIs to allow for upload and retrieval of media from S3 Storage (MinIO)",
     },
 ]
-app = FastAPI(title="Model Zoo", description=description, openapi_tags=tags_metadata)
+app = FastAPI(
+    title="Model Zoo", description=description, openapi_tags=tags_metadata
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(
@@ -68,12 +72,14 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(buckets.router, dependencies=[Depends(get_current_user)])
 app.include_router(models.router, dependencies=[Depends(get_current_user)])
-app.include_router(experiments.router, dependencies=[Depends(get_current_user)])
+app.include_router(
+    experiments.router, dependencies=[Depends(get_current_user)]
+)
 app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
 app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
 app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 
 @app.get("/")
-async def root():
+def root():
     return {"message": "Hello World"}

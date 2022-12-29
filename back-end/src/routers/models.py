@@ -4,7 +4,14 @@ import re
 from typing import List, Optional, Tuple
 
 from bson import json_util
-from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    status,
+)
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -16,8 +23,8 @@ from ..internal.auth import get_current_user
 from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
 from ..internal.preprocess_html import preprocess_html
+from ..internal.tasks import delete_orphan_images, delete_orphan_services
 from ..internal.utils import uncased_to_snake_case
-from ..internal.tasks import delete_orphan_services, delete_orphan_images
 from ..models.iam import TokenData
 from ..models.model import (
     ModelCardModelDB,
@@ -178,12 +185,14 @@ async def create_model_card_metadata(
         try:
             async with session.start_transaction():
                 await db["models"].insert_one(card_dict)
-        except DuplicateKeyError:
+        except DuplicateKeyError as err:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=f"Unable to add model with user and ID {card_dict['creatorUserId']}/{card_dict['modelId']} as the ID already exists.",
-            )
-    tasks.add_task(delete_orphan_services) # Delete preview services created during model create form
+            ) from err
+    tasks.add_task(
+        delete_orphan_services
+    )  # Delete preview services created during model create form
     return card_dict
 
 
@@ -196,10 +205,14 @@ async def update_model_card_metadata_by_id(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    tasks.add_task(delete_orphan_images) # After update, check if any images were removed and sync with Minio
+    tasks.add_task(
+        delete_orphan_images
+    )  # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
-    card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
+    card_dict = {
+        k: v for k, v in card.dict(by_alias=True).items() if v is not None
+    }
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
@@ -280,5 +293,5 @@ async def delete_model_card_by_id(
                 {"modelId": model_id, "creatorUserId": creator_user_id}
             )
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
-    tasks.add_task(delete_orphan_images) # Remove any related media 
-    tasks.add_task(delete_orphan_services) # Remove any related services
+    tasks.add_task(delete_orphan_images)  # Remove any related media
+    tasks.add_task(delete_orphan_services)  # Remove any related services

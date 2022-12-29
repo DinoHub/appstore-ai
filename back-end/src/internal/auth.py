@@ -7,12 +7,10 @@ from fastapi_csrf_protect.exceptions import CsrfProtectError
 from jose import ExpiredSignatureError, JWTError, jwt
 from passlib.context import CryptContext
 
-
 from ..config.config import config
-from ..models.iam import TokenData, UserRoles
 from ..models.auth import CsrfSettings, OAuth2PasswordBearerWithCookie
+from ..models.iam import TokenData, UserRoles
 from .db import get_db
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/auth/")
@@ -54,11 +52,11 @@ def create_access_token(
             algorithm=config.ALGORITHM,
         )
         return encoded_jwt
-    except Exception as e:
+    except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail=f"Token failed to encode",
-        )
+            detail="Token failed to encode",
+        ) from err
 
 
 def decode_jwt(token: str) -> TokenData:
@@ -87,13 +85,13 @@ async def get_current_user(
         token_data = decode_jwt(token)
         if token_data.user_id is None or token_data.role is None:
             raise CREDENTIALS_EXCEPTION
-    except ExpiredSignatureError:
+    except ExpiredSignatureError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Access Token Expired",
-        )
-    except (JWTError, CsrfProtectError):
-        raise CREDENTIALS_EXCEPTION
+        ) from err
+    except (JWTError, CsrfProtectError) as err:
+        raise CREDENTIALS_EXCEPTION from err
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             user = await db["users"].find_one(

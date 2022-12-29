@@ -74,10 +74,8 @@ def sanitize_html(html: str) -> str:
     )
     try:
         cleaned: str = cleaner.clean_html(html)
-        if type(cleaned) != str:
+        if not isinstance(cleaned, str):
             raise TypeError
         return cleaned
-    except ParserError as e:
-        return "Error!"
-    except TypeError as e:
+    except (ParserError, TypeError):
         return "Error!"
