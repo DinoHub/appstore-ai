@@ -36,21 +36,8 @@ export interface ModelCardSummary {
 export interface ModelCard extends ModelCardSummary {
   owner?: string;
   pointOfContact?: string;
-  inferenceServiceName: string;
-  explanation: string;
-  usage: string;
-  limitations: string;
-  markdown: string;
-  performance: string;
-  artifacts: Artifact[];
-  experiment?: LinkedExperiment;
-  dataset?: LinkedDataset;
-}
-
-export interface ModelCardNoInference extends ModelCardSummary {
-  owner?: string;
-  pointOfContact?: string;
-  videoLocation: string;
+  inferenceServiceName?: string;
+  videoLocation?: string;
   explanation: string;
   usage: string;
   limitations: string;
@@ -89,6 +76,7 @@ export interface UpdateModelCard {
   owner?: string;
   pointOfContact?: string;
   inferenceServiceName?: string;
+  videoLocation?: string;
   markdown?: string;
   performance?: string;
   artifacts?: Artifact[];
@@ -180,12 +168,10 @@ export const useModelStore = defineStore('model', {
         return Promise.reject('Failed to create model card');
       }
     },
-    async createModelVideo(
-      metadata: CreateModelCard
-    ): Promise<ModelCardNoInference> {
+    async createModelVideo(metadata: CreateModelCard): Promise<ModelCard> {
       try {
         const res = await api.post('models/', metadata);
-        const data: ModelCardNoInference = res.data;
+        const data: ModelCard = res.data;
         return data;
       } catch (error) {
         return Promise.reject('Failed to create model card');
