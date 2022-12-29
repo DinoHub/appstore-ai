@@ -6,11 +6,20 @@ SUPPORTED_CONNECTORS = {"clearml": ClearMLExperiment}
 class Experiment:
     """Constructor class for different experiment connectors"""
 
-    def __new__(cls, connector_type: str):
+    @staticmethod
+    def from_connector(connector_type: str, **kwargs) -> ClearMLExperiment:
+        """Create a new experiment
+
+        Args:
+            connector_type (str): Type of connector to use
+            **kwargs: Keyword arguments to pass to connector
+
+        Returns:
+            ExperimentConnector: Created experiment
+        """
         if connector_type not in SUPPORTED_CONNECTORS:
             raise KeyError(
                 f"""Experiment connector unsupported.
                 Supported connectors: {SUPPORTED_CONNECTORS.keys()}"""
             )
-        return super().__new__(SUPPORTED_CONNECTORS[connector_type])
-
+        return SUPPORTED_CONNECTORS[connector_type](**kwargs)

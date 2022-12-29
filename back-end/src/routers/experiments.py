@@ -19,7 +19,7 @@ async def get_experiment(
     return_artifacts: bool = True,
 ):
     try:
-        exp = Experiment(connector).get(exp_id=exp_id)
+        exp = Experiment.from_connector(connector).get(exp_id=exp_id)
         # Extract framework from models
         frameworks = set()
         for model in exp.models.values():
@@ -64,12 +64,12 @@ async def clone_experiment(
     item: ClonePackageModel,
     connector: Connector,
 ):
-    exp = Experiment(connector).get(exp_id=item.id)
+    exp = Experiment.from_connector(connector).get(exp_id=item.id)
     if item.clone_name is None or item.clone_name == "":
         new_exp = exp.clone(clone_name=f"Clone of {exp.exp_name}")
     else:
         new_exp = exp.clone(clone_name=f"{item.clone_name}")
-    cloned = Experiment(connector).get(exp_id=new_exp.id)
+    cloned = Experiment.from_connector(connector).get(exp_id=new_exp.id)
     return {
         "id": exp.id,
         "name": exp.exp_name,
