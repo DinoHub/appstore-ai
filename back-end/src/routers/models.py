@@ -33,7 +33,7 @@ from ..models.model import (
 )
 
 CHUNK_SIZE = 1024
-BytesPerGB = 1024 * 1024 * 1024
+BYTES_PER_GB = 1024 * 1024 * 1024
 
 
 ACCEPTED_CONTENT_TYPES = {
@@ -51,7 +51,7 @@ ACCEPTED_CONTENT_TYPES = {
 }
 
 file_validator = ValidateFileUpload(
-    max_upload_size=int(config.MAX_UPLOAD_SIZE_GB * BytesPerGB)
+    max_upload_size=int(config.MAX_UPLOAD_SIZE_GB * BYTES_PER_GB)
 )
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -187,7 +187,7 @@ async def create_model_card_metadata(
                 await db["models"].insert_one(card_dict)
         except DuplicateKeyError as err:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=status.HTTP_409_CONFLICT,
                 detail=f"Unable to add model with user and ID {card_dict['creatorUserId']}/{card_dict['modelId']} as the ID already exists.",
             ) from err
     tasks.add_task(
