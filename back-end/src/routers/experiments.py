@@ -65,7 +65,7 @@ async def clone_experiment(
     connector: Connector,
 ):
     exp = Experiment(connector).get(exp_id=item.id)
-    if item.clone_name == None or item.clone_name == "":
+    if item.clone_name is None or item.clone_name == "":
         new_exp = exp.clone(clone_name=f"Clone of {exp.exp_name}")
     else:
         new_exp = exp.clone(clone_name=f"{item.clone_name}")

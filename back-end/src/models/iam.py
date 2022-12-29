@@ -1,12 +1,11 @@
+import secrets
 from datetime import datetime
 from enum import Enum
-from typing import Optional, List
-import secrets
+from typing import List, Optional, Union
 
 from bson import ObjectId
 from password_strength import PasswordPolicy
 from pydantic import BaseModel, Field, validator
-from typing import Union
 
 from ..internal.utils import to_camel_case
 from .common import PyObjectId
@@ -39,7 +38,7 @@ class UserInsert(BaseModel):
     @validator("user_id")
     def generate_if_empty(cls, v, values, **kwargs):
         name_string = "".join(values["name"].lower().split())
-        if v == None or v == "":
+        if v is None or v == "":
             new_id = f"{name_string[0:7]}-{secrets.token_hex(8)}"
             return new_id
         return v

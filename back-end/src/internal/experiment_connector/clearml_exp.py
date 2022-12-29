@@ -26,7 +26,9 @@ class ClearMLExperiment(ExperimentConnector):
         elif project and exp_name:
             task = Task.get_task(project_name=project, task_name=exp_name)
         else:
-            raise ValueError("Must specify either exp_id or project and exp_name")
+            raise ValueError(
+                "Must specify either exp_id or project and exp_name"
+            )
         exp.id = task.id
         exp.project_name = task.get_project_name()
         exp.exp_name = task.name
@@ -65,9 +67,9 @@ class ClearMLExperiment(ExperimentConnector):
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         raw_data: Dict[str, Dict] = self.task.get_reported_scalars()
-        return list(
-            map(lambda x: self._to_plotly_json(x[0], x[1]), raw_data.items())
-        )
+        return [
+            self._to_plotly_json(name, data) for name, data in raw_data.items()
+        ]
 
     @property
     def artifacts(self) -> Dict[str, Artifact]:
@@ -106,16 +108,10 @@ class ClearMLExperiment(ExperimentConnector):
     def plots(self) -> List[Dict]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        # NOTE: Plot data is plotly compatible
-        # TODO: Consider using back end to GET this info, and front-end editor
-        # add option to import the plot, giving options based on the
-        # results of the GET request for plot and scalar info
-        return list(
-            map(
-                lambda x: json.loads(x["plot_str"]),
-                self.task.get_reported_plots(),
-            )
-        )
+        return [
+            json.loads(plot["plot_str"])
+            for plot in self.task.get_reported_plots()
+        ]
 
     def get_metadata(self) -> Dict:
         if not self.task:
@@ -145,7 +141,9 @@ class ClearMLExperiment(ExperimentConnector):
             raise ValueError("Not currently connected to any experiments")
         return self.task.enqueue(queue_name=queue_name, queue_id=queue_id)
 
-    def close(self, delete_task: bool = False, delete_artifacts: bool = False) -> None:
+    def close(
+        self, delete_task: bool = False, delete_artifacts: bool = False
+    ) -> None:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         self.task.close()

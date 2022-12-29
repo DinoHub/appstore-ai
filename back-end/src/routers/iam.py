@@ -1,9 +1,10 @@
-from typing import List, Any
 import datetime
-from fastapi import APIRouter, Depends, HTTPException, Path, status, Query
+from typing import Any, List
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from fastapi.responses import JSONResponse, Response
-from pymongo import errors as pyerrs
 from pymongo import ASCENDING, DESCENDING
+from pymongo import errors as pyerrs
 
 from ..internal.auth import check_is_admin, get_password_hash
 from ..internal.db import get_db
@@ -75,10 +76,14 @@ async def delete_user(
     try:
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                await db["users"].delete_many({"userId": {"$in": userid.users}})
+                await db["users"].delete_many(
+                    {"userId": {"$in": userid.users}}
+                )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
     except:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
+        )
 
 
 @router.put("/edit", dependencies=[Depends(check_is_admin)])
@@ -108,7 +113,9 @@ async def update_user(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
         )
     except:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
+        )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -140,7 +147,9 @@ async def update_many_user(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
         )
     except:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
+        )
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -159,23 +168,23 @@ async def get_users(
         # dictionary for lookups
         lookup = {}
         # narrow search by users that include given name from request if not none
-        if pages_user.name != None:
+        if pages_user.name is not None:
             lookup["name"] = {"$regex": pages_user.name, "$options": "i"}
         # narrow search by users that include given userId from request if not none
-        if pages_user.userId != None:
+        if pages_user.userId is not None:
             lookup["userId"] = {"$regex": pages_user.userId, "$options": "i"}
         # narrow search by looking for users with/without admin priv only based on req
-        if pages_user.admin_priv != None:
+        if pages_user.admin_priv is not None:
             lookup["adminPriv"] = pages_user.admin_priv
         # narrow search by looking for users last modified within a date range given by req
-        if pages_user.last_modified_range != None:
+        if pages_user.last_modified_range is not None:
             if type(pages_user.last_modified_range) is dict:
                 lookup["lastModified"] = {
                     "$gte": pages_user.last_modified_range["from"],
                     "$lte": pages_user.last_modified_range["to"],
                 }
         # narrow search by looking for users created within a date range given by req
-        if pages_user.date_created_range != None:
+        if pages_user.date_created_range is not None:
             if type(pages_user.date_created_range) is dict:
                 lookup["created"] = {
                     "$gte": pages_user.date_created_range["from"],
