@@ -1,7 +1,5 @@
 # Building Inference Services
 
-## What is an Inference Service?
-
 This project provides a base image with Gradio and Triton Client installed, as well as a Cookiecutter Template to create a Gradio application that calls Triton Inference Server.
 
 ## Getting Started

@@ -628,6 +628,13 @@ watch(props, (newVal) => {
   }
 }
 
+.ProseMirror {
+  img { // Restrict width of image
+    max-width: fit-content;
+    width: 100%;
+  }
+}
+
 .tableWrapper {
   padding: 1rem 0;
   overflow-x: auto;

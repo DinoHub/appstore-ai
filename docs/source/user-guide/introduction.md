@@ -23,7 +23,7 @@ The AI App Store is a platform for browsing and contributing AI model cards. Wit
 - [🔍 Browsing and searching models](shopping-for-models.md)
 - [🧪 Trying out the models](inference-services/inference-services.md)
 
-### As a model developer...
+### 🧑🏿‍💻 As a model developer...
 
 - [📥 Submitting a model card](model-cards/submitting-model-cards.md)
 - [🖊️ Updating a model card](model-cards/updating-model-cards.md)
@@ -36,3 +36,5 @@ In addition to the existing features, we aim to introduce more features somewher
 
 - [ ] 🧑‍🏭 Ability to perform transfer learning on models uploaded on the store through a GUI interface
 - [ ] 🔌 Ability to set up a dedicated inference API for integration in production pipelines
+- [ ] ✨ Ability to sort models by popularity
+- [ ] 🤖 Ability to suggest models based on user preferences

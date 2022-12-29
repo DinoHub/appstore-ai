@@ -9,6 +9,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.abspath("../../back-end"))
+sys.path.insert(0, os.path.abspath("../../front-end"))
 
 project = "AI App Store"
 copyright = "2022, Defence Science & Technology Agency"
@@ -32,6 +33,7 @@ extensions = [
     "sphinx_design",  # Extension for more supporting components
     "sphinx_inline_tabs",  # Extension for inline tabs
     "myst_parser",  # Extend the usage of Markdowns with Directives
+    # "sphinx_js"
 ]
 
 templates_path = ["_templates"]
@@ -45,7 +47,7 @@ source_suffix = {
 
 
 # Set up auto-generated documentation for Back-end
-apidoc_module_dir = "../../back-end"
+apidoc_module_dir = "../../back-end/src"
 apidoc_output_dir = "back-end-api"
 apidoc_excluded_paths = ["tests", ".cache"]
 apidoc_separate_modules = True
@@ -55,7 +57,14 @@ autodoc_mock_imports = [
     # If possible, try to use real imports, but sometimes this is not possible so we fake the import
     "pymongo",
     "motor",
+    "fastapi_csrf_protect"
 ]
+
+# Set up auto-generated documentation for Front-end
+js_language = "typescript"
+js_source_path = "../../front-end/src"
+
+
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 

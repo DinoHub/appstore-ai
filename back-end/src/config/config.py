@@ -90,7 +90,7 @@ class FactoryConfig:
 
 
 ENV_STATE = GlobalConfig().ENV_STATE
-config = FactoryConfig(ENV_STATE)()
+config: GlobalConfig = FactoryConfig(ENV_STATE)()
 
 if config is not None:
     config.set_envvar()

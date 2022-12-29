@@ -2,11 +2,10 @@ import datetime
 from urllib.error import HTTPError
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, status, BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
-from kubernetes.client.rest import RESTResponse
 from pymongo.errors import DuplicateKeyError
 from yaml import safe_load
 
@@ -16,6 +15,7 @@ from ..internal.db import get_db
 from ..internal.k8s_client import get_k8s_client
 from ..internal.templates import template_env
 from ..internal.utils import k8s_safe_name, uncased_to_snake_case
+from ..internal.tasks import delete_orphan_services
 from ..models.engine import (
     CreateInferenceEngineService,
     InferenceEngineService,
@@ -53,7 +53,7 @@ def get_inference_engine_service_status(
                 plural="services",
                 name=service_name,
             )
-            return result["status"]
+            return result["status"] # type: ignore
     except K8sAPIException as e:
         if e.status == 404:
             raise HTTPException(
@@ -99,7 +99,6 @@ async def create_inference_engine_service(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    # First check that model actually exists in DB
     # Create Deployment Template
     if not user.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -130,7 +129,7 @@ async def create_inference_engine_service(
         kourier_ingress = core_api.read_namespaced_service(
             name="kourier", namespace="knative-serving"
         )
-        lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip
+        lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip # type: ignore
         if service.external_dns:
             # TODO: Support for https
             url = f"http://{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
@@ -159,7 +158,7 @@ async def create_inference_engine_service(
                     owner_id=user.user_id,
                     model_id=uncased_to_snake_case(
                         service.model_id
-                    ),  # conver title to ID
+                    ),  # convert title to ID
                     created=datetime.datetime.now(),
                     last_modified=datetime.datetime.now(),
                     inference_url=url,
@@ -193,67 +192,6 @@ async def create_inference_engine_service(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail=f"Error when creating inference engine: {e}",
             )
-
-
-@router.delete("/cleanup", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_orphan_services(
-    db=Depends(get_db), k8s_client: ApiClient = Depends(get_k8s_client)
-):
-    db, mongo_client = db
-    # Get all model cards
-    model_services = await (
-        db["models"].find(
-            {}, {"inferenceServiceName": 1}
-        )  # include only service names
-    ).to_list(length=None)
-    # Do a search of all services NOT IN modelServices
-    orphaned_services = db["services"].find(
-        {
-            "serviceName": {
-                "$nin": [x["inferenceServiceName"] for x in model_services]
-            }
-        },
-        {"serviceName": 1},
-    )
-    with k8s_client as client:
-        api = CustomObjectsApi(client)
-        async with await mongo_client.start_session() as session:
-            async for service in orphaned_services:
-                # Remove service
-                service_name = service["serviceName"]
-                async with session.start_transaction():
-
-                    try:
-                        await db["services"].delete_one(
-                            {"serviceName": service_name}
-                        )
-                        api.delete_namespaced_custom_object(
-                            group="serving.knative.dev",
-                            version="v1",
-                            plural="services",
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name,
-                        )
-                    except K8sAPIException as e:
-                        if e.status == 404:
-                            # Service not present
-                            continue
-                    except HTTPError as e:
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Error when deleting inference engine: {e}",
-                        )
-                    except TypeError:
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail="API has no access to the K8S cluster",
-                        )
-                    except Exception as e:
-                        raise HTTPException(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Error when deleting inference engine: {e}",
-                        )
-
 
 @router.delete("/{service_name}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_inference_engine_service(
@@ -323,6 +261,7 @@ async def delete_inference_engine_service(
 async def update_inference_engine_service(
     service_name: str,
     service: UpdateInferenceEngineService,
+    tasks: BackgroundTasks,
     k8s_client: ApiClient = Depends(get_k8s_client),
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
@@ -336,6 +275,7 @@ async def update_inference_engine_service(
     :raises HTTPException: 500 Internal Server Error if failed to update
     """
     # Create Deployment Template
+    tasks.add_task(delete_orphan_services) # Remove preview services created in testing
     db, mongo_client = db
     updated_metadata = {
         k: v for k, v in service.dict(by_alias=True).items() if v is not None

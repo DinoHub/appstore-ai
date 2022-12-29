@@ -3,9 +3,8 @@ import json
 import re
 from typing import List, Optional, Tuple
 
-import httpx
 from bson import json_util
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, BackgroundTasks
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -18,14 +17,13 @@ from ..internal.db import get_db
 from ..internal.file_validator import ValidateFileUpload
 from ..internal.preprocess_html import preprocess_html
 from ..internal.utils import uncased_to_snake_case
+from ..internal.tasks import delete_orphan_services, delete_orphan_images
 from ..models.iam import TokenData
 from ..models.model import (
     ModelCardModelDB,
     ModelCardModelIn,
     UpdateModelCardModel,
 )
-
-MAKE_REQUEST_INFERENCE_TIMEOUT = httpx.Timeout(10, read=60 * 5, write=60 * 5)
 
 CHUNK_SIZE = 1024
 BytesPerGB = 1024 * 1024 * 1024
@@ -46,7 +44,7 @@ ACCEPTED_CONTENT_TYPES = {
 }
 
 file_validator = ValidateFileUpload(
-    max_upload_size=config.MAX_UPLOAD_SIZE_GB * BytesPerGB
+    max_upload_size=int(config.MAX_UPLOAD_SIZE_GB * BytesPerGB)
 )
 router = APIRouter(prefix="/models", tags=["Models"])
 
@@ -153,22 +151,23 @@ async def get_model_cards_by_user(
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_model_card_metadata(
     card: ModelCardModelIn,
+    tasks: BackgroundTasks,
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
     # NOTE: After this, still need to submit inference engine
     db, mongo_client = db
-    card.tags = set(card.tags)  # remove duplicates
-    card.frameworks = set(card.frameworks)
+    card.tags = list(set(card.tags))  # remove duplicates
+    card.frameworks = list(set(card.frameworks))
 
     # Sanitize html
     card.markdown = preprocess_html(card.markdown)
     card.performance = preprocess_html(card.performance)
 
-    card = jsonable_encoder(
+    card_dict: dict = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
-            creator_user_id=user.user_id,
+            creator_user_id=user.user_id or "unknown",
             model_id=uncased_to_snake_case(card.title),
             last_modified=datetime.datetime.now(),
             created=datetime.datetime.now(),
@@ -178,13 +177,14 @@ async def create_model_card_metadata(
     async with await mongo_client.start_session() as session:
         try:
             async with session.start_transaction():
-                await db["models"].insert_one(card)
+                await db["models"].insert_one(card_dict)
         except DuplicateKeyError:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to add model with user and ID {card['creatorUserId']}/{card['modelId']} as the ID already exists.",
+                detail=f"Unable to add model with user and ID {card_dict['creatorUserId']}/{card_dict['modelId']} as the ID already exists.",
             )
-    return card
+    tasks.add_task(delete_orphan_services) # Delete preview services created during model create form
+    return card_dict
 
 
 @router.put("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB)
@@ -192,21 +192,23 @@ async def update_model_card_metadata_by_id(
     model_id: str,
     creator_user_id: str,
     card: UpdateModelCardModel,
+    tasks: BackgroundTasks,
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
+    tasks.add_task(delete_orphan_images) # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
-    card = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
-    
-    if "markdown" in card:
-        # Upload base64 encoded image to S3
-        card["markdown"] = preprocess_html(card["markdown"])
-    if "performance" in card:
-        card["performance"] = preprocess_html(card["performance"])
+    card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
 
-    if len(card) > 0:
-        card["lastModified"] = str(datetime.datetime.now())
+    if "markdown" in card_dict:
+        # Upload base64 encoded image to S3
+        card_dict["markdown"] = preprocess_html(card_dict["markdown"])
+    if "performance" in card_dict:
+        card_dict["performance"] = preprocess_html(card_dict["performance"])
+
+    if len(card_dict) > 0:
+        card_dict["lastModified"] = str(datetime.datetime.now())
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
@@ -230,7 +232,7 @@ async def update_model_card_metadata_by_id(
                             "modelId": model_id,
                             "creatorUserId": creator_user_id,
                         },
-                        {"$set": card},
+                        {"$set": card_dict},
                     )
                     if (
                         result.modified_count == 1
@@ -245,10 +247,8 @@ async def update_model_card_metadata_by_id(
                             )
                         ) is not None:
                             return updated_card
-    # If no changes, try to return existing card
-    return existing_card
-
-    # TODO: Might need to update inference engine
+        # If no changes, try to return existing card
+        return existing_card
 
 
 @router.delete(
@@ -257,10 +257,10 @@ async def update_model_card_metadata_by_id(
 async def delete_model_card_by_id(
     model_id: str,
     creator_user_id: str,
+    tasks: BackgroundTasks,
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    # TODO: Check that user is the owner of the model card
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
@@ -280,4 +280,5 @@ async def delete_model_card_by_id(
                 {"modelId": model_id, "creatorUserId": creator_user_id}
             )
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
-    # TODO: Should actual model be deleted as well?
+    tasks.add_task(delete_orphan_images) # Remove any related media 
+    tasks.add_task(delete_orphan_services) # Remove any related services
