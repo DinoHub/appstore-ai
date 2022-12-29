@@ -74,6 +74,7 @@ class UpdateModelCardModel(BaseModel):
     frameworks: Optional[List[str]]
     point_of_contact: Optional[str]
     owner: Optional[str]
+    video_location: Optional[str]
     inference_service_name: Optional[str]
     artifacts: Optional[
         List[Artifact]
