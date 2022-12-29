@@ -2,7 +2,7 @@ import re
 
 
 def uncased_to_snake_case(string: str) -> str:
-    return "_".join(string.lower().split(" "))
+    return "_".join(string.lower().strip().split(" "))
 
 
 def k8s_safe_name(string: str) -> str:
@@ -19,7 +19,7 @@ def k8s_safe_name(string: str) -> str:
 
 
 def camel_case_to_snake_case(string: str) -> str:
-    string = re.sub(r"[\-\.\s]", "_", str(string))
+    string = re.sub(r"[\-\.\s]", "_", str(string).strip())
     if not string:
         return string
     return (
@@ -30,6 +30,7 @@ def camel_case_to_snake_case(string: str) -> str:
 
 def to_camel_case(string: str) -> str:
     string_split = string.split("_")
-    return string_split[0] + "".join(
-        word.capitalize() for word in string_split[1:]
-    )
+    return (
+        string_split[0]
+        + "".join(word.capitalize() for word in string_split[1:])
+    ).strip()
