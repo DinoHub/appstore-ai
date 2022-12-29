@@ -13,6 +13,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   src.models.auth
    src.models.common
    src.models.dataset
    src.models.engine

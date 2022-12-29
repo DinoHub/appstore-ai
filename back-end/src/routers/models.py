@@ -1,56 +1,40 @@
+import datetime
 import json
 import re
-import tempfile
-from io import BytesIO
-from typing import BinaryIO, List, Mapping, Optional, Union
+from typing import List, Optional, Tuple
 
-import filetype
-import httpx
 from bson import json_util
-from clearml import Model, Task
-from clearml.backend_api.session.client import APIClient
 from fastapi import (
     APIRouter,
+    BackgroundTasks,
     Depends,
-    File,
-    Form,
     HTTPException,
-    Request,
-    UploadFile,
+    Query,
     status,
 )
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import DuplicateKeyError
 
 from ..config.config import config
 from ..internal.auth import get_current_user
-from ..internal.clearml_client import clearml_api_client
 from ..internal.db import get_db
-from ..internal.file_validator import (
-    MaxFileSizeException,
-    MaxFileSizeValidator,
-    ValidateFileUpload,
-)
-from ..internal.inference import process_inference_data
-from ..models.engine import IOTypes
-from ..models.iam import User
+from ..internal.file_validator import ValidateFileUpload
+from ..internal.preprocess_html import preprocess_html
+from ..internal.tasks import delete_orphan_images, delete_orphan_services
+from ..internal.utils import uncased_to_snake_case
+from ..models.iam import TokenData
 from ..models.model import (
-    FindModelCardModel,
-    InferenceEngine,
     ModelCardModelDB,
     ModelCardModelIn,
     UpdateModelCardModel,
 )
 
-MAKE_REQUEST_INFERENCE_TIMEOUT = httpx.Timeout(10, read=60 * 5, write=60 * 5)
-
 CHUNK_SIZE = 1024
-BytesPerGB = 1024 * 1024 * 1024
+BYTES_PER_GB = 1024 * 1024 * 1024
 
-MEDIA_IO_INTERFACES = {IOTypes.Media, IOTypes.Generic}
-
-TEXT_IO_INTERFACES = {IOTypes.Generic, IOTypes.JSON, IOTypes.Text}
 
 ACCEPTED_CONTENT_TYPES = {
     "image/jpeg",
@@ -67,350 +51,247 @@ ACCEPTED_CONTENT_TYPES = {
 }
 
 file_validator = ValidateFileUpload(
-    max_upload_size=config.MAX_UPLOAD_SIZE_GB * BytesPerGB
+    max_upload_size=int(config.MAX_UPLOAD_SIZE_GB * BYTES_PER_GB)
 )
 router = APIRouter(prefix="/models", tags=["Models"])
 
 
-# TODO: Convert this to GET
-@router.post("/search", response_model=ModelCardModelIn)
-async def get_model_cards(query: FindModelCardModel, db=Depends(get_db)):
-    # Search model cards
-    # TODO: Pagination support
-    # NOTE: if nothing provided, return all
-    # TODO: if possible, consider an option like elasticsearch or
-    # mongodb atlas search to allow for fuzzy matching
+@router.get(
+    "/_db/options/filters/"
+)  # prevent accidently matching with user/model id
+async def get_available_filters(db=Depends(get_db)):
     db, _ = db
-    db_query = {
-        "model_id": query.model_id,
-        "task": query.task,
-        "owner_id": query.owner_id,
-        "creator": query.creator,
-        "tags": {
-            # NOTE: assumes AND
-            "$all": query.tags
-        },
-        "frameworks": {"$in": query.frameworks},
-    }
-    if query.title:
-        db_query["title"] = {
-            # NOTE: not sure if security risk
-            # escape so that chars like / are accepted in title
-            "$regex": re.escape(query.title),
-            "$options": "i",
-        }
-
-    if query.sort:
-        # TODO: refactor this to be more intuitive
-        query.sort = [
-            (col_name, 1 if order == "ASC" else -1)
-            for col_name, order in query.sort
-        ]
-    # Remove empty attributes
-    if not query.tags:
-        del db_query["tags"]
-    if not query.frameworks:
-        del db_query["frameworks"]
-    # If user only wants some attrs to be returned (e.g. summary card only needs some attributes)
-    db_projection = query.return_attrs
-    db_query = {k: v for k, v in db_query.items() if v is not None}
-    results = (
-        await db["models"]
-        .find(filter=db_query, projection=db_projection, sort=query.sort)
-        .to_list(length=None)
-    )
-    results = json.loads(
-        json_util.dumps(results)
-    )  # enable bson from mongodb to be converted to json
-    return JSONResponse(content=results, status_code=status.HTTP_200_OK)
+    models = db["models"]
+    tags = await models.distinct("tags")
+    frameworks = await models.distinct("frameworks")
+    tasks = await models.distinct("task")
+    return {"tags": tags, "frameworks": frameworks, "tasks": tasks}
 
 
-@router.get("/{model_id}")
-async def get_model_card_by_id(model_id: str, db=Depends(get_db)):
+@router.get("/{creator_user_id}/{model_id}")
+async def get_model_card_by_id(
+    model_id: str, creator_user_id: str, db=Depends(get_db)
+):
     db, _ = db
     # Get model card by database id (NOT clearml id)
-    model = await db["models"].find_one({"model_id": model_id})
+    model = await db["models"].find_one(
+        {"modelId": model_id, "creatorUserId": creator_user_id}
+    )
     if model is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
     model = json.loads(json_util.dumps(model))
     return JSONResponse(status_code=status.HTTP_200_OK, content=model)
 
 
+@router.get("/")
+async def search_cards(
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+    page: int = Query(default=1, alias="p", gt=0),
+    rows_per_page: int = Query(default=10, alias="n", ge=0),
+    descending: bool = Query(default=False, alias="desc"),
+    sort_by: str = Query(default="_id", alias="sort"),
+    title: Optional[str] = Query(default=None),
+    tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
+    tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
+    frameworks: Optional[List[str]] = Query(
+        default=None, alias="frameworks[]"
+    ),
+    creator_user_id: Optional[str] = Query(default=None, alias="creator"),
+    return_attr: Optional[List[str]] = Query(default=None, alias="return[]"),
+    all: Optional[bool] = Query(default=None),
+):
+    db, client = db
+    query = {}
+    if title:
+        query["title"] = {"$regex": re.escape(title), "$options": "i"}
+    if tasks:
+        query["task"] = {"$in": tasks}
+    if tags:
+        query["tags"] = {"$all": tags}
+    if frameworks:
+        query["frameworks"] = {"$in": frameworks}
+    if creator_user_id:
+        query["creatorUserId"] = creator_user_id
+
+    # How many documents to skip
+    if not all or rows_per_page == 0:
+        pagination_ptr = (page - 1) * rows_per_page
+    else:
+        pagination_ptr = 0
+        rows_per_page = 0
+
+    # TODO: Refactor pagination method to be more efficient
+    async with await client.start_session() as session:
+        async with session.start_transaction():
+            total_rows = await (db["models"].count_documents(query))
+            results = await (
+                db["models"]
+                .find(query, projection=return_attr)
+                .sort(sort_by, DESCENDING if descending else ASCENDING)
+                .skip(pagination_ptr)
+                .limit(rows_per_page)
+            ).to_list(length=rows_per_page if rows_per_page != 0 else None)
+    results = json.loads(json_util.dumps(results))
+    return {"results": results, "total": total_rows}
+
+
+@router.get("/{creator_user_id}")
+async def get_model_cards_by_user(
+    creator_user_id: str,
+    db=Depends(get_db),
+    return_attr: Optional[List[str]] = Query(None, alias="return"),
+):
+    results = await search_cards(
+        db=db,
+        all=True,
+        return_attr=return_attr,
+        creator_user_id=creator_user_id,
+        title=None,
+        tags=None,
+        frameworks=None,
+        sort_by="_id",
+        descending=True,
+    )
+    return results
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_model_card_metadata(
     card: ModelCardModelIn,
+    tasks: BackgroundTasks,
     db=Depends(get_db),
-    user: User = Depends(get_current_user),
-    clearml_client: APIClient = Depends(clearml_api_client),
+    user: TokenData = Depends(get_current_user),
 ):
     # NOTE: After this, still need to submit inference engine
-    # If exp id is provided, some metadata can be obtained from ClearML
     db, mongo_client = db
-    if card.clearml_exp_id:
-        # Retrieve metadata from ClearML experiment
-        # Get Scalars if present
-        # this data will be passed to front end (Plotly.js)
-        # OR we can create plots within here and save the image to db
-        # NOTE: I specifically use clearml sdk as it is the only way to get the data points
-        # backend rest api does not expose this info (only summary statistics)
-        try:
-            task = Task.get_task(task_id=card.clearml_exp_id)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"ClearML experiment with id {card.clearml_exp_id} not found.",
-            )
-        if card.performance is None:
-            card.performance = {
-                "title": "Performance",
-                "text": "",
-                "media": [],
-            }
-        card.performance["media"].append(
-            task.get_reported_scalars()
-        )  # do not override existing plots
-        # NOTE: switch to backend rest api as only that let's me get info on user
-        # NOTE: we can only obtain attributes using "." notation from the data below
-        task_data: Mapping[
-            str, Union[str, Mapping]
-        ] = clearml_client.tasks.get_by_id(task=card.clearml_exp_id).data
-        # NOTE: I can only get user id, not the name
-        # NOTE: consider using userid to form a url to the user account
-        card.creator = task_data.user
-        card.tags.extend(task_data.tags)
-        # Start by getting model id so that we can get them
-        # NOTE: client api from testing seems to only give id and name if I use th
-        # this is why I don't just use the get_all REST api
-        output_models: List[Mapping[str, str]] = task_data.models.output
-        # Obtain Id
-        # Use set as there can be duplicate model ids as some files refer to same model
-        model_ids = set(map(lambda model: model.model, output_models))
-        if card.model_details is None:
-            card.model_details = {"title": "Model Details", "text": ""}
-        # For each model,
-        if len(model_ids) > 0:
-            # potentially a script could output multiple models
-            for model_id in model_ids:
-                try:
-                    # NOTE: get_frameworks REST api will give ALL frameworks in project
-                    # therefore, get them using Model object
-                    card.frameworks.append(Model(model_id).framework)
-                except ValueError as e:
-                    # Possibly model has been deleted
-                    # TODO: Warn user that model metadata was not found
-                    # NOTE: if they provided the inference url, should still be usable
-                    continue  # thus, just ignore this
-    card.tags = set(card.tags)  # remove duplicates
-    card.frameworks = set(
-        card.frameworks
-    )  # TODO: Decide if frameworks should be singular (i.e. only one framework allowed)
+    card.tags = list(set(card.tags))  # remove duplicates
+    card.frameworks = list(set(card.frameworks))
 
-    if card.inference_engine:  # Dynamically insert
-        card.inference_engine.owner_id = user[
-            "userid"
-        ]  # TODO: Clean up IE code
+    # Sanitize html
+    card.markdown = preprocess_html(card.markdown)
+    card.performance = preprocess_html(card.performance)
 
-    card = jsonable_encoder(
-        ModelCardModelDB(**card.dict(), owner_id=user["userid"])
+    card_dict: dict = jsonable_encoder(
+        ModelCardModelDB(
+            **card.dict(),
+            creator_user_id=user.user_id or "unknown",
+            model_id=uncased_to_snake_case(card.title),
+            last_modified=datetime.datetime.now(),
+            created=datetime.datetime.now(),
+        ),
+        by_alias=True,  # Convert snake_case to camelCase
     )
     async with await mongo_client.start_session() as session:
         try:
             async with session.start_transaction():
-                await db["models"].insert_one(card)
-        except DuplicateKeyError:
+                await db["models"].insert_one(card_dict)
+        except DuplicateKeyError as err:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Unable to add model with ID {card['model_id']} as the ID already exists.",
-            )
-    return card
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"Unable to add model with user and ID {card_dict['creatorUserId']}/{card_dict['modelId']} as the ID already exists.",
+            ) from err
+    tasks.add_task(
+        delete_orphan_services
+    )  # Delete preview services created during model create form
+    return card_dict
 
 
-@router.put("/{model_id}", response_model=ModelCardModelDB)
+@router.put("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB)
 async def update_model_card_metadata_by_id(
     model_id: str,
+    creator_user_id: str,
     card: UpdateModelCardModel,
+    tasks: BackgroundTasks,
     db=Depends(get_db),
-    user: User = Depends(get_current_user),
+    user: TokenData = Depends(get_current_user),
 ):
+    tasks.add_task(
+        delete_orphan_images
+    )  # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
-    card = {k: v for k, v in card.dict().items() if v is not None}
-    # TODO: should we consider updating datetime to current datetime??
+    # by alias => convert snake_case to camelCase
+    card_dict = {
+        k: v for k, v in card.dict(by_alias=True).items() if v is not None
+    }
 
-    if len(card) > 0:
+    if "markdown" in card_dict:
+        # Upload base64 encoded image to S3
+        card_dict["markdown"] = preprocess_html(card_dict["markdown"])
+    if "performance" in card_dict:
+        card_dict["performance"] = preprocess_html(card_dict["performance"])
+
+    if len(card_dict) > 0:
+        card_dict["lastModified"] = str(datetime.datetime.now())
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # First, check that user actually has access
                 existing_card = await db["models"].find_one(
-                    {"model_id": model_id}
+                    {"modelId": model_id, "creatorUserId": creator_user_id}
                 )
                 if existing_card is None:
                     raise HTTPException(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"Model Card with ID: {model_id} not found",
                     )
-                if existing_card["owner_id"] != user["userid"]:
+                elif existing_card["creatorUserId"] != user.user_id:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="User does not have editor access to this model card",
                     )
                 else:
                     result = await db["models"].update_one(
-                        {"model_id": model_id}, {"$set": card}
+                        {
+                            "modelId": model_id,
+                            "creatorUserId": creator_user_id,
+                        },
+                        {"$set": card_dict},
                     )
-
                     if (
                         result.modified_count == 1
                     ):  # NOTE: how pythonic is this? (seems to violate DRY)
                         # TODO: consider just removing the lines below
                         if (
                             updated_card := await db["models"].find_one(
-                                {"model_id": model_id}
+                                {
+                                    "modelId": model_id,
+                                    "creatorUserId": creator_user_id,
+                                }
                             )
                         ) is not None:
                             return updated_card
-    # If no changes, try to return existing card
-    return existing_card
-
-    # TODO: Might need to update inference engine
+        # If no changes, try to return existing card
+        return existing_card
 
 
-@router.delete("/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_model_card_by_id(
-    model_id: str, db=Depends(get_db), user: User = Depends(get_current_user)
+    model_id: str,
+    creator_user_id: str,
+    tasks: BackgroundTasks,
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
 ):
-    # TODO: Check that user is the owner of the model card
     db, mongo_client = db
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
             # First, check that user actually has access
-            existing_card = await db["models"].find_one({"model_id": model_id})
+            existing_card = await db["models"].find_one(
+                {"modelId": model_id, "creatorUserId": creator_user_id}
+            )
             if (
                 existing_card is not None
-                and existing_card["owner_id"] != user["userid"]
+                and existing_card["creatorUserId"] != user.user_id
             ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have editor access to this model card",
                 )
-            await db["models"].delete_one({"model_id": model_id})
-    # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
-    # TODO: Should actual model be deleted as well?
-
-
-@router.post("/inference/{model_id}", dependencies=[Depends(file_validator)])
-async def make_test_inference(
-    model_id: str,
-    request: Request,
-    media: Optional[List[UploadFile]] = File(
-        None,
-        description="Default file field to store media file in. Note that additional media fields can be sent to this endpoint.",
-    ),
-    text: Optional[str] = Form(
-        None,
-        description="Input to this is expected to be formatted as a JSON. Default form field to store text/json in. Note that additional form fields can be sent to this endpoint.",
-    ),
-    db=Depends(get_db),
-):
-    # NOTE: Deprecated in Favour of Gradio
-    raise DeprecationWarning("Deprecated in favour of Gradio")
-    # TODO: Consider if we can simply just return
-    # the url to the front end and let the front-
-    # end directly call the service
-    # PRO: faster, more reliable
-    # CON: potential issue if the service not publicly accessible
-    # (e.g private service) as then only the back-end can access
-    # it
-    # Get metadata of inference engine url
-    media_data, json_data = await process_inference_data(request)
-    # NOTE: we do not give error for empty input as some models
-    # may not require any inputs
-
-    # Get metadata about the inference engine of the model
-    db, _ = db
-    model = await db["models"].find_one(
-        {
-            "model_id": model_id,
-        },
-        projection=["inference_engine"],
-    )
-    if model is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with ID {model_id} not found.",
-        )
-    if "inference_engine" not in model:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Model with ID {model_id} does not have known inference engine.",
-        )
-    engine: InferenceEngine = model["inference_engine"]
-    inference_url = engine["service_url"]
-    input_interface = engine["input_schema"]["io_type"]
-
-    # Validate File Size
-    file_size_validator = MaxFileSizeValidator(
-        config.MAX_UPLOAD_SIZE_GB * BytesPerGB
-    )
-    if input_interface in MEDIA_IO_INTERFACES:
-        for files in media_data:
-            file: BinaryIO
-            content_type: str
-            for (_, (_, file, content_type)) in files:
-                with tempfile.NamedTemporaryFile() as f:
-                    try:
-                        while content := file.read(CHUNK_SIZE):
-                            file_size_validator(content)
-                            f.write(content)
-                        guessed_content_type = filetype.guess_mime(f.name)
-                        if guessed_content_type not in ACCEPTED_CONTENT_TYPES:
-                            raise ValueError
-                        if content_type != content_type:  # MIME type mismatch
-                            raise HTTPException(
-                                status_code=status.HTTP_400_BAD_REQUEST,
-                                detail=f"MIME Type Mismatch. Content type reported was {content_type}, but file was {guessed_content_type}",
-                            )
-                    except MaxFileSizeException:
-                        raise HTTPException(
-                            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                            detail=f"File uploaded is too large. Limit is {config.MAX_UPLOAD_SIZE_GB}GB",
-                        )
-                    except ValueError:
-                        raise HTTPException(
-                            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                            detail=f"File type {content_type} not supported",
-                        )
-                file.seek(
-                    0
-                )  # Set pointer to start of file to ensure file can be re-read
-    async with httpx.AsyncClient() as client:
-        response = await client.post(
-            f"{inference_url}/predict",
-            files=media_data,
-            data=json_data,
-            timeout=MAKE_REQUEST_INFERENCE_TIMEOUT,
-        )
-        try:
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when calling inference engine: {e}",
+            await db["models"].delete_one(
+                {"modelId": model_id, "creatorUserId": creator_user_id}
             )
-        return StreamingResponse(
-            BytesIO(response.content),
-            media_type=response.headers.get("Content-Type"),
-        )
-    # return stream_generator(inference_url, media_data, json_data)
-    # TODO: Streaming generator that will also attempt
-    # to get a media type
-    # stream = (
-    #     await httpx.AsyncClient()
-    #     .stream("POST", f"{inference_url}/predict", files=media, data=text)
-    #     .__aenter__()
-    # ) # manually open stream context
-    # # this allows us to first get the MIME type of the output
-    # media_type = stream.headers.get("Content-Type")
-    # return StreamingResponse(
-    #     content=stream.aiter_raw(), media_type=media_type
-    # aiter_raw automatically closes the stream when consumed
+    # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
+    tasks.add_task(delete_orphan_images)  # Remove any related media
+    tasks.add_task(delete_orphan_services)  # Remove any related services

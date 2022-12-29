@@ -1,22 +1,21 @@
-db = db.getSiblingDB('app_store');
+db = db.getSiblingDB("app_store");
 
-db.createCollection('users');
-db.users.createIndex({userid: 'text'}, {unique:true})
+db.createCollection("users");
+db.users.createIndex({ userId: 1 }, { unique: true });
+db.models.createIndex({ modelId: 1, creatorUserId: 1 }, { unique: true });
+db.services.createIndex({ serviceName: 1 }, { unique: true });
 
 db.users.insertMany([
- {
-    userid: 'master',
-    name: 'Master',
-    password: '$2b$12$X86gHxJpDZEc4YHy2oLqU.pwNvvcJP16L5C292q39KuxXmCBW.xdG',
-    admin_priv: true
+  {
+    userId: "master",
+    name: "Master",
+    password: "$2b$12$X86gHxJpDZEc4YHy2oLqU.pwNvvcJP16L5C292q39KuxXmCBW.xdG",
+    adminPriv: true,
   },
   {
-    userid: 'dev1',
-    name: 'Developer One',
-    password: '$2b$12$X86gHxJpDZEc4YHy2oLqU.pwNvvcJP16L5C292q39KuxXmCBW.xdG',
-    admin_priv: false
+    userId: "dev1",
+    name: "Developer One",
+    password: "$2b$12$X86gHxJpDZEc4YHy2oLqU.pwNvvcJP16L5C292q39KuxXmCBW.xdG",
+    adminPriv: false,
   },
-
 ]);
-
-

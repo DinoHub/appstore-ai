@@ -55,4 +55,4 @@ demo = gr.Interface(
 ).queue()
 
 
-demo.launch()
+demo.launch(server_port=int(os.environ.get("PORT", 8080)))

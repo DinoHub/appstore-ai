@@ -1,58 +1,60 @@
-from enum import Enum
-from typing import Dict, Optional
+from datetime import datetime
+from typing import Optional
 
-from pydantic import BaseModel, Field
+from bson import ObjectId
+from pydantic import BaseModel, Field, validator
 
+from ..internal.utils import to_camel_case
+from .common import PyObjectId
 
-class IOTypes(str, Enum):
-    JSON = "JSONIO"
-    Text = "TextIO"
-    Media = "MediaFileIO"
-    Generic = "GenericIO"
-
-
-class IOSchema(BaseModel):
-    io_type: IOTypes
-    json_schema: Optional[Dict] = Field(None)  # JSON Schema
-
-    """
-    NOTE: when submitting an IE, a user
-    may choose to add different form fields,
-    with different names. Therefore,
-    we need to autogenerate a schema,
-    so that when presenting inference page
-    to end user, we can create the 
-    appropriate form. We also use this
-    to show an appropriate output (e.g. showing two
-    types of media files in output)
-    E.g.
-    
-    For example, consider a Guided Diffusion model
-    ```
-    json_schema = {
-        "prompt" : { "type" : "text" },
-        "parameters": { "type" : "json", "required" : false},
-        "files: { "type" : "media" }
-    }
-    ```
-    This refers to a form with three fields:
-    - Text prompt (prompt): shows up as text form field
-    - Initial image (files): shows up as file upload box
-    - Parameters as JSON (parameters): shows up as textarea
-
-    Note that for certain IO types such as Media, Text,
-    we use a preset schema. 
-    """
+# NOTE: disabled ability to set resource limits
+# TODO: Improve implementation of resource limits
+# class ResourceLimits(BaseModel):
+#     cpu_cores: float = Field(
+#         default=1, gt=0, lt=16, description="CPU cores (0.5, 1, 2, 4, 8, 16)"
+#     )
+#     memory_gb: int = Field(
+#         default=2,
+#         gt=0,
+#         lt=32,
+#         description="Memory in GB (1, 2, 4, 8, 16, 32)",
+#     )
 
 
-class InferenceEngine(BaseModel):
-    owner_id: str
-    # input_schema: IOSchema # NOTE: Deprecated
-    # output_schema: IOSchema
-    service_url: str
-
-
-class InferenceEngineService(BaseModel):
-    owner_id: str
-    service_name: str  # use this to generate
+class CreateInferenceEngineService(BaseModel):
+    model_id: str  # NOTE: actually model title, will convert to model id in backend
     image_uri: str
+    # resource_limits: ResourceLimits
+    container_port: Optional[int]
+    external_dns: Optional[str]
+    env: Optional[dict]
+
+    class Config:
+        alias_generator = to_camel_case
+
+
+class InferenceEngineService(CreateInferenceEngineService):
+    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+    inference_url: str
+    owner_id: str
+    service_name: str
+    created: datetime
+    last_modified: datetime
+
+    class Config:
+        alias_generator = to_camel_case
+        allow_population_by_field_name = True
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}
+
+
+class UpdateInferenceEngineService(BaseModel):
+    image_uri: str
+    container_port: Optional[int]
+    # resource_limits: ResourceLimits
+    env: Optional[dict]
+
+    class Config:
+        alias_generator = to_camel_case
+        arbitrary_types_allowed = True
+        json_encoders = {ObjectId: str}

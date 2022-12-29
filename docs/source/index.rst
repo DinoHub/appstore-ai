@@ -3,7 +3,13 @@ Welcome to AI App Store documentation!
 
 .. toctree::
    :maxdepth: 3
-   :caption: Contents:
+   :caption: User Guide
+   
+   user-guide/introduction
+
+.. toctree::
+   :maxdepth: 3
+   :caption: Developer Guide
    
    back-end-api/src
 

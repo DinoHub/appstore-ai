@@ -1,4 +1,4 @@
-triton_url: 172.20.0.3:8001
+triton_url: 172.20.0.4:8001
 triton_mode: POLLING
 model_name: inception_graphdef
-model_version: '1'
+model_version: "1"

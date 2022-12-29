@@ -1,88 +1,88 @@
+from datetime import datetime
+from enum import Enum
 from typing import Dict, List, Optional
 
 from bson import ObjectId
 from pydantic import BaseModel, Field
 
+from ..internal.utils import to_camel_case
+from .experiment import LinkedExperiment
+from .dataset import LinkedDataset
 from .common import PyObjectId
-from .engine import InferenceEngine
 
 
-class SectionModel(BaseModel):
-    text: str
-    title: str
-    media: Optional[List[Dict]]
+class Artifact(BaseModel):
+    artifact_type: str = Field(..., alias="artifactType")
+    name: str
+    url: str
+    timestamp: Optional[datetime]
+    framework: Optional[str]
+
+    class Config:
+        allow_population_by_field_name = True
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
-    model_id: str  # unique id
     title: str
-    # NOTE: flattened sections to make schema easier
-    # description: Dict[SectionTypes, Section]
-    description: SectionModel
-    limitations: SectionModel
-    metrics: SectionModel
-    explanation: SectionModel
-    deployment: SectionModel
-    performance: Optional[SectionModel]
-    model_details: Optional[
-        SectionModel
-    ]  # store model genre, format and framework
-    datetime: str
-    tags: List[str]  # for all other tags
+    markdown: str
+    performance: str
     task: str  # a task is a tag
-    frameworks: List[
-        str
-    ]  # TODO: decide if this should be a singular tag or allow multiple
-    point_of_contact: str
-    creator: Optional[str]
-    # TODO: Figure out model source stuff
-    clearml_exp_id: Optional[str]
-    inference_engine: Optional[InferenceEngine]
+    inference_service_name: Optional[str]
+    video_location: Optional[str]
+    tags: List[str]  # for all other tags
+    frameworks: List[str]
+    description: Optional[str]
+    explanation: Optional[str]
+    usage: Optional[str]
+    limitations: Optional[str]
+    owner: Optional[str]  # NOTE: This is different from creator_user_id
+    point_of_contact: Optional[str]
+    artifacts: Optional[
+        List[Artifact]
+    ]  # will need to use GET /experiments/{exp_id} to get this
+    experiment: Optional[LinkedExperiment]
+    dataset: Optional[LinkedDataset]
+
+    class Config:
+        alias_generator = to_camel_case
 
 
 class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    owner_id: str  # to be dynamically put in by FastAPI
+    creator_user_id: str  # to be dynamically put in by FastAPI
+    model_id: str  # to be generated on back-end
+    created: datetime
+    last_modified: datetime
 
     class Config:
+        alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
 
-class FindModelCardModel(BaseModel):
-    model_id: Optional[str]
-    owner_id: Optional[str]
-    title: Optional[str]
-    tags: Optional[List[str]]
-    task: Optional[str]
-    frameworks: Optional[List[str]]
-    point_of_contact: Optional[str]
-    creator: Optional[str]
-    sort: Optional[List[List[str]]]  # [(sort col, sort direction)]
-    return_attrs: Optional[List[str]]
-
-
 class UpdateModelCardModel(BaseModel):
     title: Optional[str]
-    description: Optional[SectionModel]
-    limitations: Optional[SectionModel]
-    metrics: Optional[SectionModel]
-    explanation: Optional[SectionModel]
-    deployment: Optional[SectionModel]
-    performance: Optional[SectionModel]
-    model_details: Optional[SectionModel]
-    datetime: Optional[str]
-    tags: Optional[List[str]]
-    task: Optional[str]
-    frameworks: Optional[
-        List[str]
-    ]  # NOTE: tbd if this should be just 1 string
+    description: Optional[str]
+    explanation: Optional[str]
+    usage: Optional[str]
+    limitations: Optional[str]
+    markdown: Optional[str]
+    performance: Optional[str]
+    tags: Optional[List[str]]  # for all other tags
+    task: Optional[str]  # a task is a tag
+    frameworks: Optional[List[str]]
     point_of_contact: Optional[str]
-    creator: Optional[str]
-    clearml_exp_id: Optional[str]
-    inference_engine: Optional[InferenceEngine]
+    owner: Optional[str]
+    video_location: Optional[str]
+    inference_service_name: Optional[str]
+    artifacts: Optional[
+        List[Artifact]
+    ]  # will need to use GET /experiments/{exp_id} to get this
+    experiment: Optional[LinkedExperiment]
+    dataset: Optional[LinkedDataset]
 
     class Config:
+        alias_generator = to_camel_case
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}

@@ -1,4 +1,5 @@
 import tempfile
+from datetime import datetime
 from os import remove
 from pathlib import Path
 from shutil import unpack_archive
@@ -27,12 +28,12 @@ ACCEPTED_CONTENT_TYPES = [
     "application/x-bzip2",
 ]
 CHUNK_SIZE = 1024
-BytesPerGB = 1024 * 1024 * 1024
+BYTES_PER_GB = 1024 * 1024 * 1024
 MAX_UPLOAD_SIZE_GB = config.MAX_UPLOAD_SIZE_GB
 file_validator = ValidateFileUpload(
-    max_upload_size=MAX_UPLOAD_SIZE_GB
+    max_upload_size=None
     if MAX_UPLOAD_SIZE_GB is None
-    else BytesPerGB * MAX_UPLOAD_SIZE_GB,
+    else int(BYTES_PER_GB * MAX_UPLOAD_SIZE_GB),
 )  # Note, cannot validate file type here as content-type will be multipart form upload
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
@@ -40,7 +41,7 @@ router = APIRouter(prefix="/datasets", tags=["Datasets"])
 @router.post(
     "/search",
     response_model=List[DatasetModel],
-    response_model_exclude=["files", "default_remote"],
+    response_model_exclude={"files", "default_remote"},
 )
 def search_datasets(query: FindDatasetModel) -> List[Dict]:
     """Search endpoint for any datasets stored in
@@ -51,7 +52,7 @@ def search_datasets(query: FindDatasetModel) -> List[Dict]:
     :return: A list of dataset metadata
     :rtype: List[Dict]
     """
-    datasets = Dataset(connector_type=DATA_CONNECTOR).list_datasets(
+    datasets = Dataset.from_connector(DATA_CONNECTOR).list_datasets(
         project=query.project,
         partial_name=query.name,
         tags=query.tags,
@@ -71,19 +72,20 @@ async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
     :rtype: DatasetModel
     """
     try:
-        dataset = Dataset(connector_type=DATA_CONNECTOR).get(id=dataset_id)
-    except ValueError:
+        dataset = Dataset.from_connector(DATA_CONNECTOR).get(id=dataset_id)
+    except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Dataset with ID {dataset_id} not found.",
-        )
+        ) from err
     return DatasetModel(
-        id=dataset.id,
+        id=dataset_id,
         name=dataset.name,
         project=dataset.project,
         tags=dataset.tags,
         files=dataset.file_entries,
         default_remote=dataset.default_remote,
+        created=None,
     )
 
 
@@ -121,10 +123,9 @@ async def create_dataset(
     # First determine max file size
     max_file_size = determine_safe_file_size("/", clearance=5)
     file_size_validator = MaxFileSizeValidator(max_size=max_file_size)
+    path = None
     # TODO: Refactor code to make it more readable
-    with tempfile.TemporaryDirectory(
-        dataset_name, "clearml-dataset"
-    ) as dirpath:
+    with tempfile.TemporaryDirectory(prefix="dataset-") as dirpath:
         # write file to fs
         try:
             path = Path(dirpath, clean_filename(file.filename))
@@ -141,40 +142,43 @@ async def create_dataset(
             content_type = filetype.guess_mime(path)
             if content_type not in ACCEPTED_CONTENT_TYPES:
                 raise ValueError
-        except MaxFileSizeException:
-            remove(path)
+        except MaxFileSizeException as err:
+            if path:
+                remove(path)
             raise HTTPException(
                 status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 detail="Dataset uploaded was too large for the server to handle.",
-            )
-        except ValueError:
-            remove(path)
+            ) from err
+        except ValueError as err:
+            if path:
+                remove(path)
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail=f"File type of compressed file {file.filename} is not supported.",
-            )
-        except Exception:
-            remove(path)
+            ) from err
+        except Exception as err:
+            if path:
+                remove(path)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="There was an error reading the file",
-            )
+            ) from err
         try:
             unpack_archive(filename=path, extract_dir=dirpath)
-        except ValueError:  # Redundant?
+        except ValueError as err:  # Redundant?
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail=f"File type of compressed file {file.filename} is not supported.",
-            )
-        except Exception:
+            ) from err
+        except Exception as err:
             raise HTTPException(
                 status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Error when decompressing dataset",
-            )
+            ) from err
         finally:
             # this will still run even if HTTPException is raised
             remove(path)  # remove zipfile so it is not uploaded
-        dataset = Dataset(connector_type=DATA_CONNECTOR).create(
+        dataset = Dataset.from_connector(DATA_CONNECTOR).create(
             name=dataset_name,
             project=project_name,
         )
@@ -190,4 +194,6 @@ async def create_dataset(
         tags=dataset.tags,
         project=dataset.project,
         files=dataset.file_entries,
+        default_remote=dataset.default_remote,
+        created=datetime.now(),
     )

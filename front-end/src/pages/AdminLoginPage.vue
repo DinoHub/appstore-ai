@@ -1,0 +1,80 @@
+<template>
+  <q-page padding>
+    <!-- content -->
+    <div class="row justify-center items-center">
+      <section class="col-5">
+        <q-card tag="form" class="bg-surface">
+          <q-card-section>
+            <div class="text-h5">Admin Login</div>
+          </q-card-section>
+          <q-card-section>
+            <q-form @submit="onSubmit" class="q-gutter-md">
+              <q-input
+                filled
+                v-model="userId"
+                color="on-surface-variant"
+                label="User ID"
+                lazy-rules
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Please type a User ID',
+                ]"
+              ></q-input>
+              <q-input
+                filled
+                color="on-surface-variant"
+                v-model="password"
+                label="Password"
+                type="password"
+                lazy-rules
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Please type a password',
+                ]"
+              ></q-input>
+              <q-btn
+                icon="login"
+                label="Sign In"
+                type="submit"
+                color="primary"
+                padding="sm xl"
+                unelevated
+                rounded
+                no-caps
+              ></q-btn>
+            </q-form>
+          </q-card-section>
+        </q-card>
+      </section>
+    </div>
+    <div class="row justify-center items-center q-mt-xl">
+      <q-card class="q-mt-xl col-4 bg-dark"
+        ><q-card-section class="q-py-sm text-white">
+          <div class="row justify-between">
+            <span class="col-6">
+              <p class="q-my-sm">Looking for the main website?</p></span
+            >
+            <q-btn
+              flat
+              align="right"
+              class="text-red-6 col-6"
+              label="GO TO APP STORE"
+              to="/login"
+            ></q-btn>
+          </div> </q-card-section
+      ></q-card>
+    </div>
+  </q-page>
+</template>
+
+<script setup lang="ts">
+import { useAuthStore } from 'src/stores/auth-store';
+import { Ref, ref } from 'vue';
+const userId: Ref<string | null> = ref(null);
+const password: Ref<string | null> = ref(null);
+const authStore = useAuthStore();
+
+async function onSubmit() {
+  if (userId.value && password.value) {
+    await authStore.admin_login(userId.value, password.value);
+  }
+}
+</script>

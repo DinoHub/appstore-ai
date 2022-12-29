@@ -14,10 +14,11 @@ sphinx-inline-tabs = "^2022.1.2b11"
 myst-parser = "^0.18.1"
 sphinxcontrib-apidoc = "^0.3.0"
 sphinx_design = "^0.3.0"
-MarkupSafe = "^2.1.1"
 sphinx-jsonschema = "^1.19.1"
 sphinx-autobuild = "^2021.3.14"
 filetype = "^1.1.0"
+markupsafe = "2.0.1"
+sphinx-js = "^3.2.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.10.0"

@@ -9,5 +9,23 @@ spec:
         - image: {{ image_name }}
           # imagePullPolicy: Always # TODO: uncomment when registry is properly set up
           imagePullPolicy: IfNotPresent
+          {% if port %}
           ports:
-            - containerPort: 4001
+            - containerPort: {{ port }}
+          {% endif %}
+          {% if env %}
+          env:
+          {% for key, value in env.items()  %}
+            - name: {{ key }}
+              value: {{ value }}
+          {% endfor %}
+          {% endif %}
+          # {% if resource_limits %}
+          # resources:
+          #   limits:
+          #     cpu: {{ resource_limits["cpu_cores"] }}
+          #     memory: {{ resource_limits["memory_gb"] }}G
+          #   requests:
+          #     cpu: 500m
+          #     memory: 1G
+          # {% endif %}

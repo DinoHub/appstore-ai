@@ -9,18 +9,25 @@ services:
     depends_on:
       - mongodb
     environment:
+      - DEV_FRONTEND_HOST=http://127.0.0.1:9000
       - DEV_SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
       - DEV_ADMIN_SECRET_KEY=60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
       - DEV_ALGORITHM=HS256
       - DEV_MONGO_DSN=mongodb://mongodb:27017
       - DEV_MAX_UPLOAD_SIZE_GB=10
       - DEV_DB_NAME=app_store
+      - DEV_IE_NAMESPACE=inference-engine
+      - DEV_MINIO_TLS=False
+      - DEV_MINIO_BUCKET_NAME=model-zoo
+      - DEV_MINIO_DSN=minio:9000
+      - DEV_MINIO_API_HOST=localhost:9000
+      - DEV_MINIO_API_ACCESS_KEY=aas-minio-uploader
+      - DEV_MINIO_API_SECRET_KEY=TempPassword1234
       - CLEARML_WEB_HOST=https://app.clear.ml
       - CLEARML_API_HOST=https://api.clear.ml
       - CLEARML_FILES_HOST=https://files.clear.ml
       - CLEARML_API_ACCESS_KEY=WT9BPSIZML1TMQZMC0XM
       - CLEARML_API_SECRET_KEY=6vjSQME0FpOYFBsqSvaRjTPaAyWF1NKNHHXlLkrk1mbepcRud0
-
 
     networks:
       - appstore
@@ -36,7 +43,20 @@ services:
       - "./mongodb_data:/data/db"
     networks:
       - appstore
-      
+
+  minio:
+    image: quay.io/minio/minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=aas-minio-uploader
+      - MINIO_ROOT_PASSWORD=TempPassword1234
+    volumes:
+      - "./minio_data:/data"
+    command: server /data --console-address ":9001"
+
 networks:
   appstore:
     driver: bridge

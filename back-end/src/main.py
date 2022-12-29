@@ -3,10 +3,13 @@ from pathlib import Path
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .config.config import config
 from .internal.auth import check_is_admin, get_current_user
-from .routers import auth, datasets, engines, experiments, iam, models
+from .routers import auth, buckets, datasets, engines, experiments, iam, models
 
-with open(Path(__file__).parent.parent.joinpath("README.md"), "r") as f:
+with open(
+    Path(__file__).parent.parent.joinpath("README.md"), "r", encoding="utf-8"
+) as f:
     description = f.read()
 
 tags_metadata = [
@@ -34,19 +37,40 @@ tags_metadata = [
         "name": "Authentication",
         "description": "APIs to allow end users to login to the system",
     },
+    {
+        "name": "Buckets",
+        "description": "APIs to allow for upload and retrieval of media from S3 Storage (MinIO)",
+    },
 ]
 app = FastAPI(
     title="Model Zoo", description=description, openapi_tags=tags_metadata
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost"],
-    allow_methods=["*"],
+    allow_origins=list(
+        set(
+            [
+                "http://localhost:9000",
+                "http://127.0.0.1:9000",
+                "http://172.20.255.203",
+                "http://appstore.ai",
+                (config.FRONTEND_HOST if config else ""),
+            ]
+        )
+    ),
+    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_credentials=True,
-    allow_headers=["*"],
+    allow_headers=[
+        "Content-Type",
+        "Set-Cookie",
+        "Access-Control-Allow-Headers",
+        "Authorization",
+        "Access-Control-Allow-Origin",
+    ],
 )
 
 app.include_router(auth.router)
+app.include_router(buckets.router, dependencies=[Depends(get_current_user)])
 app.include_router(models.router, dependencies=[Depends(get_current_user)])
 app.include_router(
     experiments.router, dependencies=[Depends(get_current_user)]
@@ -57,5 +81,5 @@ app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 
 @app.get("/")
-async def root():
+def root():
     return {"message": "Hello World"}

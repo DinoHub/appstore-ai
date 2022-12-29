@@ -1,12 +1,13 @@
-from typing import List
+import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse, Response
+from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
 
 from ..internal.auth import check_is_admin, get_password_hash
 from ..internal.db import get_db
-from ..models.iam import UserInsert, UserPage
+from ..models.iam import UserInsert, UserPage, UserRemoval, UsersEdit
 
 # use openssl rand -hex 32 to generate secret key
 ACCESS_TOKEN_EXPIRE_MINUTES = 45
@@ -20,6 +21,16 @@ async def add_user(
     item: UserInsert,
     db=Depends(get_db),
 ):
+    """
+    Function to add a user to the MongoDB after reciveing a POST call to the endpoint
+
+    Args:
+        item (UserInsert): The item that contains the user information to be sent to the database for storage
+        db (Any = Depends(get_db)): This retieves the client that is connected to the database.
+
+    Returns:
+        JSONResponse: A Response object with a corresponding code depending on the success of the call or a failure for whatever reason.
+    """
     db, mongo_client = db
     try:
         item.password = get_password_hash(item.password)
@@ -27,49 +38,51 @@ async def add_user(
             async with session.start_transaction():
                 user = await db["users"].insert_one(
                     {
-                        "userid": item.userid,
+                        "userId": item.user_id,
                         "name": item.name,
                         "password": item.password,
-                        "admin_priv": item.admin_priv,
+                        "adminPriv": item.admin_priv,
+                        "lastModified": str(datetime.datetime.now()),
+                        "created": str(datetime.datetime.now()),
                     }
                 )
-                add_user = await db["users"].find_one(
+                added_user = await db["users"].find_one(
                     {"_id": user.inserted_id},
                     {"_id": False, "password": False},
                 )
-        print(add_user)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
-            content=f"User of ID: {add_user['userid']} created",
+            content=f"User of ID: {added_user['userId']} created",
         )
-    except pyerrs.DuplicateKeyError:
-        return JSONResponse(
+    except pyerrs.DuplicateKeyError as err:
+        raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            content=f"User with ID of {item.userid} already exists",
-        )
-    except Exception as e:
-        print(e)
-        return JSONResponse(
+            detail=f"User with ID of {item.user_id} already exists",
+        ) from err
+    except Exception as err:
+        raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content="An error occurred",
-        )
+            detail="An error occurred",
+        ) from err
 
 
 @router.delete("/delete", dependencies=[Depends(check_is_admin)])
 async def delete_user(
-    userid: List[str],
+    userid: UserRemoval,
     db=Depends(get_db),
 ):
     db, mongo_client = db
     try:
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                await db["users"].delete_many({"userid": {"$in": userid}})
+                await db["users"].delete_many(
+                    {"userId": {"$in": userid.users}}
+                )
         return Response(status_code=status.HTTP_204_NO_CONTENT)
-    except:
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        ) from err
 
 
 @router.put("/edit", dependencies=[Depends(check_is_admin)])
@@ -83,52 +96,113 @@ async def update_user(
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 await db["users"].update_one(
-                    {"userid": user.userid},
+                    {"userId": user.user_id},
                     {
                         "$set": {
-                            "userid": user.userid,
+                            "userId": user.user_id,
                             "name": user.name,
                             "password": user.password,
-                            "admin_priv": user.admin_priv,
+                            "adminPriv": user.admin_priv,
+                            "lastModified": str(datetime.datetime.now()),
                         }
                     },
                 )
-    except ValueError:
+    except ValueError as err:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f""
-        )
-    except:
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to update user",
+        ) from err
+    except Exception as err:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Not found"
-        )
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        ) from err
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.put("/edit/multi", dependencies=[Depends(check_is_admin)])
+async def update_many_user(
+    user: UsersEdit,
+    db=Depends(get_db),
+):
+    db, mongo_client = db
+    try:
+        if user.priv is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Privilege must be set properly",
+            )
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                await db["users"].update_many(
+                    {"userId": {"$in": user.users}},
+                    {
+                        "$set": {
+                            "adminPriv": user.priv,
+                            "lastModified": str(datetime.datetime.now()),
+                        }
+                    },
+                )
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to update users",
+        ) from err
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Not found"
+        ) from err
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # list users with pagination
-@router.post("/{page_num}", dependencies=[Depends(check_is_admin)])
+@router.post("/", dependencies=[Depends(check_is_admin)])
 async def get_users(
     pages_user: UserPage,
-    page_num: int = Path(ge=1),
+    descending: bool = Query(default=True, alias="desc"),
+    sort_by: str = Query(default="lastModified", alias="sort"),
     db=Depends(get_db),
 ):
     db, mongo_client = db
     try:
         # check number of documents to skip past
-        skips = pages_user.user_num * (page_num - 1)
-        # lookups for name and admin priv matching
+        skips = pages_user.user_num * (pages_user.page_num - 1)
+        # dictionary for lookups
         lookup = {}
-        if pages_user.name != None:
+        # narrow search by users that include given name from request if not none
+        if pages_user.name is not None:
             lookup["name"] = {"$regex": pages_user.name, "$options": "i"}
-        if pages_user.admin_priv != None:
-            lookup["admin_priv"] = pages_user.admin_priv
-        # dont skip if 1st page
+        # narrow search by users that include given userId from request if not none
+        if pages_user.userId is not None:
+            lookup["userId"] = {"$regex": pages_user.userId, "$options": "i"}
+        # narrow search by looking for users with/without admin priv only based on req
+        if pages_user.admin_priv is not None:
+            lookup["adminPriv"] = pages_user.admin_priv
+        # narrow search by looking for users last modified within a date range given by req
+        if pages_user.last_modified_range is not None:
+            if isinstance(pages_user.last_modified_range, dict):
+                lookup["lastModified"] = {
+                    "$gte": pages_user.last_modified_range["from"],
+                    "$lte": pages_user.last_modified_range["to"],
+                }
+        # narrow search by looking for users created within a date range given by req
+        if pages_user.date_created_range is not None:
+            if isinstance(pages_user.date_created_range, dict):
+                lookup["created"] = {
+                    "$gte": pages_user.date_created_range["from"],
+                    "$lte": pages_user.date_created_range["to"],
+                }
+        # start session + transaction to get data from MongoDB
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
+                # check for the total number of rows in 'users' collection
+                total_rows = await (db["users"].count_documents(lookup))
+                # dont skip if 1st page
                 if skips <= 0:
                     # find from users in MongodDB exclude ObjectID and convert to list
                     cursor = await (
                         db["users"]
                         .find(lookup, {"_id": False, "password": False})
+                        .sort(sort_by, DESCENDING if descending else ASCENDING)
                         .limit(pages_user.user_num)
                     ).to_list(length=pages_user.user_num)
                 # else call cursor with skips
@@ -137,14 +211,24 @@ async def get_users(
                     cursor = await (
                         db["users"]
                         .find(lookup, {"_id": False, "password": False})
+                        .sort(sort_by, DESCENDING if descending else ASCENDING)
                         .skip(skips)
                         .limit(pages_user.user_num)
                     ).to_list(length=pages_user.user_num)
-                # return documents
-        return JSONResponse(status_code=status.HTTP_200_OK, content=cursor)
-    except ValueError:
+        # return documents if all ok
         return JSONResponse(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, content=f""
+            status_code=status.HTTP_200_OK,
+            content={"results": cursor, "total_rows": total_rows},
         )
-    except Exception:
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    # triggered if req sent to this endpoint has missing headers or invalid data
+    except ValueError as err:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Unable to get users",
+        ) from err
+    # triggered if all else fails
+    except Exception as err:
+        # TODO: should the status code be 404?
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Cannot find users"
+        ) from err

@@ -8,6 +8,7 @@ from pydantic import BaseSettings, Field, MongoDsn
 class GlobalConfig(BaseSettings):
     ENV_STATE: str = Field(default="dev", env="ENV_STATE")
     DB_NAME: str = Field(default="appStoreDB")
+    FRONTEND_HOST: str = Field(default="http://localhost:9000")
     ALGORITHM: str = Field(default="HS256")
     MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=1)
     SECRET_KEY: Optional[
@@ -21,6 +22,17 @@ class GlobalConfig(BaseSettings):
     CLEARML_CONFIG_FILE: Optional[str] = None
     K8S_HOST: Optional[str] = None
     K8S_API_KEY: Optional[str] = None
+    CLEARML_WEB_HOST: Optional[str] = None
+    CLEARML_API_HOST: Optional[str] = None
+    CLEARML_FILES_HOST: Optional[str] = None
+    CLEARML_API_ACCESS_KEY: Optional[str] = None
+    CLEARML_API_SECRET_KEY: Optional[str] = None
+    MINIO_DSN: Optional[str] = None
+    MINIO_API_HOST: Optional[str] = None
+    MINIO_BUCKET_NAME: str = Field(default="model-zoo")
+    MINIO_TLS: bool = Field(default=False)
+    MINIO_API_ACCESS_KEY: Optional[str] = None
+    MINIO_API_SECRET_KEY: Optional[str] = None
 
     class Config:
         env_file: str = "./src/config/.env"
@@ -71,14 +83,12 @@ class FactoryConfig:
             return ProductionConfig()
         elif self.env_state == "test":
             return TestingConfig()
-        elif self.env_state is None:
-            return None
         else:
             raise ValueError(f"Unsupported config: {self.env_state}")
 
 
 ENV_STATE = GlobalConfig().ENV_STATE
-config = FactoryConfig(ENV_STATE)()
+config: GlobalConfig = FactoryConfig(ENV_STATE)()
 
 if config is not None:
     config.set_envvar()
