@@ -20,12 +20,18 @@ export const useUploadStore = defineStore('users', {
       const form = new FormData();
       form.append('video', videoFile[0]);
       let videoLocation = '';
+      console.log(form);
       await api
-        .post('/buckets/video', form)
+        .post('buckets/video', form, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
         .then((data) => {
           videoLocation = data.data.video_location;
         })
         .catch((err) => {
+          console.error(err);
           Notify.create({
             message: 'Video upload failed.',
             type: 'negative',
@@ -37,21 +43,26 @@ export const useUploadStore = defineStore('users', {
       videoFile: File,
       currentVideoLocation: string,
       userId: string,
-      modelId: string
+      modelId: string,
     ): Promise<string> {
       const modelStore = useModelStore();
       const form = new FormData();
+      console.log(form);
       form.append('new_video', videoFile[0]);
       form.append('old_video_location', currentVideoLocation);
       let videoLocation = '';
       await api
-        .put('/buckets/video', form)
+        .put('/buckets/video', form, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
         .then((data) => {
           videoLocation = data.data.video_location;
           modelStore.updateModel(
             { videoLocation: videoLocation },
             userId,
-            modelId
+            modelId,
           );
           Notify.create({
             message: 'Video replaced successfullly!',
@@ -59,6 +70,7 @@ export const useUploadStore = defineStore('users', {
           });
         })
         .catch((err) => {
+          console.error(err);
           Notify.create({
             message: 'Video upload failed.',
             type: 'negative',
@@ -68,7 +80,7 @@ export const useUploadStore = defineStore('users', {
     },
     async uploadMedia(
       url: string,
-      fieldName: string | ((file: File) => string)
+      fieldName: string | ((file: File) => string),
     ): Promise<MediaUploadResponse> {
       const form = new FormData();
       for (const media of this.files) {
