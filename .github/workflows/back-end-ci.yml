@@ -37,6 +37,15 @@ jobs:
         image: mongo
         ports:
           - 4051:27017
+      minio:
+        image: lazybit/minio
+        ports:
+          - 9000:9000
+        env:
+          MINIO_ROOT_USER: aas-minio-uploader
+          MINIO_ROOT_PASSWORD: TempPassword1234
+        options: --name=minio --health-cmd "curl http://localhost:9000/minio/health/live"
+
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
