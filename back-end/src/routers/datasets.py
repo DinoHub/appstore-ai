@@ -41,7 +41,7 @@ router = APIRouter(prefix="/datasets", tags=["Datasets"])
 @router.post(
     "/search",
     response_model=List[DatasetModel],
-    response_model_exclude=["files", "default_remote"],
+    response_model_exclude={"files", "default_remote"},
 )
 def search_datasets(query: FindDatasetModel) -> List[Dict]:
     """Search endpoint for any datasets stored in
@@ -79,7 +79,7 @@ async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
             detail=f"Dataset with ID {dataset_id} not found.",
         )
     return DatasetModel(
-        id=dataset.id,
+        id=dataset_id,
         name=dataset.name,
         project=dataset.project,
         tags=dataset.tags,
@@ -125,9 +125,7 @@ async def create_dataset(
     file_size_validator = MaxFileSizeValidator(max_size=max_file_size)
     path = None
     # TODO: Refactor code to make it more readable
-    with tempfile.TemporaryDirectory(
-        dataset_name, "clearml-dataset"
-    ) as dirpath:
+    with tempfile.TemporaryDirectory(prefix="dataset-") as dirpath:
         # write file to fs
         try:
             path = Path(dirpath, clean_filename(file.filename))
