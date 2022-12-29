@@ -38,6 +38,8 @@ pre-commit = "^2.20.0"
 isort = "^5.10.1"
 pytest-cov = "^4.0.0"
 pytest-mock = "^3.10.0"
+pylint = "^2.15.9"
+pylint-pydantic = "^0.1.4"
 
 [tool.poe.tasks.boot]
   help = "Boot application"
@@ -66,3 +68,6 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_pydantic"
