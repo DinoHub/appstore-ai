@@ -1,20 +1,39 @@
 import uuid
+from typing import Optional
 
 from colorama import Fore
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status, Form
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from minio import Minio
 
 from ..config.config import config
 from ..internal.auth import get_current_user
-from ..internal.minio_client import minio_api_client, upload_data, remove_data
+from ..internal.file_validator import ValidateFileUpload
+from ..internal.minio_client import minio_api_client, remove_data, upload_data
 from ..models.iam import TokenData
 
 router = APIRouter(prefix="/buckets", tags=["buckets"])
 
 BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
 
+MAX_UPLOAD_SIZE_MB = 10
+BYTES_PER_MB = 1000000
+video_validator = ValidateFileUpload(
+    max_upload_size=int(BYTES_PER_MB * MAX_UPLOAD_SIZE_MB),
+    accepted_content_types=[
+        "video/mp4",
+        "video/avi",
+        "video/mov",
+        "video/mkv",
+        "video/webm",
+    ],
+)
 
-@router.post("/video", status_code=status.HTTP_200_OK)
+
+@router.post(
+    "/video",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(video_validator)],
+)
 def upload_video(
     video: UploadFile,
     user: TokenData = Depends(get_current_user),
@@ -45,10 +64,14 @@ def upload_video(
         ) from err
 
 
-@router.put("/video", status_code=status.HTTP_200_OK)
+@router.put(
+    "/video",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(video_validator)],
+)
 def replace_video(
     new_video: UploadFile = Form(),
-    old_video_location: str = Form(),
+    old_video_location: Optional[str] = Form(None),
     user: TokenData = Depends(get_current_user),
     s3_client: Minio = Depends(minio_api_client),
 ):
@@ -59,10 +82,15 @@ def replace_video(
         if "video" in new_video.content_type:
 
             # remove the old video inside the bucket
-            video_location = old_video_location.replace(
-                f"{config.MINIO_API_HOST}/{config.MINIO_BUCKET_NAME}/", ""
-            )
-            remove_data(s3_client, video_location, config.MINIO_BUCKET_NAME)
+            if old_video_location is not None:
+                video_location = old_video_location.replace(
+                    f"{config.MINIO_API_HOST}/{config.MINIO_BUCKET_NAME}/", ""
+                )
+                remove_data(
+                    s3_client, video_location, config.MINIO_BUCKET_NAME
+                )
+            else:
+                print("WARN:\t  No old video location provided")
 
             # upload the new video to the bucket
             path = upload_data(
