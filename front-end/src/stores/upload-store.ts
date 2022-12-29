@@ -2,6 +2,7 @@ import { AxiosError, AxiosResponse } from 'axios';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
+import { useModelStore } from './model-store';
 
 export interface MediaUploadResponse {
   files: {
@@ -23,6 +24,39 @@ export const useUploadStore = defineStore('users', {
         .post('/buckets/video', form)
         .then((data) => {
           videoLocation = data.data.video_location;
+        })
+        .catch((err) => {
+          Notify.create({
+            message: 'Video upload failed.',
+            type: 'negative',
+          });
+        });
+      return videoLocation;
+    },
+    async replaceVideo(
+      videoFile: File,
+      currentVideoLocation: string,
+      userId: string,
+      modelId: string
+    ): Promise<string> {
+      const modelStore = useModelStore();
+      const form = new FormData();
+      form.append('new_video', videoFile[0]);
+      form.append('old_video_location', currentVideoLocation);
+      let videoLocation = '';
+      await api
+        .put('/buckets/video', form)
+        .then((data) => {
+          videoLocation = data.data.video_location;
+          modelStore.updateModel(
+            { videoLocation: videoLocation },
+            userId,
+            modelId
+          );
+          Notify.create({
+            message: 'Video replaced successfullly!',
+            type: 'positive',
+          });
         })
         .catch((err) => {
           Notify.create({
