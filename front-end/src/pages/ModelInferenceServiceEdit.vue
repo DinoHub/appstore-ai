@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <!-- content -->
-    <model-card-edit-tabs />
+    <model-card-edit-tabs :task="''" />
     <q-stepper
       v-model="editInferenceServiceStore.step"
       animated
@@ -178,6 +178,7 @@ const modelId = route.params.modelId as string;
 
 const buttonDisable = ref(false);
 const loading = ref(false);
+const cancel = ref(false);
 
 const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;
