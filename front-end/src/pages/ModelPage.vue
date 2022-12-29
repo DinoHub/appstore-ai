@@ -63,6 +63,12 @@
               label="Inference"
               no-caps
             ></q-tab>
+            <q-tab
+              v-if="model.videoLocation"
+              name="video"
+              label="Video"
+              no-caps
+            ></q-tab>
             <q-tab name="metadata" label="Metadata" no-caps></q-tab>
             <q-tab
               name="artifacts"
@@ -88,6 +94,20 @@
                   >Inference service is not available for this
                   model</q-card-section
                 >
+              </q-card>
+            </q-tab-panel>
+            <q-tab-panel v-if="model.videoLocation" name="video">
+              <q-card>
+                <q-card-section>
+                  <div class="text-h6">Video Preview</div>
+                </q-card-section>
+                <q-separator></q-separator>
+                <q-card-actions>
+                  <vue-plyr
+                    ><video controls playsinline>
+                      <source size="1080" :src="model.videoLocation" /></video
+                  ></vue-plyr>
+                </q-card-actions>
               </q-card>
             </q-tab-panel>
             <q-tab-panel name="metadata">
@@ -162,10 +182,20 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md">
+              <div class="q-py-md" v-if="model.inferenceServiceName">
                 <q-btn
                   label="Edit Model Inference Service"
                   :to="`/model/${userId}/${modelId}/edit/inference`"
+                  rounded
+                  color="tertiary"
+                  no-caps
+                  padding="sm xl"
+                ></q-btn>
+              </div>
+              <div class="q-py-md" v-if="model.videoLocation">
+                <q-btn
+                  label="Edit Example Video"
+                  :to="`/model/${userId}/${modelId}/edit/video`"
                   rounded
                   color="tertiary"
                   no-caps
@@ -223,6 +253,7 @@ import { Notify } from 'quasar';
 
 enum Tabs {
   inference = 'inference',
+  video = 'video',
   metadata = 'metadata',
   artifacts = 'artifacts',
   manage = 'manage',
@@ -245,6 +276,7 @@ const model = reactive({
   frameworks: [],
   creatorUserId: '',
   inferenceServiceName: '',
+  videoLocation: '',
   markdown: '',
   performance: '',
   created: '',
@@ -260,7 +292,7 @@ modelStore
   .getModelById(userId, modelId)
   .then((card) => {
     Object.assign(model, card);
-
+    console.log(model);
     // set up datetime to appear nicer in the frontend
     var dateCreated = new Date(model.created);
     var dateLastModified = new Date(model.lastModified);
@@ -271,8 +303,12 @@ modelStore
       dateLastModified.getMonth() + 1
     }/${dateLastModified.getFullYear()}, ${dateLastModified.toLocaleTimeString()}`;
 
+    if (!model.inferenceServiceName && !model.videoLocation) {
+      tab.value = Tabs.metadata; // if both not available, go to metadata
+      return;
+    }
     if (!model.inferenceServiceName) {
-      tab.value = Tabs.metadata; // if inference not available, hide
+      tab.value = Tabs.video; // if inference not available, go to videos tab instead
       return;
     }
     inferenceServiceStore
