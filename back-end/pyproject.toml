@@ -24,6 +24,7 @@ fastapi-csrf-protect = "^0.2.2"
 lxml = "^4.9.1"
 bs4 = "^0.0.1"
 minio = "^7.1.12"
+colorama = "^0.4.6"
 
 [tool.poetry.scripts]
 boot = "main:start"
