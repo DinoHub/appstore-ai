@@ -198,7 +198,7 @@ async def update_model_card_metadata_by_id(
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
     card = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
-
+    
     if "markdown" in card:
         # Upload base64 encoded image to S3
         card["markdown"] = preprocess_html(card["markdown"])
