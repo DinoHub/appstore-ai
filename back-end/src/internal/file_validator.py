@@ -112,5 +112,6 @@ class ValidateFileUpload:
                 content_length = int(request.headers["content-length"])
                 if content_length > self.max_upload_size:
                     raise HTTPException(
-                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+                        status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                        detail=f"File is too large. Max size is {self.max_upload_size}, file size is {content_length}",
                     )
