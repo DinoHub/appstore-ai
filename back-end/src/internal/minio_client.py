@@ -29,9 +29,7 @@ def minio_api_client() -> Optional[minio.Minio]:
         # create the bucket from env variables if not already created
         if not found_bucket:
             minio_client.make_bucket(bucket_name)
-            print(
-                f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created"
-            )
+            print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created")
         else:
             print(
                 f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' already exists"
@@ -41,6 +39,18 @@ def minio_api_client() -> Optional[minio.Minio]:
         print(
             f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Failed to connect to MinIO instance"
         )
+
+
+def remove_data(
+    client: minio.Minio,
+    object_name: str,
+    bucket_name: str,
+):
+    # remove data from S3 bucket
+    client.remove_object(
+        bucket_name=bucket_name,
+        object_name=object_name,
+    )
 
 
 def upload_data(
