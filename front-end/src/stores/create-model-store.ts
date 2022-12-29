@@ -1,4 +1,4 @@
-import { ModelCard, ModelCardNoInference, useModelStore } from './model-store';
+import { ModelCard, useModelStore } from './model-store';
 
 import { Chart, EnvField } from 'src/components/models';
 import { Notify } from 'quasar';
@@ -297,7 +297,7 @@ export const useCreationStore = defineStore('createModel', {
         const uploadStore = useUploadStore();
         const videoUploader = uploadStore.uploadVideo(this.exampleVideo);
         let videoLocation = '';
-        videoUploader.then((data) => {
+        await videoUploader.then((data) => {
           videoLocation = data;
         });
         if (authStore.user?.name) {
@@ -329,7 +329,7 @@ export const useCreationStore = defineStore('createModel', {
           explanation: this.modelExplain,
           usage: this.modelUsage,
           limitations: this.modelLimitations,
-        } as ModelCardNoInference;
+        } as ModelCard;
 
         if (this.experimentID != '' && this.experimentPlatform != '') {
           cardPackage.experiment = {
