@@ -10,6 +10,7 @@ import MainLayout from 'layouts/MainLayout.vue';
 import AdminDashboardLayout from 'layouts/AdminDashboardLayout.vue';
 import ModelInferenceServiceEdit from 'src/pages/ModelInferenceServiceEdit.vue';
 import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
+import ModelVideoEdit from 'pages/ModelVideoEdit.vue';
 import ModelPage from 'pages/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
 import SearchLayout from 'layouts/SearchLayout.vue';
@@ -122,6 +123,11 @@ const routes: RouteRecordRaw[] = [
             path: 'inference',
             name: 'Model Inference Service',
             component: ModelInferenceServiceEdit,
+          },
+          {
+            path: 'video',
+            name: 'Model Example Video',
+            component: ModelVideoEdit,
           },
         ],
       },
