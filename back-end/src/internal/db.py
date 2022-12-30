@@ -1,11 +1,17 @@
+"""Database Connection to MongoDB"""
 from typing import Tuple
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
+from ..config.config import config
+
 
 def get_db() -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
-    from ..config.config import config
+    """Get MongoDB connection
 
+    Returns:
+        Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]: Connection to MongoDB and Client
+    """
     mongo_client = AsyncIOMotorClient(
         config.MONGO_DSN,
         username=config.MONGO_USERNAME,
@@ -16,8 +22,8 @@ def get_db() -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
     return db, mongo_client
 
 
-def init_db():
-    db, _ = get_db()
+# def init_db():
+#     db, _ = get_db()
 
     # db["users"].create_index([("userId", 1)], unique=True)
 
@@ -46,7 +52,7 @@ def init_db():
     # )
 
 
-init_db()
+# init_db()
 
 # Create text index to allow searching
 # db["models"].create_index([

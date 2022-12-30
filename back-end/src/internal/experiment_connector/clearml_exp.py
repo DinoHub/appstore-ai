@@ -1,3 +1,6 @@
+"""ClearML experiment connector.
+A interface to interact with ClearML experiments.
+"""
 import json
 from typing import Dict, List, Optional
 
@@ -54,13 +57,13 @@ class ClearMLExperiment(ExperimentConnector):
     def config(self) -> Dict:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return self.task.get_parameters(cast=True)
+        return dict(self.task.get_parameters(cast=True) or {})
 
     @property
-    def tags(self) -> List:
+    def tags(self) -> List[str]:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return self.task.get_tags()
+        return list(self.task.get_tags())
 
     @property
     def metrics(self) -> List[Dict]:
@@ -79,10 +82,11 @@ class ClearMLExperiment(ExperimentConnector):
         output: Dict[str, Artifact] = {}
         for name, artifact in artifacts.items():
             output[name] = Artifact(
-                artifact_type=artifact.type,
+                artifactType=artifact.type,
                 name=name,
                 url=artifact.url,
                 timestamp=artifact.timestamp,
+                framework=None,
             )
         return output
 
@@ -97,15 +101,24 @@ class ClearMLExperiment(ExperimentConnector):
             # model_type: "input", "output"
             for model in values:
                 output[model.name] = Artifact(
-                    artifact_type="model",
+                    artifactType="model",
                     name=model.name,
                     url=model.url,
                     framework=model.framework,
+                    timestamp=None,
                 )
         return output
 
     @property
     def plots(self) -> List[Dict]:
+        """Get all plots from the current experiment.
+
+        Raises:
+            ValueError: If not currently connected to any experiments
+
+        Returns:
+            List[Dict]: List of plotly json objects
+        """
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         return [
@@ -114,6 +127,15 @@ class ClearMLExperiment(ExperimentConnector):
         ]
 
     def get_metadata(self) -> Dict:
+        """Get metadata for the current experiment.
+
+        Raises:
+            ValueError: If not currently connected to any experiments
+            ValueError: If unable to find task
+
+        Returns:
+            Dict: Metadata for the current experiment
+        """
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         tasks = Task.query_tasks(
@@ -126,7 +148,20 @@ class ClearMLExperiment(ExperimentConnector):
             raise ValueError("Unable to find task")
         return tasks[0]
 
-    def clone(self, clone_name: Optional[str] = None) -> "ClearMLExperiment":
+    def clone_self(
+        self, clone_name: Optional[str] = None
+    ) -> "ClearMLExperiment":
+        """Clone the current experiment.
+
+        Args:
+            clone_name (Optional[str], optional): Name of cloned exp. Defaults to None.
+
+        Raises:
+            ValueError: If not currently connected to any experiments
+
+        Returns:
+            ClearMLExperiment: Cloned experiment
+        """
         if not self.id:
             raise ValueError("Not currently connected to any experiments")
         task = Task.clone(source_task=self.id, name=clone_name)
@@ -137,9 +172,25 @@ class ClearMLExperiment(ExperimentConnector):
         queue_name: Optional[str] = "default",
         queue_id: Optional[str] = None,
     ) -> Dict:
+        """Add current experiment to the ClearML task queue.
+
+        Args:
+            queue_name (Optional[str], optional): Name of queue. Defaults to "default".
+            queue_id (Optional[str], optional): ID of queue (in place of name). Defaults to None.
+
+        Raises:
+            ValueError: If not currently connected to any experiments
+
+        Returns:
+            Dict: An enqueue JSON response
+        """
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return self.task.enqueue(queue_name=queue_name, queue_id=queue_id)
+        return dict(
+            self.task.enqueue(
+                self.task, queue_name=queue_name, queue_id=queue_id
+            )
+        )
 
     def close(
         self, delete_task: bool = False, delete_artifacts: bool = False
@@ -151,6 +202,18 @@ class ClearMLExperiment(ExperimentConnector):
             self.delete(delete_artifacts=delete_artifacts)
 
     def delete(self, delete_artifacts: bool = False) -> bool:
+        """Delete the current experiment.
+
+        Args:
+            delete_artifacts (bool, optional): If artifacts associated should also be deleted.
+                Defaults to False.
+
+        Raises:
+            ValueError: If not currently connected to any experiments
+
+        Returns:
+            bool: If the experiment was successfully deleted
+        """
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         return self.task.delete(delete_artifacts_and_models=delete_artifacts)
@@ -163,6 +226,18 @@ class ClearMLExperiment(ExperimentConnector):
         tags: Optional[List[str]] = None,
         task_filter: Optional[Dict] = None,
     ) -> List[Task]:
+        """List all experiments.
+
+        Args:
+            ids (Optional[List[str]], optional): Filter by list of exp ids. Defaults to None.
+            project (Optional[str], optional): Filter by list of exp projects. Defaults to None.
+            exp_name (Optional[str], optional): Filter by list of exp names. Defaults to None.
+            tags (Optional[List[str]], optional): Filter by list of tags. Defaults to None.
+            task_filter (Optional[Dict], optional): More filter and sort options. Defaults to None.
+
+        Returns:
+            List[Task]: List of experiments matching the filter
+        """
         task_list = Task.get_tasks(
             task_ids=ids,
             project_name=project,
@@ -174,6 +249,15 @@ class ClearMLExperiment(ExperimentConnector):
 
     @staticmethod
     def _to_plotly_json(title: str, data: Dict) -> Dict[str, Dict]:
+        """Convert ClearML metrics data to plotly json.
+
+        Args:
+            title (str): Graph title
+            data (Dict): ClearML metrics data
+
+        Returns:
+            Dict[str, Dict]: Plotly compatible json
+        """
         result = {
             "data": [],
             "layout": {

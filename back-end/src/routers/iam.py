@@ -1,7 +1,9 @@
 import datetime
+from typing import Tuple, Dict
 
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse
 from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
 
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/iam", tags=["IAM"])
 @router.post("/add", dependencies=[Depends(check_is_admin)])
 async def add_user(
     item: UserInsert,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ):
     """
     Function to add a user to the MongoDB after reciveing a POST call to the endpoint
@@ -66,11 +68,25 @@ async def add_user(
         ) from err
 
 
-@router.delete("/delete", dependencies=[Depends(check_is_admin)])
+@router.delete(
+    "/delete",
+    dependencies=[Depends(check_is_admin)],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def delete_user(
     userid: UserRemoval,
-    db=Depends(get_db),
-):
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+) -> None:
+    """Delete a user from the database
+
+    Args:
+        userid (UserRemoval): User ID to delete
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 404 if user not found
+    """
     db, mongo_client = db
     try:
         async with await mongo_client.start_session() as session:
@@ -78,17 +94,20 @@ async def delete_user(
                 await db["users"].delete_many(
                     {"userId": {"$in": userid.users}}
                 )
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         ) from err
 
 
-@router.put("/edit", dependencies=[Depends(check_is_admin)])
+@router.put(
+    "/edit",
+    dependencies=[Depends(check_is_admin)],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def update_user(
     user: UserInsert,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ):
     db, mongo_client = db
     try:
@@ -116,13 +135,16 @@ async def update_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         ) from err
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/edit/multi", dependencies=[Depends(check_is_admin)])
+@router.put(
+    "/edit/multi",
+    dependencies=[Depends(check_is_admin)],
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def update_many_user(
     user: UsersEdit,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ):
     db, mongo_client = db
     try:
@@ -151,7 +173,6 @@ async def update_many_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Not found"
         ) from err
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 # list users with pagination
@@ -160,8 +181,24 @@ async def get_users(
     pages_user: UserPage,
     descending: bool = Query(default=True, alias="desc"),
     sort_by: str = Query(default="lastModified", alias="sort"),
-    db=Depends(get_db),
-):
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]=Depends(get_db),
+) -> Dict:
+    """Get a list of users from the database
+
+    Args:
+        pages_user (UserPage): Pagination input
+        descending (bool, optional): Order of results. Defaults to Query(default=True, alias="desc").
+        sort_by (str, optional): Sort field. Defaults to Query(default="lastModified", alias="sort").
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection. 
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 422 if unable to get users
+        HTTPException: 404 if user not found
+
+    Returns:
+        Dict: _description_
+    """
     db, mongo_client = db
     try:
         # check number of documents to skip past
@@ -216,10 +253,7 @@ async def get_users(
                         .limit(pages_user.user_num)
                     ).to_list(length=pages_user.user_num)
         # return documents if all ok
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"results": cursor, "total_rows": total_rows},
-        )
+        return {"results": cursor, "total_rows": total_rows}
     # triggered if req sent to this endpoint has missing headers or invalid data
     except ValueError as err:
         raise HTTPException(

@@ -1,5 +1,8 @@
+"""Authentication Endpoints"""
 from datetime import timedelta
+from typing import Dict, Tuple, Optional
 
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from fastapi import (
     APIRouter,
     Depends,
@@ -35,8 +38,24 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 async def auth_user(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db=Depends(get_db),
-):
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+) -> Dict[str, str]:
+    """Authenticate user and return access and refresh tokens
+
+    Args:
+        response (Response): Response that will be returned to the client
+        form_data (OAuth2PasswordRequestForm, optional): Username and Password.
+            Defaults to Depends().
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB Connection.
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 401 Unauthorized if credentials are invalid
+        HTTPException: 404 Not Found if user does not exist
+
+    Returns:
+        Dict[str, str]: Response containing access and refresh tokens. Credentials are saved as cookies.
+    """
     db, mongo_client = db
     csrf = CsrfProtect()
     async with await mongo_client.start_session() as session:
@@ -110,9 +129,29 @@ async def auth_user(
 async def get_refresh_token(
     request: Request,
     response: Response,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]= Depends(get_db),
     csrf: CsrfProtect = Depends(),
-):
+) -> Optional[Dict[str, str]]:
+    """Use refresh token to get new access token
+    when access token expires.
+
+    Args:
+        request (Request): Incoming request
+        response (Response): Response that will be returned to the client
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB Connection. 
+            Defaults to Depends(get_db).
+        csrf (CsrfProtect, optional): Perform CSRF protection. Defaults to Depends().
+
+    Raises:
+        HTTPException: 404 if user does not exist
+        HTTPException: 403 if refresh token expired
+        CREDENTIALS_EXCEPTION: 401 if credentials are invalid
+        HTTPException: 409 if CSRF token is invalid
+        HTTPException: 400 otherwise
+
+    Returns:
+        Optional[Dict[str, str]]: Access token if refresh token is valid
+    """
     try:
         form = await request.json()
         if form.get("grant_type") == "refresh_token":
@@ -187,7 +226,15 @@ async def get_refresh_token(
 
 
 @router.delete("/logout", status_code=status.HTTP_204_NO_CONTENT)
-def logout_user(response: Response):
+def logout_user(response: Response) -> None:
+    """Logout user by deleting cookies
+
+    Args:
+        response (Response): Response that will be returned to the client
+
+    Raises:
+        HTTPException: 500 if an error occurs
+    """
     try:
         response.delete_cookie("access_token")
         response.delete_cookie("refresh_token")

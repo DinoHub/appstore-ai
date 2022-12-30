@@ -1,3 +1,6 @@
+"""ClearML Dataset Connector
+A interface to interact with ClearML datasets.
+"""
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
@@ -7,17 +10,24 @@ from .connector import DatasetConnector
 
 
 class ClearMLDataset(DatasetConnector):
+    """ClearML Dataset Connector.
+    """
     def __init__(self):
+        """Initialize a ClearML dataset connector.
+        Note: Do not directly instantiate,
+        instead, you should use the `create`
+        or `get` class method to create the
+        connector.
+        """
         super().__init__()
-        # Add type hinting for dataset
         self.dataset: Optional[Dataset] = None
+        self.output_path: Optional[Union[Path, str]] = None
 
     @property
     def file_entries(self) -> Dict:
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
-        return self.dataset.file_entries_dict
-
+        return self.dataset.file_entries_dict # type: ignore
     @property
     def name(self) -> str:
         if self.dataset is None:
@@ -32,6 +42,14 @@ class ClearMLDataset(DatasetConnector):
 
     @property
     def tags(self) -> List[str]:
+        """Get the tags associated with the dataset.
+
+        Raises:
+            AttributeError: If dataset has not been initialized.
+
+        Returns:
+            List[str]: List of tags associated with the dataset.
+        """
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
         return self.dataset.tags
@@ -104,7 +122,7 @@ class ClearMLDataset(DatasetConnector):
     ) -> None:
         if self.dataset is None:
             raise AttributeError("Dataset has not been created.")
-        self.dataset.remove_files(path=path, recursive=recursive)
+        self.dataset.remove_files(dataset_path=str(path), recursive=recursive)
 
     def upload(self, remote: Optional[str] = None) -> None:
         if self.dataset is None:
@@ -126,6 +144,8 @@ class ClearMLDataset(DatasetConnector):
         self.output_path = self.dataset.get_mutable_local_copy(
             target_folder=path, overwrite=overwrite
         )
+        if self.output_path is None:
+            raise RuntimeError("Failed to download dataset")
         return self.output_path
 
     def delete(self) -> None:

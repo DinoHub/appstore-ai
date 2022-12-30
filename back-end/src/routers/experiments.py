@@ -1,23 +1,37 @@
 from typing import Dict
 
 from clearml.backend_api.session.client import APIClient
-from fastapi import APIRouter, Depends, HTTPException, Path, status
-from fastapi.responses import JSONResponse, Response
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..internal.clearml_client import clearml_api_client
 from ..internal.experiment_connector import Experiment
-from ..models.experiment import ClonePackageModel, Connector
+from ..models.experiment import ClonePackageModel, Connector, ExperimentResponse
 
 router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
 
-@router.get("/{exp_id}")
+@router.get("/{exp_id}", response_model=ExperimentResponse)
 async def get_experiment(
     exp_id: str,
     connector: Connector,
     return_plots: bool = True,
     return_artifacts: bool = True,
-):
+) -> Dict:
+    """Get experiment by ID.
+
+    Args:
+        exp_id (str): Experiment ID
+        connector (Connector): Connector to use
+        return_plots (bool, optional): If plots should be returned. Defaults to True.
+        return_artifacts (bool, optional): If artifacts should be returned. Defaults to True.
+
+    Raises:
+        HTTPException: 404 Not Found if experiment does not exist
+        HTTPException: 500 Internal Server Error if error occurs
+
+    Returns:
+        Dict: Experiment details
+    """
     try:
         exp = Experiment.from_connector(connector).get(exp_id=exp_id)
         # Extract framework from models
@@ -63,12 +77,21 @@ async def get_experiment(
 async def clone_experiment(
     item: ClonePackageModel,
     connector: Connector,
-):
+) -> Dict:
+    """Clone experiment. (Not implemented yet.)
+
+    Args:
+        item (ClonePackageModel): Item to clone
+        connector (Connector): Experiment connector
+
+    Returns:
+        Dict: Details of cloned experiment
+    """
     exp = Experiment.from_connector(connector).get(exp_id=item.id)
     if item.clone_name is None or item.clone_name == "":
-        new_exp = exp.clone(clone_name=f"Clone of {exp.exp_name}")
+        new_exp = exp.clone_self(clone_name=f"Clone of {exp.exp_name}")
     else:
-        new_exp = exp.clone(clone_name=f"{item.clone_name}")
+        new_exp = exp.clone_self(clone_name=f"{item.clone_name}")
     cloned = Experiment.from_connector(connector).get(exp_id=new_exp.id)
     return {
         "id": exp.id,

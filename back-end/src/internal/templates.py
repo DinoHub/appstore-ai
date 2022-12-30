@@ -1,3 +1,4 @@
+"""Jinja2 template environment for the project."""
 from pathlib import Path
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape

@@ -1,3 +1,4 @@
+"""Module for validating file uploads."""
 import string
 import unicodedata
 from shutil import disk_usage
@@ -13,16 +14,38 @@ CHAR_LIMIT = 255
 
 
 class MaxFileSizeException(Exception):
+    """Exception raised when file size exceeds upload limit.
+    """
     def __init__(self, fs: int):
+        """Initialize a MaxFileSizeException.
+
+        Args:
+            fs (int): Total bytes consumed when this exception was raised.
+        """
         self.fs = fs
 
 
 class MaxFileSizeValidator:
+    """Validates that file size does not exceed max size."""
     def __init__(self, max_size: int):
+        """Initialize a MaxFileSizeValidator.
+
+        Args:
+            max_size (int): Max file size in bytes
+        """
         self.fs = 0
         self.max_size = max_size
 
     def __call__(self, chunk: bytes):
+        """Consume a chunk of bytes
+
+        Args:
+            chunk (bytes): Bytes from file upload
+
+        Raises:
+            MaxFileSizeException: If total chunks consumed
+                exceeds max size, then file size is too large.
+        """
         self.fs += len(chunk)
         if self.fs > self.max_size:
             raise MaxFileSizeException(fs=self.fs)
@@ -31,6 +54,17 @@ class MaxFileSizeValidator:
 def determine_safe_file_size(
     path: str = "/", clearance: Union[int, float] = 5
 ) -> int:
+    """Determine the safe file size for a given path.
+    This is done to determine if there is enough space
+    for decompressing a file.
+
+    Args:
+        path (str, optional): Path to check disk usage for. Defaults to "/".
+        clearance (Union[int, float], optional): Expected compression ratio. Defaults to 5.
+
+    Returns:
+        int: How many bytes can be safely written to disk.
+    """
     # clearance is because we need to give space for decompression
     assert clearance > 0
     (_, _, free) = disk_usage(path)
@@ -79,15 +113,33 @@ def clean_filename(
 
 
 class ValidateFileUpload:
+    """Validates incoming request to check if file upload is valid."""
     def __init__(
         self,
         max_upload_size: Optional[int] = None,
         accepted_content_types: Optional[List[str]] = None,
     ):
+        """Initialize a ValidateFileUpload.
+
+        Args:
+            max_upload_size (Optional[int], optional): Maximum upload size in bytes. Defaults to None.
+            accepted_content_types (Optional[List[str]], optional): List of accepted MIME types. Defaults to None.
+        """
         self.max_upload_size = max_upload_size
         self.accepted_content_types = accepted_content_types
 
     def __call__(self, request: Request):
+        """Intercept incoming request and validate it.
+
+        Args:
+            request (Request): Incoming HTTP POST request
+
+        Raises:
+            HTTPException: If request does not contain a content-type header.
+            HTTPException: If content-type is not in accepted_content_types.
+            HTTPException: If request does not contain a content-length header.
+            HTTPException: If content-length is greater than max_upload_size.
+        """
         if request.method == "POST":
             if self.accepted_content_types is not None:
                 if "content-type" not in request.headers:

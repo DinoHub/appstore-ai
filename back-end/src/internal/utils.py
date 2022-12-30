@@ -1,24 +1,43 @@
+"""This module contains utility functions that are used throughout the project."""
 import re
 
 
 def uncased_to_snake_case(string: str) -> str:
+    """Converts a string to snake case.
+
+    Args:
+        string (str): Input string
+
+    Returns:
+        str: Snake case string
+    """
     return "_".join(string.lower().strip().split(" "))
 
-
 def k8s_safe_name(string: str) -> str:
-    """K8S names can only contain alphanum
+    """Converts a string to a k8s safe name.
+
+    A k8s safe name can only contain alphanum
     chars and hyphens, be lower case and
     names cannot start with hyphens.
 
-    :param string: _description_
-    :type string: str
-    :return: _description_
-    :rtype: str
+    Args:
+        string (str): Input string
+
+    Returns:
+        str: Output string
     """
     return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix("-")
 
 
 def camel_case_to_snake_case(string: str) -> str:
+    """Converts a string from camel case to snake case.
+
+    Args:
+        string (str): Camel case string
+
+    Returns:
+        str: Snake case string
+    """
     string = re.sub(r"[\-\.\s]", "_", str(string).strip())
     if not string:
         return string
@@ -29,6 +48,14 @@ def camel_case_to_snake_case(string: str) -> str:
 
 
 def to_camel_case(string: str) -> str:
+    """Converts a string to camel case.
+
+    Args:
+        string (str): Input string
+
+    Returns:
+        str: Camel case string
+    """
     string_split = string.split("_")
     return (
         string_split[0]

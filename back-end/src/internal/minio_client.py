@@ -1,3 +1,4 @@
+"""Contains functions to connect to MinIO instance and upload data to it"""
 from io import BytesIO
 from typing import Optional
 
@@ -8,10 +9,10 @@ from ..config.config import config
 
 
 def minio_api_client() -> Optional[minio.Minio]:
-    """Function to create a connection to the MinIO instance
+    """Create a MinIO API Client.
 
-    :return: An object that contains the MinIO client
-    :rtype: Minio
+    Returns:
+        Optional[minio.Minio]: MinIO API Client. If connection fails, returns None.
     """
     try:
         print(
@@ -46,12 +47,18 @@ def remove_data(
     object_name: str,
     bucket_name: str,
 ):
+    """Removes data from MinIO bucket
+
+    Args:
+        client (minio.Minio): S3 client
+        object_name (str): Name of object to remove
+        bucket_name (str): Name of bucket to remove object from
+    """
     # remove data from S3 bucket
     client.remove_object(
         bucket_name=bucket_name,
         object_name=object_name,
     )
-
 
 def upload_data(
     client: minio.Minio,
@@ -62,18 +69,15 @@ def upload_data(
 ) -> str:
     """Stores blob in MinIO bucket and returns URL to object
 
-    :param client: MinIO client
-    :type client: minio.Minio
-    :param blob: Binary data to store
-    :type blob: bytes
-    :param object_name: filename of object
-    :type object_name: str
-    :param bucket_name: name of bucket to store object in
-    :type bucket_name: str
-    :param content_type: Content type of object, defaults to "application/octet-stream"
-    :type content_type: str, optional
-    :return: A URL to the object
-    :rtype: str
+    Args:
+        client (minio.Minio): MinIO client
+        blob (bytes): Binary data to store
+        object_name (str): Filename of object
+        bucket_name (str): Bucket to store object in
+        content_type (str, optional): Content type of object. Defaults to "application/octet-stream".
+
+    Returns:
+        str: URL to object
     """
     data_stream = BytesIO(blob)
     # read whole stream to get length

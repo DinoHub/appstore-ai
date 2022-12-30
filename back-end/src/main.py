@@ -82,4 +82,9 @@ app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 @app.get("/")
 def root():
+    """Return a simple message to test if the server is running.
+
+    Returns:
+        JSONResponse: A simple message that says "Hello World"
+    """
     return {"message": "Hello World"}
