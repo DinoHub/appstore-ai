@@ -24,6 +24,7 @@ from .common import PyObjectId
 
 class CreateInferenceEngineService(BaseModel):
     """Request model for creating an inference engine service."""
+
     model_id: str  # NOTE: actually model title, will convert to model id in backend
     image_uri: str
     # resource_limits: ResourceLimits
@@ -35,11 +36,13 @@ class CreateInferenceEngineService(BaseModel):
         """Pydantic config to allow creation of data model
         from a JSON object with camelCase keys.
         """
+
         alias_generator = to_camel_case
 
 
 class InferenceEngineService(CreateInferenceEngineService):
     """Data model for inference engine service in database."""
+
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     inference_url: str
     owner_id: str
@@ -52,6 +55,7 @@ class InferenceEngineService(CreateInferenceEngineService):
         from a JSON object with camelCase keys and to convert
         ObjectId to str when returning JSON.
         """
+
         alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
@@ -60,6 +64,7 @@ class InferenceEngineService(CreateInferenceEngineService):
 
 class UpdateInferenceEngineService(BaseModel):
     """Request model for updating an inference engine service."""
+
     image_uri: str
     container_port: Optional[int] = None
     # resource_limits: ResourceLimits
@@ -69,6 +74,7 @@ class UpdateInferenceEngineService(BaseModel):
         """Pydantic config to allow creation of data model
         from a JSON object with camelCase keys.
         """
+
         alias_generator = to_camel_case
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}

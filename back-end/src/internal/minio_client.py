@@ -30,7 +30,9 @@ def minio_api_client() -> Optional[minio.Minio]:
         # create the bucket from env variables if not already created
         if not found_bucket:
             minio_client.make_bucket(bucket_name)
-            print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created")
+            print(
+                f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created"
+            )
         else:
             print(
                 f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' already exists"
@@ -59,6 +61,7 @@ def remove_data(
         bucket_name=bucket_name,
         object_name=object_name,
     )
+
 
 def upload_data(
     client: minio.Minio,

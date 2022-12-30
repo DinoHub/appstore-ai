@@ -1,15 +1,15 @@
 """Endpoints for handling object storage buckets."""
 import uuid
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from colorama import Fore
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from minio import Minio
 
 from ..config.config import config
-from ..models.buckets import VideoUploadResponse
 from ..internal.file_validator import ValidateFileUpload
 from ..internal.minio_client import minio_api_client, remove_data, upload_data
+from ..models.buckets import VideoUploadResponse
 
 router = APIRouter(prefix="/buckets", tags=["buckets"])
 
@@ -72,7 +72,7 @@ def upload_video(
     "/video",
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(video_validator)],
-    response_model=VideoUploadResponse
+    response_model=VideoUploadResponse,
 )
 def replace_video(
     new_video: UploadFile = Form(),

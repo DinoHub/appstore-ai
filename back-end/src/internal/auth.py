@@ -22,6 +22,7 @@ CREDENTIALS_EXCEPTION = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+
 @CsrfProtect.load_config
 def get_csrf_config() -> CsrfSettings:
     """Get CSRF config
@@ -30,6 +31,7 @@ def get_csrf_config() -> CsrfSettings:
         CsrfSettings: Cross-site request forgery protection config
     """
     return CsrfSettings()
+
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify that password is correct

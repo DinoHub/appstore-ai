@@ -3,8 +3,8 @@ which provides a common interface to allow the app
 to interact with different providers (e.g ClearML datasets,
 Weights and Biases artifacts, DVC, etc.).
 """
-from .clearml_dataset import ClearMLDataset
 from ...models.dataset import Connector
+from .clearml_dataset import ClearMLDataset
 
 # NOTE: Update type hinting when more connectors are added
 SUPPORTED_CONNECTORS = {"clearml": ClearMLDataset}

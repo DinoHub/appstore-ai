@@ -6,17 +6,14 @@ from bson import ObjectId
 from pydantic import BaseModel, Field
 
 from ..internal.utils import to_camel_case
-from .experiment import LinkedExperiment
+from .common import Artifact, PyObjectId
 from .dataset import LinkedDataset
-from .common import PyObjectId, Artifact
-
-
-
+from .experiment import LinkedExperiment
 
 
 class ModelCardModelIn(BaseModel):  # Input spec
-    """Request model for creating a model card.
-    """
+    """Request model for creating a model card."""
+
     title: str
     markdown: str
     performance: str
@@ -33,7 +30,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     point_of_contact: Optional[str] = None
     artifacts: Optional[
         List[Artifact]
-    ]  = None # will need to use GET /experiments/{exp_id} to get this
+    ] = None  # will need to use GET /experiments/{exp_id} to get this
     experiment: Optional[LinkedExperiment] = None
     dataset: Optional[LinkedDataset] = None
 
@@ -41,6 +38,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
         """Pydantic config to allow creation of data model
         from a JSON object with camelCase keys.
         """
+
         alias_generator = to_camel_case
 
 
@@ -49,6 +47,7 @@ class ModelCardModelDB(ModelCardModelIn):
     Contain additional fields for database that will
     be filled in as part of the controller logic.
     """
+
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     creator_user_id: str  # to be dynamically put in by FastAPI
     model_id: str  # to be generated on back-end
@@ -60,6 +59,7 @@ class ModelCardModelDB(ModelCardModelIn):
         from a JSON object with camelCase keys and to convert
         ObjectId to str when returning JSON.
         """
+
         alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
@@ -70,6 +70,7 @@ class UpdateModelCardModel(BaseModel):
     """Request model for updating a model card.
     All fields are optional, to allow for partial updates.
     """
+
     title: Optional[str] = None
     description: Optional[str] = None
     explanation: Optional[str] = None
@@ -94,20 +95,22 @@ class UpdateModelCardModel(BaseModel):
         """Pydantic config to allow creation of data model
         from a JSON object with camelCase keys.
         """
+
         alias_generator = to_camel_case
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
 
 class GetFilterResponseModel(BaseModel):
-    """Response model for getting filter options for model cards.
-    """
+    """Response model for getting filter options for model cards."""
+
     tags: List[str]
     frameworks: List[str]
     tasks: List[str]
 
+
 class SearchModelResponse(BaseModel):
-    """Response model for searching model cards.
-    """
+    """Response model for searching model cards."""
+
     results: List[ModelCardModelDB]
     total: int

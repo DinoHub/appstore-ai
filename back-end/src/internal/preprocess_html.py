@@ -105,7 +105,7 @@ def sanitize_html(html: str) -> str:
         remove_unknown_tags=False,
     )
     try:
-        cleaned: str = cleaner.clean_html(html) # type: ignore
+        cleaned: str = cleaner.clean_html(html)  # type: ignore
         if not isinstance(cleaned, str):
             raise TypeError
         return cleaned

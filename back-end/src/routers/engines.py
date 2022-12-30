@@ -1,21 +1,14 @@
 """Endpoints for Inference Engine Services"""
 import datetime
+from typing import Dict, Tuple
 from urllib.error import HTTPError
 from uuid import uuid4
-from typing import Dict, Tuple
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from fastapi import (
-    APIRouter,
-    BackgroundTasks,
-    Depends,
-    HTTPException,
-    Path,
-    status,
-)
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, status
 from fastapi.encoders import jsonable_encoder
 from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import DuplicateKeyError
 from yaml import safe_load
 

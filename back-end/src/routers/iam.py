@@ -1,9 +1,9 @@
 import datetime
-from typing import Tuple, Dict
+from typing import Dict, Tuple
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
 
@@ -181,7 +181,7 @@ async def get_users(
     pages_user: UserPage,
     descending: bool = Query(default=True, alias="desc"),
     sort_by: str = Query(default="lastModified", alias="sort"),
-    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ) -> Dict:
     """Get a list of users from the database
 
@@ -189,7 +189,7 @@ async def get_users(
         pages_user (UserPage): Pagination input
         descending (bool, optional): Order of results. Defaults to Query(default=True, alias="desc").
         sort_by (str, optional): Sort field. Defaults to Query(default="lastModified", alias="sort").
-        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection. 
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
             Defaults to Depends(get_db).
 
     Raises:

@@ -13,6 +13,7 @@ def uncased_to_snake_case(string: str) -> str:
     """
     return "_".join(string.lower().strip().split(" "))
 
+
 def k8s_safe_name(string: str) -> str:
     """Converts a string to a k8s safe name.
 

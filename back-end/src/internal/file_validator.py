@@ -14,8 +14,8 @@ CHAR_LIMIT = 255
 
 
 class MaxFileSizeException(Exception):
-    """Exception raised when file size exceeds upload limit.
-    """
+    """Exception raised when file size exceeds upload limit."""
+
     def __init__(self, fs: int):
         """Initialize a MaxFileSizeException.
 
@@ -27,6 +27,7 @@ class MaxFileSizeException(Exception):
 
 class MaxFileSizeValidator:
     """Validates that file size does not exceed max size."""
+
     def __init__(self, max_size: int):
         """Initialize a MaxFileSizeValidator.
 
@@ -114,6 +115,7 @@ def clean_filename(
 
 class ValidateFileUpload:
     """Validates incoming request to check if file upload is valid."""
+
     def __init__(
         self,
         max_upload_size: Optional[int] = None,

@@ -7,7 +7,9 @@ from clearml.backend_api.session.client import APIClient, StrictSession
 from ..config.config import config
 
 
-def clearml_api_client(config_path: Optional[Union[str, Path]] = None) -> APIClient:
+def clearml_api_client(
+    config_path: Optional[Union[str, Path]] = None
+) -> APIClient:
     """Create a ClearML API Client.
 
     Args:

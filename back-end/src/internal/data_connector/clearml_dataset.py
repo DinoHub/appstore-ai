@@ -10,8 +10,8 @@ from .connector import DatasetConnector
 
 
 class ClearMLDataset(DatasetConnector):
-    """ClearML Dataset Connector.
-    """
+    """ClearML Dataset Connector."""
+
     def __init__(self):
         """Initialize a ClearML dataset connector.
         Note: Do not directly instantiate,
@@ -27,7 +27,8 @@ class ClearMLDataset(DatasetConnector):
     def file_entries(self) -> Dict:
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
-        return self.dataset.file_entries_dict # type: ignore
+        return self.dataset.file_entries_dict  # type: ignore
+
     @property
     def name(self) -> str:
         if self.dataset is None:

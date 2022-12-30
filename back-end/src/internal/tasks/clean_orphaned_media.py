@@ -1,5 +1,5 @@
 """Tasks to clean up app of any unused media resources (e.g. images)."""
-from typing import Set, List
+from typing import List, Set
 
 from bs4 import BeautifulSoup
 from minio.deleteobjects import DeleteObject

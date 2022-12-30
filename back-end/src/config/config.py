@@ -5,8 +5,8 @@ Depending on the environment, the configuration will be different.
 
 # https://rednafi.github.io/digressions/python/2020/06/03/python-configs.html
 import os
-from typing import Optional, Union
 from enum import Enum
+from typing import Optional, Union
 
 from pydantic import BaseSettings, Field, MongoDsn
 
@@ -155,8 +155,10 @@ class FactoryConfig:
             raise ValueError(f"Unsupported config: {self.env_state}")
 
 
-ENV_STATE = GlobalConfig().ENV_STATE # Based on environment variables
-config: GlobalConfig = FactoryConfig(ENV_STATE)() # Initialize config based on ENV_STATE
+ENV_STATE = GlobalConfig().ENV_STATE  # Based on environment variables
+config: GlobalConfig = FactoryConfig(
+    ENV_STATE
+)()  # Initialize config based on ENV_STATE
 
 if config is not None:
     # Set environment variables based on config

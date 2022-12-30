@@ -1,21 +1,14 @@
 """Authentication Endpoints"""
 from datetime import timedelta
-from typing import Dict, Tuple, Optional
+from typing import Dict, Optional, Tuple
 
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Request,
-    Response,
-    status,
-)
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.security.utils import get_authorization_scheme_param
 from fastapi_csrf_protect import CsrfProtect
 from fastapi_csrf_protect.exceptions import CsrfProtectError
 from jose import ExpiredSignatureError, JWTError
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from ..internal.auth import (
     CREDENTIALS_EXCEPTION,
@@ -129,7 +122,7 @@ async def auth_user(
 async def get_refresh_token(
     request: Request,
     response: Response,
-    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]= Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     csrf: CsrfProtect = Depends(),
 ) -> Optional[Dict[str, str]]:
     """Use refresh token to get new access token
@@ -138,7 +131,7 @@ async def get_refresh_token(
     Args:
         request (Request): Incoming request
         response (Response): Response that will be returned to the client
-        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB Connection. 
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB Connection.
             Defaults to Depends(get_db).
         csrf (CsrfProtect, optional): Perform CSRF protection. Defaults to Depends().
 

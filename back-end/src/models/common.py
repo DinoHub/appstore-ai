@@ -1,13 +1,16 @@
-"""Common Pydantic models and functions."""""
-from typing import Optional
+"""Common Pydantic models and functions.""" ""
 from datetime import datetime
-from pydantic import BaseModel, Field
+from typing import Optional
+
 from bson import ObjectId
+from pydantic import BaseModel, Field
+
 
 class Artifact(BaseModel):
     """Artifact model for model cards.
     Artifacts can be linked models, datasets, or other artifacts.
     """
+
     artifact_type: str = Field(..., alias="artifactType")
     name: str
     url: str
@@ -17,10 +20,13 @@ class Artifact(BaseModel):
     class Config:
         """Pydantic config to allow creation of data model
         from a JSON object with camelCase keys."""
+
         allow_population_by_field_name = True
+
 
 class PyObjectId(ObjectId):
     """Custom Pydantic type for MongoDB ObjectIds."""
+
     @classmethod
     def __get_validators__(cls):
         yield cls.validate

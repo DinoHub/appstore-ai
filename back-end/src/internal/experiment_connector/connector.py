@@ -1,4 +1,4 @@
-"""Provides a base class for all experiment connectors to inherit from."""""
+"""Provides a base class for all experiment connectors to inherit from.""" ""
 from abc import ABC, abstractmethod
 from logging import Logger
 from typing import Dict, List, Optional
@@ -8,6 +8,7 @@ from ...models.model import Artifact
 
 class ExperimentConnector(ABC):
     """Base class for experiment connectors."""
+
     def __init__(self):
         """Initalize an experiment connector"""
         self.project_name: Optional[str] = None

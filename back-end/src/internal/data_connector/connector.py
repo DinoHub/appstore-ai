@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union
 
 class DatasetConnector(ABC):
     """Base class for dataset connectors."""
+
     def __init__(self):
         """Initialize a dataset connector.
 
@@ -119,8 +120,6 @@ class DatasetConnector(ABC):
                 does not implement this method.
         """
         raise NotImplementedError
-
-
 
     @abstractmethod
     def remove_files(

@@ -2,7 +2,8 @@
 from typing import Optional
 
 from fastapi import HTTPException, Request, status
-from fastapi.openapi.models import OAuthFlowPassword, OAuthFlows as OAuthFlowsModel
+from fastapi.openapi.models import OAuthFlowPassword
+from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
 from fastapi.security.utils import get_authorization_scheme_param
 from pydantic import BaseModel
@@ -11,13 +12,15 @@ from ..config.config import config
 
 
 class CsrfSettings(BaseModel):
-    """Cross-site request forgery protection config
-    """
+    """Cross-site request forgery protection config"""
+
     secret_key: str = config.SECRET_KEY
+
 
 # NOTE: Should this be moved to internal/auth.py?
 class OAuth2PasswordBearerWithCookie(OAuth2):
     """Custom OAuth2PasswordBearer class to allow cookie authentication"""
+
     def __init__(
         self,
         tokenUrl: str,

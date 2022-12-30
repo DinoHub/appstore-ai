@@ -2,7 +2,7 @@
 import secrets
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union, Dict, Literal
+from typing import Dict, List, Literal, Optional, Union
 
 from bson import ObjectId
 from password_strength import PasswordPolicy
@@ -21,18 +21,21 @@ policy = PasswordPolicy.from_names(
 
 class UserRoles(str, Enum):
     """Possible user roles."""
+
     user = "user"
     admin = "admin"
 
 
 class UsersEdit(BaseModel):
     """Request model for editing many users."""
+
     users: List[str] = []
     priv: bool = False
 
 
 class UserInsert(BaseModel):
     """Request model for creating a user."""
+
     name: str
     user_id: str
     password: str
@@ -40,7 +43,9 @@ class UserInsert(BaseModel):
     admin_priv: bool = False
 
     @validator("user_id")
-    def generate_if_empty(cls, v: Optional[str], values: Dict, **kwargs) -> str:
+    def generate_if_empty(
+        cls, v: Optional[str], values: Dict, **kwargs
+    ) -> str:
         """Generates a user id if one is not provided.
 
         Args:
@@ -85,6 +90,7 @@ class UserInsert(BaseModel):
 
 class UserInsertDB(BaseModel):
     """Request model for creating a user."""
+
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     user_id: str
     name: str
@@ -93,6 +99,7 @@ class UserInsertDB(BaseModel):
     class Config:
         """Pydantic config to allow creation of data model
         from a JSON object with camelCase keys."""
+
         alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
@@ -100,16 +107,16 @@ class UserInsertDB(BaseModel):
 
 
 class Token(BaseModel):
-    """Data model for user tokens
-    """
+    """Data model for user tokens"""
+
     access_token: str
     refresh_token: str
     token_type: Literal["bearer"]
 
 
 class TokenData(BaseModel):
-    """Decoded JWT token data.
-    """
+    """Decoded JWT token data."""
+
     user_id: Optional[str] = None
     name: Optional[str] = None
     role: Optional[UserRoles] = None
@@ -117,26 +124,27 @@ class TokenData(BaseModel):
 
 
 class User(BaseModel):
-    """Data model for user.
-    """
+    """Data model for user."""
+
     userId: str
     adminPriv: bool
 
 
 class UserInDB(User):
-    """Data model for user in database.
-    """
+    """Data model for user in database."""
+
     hashed_password: str
 
 
 class UserRemoval(BaseModel):
     """Request model for removing many users."""
+
     users: List[str]
 
 
 class UserPage(BaseModel):
-    """Request model for finding users
-    """
+    """Request model for finding users"""
+
     page_num: int = 1
     user_num: int = 5
     name: str = ""

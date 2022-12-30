@@ -1,12 +1,9 @@
 """Create a K8S client for use in the app."""
 from kubernetes.client import ApiClient, Configuration
-from kubernetes.config import (
-    ConfigException,
-    load_incluster_config,
-    load_kube_config,
-)
+from kubernetes.config import ConfigException, load_incluster_config, load_kube_config
 
 from ..config.config import config
+
 
 def get_k8s_client() -> ApiClient:
     """Create a K8S client to interact with the cluster.

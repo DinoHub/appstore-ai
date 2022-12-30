@@ -19,7 +19,7 @@ from ..internal.file_validator import (
     clean_filename,
     determine_safe_file_size,
 )
-from ..models.dataset import DatasetModel, FindDatasetModel, Connector
+from ..models.dataset import Connector, DatasetModel, FindDatasetModel
 
 DATA_CONNECTOR = Connector.CLEARML
 ACCEPTED_CONTENT_TYPES = [
