@@ -41,7 +41,7 @@ import { ref } from 'vue';
 import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
-import { Pagination, SearchFilter } from '../components/models';
+import { Pagination, SearchFilter } from 'src/components/models';
 
 const authStore = useAuthStore();
 const username = ref(authStore.user?.name);

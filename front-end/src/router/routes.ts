@@ -1,20 +1,20 @@
-import CreateModel from 'src/pages/ModelCreate.vue';
-import DashboardLayout from 'layouts/DashboardLayout.vue';
-import DashboardPage from 'pages/DashboardPage.vue';
-import AdminDashboardPage from 'pages/AdminDashboardPage.vue';
-import ErrorNotFound from 'pages/ErrorNotFound.vue';
-import AdminLoginPage from 'pages/AdminLoginPage.vue';
-import LoginLayout from 'layouts/LoginLayout.vue';
-import LoginPage from 'pages/LoginPage.vue';
-import MainLayout from 'layouts/MainLayout.vue';
-import AdminDashboardLayout from 'layouts/AdminDashboardLayout.vue';
-import ModelInferenceServiceEdit from 'src/pages/ModelInferenceServiceEdit.vue';
-import ModelMetadataEdit from 'pages/ModelMetadataEdit.vue';
-import ModelVideoEdit from 'pages/ModelVideoEdit.vue';
-import ModelPage from 'pages/ModelPage.vue';
+import CreateModel from 'src/pages/models/ModelCreate.vue';
+import DashboardLayout from 'src/layouts/DashboardLayout.vue';
+import DashboardPage from 'src/pages/DashboardPage.vue';
+import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
+import ErrorNotFound from 'src/pages/ErrorNotFound.vue';
+import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
+import LoginLayout from 'src/layouts/LoginLayout.vue';
+import LoginPage from 'src/pages/auth/LoginPage.vue';
+import MainLayout from 'src/layouts/MainLayout.vue';
+import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
+import ModelInferenceServiceEdit from 'src/pages/models/ModelInferenceServiceEdit.vue';
+import ModelMetadataEdit from 'src/pages/models/ModelMetadataEdit.vue';
+import ModelVideoEdit from 'src/pages/models/ModelVideoEdit.vue';
+import ModelPage from 'src/pages/models/ModelPage.vue';
 import { RouteRecordRaw } from 'vue-router';
-import SearchLayout from 'layouts/SearchLayout.vue';
-import SearchModelsPage from 'pages/SearchModelsPage.vue';
+import SearchLayout from 'src/layouts/SearchLayout.vue';
+import SearchModelsPage from 'src/pages/models/SearchModelsPage.vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { Notify } from 'quasar';
 const routes: RouteRecordRaw[] = [
@@ -26,7 +26,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Login',
         component: LoginPage,
-        beforeEnter: (to) => {
+        beforeEnter: () => {
           const auth = useAuthStore();
           if (auth.user?.userId) {
             // Logged in
@@ -37,7 +37,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'admin',
         name: 'Admin Login',
-        beforeEnter: (to) => {
+        beforeEnter: () => {
           const auth = useAuthStore();
           if (auth.user?.role == 'admin') {
             // Logged in
@@ -56,7 +56,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Admin Dashboard',
         component: AdminDashboardPage,
-        beforeEnter: (to) => {
+        beforeEnter: () => {
           const auth = useAuthStore();
           if (auth.user?.role != 'admin') {
             auth.logout();

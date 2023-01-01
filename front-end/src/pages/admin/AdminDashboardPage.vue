@@ -28,7 +28,7 @@
 import { ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useUsersStore } from 'src/stores/users-store';
-import { Pagination } from '../components/models';
+import { Pagination } from 'src/components/components/models';
 import UsersDataTable from 'src/components/content/UsersDataTable.vue';
 
 const authStore = useAuthStore();
