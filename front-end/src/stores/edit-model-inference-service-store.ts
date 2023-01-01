@@ -1,4 +1,3 @@
-import { Dialog } from 'quasar';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useInferenceServiceStore } from './inference-service-store';

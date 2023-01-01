@@ -46,7 +46,6 @@ export default route(function (/* { store, ssrContext } */) {
       auth.returnUrl = to.fullPath;
       Notify.create({
         type: 'negative',
-        position: 'top',
         message: 'Authentication required',
       });
       return '/login';

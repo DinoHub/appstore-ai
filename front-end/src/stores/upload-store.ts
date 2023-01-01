@@ -1,4 +1,3 @@
-import { AxiosError, AxiosResponse } from 'axios';
 import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';

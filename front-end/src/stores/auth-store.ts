@@ -44,7 +44,6 @@ export const useAuthStore = defineStore('auth', {
           console.error('Failed to decode');
         }
         this.user = {
-          // TODO: Replace with actual api call
           userId: jwt_data.sub,
           name: jwt_data.name,
           role: jwt_data.role,
@@ -67,6 +66,7 @@ export const useAuthStore = defineStore('auth', {
         creds.append('username', userId);
         creds.append('password', password);
         const response = await api.post('/auth/', creds);
+        // Validate admin, if not admin, error will be thrown
         const admin_check = await api.get('/auth/is_admin');
         // Decode JWT
         const { access_token }: LoginResponse = response.data;
