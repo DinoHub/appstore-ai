@@ -8,7 +8,11 @@ from minio import Minio
 
 from ..config.config import config
 from ..internal.dependencies.file_validator import ValidateFileUpload
-from ..internal.dependencies.minio_client import minio_api_client, remove_data, upload_data
+from ..internal.dependencies.minio_client import (
+    minio_api_client,
+    remove_data,
+    upload_data,
+)
 from ..models.buckets import VideoUploadResponse
 
 router = APIRouter(prefix="/buckets", tags=["buckets"])
