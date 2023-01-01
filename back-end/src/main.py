@@ -1,3 +1,4 @@
+"""AI Appstore Main Module"""
 from pathlib import Path
 
 from fastapi import Depends, FastAPI
