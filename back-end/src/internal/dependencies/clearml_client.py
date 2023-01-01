@@ -4,7 +4,7 @@ from typing import Optional, Union
 
 from clearml.backend_api.session.client import APIClient, StrictSession
 
-from ..config.config import config
+from ...config.config import config
 
 
 def clearml_api_client(

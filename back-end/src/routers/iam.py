@@ -8,7 +8,7 @@ from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
 
 from ..internal.auth import check_is_admin, get_password_hash
-from ..internal.db import get_db
+from ..internal.dependencies.mongo_client import get_db
 from ..models.iam import UserInsert, UserPage, UserRemoval, UsersEdit
 
 # use openssl rand -hex 32 to generate secret key

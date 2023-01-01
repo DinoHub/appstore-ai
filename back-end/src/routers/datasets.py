@@ -12,7 +12,7 @@ from fastapi.exceptions import HTTPException
 
 from ..config.config import config
 from ..internal.data_connector import Dataset
-from ..internal.file_validator import (
+from ..internal.dependencies.file_validator import (
     MaxFileSizeException,
     MaxFileSizeValidator,
     ValidateFileUpload,

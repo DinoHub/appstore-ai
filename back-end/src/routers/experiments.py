@@ -3,7 +3,7 @@ from typing import Dict
 from clearml.backend_api.session.client import APIClient
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from ..internal.clearml_client import clearml_api_client
+from ..internal.dependencies.clearml_client import clearml_api_client
 from ..internal.experiment_connector import Experiment
 from ..models.experiment import ClonePackageModel, Connector, ExperimentResponse
 

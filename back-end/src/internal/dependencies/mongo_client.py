@@ -3,7 +3,7 @@ from typing import Tuple
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from ..config.config import config
+from ...config.config import config
 
 
 def get_db() -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:

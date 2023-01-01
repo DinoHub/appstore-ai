@@ -12,8 +12,8 @@ from pymongo.errors import DuplicateKeyError
 
 from ..config.config import config
 from ..internal.auth import get_current_user
-from ..internal.db import get_db
-from ..internal.file_validator import ValidateFileUpload
+from ..internal.dependencies.mongo_client import get_db
+from ..internal.dependencies.file_validator import ValidateFileUpload
 from ..internal.preprocess_html import preprocess_html
 from ..internal.tasks import delete_orphan_images, delete_orphan_services
 from ..internal.utils import uncased_to_snake_case

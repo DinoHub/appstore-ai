@@ -11,7 +11,7 @@ from passlib.context import CryptContext
 from ..config.config import config
 from ..models.auth import CsrfSettings, OAuth2PasswordBearerWithCookie
 from ..models.iam import TokenData, UserRoles
-from .db import get_db
+from .dependencies.mongo_client import get_db
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearerWithCookie(tokenUrl="/auth/")

@@ -8,7 +8,7 @@ from lxml.etree import ParserError
 from lxml.html.clean import Cleaner
 
 from ..config.config import config
-from .minio_client import minio_api_client, upload_data
+from .dependencies.minio_client import minio_api_client, upload_data
 
 
 def preprocess_html(html: str) -> str:

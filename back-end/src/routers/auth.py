@@ -17,7 +17,7 @@ from ..internal.auth import (
     decode_jwt,
     verify_password,
 )
-from ..internal.db import get_db
+from ..internal.dependencies.mongo_client import get_db
 from ..models.iam import Token, UserRoles
 
 # use openssl rand -hex 32 to generate secret key

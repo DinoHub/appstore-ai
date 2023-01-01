@@ -14,8 +14,8 @@ from yaml import safe_load
 
 from ..config.config import config
 from ..internal.auth import get_current_user
-from ..internal.db import get_db
-from ..internal.k8s_client import get_k8s_client
+from ..internal.dependencies.mongo_client import get_db
+from ..internal.dependencies.k8s_client import get_k8s_client
 from ..internal.tasks import delete_orphan_services
 from ..internal.templates import template_env
 from ..internal.utils import k8s_safe_name, uncased_to_snake_case

@@ -5,7 +5,7 @@ from typing import Optional
 import minio
 from colorama import Fore
 
-from ..config.config import config
+from ...config.config import config
 
 
 def minio_api_client() -> Optional[minio.Minio]:
