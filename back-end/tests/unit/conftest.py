@@ -22,8 +22,7 @@ def client() -> TestClient:
     app.dependency_overrides[get_current_user] = fake_login_user
     if check_is_admin in app.dependency_overrides:
         del app.dependency_overrides[check_is_admin]
-    client = TestClient(app)
-    return client
+    return TestClient(app)
 
 
 @pytest.fixture
@@ -58,10 +57,10 @@ def anonymous_client(client: TestClient) -> TestClient:
 
 @pytest.fixture()
 def get_fake_db(client) -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
-    from src.internal.db import get_db
+    from src.internal.dependencies.mongo_client import get_db
 
-    db, client = get_db()
-    return db, client
+    db, db_client = get_db()
+    return db, db_client
 
 
 @pytest_asyncio.fixture
