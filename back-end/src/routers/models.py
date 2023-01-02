@@ -74,7 +74,7 @@ async def get_available_filters(
     return {"tags": tags, "frameworks": frameworks, "tasks": tasks}
 
 
-@router.get("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB)
+@router.get("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB, response_model_exclude={"_id"})
 async def get_model_card_by_id(
     model_id: str,
     creator_user_id: str,

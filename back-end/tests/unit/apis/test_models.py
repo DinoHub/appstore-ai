@@ -11,7 +11,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
-            "_id": f"test-model-card-{idx}",
+            # "_id": f"test-model-card-{idx}",
             "modelId": f"test-model-card-{idx}",
             "creatorUserId": f"test_{idx}",
             "title": f"Test Model {idx}",
