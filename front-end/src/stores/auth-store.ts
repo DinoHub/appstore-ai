@@ -51,7 +51,6 @@ export const useAuthStore = defineStore('auth', {
       } catch (err) {
         Notify.create({
           type: 'negative',
-          position: 'top',
           message: 'Failed to login',
         });
       }
@@ -87,7 +86,6 @@ export const useAuthStore = defineStore('auth', {
         this.admin_logout();
         Notify.create({
           type: 'negative',
-          position: 'top',
           message:
             'Failed to login, credentials invalid or insufficient privileges',
         });
