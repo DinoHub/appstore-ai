@@ -27,7 +27,7 @@ class GlobalConfig(BaseSettings):
 
     # General Settings
     FRONTEND_HOST: str = Field(default="http://localhost:9000")
-    MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=1)
+    MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=10)
 
     # Authentication Settings
     ALGORITHM: str = Field(default="HS256")
@@ -35,6 +35,8 @@ class GlobalConfig(BaseSettings):
         str
     ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
     ADMIN_SECRET_KEY: Optional[str] = None
+    FIRST_SUPERUSER_ID: Optional[str] = None
+    FIRST_SUPERUSER_PASSWORD: Optional[str] = None
 
     # Database Settings
     DB_NAME: str = Field(default="appStoreDB")
