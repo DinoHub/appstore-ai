@@ -16,7 +16,7 @@ def app() -> TestClient:
     from src.config import config
 
     config.ENV_STATE = Environment.TEST
-    config.config = config.TestingConfig()
+    config.config = config.TestingConfig(ENV_STATE=Environment.TEST)
     from src.main import app
     app.dependency_overrides[get_current_user] = fake_login_user
     if check_is_admin in app.dependency_overrides:
