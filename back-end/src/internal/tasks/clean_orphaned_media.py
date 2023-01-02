@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from minio.deleteobjects import DeleteObject
 
 from ...config.config import config
-from ..db import get_db
-from ..minio_client import minio_api_client
+from ..dependencies.mongo_client import get_db
+from ..dependencies.minio_client import minio_api_client
 
 
 async def delete_orphan_images():

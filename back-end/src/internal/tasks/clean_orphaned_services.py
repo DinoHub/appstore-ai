@@ -3,8 +3,8 @@ from kubernetes.client import CustomObjectsApi
 from kubernetes.client.rest import ApiException
 
 from ...config.config import config
-from ..db import get_db
-from ..k8s_client import get_k8s_client
+from ..dependencies.mongo_client import get_db
+from ..dependencies.k8s_client import get_k8s_client
 
 
 async def delete_orphan_services():
