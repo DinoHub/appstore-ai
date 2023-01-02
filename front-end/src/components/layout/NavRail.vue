@@ -9,6 +9,7 @@
       <q-route-tab no-caps icon="add" label="Submit Model" to="/model/create"></q-route-tab>
       <q-route-tab no-caps icon="dashboard" label="Dashboard" to="/"></q-route-tab>
       <q-route-tab no-caps icon="store" label="Models" to="/models"></q-route-tab>
+      <q-route-tab no-caps icon="help" label="Help" href="https://dinohub.github.io/appstore-ai/user-guide/introduction.html" target="_blank"></q-route-tab>
     </q-tabs>
   </nav>
 </template>
