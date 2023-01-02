@@ -111,6 +111,5 @@ class GetFilterResponseModel(BaseModel):
 
 class SearchModelResponse(BaseModel):
     """Response model for searching model cards."""
-
-    results: List[ModelCardModelDB]
+    results: List
     total: int
