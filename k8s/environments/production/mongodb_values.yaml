@@ -1,0 +1,10 @@
+auth:
+  enabled: true
+  rootUser: <REPLACE_ME>
+  rootPassword: <REPLACE_ME>
+  usernames:
+    - <REPLACE_ME>
+  passwords: 
+    - <REPLACE_ME>
+  databases:  
+    - <REPLACE_ME>
