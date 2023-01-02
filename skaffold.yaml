@@ -31,15 +31,6 @@ deploy:
           nameOverride: "aas-mongodb"
           fullnameOverride: "aas-mongodb"
         wait: true
-      # - name: minio
-      #   repo: https://charts.bitnami.com/bitnami
-      #   chartPath: k8s/charts/dependencies/minio
-      #   upgradeOnChange: false
-      #   version: 11.10.24
-      #   namespace: ai-appstore
-      #   wait: true
-      #   valuesFiles:
-      #     - k8s/environments/development/minio_values.yaml
       - name: minio
         # repo: https://charts.min.io/
         chartPath: k8s/charts/dependencies/minio
@@ -56,6 +47,12 @@ profiles:
       - kubeContext: kind-(.*)
     patches:
       - op: add
+        path: /manifests/rawYaml/-
+        value: k8s/environments/development/cluster/metallb-config.yaml
+      - op: add
+        path: /manifests/rawYaml/-
+        value: k8s/environments/development/cluster/metallb-ip-address-pool.yaml
+      - op: add
         path: /deploy/helm/releases/0
         value:
           name: metallb
@@ -70,29 +67,7 @@ profiles:
       - op: add
         path: /manifests/rawYaml/-
         value: k8s/environments/development/dashboard/admin.yaml
-      - op: add
-        path: /manifests/rawYaml/-
-        value: k8s/environments/development/cluster/metallb-config.yaml
 ---
-# apiVersion: skaffold/v3
-# kind: Config
-# metadata:
-#   name: aas-knative-backend
-# deploy:
-#   helm:
-#     releases:
-#       - name: aas-knative-backend
-#         chartPath: k8s/charts/aas-knative-backend
-#         namespace: inference-engine
-#         upgradeOnChange: false
-        
-# profiles:
-#   - name: dev
-#     activation:
-#       - command: dev
-#       - kubeContext: kind-(.*)
-#       - kubeContext: minikube
-# ---
 apiVersion: skaffold/v3
 kind: Config
 metadata:
@@ -125,6 +100,8 @@ deploy:
         chartPath: k8s/charts/aas-knative-backend
         namespace: inference-engine
         upgradeOnChange: false
+        valuesFiles:
+          - k8s/environments/development/aas_knative_backend_values.yaml
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore
