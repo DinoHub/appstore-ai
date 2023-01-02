@@ -31,6 +31,6 @@ async def test_get_inference_engine_service(
         await db.services.insert_one(service)
 
     for service in service_metadata:
-        response = client.get(f"/services/{service['service_name']}")
+        response = client.get(f"/engines/{service['service_name']}")
         assert response.status_code == status.HTTP_200_OK
         assert response.json() == service
