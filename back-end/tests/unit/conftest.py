@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.internal.auth import check_is_admin, get_current_user
+from src.config.config import Environment
 
 from .utils import fake_login_admin, fake_login_user
 
@@ -14,7 +15,7 @@ from .utils import fake_login_admin, fake_login_user
 def app() -> TestClient:
     from src.config import config
 
-    config.ENV_STATE = "test"
+    config.ENV_STATE = Environment.TEST
     config.config = config.TestingConfig()
     from src.main import app
     app.dependency_overrides[get_current_user] = fake_login_user
@@ -40,7 +41,7 @@ def client(app) -> TestClient:
 def admin_client(client: TestClient) -> TestClient:
     from src.config import config
 
-    config.ENV_STATE = "test"
+    config.ENV_STATE = Environment.TEST
     config.config = config.TestingConfig()
     from src.main import app
 
