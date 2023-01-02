@@ -11,6 +11,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 def model_metadata() -> List[Dict]:
     fake_model_metadata = [
         {
+            "_id": f"test-model-card-{idx}",
             "modelId": f"test-model-card-{idx}",
             "creatorUserId": f"test_{idx}",
             "title": f"Test Model {idx}",
@@ -145,7 +146,6 @@ def test_create_model_card_metadata(
     client: TestClient,
     create_model_card: Dict,
 ):
-    print(create_model_card)
     response = client.post("/models/", json=create_model_card)
     assert response.status_code == status.HTTP_201_CREATED
 
