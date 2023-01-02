@@ -1,6 +1,6 @@
-import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
+import { Notify } from 'quasar';
 import { useModelStore } from './model-store';
 
 export interface MediaUploadResponse {
@@ -42,7 +42,7 @@ export const useUploadStore = defineStore('users', {
       videoFile: File,
       currentVideoLocation: string,
       userId: string,
-      modelId: string,
+      modelId: string
     ): Promise<string> {
       const modelStore = useModelStore();
       const form = new FormData();
@@ -61,7 +61,7 @@ export const useUploadStore = defineStore('users', {
           modelStore.updateModel(
             { videoLocation: videoLocation },
             userId,
-            modelId,
+            modelId
           );
           Notify.create({
             message: 'Video replaced successfullly!',
@@ -79,7 +79,7 @@ export const useUploadStore = defineStore('users', {
     },
     async uploadMedia(
       url: string,
-      fieldName: string | ((file: File) => string),
+      fieldName: string | ((file: File) => string)
     ): Promise<MediaUploadResponse> {
       const form = new FormData();
       for (const media of this.files) {

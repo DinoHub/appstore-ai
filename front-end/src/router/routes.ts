@@ -1,22 +1,24 @@
+import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
+import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
+import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
 import CreateModel from 'src/pages/models/ModelCreate.vue';
 import DashboardLayout from 'src/layouts/DashboardLayout.vue';
 import DashboardPage from 'src/pages/DashboardPage.vue';
-import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
 import ErrorNotFound from 'src/pages/ErrorNotFound.vue';
-import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
 import LoginLayout from 'src/layouts/LoginLayout.vue';
 import LoginPage from 'src/pages/auth/LoginPage.vue';
 import MainLayout from 'src/layouts/MainLayout.vue';
-import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
 import ModelInferenceServiceEdit from 'src/pages/models/ModelInferenceServiceEdit.vue';
 import ModelMetadataEdit from 'src/pages/models/ModelMetadataEdit.vue';
-import ModelVideoEdit from 'src/pages/models/ModelVideoEdit.vue';
 import ModelPage from 'src/pages/models/ModelPage.vue';
-import { RouteRecordRaw } from 'vue-router';
+import ModelVideoEdit from 'src/pages/models/ModelVideoEdit.vue';
 import SearchLayout from 'src/layouts/SearchLayout.vue';
 import SearchModelsPage from 'src/pages/models/SearchModelsPage.vue';
-import { useAuthStore } from 'src/stores/auth-store';
+
 import { Notify } from 'quasar';
+import { RouteRecordRaw } from 'vue-router';
+import { useAuthStore } from 'src/stores/auth-store';
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',

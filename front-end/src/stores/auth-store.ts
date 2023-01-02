@@ -1,6 +1,6 @@
+import jwt_decode from 'jwt-decode';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
-import jwt_decode from 'jwt-decode';
 import { Notify } from 'quasar';
 export enum Role {
   user = 'user',
@@ -67,7 +67,7 @@ export const useAuthStore = defineStore('auth', {
         creds.append('password', password);
         const response = await api.post('/auth/', creds);
         // Validate admin, if not admin, error will be thrown
-        const admin_check = await api.get('/auth/is_admin');
+        await api.get('/auth/is_admin');
         // Decode JWT
         const { access_token }: LoginResponse = response.data;
         const jwt_data = jwt_decode(access_token) as JWT;

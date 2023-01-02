@@ -1,8 +1,8 @@
+import { api } from 'src/boot/axios';
 import { AxiosError } from 'axios';
+import { defineStore } from 'pinia';
 import { LocationQueryValue } from 'vue-router';
 import { Notify } from 'quasar';
-import { api } from 'src/boot/axios';
-import { defineStore } from 'pinia';
 
 export interface Artifact {
   name: string;

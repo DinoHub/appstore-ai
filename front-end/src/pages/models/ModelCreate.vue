@@ -804,7 +804,7 @@ import { useExperimentStore } from 'src/stores/experiment-store';
 import { useCreationStore } from 'src/stores/create-model-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
-import { ModelCard, useModelStore } from 'src/stores/model-store';
+import { useModelStore } from 'src/stores/model-store';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -818,9 +818,7 @@ import { useDatasetStore } from 'src/stores/dataset-store';
 const router = useRouter();
 // constants for stores
 const experimentStore = useExperimentStore();
-const inferenceServiceStore = useInferenceServiceStore();
 const datasetStore = useDatasetStore();
-const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const modelStore = useModelStore();
 

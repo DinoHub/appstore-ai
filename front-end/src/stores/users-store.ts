@@ -1,7 +1,7 @@
-import { AxiosError } from 'axios';
-import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
+import { AxiosError } from 'axios';
 import { defineStore } from 'pinia';
+import { Notify } from 'quasar';
 
 export interface CreateUser {
   name: string;
@@ -13,7 +13,7 @@ export interface CreateUser {
 export interface Users {
   userId: string;
   name: string;
-  adminPriv: any;
+  adminPriv: 'admin' | 'user';
   created: string;
   lastModified: string;
 }
@@ -47,7 +47,7 @@ export const useUsersStore = defineStore('users', {
       pageNumber: number,
       userNumber: number,
       sortBy: string,
-      descending: boolean,
+      descending: boolean
     ): Promise<UsersPaginated> {
       try {
         let desc;
@@ -86,11 +86,11 @@ export const useUsersStore = defineStore('users', {
           tempCreatedDateRange = Object.create(this.createdDateRange);
           tempCreatedDateRange.from = tempCreatedDateRange.from.replaceAll(
             '/',
-            '-',
+            '-'
           );
           tempCreatedDateRange.to = tempCreatedDateRange.to.replaceAll(
             '/',
-            '-',
+            '-'
           );
           tempCreatedDateRange.to = `${tempCreatedDateRange.to} 24:00:00`;
         }
@@ -101,7 +101,7 @@ export const useUsersStore = defineStore('users', {
           tempCreatedDateRange = { from: '', to: '' };
           tempCreatedDateRange.from = this.createdDateRange.replaceAll(
             '/',
-            '-',
+            '-'
           );
           tempCreatedDateRange.to = this.createdDateRange.replaceAll('/', '-');
           tempCreatedDateRange.to = `${tempCreatedDateRange.to} 24:00:00`;
@@ -121,17 +121,18 @@ export const useUsersStore = defineStore('users', {
       } catch (error) {
         const errRes = error as AxiosError;
         Notify.create({
-          message: `Error occurred while retrieving users. Ensure values have been input correctly.`,
+          message: 'Error occurred while retrieving users. Ensure values have been input correctly.',
           color: 'negative',
           icon: 'error',
         });
+        console.error(errRes.response?.data);
         return Promise.reject('Unable to query for users');
       }
     },
     async removeUsers(userList: Array<any>): Promise<void> {
       try {
         const removeUsers = userList.map((a) => a.userId);
-        const res = await api.delete('iam/delete', {
+        await api.delete('iam/delete', {
           data: { users: removeUsers },
         });
         Notify.create({
@@ -142,7 +143,7 @@ export const useUsersStore = defineStore('users', {
       } catch (err) {
         console.log(err);
         Notify.create({
-          message: `Error occurred while removing user(s). Ensure values have been input correctly.`,
+          message: 'Error occurred while removing user(s). Ensure values have been input correctly.',
           type: 'negative',
           position: 'top',
         });
@@ -151,7 +152,7 @@ export const useUsersStore = defineStore('users', {
     async editUsersMulti(userList: Array<any>, privilege: any): Promise<void> {
       try {
         const editUsersMulti = userList.map((a) => a.userId);
-        const res = await api.put('iam/edit/multi', {
+        await api.put('iam/edit/multi', {
           users: editUsersMulti,
           priv: privilege.value,
         });
@@ -163,7 +164,7 @@ export const useUsersStore = defineStore('users', {
       } catch (err) {
         console.log(err);
         Notify.create({
-          message: `Error occurred while send request to edit users. Ensure values have been input correctly.`,
+          message: 'Error occurred while send request to edit users. Ensure values have been input correctly.',
           type: 'negative',
           position: 'top',
         });
@@ -174,7 +175,7 @@ export const useUsersStore = defineStore('users', {
       name: string,
       adminPriv: string,
       password: string,
-      confirmPassword: string,
+      confirmPassword: string
     ): Promise<void> {
       try {
         let priv;
@@ -183,7 +184,7 @@ export const useUsersStore = defineStore('users', {
         } else {
           priv = false;
         }
-        const res = await api.put('iam/edit', {
+        await api.put('iam/edit', {
           user_id: userId,
           name: name,
           password: password,
@@ -193,11 +194,11 @@ export const useUsersStore = defineStore('users', {
         Notify.create({
           type: 'positive',
           position: 'top',
-          message: `Successfully edited user`,
+          message: 'Successfully edited user',
         });
       } catch (err) {
         Notify.create({
-          message: `Error occurred while editing user. Ensure values have been input correctly.`,
+          message: 'Error occurred while editing user. Ensure values have been input correctly.',
           type: 'negative',
           position: 'top',
         });
@@ -207,7 +208,7 @@ export const useUsersStore = defineStore('users', {
       name: string,
       adminPriv: string,
       password: string,
-      confirmPassword: string,
+      confirmPassword: string
     ): Promise<void> {
       try {
         let priv;
@@ -216,7 +217,7 @@ export const useUsersStore = defineStore('users', {
         } else {
           priv = false;
         }
-        const res = await api.post('iam/add', {
+        await api.post('iam/add', {
           user_id: '',
           name: name,
           password: password,
@@ -226,11 +227,11 @@ export const useUsersStore = defineStore('users', {
         Notify.create({
           type: 'positive',
           position: 'top',
-          message: `Successfully created user`,
+          message: 'Successfully created user',
         });
       } catch (err) {
         Notify.create({
-          message: `Error occurred while creating user. Ensure values have been input correctly.`,
+          message: 'Error occurred while creating user. Ensure values have been input correctly.',
           color: 'negative',
           position: 'top',
           icon: 'error',

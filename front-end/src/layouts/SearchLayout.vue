@@ -20,7 +20,6 @@
 <script setup lang="ts">
 import TheFooter from 'src/components/layout/TheFooter.vue';
 import TheNavbar from 'src/components/layout/TheNavbar.vue';
-import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 import NavRail from 'src/components/layout/NavRail.vue';
 
 import { ref } from 'vue';

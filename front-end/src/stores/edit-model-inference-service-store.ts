@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
+import { EnvField } from 'src/components/models';
 import { useAuthStore } from './auth-store';
 import { useInferenceServiceStore } from './inference-service-store';
 import { useModelStore } from './model-store';
-import { EnvField } from 'src/components/models';
 
 export const useEditInferenceServiceStore = defineStore(
   'editInferenceService',
@@ -36,13 +36,17 @@ export const useEditInferenceServiceStore = defineStore(
 
         const data = await modelStore.getModelById(
           authStore.user?.userId ?? '',
-          modelId,
+          modelId
         );
         const serviceName = data.inferenceServiceName;
 
+        if (!serviceName) {
+          return Promise.reject('No inference service found');
+        }
+
         // Get the inference service
         const service = await inferenceServiceStore.getServiceByName(
-          serviceName,
+          serviceName
         );
 
         // Load the data
@@ -66,7 +70,7 @@ export const useEditInferenceServiceStore = defineStore(
               modelId,
               this.imageUri,
               this.containerPort,
-              this.uniqueEnv,
+              this.uniqueEnv
             );
           this.previewServiceName = serviceName;
           this.previewServiceUrl = inferenceUrl;
@@ -80,7 +84,7 @@ export const useEditInferenceServiceStore = defineStore(
           this.serviceName,
           this.imageUri,
           this.containerPort,
-          this.uniqueEnv,
+          this.uniqueEnv
         );
         // Check status of updated service
         const ready = await inferenceServiceStore.getServiceReady(serviceName);
@@ -91,5 +95,5 @@ export const useEditInferenceServiceStore = defineStore(
         }
       },
     },
-  },
+  }
 );
