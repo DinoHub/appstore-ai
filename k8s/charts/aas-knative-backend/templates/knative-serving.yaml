@@ -10,3 +10,7 @@ spec:
   config:
     network:
       ingress-class: "kourier.ingress.networking.knative.dev"
+    {{- if .Values.domain.enabled -}}
+    domain:
+      {{ .Values.domain.name}}: ""
+    {{- end -}}
