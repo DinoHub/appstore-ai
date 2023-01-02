@@ -4,7 +4,7 @@
 }
 
 .card-height {
-  height: 17rem;
+  height: 100%;
 }
 </style>
 

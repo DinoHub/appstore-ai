@@ -5,6 +5,12 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+.action-row {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+}
 </style>
 <template>
   <q-card
@@ -15,7 +21,7 @@
   >
     <span class="q-focus-helper"></span>
     <q-card-section>
-      <div class="headline-small">{{ props.title }}</div>
+      <div class="headline-small clamp-text">{{ props.title }}</div>
       <div>
         <material-chip
           :label="props.task"
@@ -43,10 +49,10 @@
         </material-chip>
       </div>
     </q-card-section>
-    <q-card-section class="clamp-text">
+    <q-card-section class="clamp-text q-pb-xl">
       {{ props.description ?? 'No description provided' }}
     </q-card-section>
-    <q-card-actions align="right" v-if="isModelOwner">
+    <q-card-actions align="right" class="action-row" v-if="isModelOwner">
       <q-btn
         outline
         rounded
