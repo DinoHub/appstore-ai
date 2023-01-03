@@ -111,7 +111,7 @@
               </q-card>
             </q-tab-panel>
             <q-tab-panel name="metadata">
-              <q-markup-table>
+              <q-markup-table wrap-cells>
                 <thead>
                   <tr>
                     <th colspan="2">Metadata</th>
@@ -148,7 +148,9 @@
                   </tr>
                   <tr>
                     <td>Explanation</td>
-                    <td>{{ model.explanation }}</td>
+                    <td>
+                      {{ model.explanation }}
+                    </td>
                   </tr>
                   <tr>
                     <td>Usage</td>
