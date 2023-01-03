@@ -147,7 +147,7 @@
                     <td>{{ model.description }}</td>
                   </tr>
                   <tr>
-                    <td>Explaination</td>
+                    <td>Explanation</td>
                     <td>{{ model.explanation }}</td>
                   </tr>
                   <tr>
