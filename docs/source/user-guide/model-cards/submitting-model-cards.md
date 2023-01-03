@@ -107,6 +107,8 @@ In some cases, such as with Reinforcement Learning tasks, an Inference Service m
 
 Hence, the option of submitting an example video is provided for such tasks and situations, allowing you to showcase the agent's/model's performance in the chosen environment.
 
+> The video must be in some type of widely accepted video format (e.g., MP4, MOV, MKV) and must be under 10MB for it to be accepted by us
+
 ![Submit Example Video](../../_static/model-cards/submit-example-video.png)
 
 When you click on "Submit Video", we will temporarily display the submitted video in a media player for viewing to ensure that it's the video you want to submit to us.
