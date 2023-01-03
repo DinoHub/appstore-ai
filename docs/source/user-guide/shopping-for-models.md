@@ -40,12 +40,14 @@ The quick search menu is available on all view by clicking on the search icon in
 When you click on a model in the App Store, you will be taken to its model card. The model card provides detailed information about the model, including its performance metrics, input and output variables, and any additional resources or documentation that may be available. You can use the model card to learn more about the model and decide whether it is suitable for your needs.
 
 ![Model Card](../_static/model-cards/model-card.png)
+![Model_Card_Video](../_static/model-cards/model-card-video.png)
 
 The model card is divided into two sections: the left side contains markup that details the model description and performance, while the right side contains several tabs with additional information about the model.
 
 On the right side of the model card, you will find the following tabs:
 
-- Inference: This tab provides a GUI interface that allows you to test out the model by providing input and seeing the output.
+- Inference (Shown if video is not the option): This tab provides a GUI interface that allows you to test out the model by providing input and seeing the output.
+- Video (Shown if inference is not the option): This tab has a media player that shows the example video of the agent/model that the developer wants to display.
 - Artifacts: This tab lists any references or additional resources that are related to the model, such as the dataset it was trained on or the model weights.
 - Metadata: This tab shows you information about the model, such as the dates it was created and modified, who owns the model, and any attributes that have been applied to the model card.
 - Manage (only shown if you own the model): This tab allows you to edit and delete the model card.
