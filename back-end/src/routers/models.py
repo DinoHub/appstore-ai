@@ -4,7 +4,14 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 from bson import json_util
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Query,
+    status,
+)
 from fastapi.encoders import jsonable_encoder
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
@@ -74,7 +81,7 @@ async def get_available_filters(
     return {"tags": tags, "frameworks": frameworks, "tasks": tasks}
 
 
-@router.get("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB, response_model_exclude={"_id"})
+@router.get("/{creator_user_id}/{model_id}")
 async def get_model_card_by_id(
     model_id: str,
     creator_user_id: str,
