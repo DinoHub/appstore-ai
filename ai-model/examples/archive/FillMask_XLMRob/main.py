@@ -1,27 +1,37 @@
+import os
+from datetime import datetime
+
 import gradio as gr
 import numpy as np
+import torch
 import tritonclient.grpc as tritongrpc
 from scipy.special import softmax
-from datetime import datetime
-import os
 from transformers import AutoTokenizer
-import torch
 
 
 def loadModel(
-    model_name="mask_fill", model_version="1", url="127.0.0.1:8001", loading="POLLING"
+    model_name="mask_fill",
+    model_version="1",
+    url="127.0.0.1:8001",
+    loading="POLLING",
 ):
     # establish connection to triton
     triton_client = tritongrpc.InferenceServerClient(url=url, verbose=VERBOSE)
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Connection')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Connection'
+    )
 
     # load model in triton, not needed if mode = 'polling'
     if loading == "EXPLICIT":
         triton_client.load_model(model_name)
     if not triton_client.is_model_ready(model_name):
-        print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Load Model')
+        print(
+            f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] FAILED: Load Model'
+        )
     else:
-        print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Load Model')
+        print(
+            f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Load Model'
+        )
 
     # get model data
     model_metadata = triton_client.get_model_metadata(
@@ -30,7 +40,9 @@ def loadModel(
     model_config = triton_client.get_model_config(
         model_name=model_name, model_version=model_version
     )
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] CONFIG: {model_config}')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] CONFIG: {model_config}'
+    )
     return triton_client
 
 
@@ -51,7 +63,9 @@ def run_inference(
     triton_client, premise="", model_name="zst", model_version="1", top_k=5
 ):
 
-    print(f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREMISE: {premise}')
+    print(
+        f'\n[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PREMISE: {premise}'
+    )
 
     # tokenize inputs and format
     inputs = tokenizer(
@@ -59,7 +73,9 @@ def run_inference(
     )
     input_ids = np.array(inputs["input_ids"], dtype=np.int32)
     attention_mask = np.array(inputs["attention_mask"], dtype=np.int32)
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Tokenize')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Tokenize'
+    )
 
     # insert inputs and output(s)
     input0 = tritongrpc.InferInput(input_name[0], (1, 512), "INT32")
@@ -67,7 +83,9 @@ def run_inference(
     input1 = tritongrpc.InferInput(input_name[1], (1, 512), "INT32")
     input1.set_data_from_numpy(attention_mask)
     output = tritongrpc.InferRequestedOutput(output_name)
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inputs/Outputs')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inputs/Outputs'
+    )
 
     # send inputs for inference and recieve output(s)
     response = triton_client.infer(
@@ -76,18 +94,24 @@ def run_inference(
         inputs=[input0, input1],
         outputs=[output],
     )
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inference')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Inference'
+    )
 
     # format output(s)
     logits = response.as_numpy("output__0")
     result = np.copy(logits)
     logits = torch.Tensor(result)
-    mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1]
+    mask_token_index = torch.where(
+        inputs["input_ids"] == tokenizer.mask_token_id
+    )[1]
     mask_token_logits = logits[0, mask_token_index, :]
     probs = softmax(mask_token_logits)
     top_k_probs = torch.topk(torch.Tensor(probs), top_k).values[0].tolist()
     top_k_tokens = torch.topk(torch.Tensor(probs), top_k).indices[0].tolist()
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Masks Filled\n')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] PASSED: Masks Filled\n'
+    )
 
     # display output(s)
     for x in range(len(top_k_tokens)):
@@ -138,10 +162,13 @@ try:
         comp_btn = gr.Button("Compute")
 
         output = gr.Textbox(
-            label="Probabilities", placeholder="<Token> (<Probability of being true>)"
+            label="Probabilities",
+            placeholder="<Token> (<Probability of being true>)",
         )
         # call function that sends inputs for inference and formats outputs for  display
-        comp_btn.click(fn=question_answer, inputs=[premiseBox, topKbox], outputs=output)
+        comp_btn.click(
+            fn=question_answer, inputs=[premiseBox, topKbox], outputs=output
+        )
 
     if __name__ == "__main__":
         # launch Gradio frontend
@@ -150,4 +177,6 @@ except:
     # catch for errors and unload model in Triton
     # NOTE: This doesn't really work very well, some issues with SciPy/other packages causes complete crash when keyboard interrupting
     unloadModel(client, MODEL_NAME)
-    print(f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] Exited Application')
+    print(
+        f'[{(datetime.now()).strftime("%d-%m-%Y %H:%M:%S")}] Exited Application'
+    )
