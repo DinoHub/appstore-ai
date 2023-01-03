@@ -6,7 +6,6 @@ metadata:
 manifests:
   rawYaml:
     - k8s/namespaces.yaml
-    - k8s/knative-operator.yaml
 deploy:
   helm:
     releases:
@@ -97,7 +96,7 @@ deploy:
   helm:
     releases:
       - name: aas-knative-backend
-        chartPath: k8s/charts/aas-knative-backend
+        chartPath: k8s/charts/aas-knative-backend-private
         namespace: inference-engine
         upgradeOnChange: false
         valuesFiles:

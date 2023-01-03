@@ -197,7 +197,8 @@ async def create_inference_engine_service(
         # Get KNative Serving Ext Ip
         core_api = CoreV1Api(client)
         kourier_ingress = core_api.read_namespaced_service(
-            name="kourier", namespace="knative-serving"
+            name="kourier",
+            namespace="kourier-system",  # TODO: Make this configurable
         )
         lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip  # type: ignore
         if service.external_dns:
