@@ -5,11 +5,15 @@
 ![AAS Logo](.github/media/logo-dark.png)
 
 ## How to Use
+
 > Work In Progress
 
 ## Deployment Guide
+
 > Work In Progress
+
 ## Contributing
+
 > As of right now, contributions to this repo will be closed with exception to core contributors. When opened up again, the hidden text below which contains contribution instructions will be uncommented.
 
 <!-- Contributions to this repo are welcome, so long as these guidelines as followed:
@@ -28,15 +32,15 @@
 - [x] Submit Test Inference API
 - [x] Inference Engine
 - [x] Deploy Inference Engine API
-- [ ] K8S Deployment (90%)
-- [ ] Endpoint Authentication (50%)
+- [x] K8S Deployment
+- [x] Endpoint Authentication (50%)
 
-- [ ] Front-end web application
-  - [ ] Login Page
-  - [ ] Dashboard
-  - [ ] Model Card Page
-  - [ ] Model Card Listing
-  - [ ] Model Card CRUD Operations
+- [x] Front-end web application
+  - [x] Login Page
+  - [x] Dashboard
+  - [x] Model Card Page
+  - [x] Model Card Listing
+  - [x] Model Card CRUD Operations
 
 ### v1.1
 
