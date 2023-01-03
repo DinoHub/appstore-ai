@@ -4,7 +4,14 @@ from typing import Dict, Tuple
 from urllib.error import HTTPError
 from uuid import uuid4
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Path, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    HTTPException,
+    Path,
+    status,
+)
 from fastapi.encoders import jsonable_encoder
 from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
@@ -50,7 +57,9 @@ async def get_inference_engine_service(
     db, _ = db
     service = await db["services"].find_one({"serviceName": service_name})
     if service is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Service not found"
+        )
     return service
 
 
