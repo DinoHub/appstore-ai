@@ -3,3 +3,4 @@ minio_data
 clearml.conf
 token.txt
 .dccache
+*.trunk
