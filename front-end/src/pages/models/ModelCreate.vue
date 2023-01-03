@@ -555,7 +555,12 @@
               ensure it works as intended and can receive inputs and outputs as
               designed by you.
             </p>
-            <q-icon name="warning" color="negative" size="1.75rem" />
+            <q-icon
+              class="row q-mx-auto"
+              name="warning"
+              color="negative"
+              size="1.75rem"
+            />
             <p class="text-center text-bold q-px-lg text-negative">
               Ensure all information has been input correctly and the inference
               engine application is working as intended. Once confirmed all
