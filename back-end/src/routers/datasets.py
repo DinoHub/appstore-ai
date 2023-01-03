@@ -1,3 +1,4 @@
+"""Endpoint to handle datasets"""
 import tempfile
 from datetime import datetime
 from os import remove
@@ -11,16 +12,16 @@ from fastapi.exceptions import HTTPException
 
 from ..config.config import config
 from ..internal.data_connector import Dataset
-from ..internal.file_validator import (
+from ..internal.dependencies.file_validator import (
     MaxFileSizeException,
     MaxFileSizeValidator,
     ValidateFileUpload,
     clean_filename,
     determine_safe_file_size,
 )
-from ..models.dataset import DatasetModel, FindDatasetModel
+from ..models.dataset import Connector, DatasetModel, FindDatasetModel
 
-DATA_CONNECTOR = "clearml"
+DATA_CONNECTOR = Connector.CLEARML
 ACCEPTED_CONTENT_TYPES = [
     "application/zip",
     "application/x-tar",
@@ -47,10 +48,11 @@ def search_datasets(query: FindDatasetModel) -> List[Dict]:
     """Search endpoint for any datasets stored in
     the current data connector
 
-    :param query: Search query
-    :type query: FindDatasetModel
-    :return: A list of dataset metadata
-    :rtype: List[Dict]
+    Args:
+        query (FindDatasetModel): Search query
+
+    Returns:
+        List[Dict]: List of dataset metadata
     """
     datasets = Dataset.from_connector(DATA_CONNECTOR).list_datasets(
         project=query.project,
@@ -65,11 +67,14 @@ def search_datasets(query: FindDatasetModel) -> List[Dict]:
 async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
     """Get a dataset from it's ID
 
-    :param dataset_id: ID of dataset (e.g ClearML Dataset ID)
-    :type dataset_id: str
-    :raises HTTPException: 404 Not Found if dataset not found
-    :return: Dataset with that ID
-    :rtype: DatasetModel
+    Args:
+        dataset_id (str): ID of dataset (e.g ClearML Dataset ID)
+
+    Raises:
+        HTTPException: 404 Not Found if dataset not found
+
+    Returns:
+        DatasetModel: Dataset with that ID
     """
     try:
         dataset = Dataset.from_connector(DATA_CONNECTOR).get(id=dataset_id)
@@ -100,22 +105,22 @@ async def create_dataset(
     dataset_name: str = Form(...),
     project_name: str = Form(...),
     output_url: Optional[str] = Form(default=None),
-):
+) -> DatasetModel:
     """Create a new dataset, based on a dataset file uploaded to it
 
-    :param file: Archived dataset (e.g .zip file), defaults to File(...)
-    :type file: UploadFile, optional
-    :param dataset_name: Name of dataset, defaults to Form(...)
-    :type dataset_name: str, optional
-    :param project_name: Name of project to upload to, defaults to Form(...)
-    :type project_name: str, optional
-    :param output_url: Remote URL to upload file to, defaults to Form(default=None)
-    :type output_url: Optional[str], optional
-    :raises HTTPException: 413 Request Entity Too Large if dataset size is too large
-    :raises HTTPException: 415 Unsupported Media Type if wrong file type
-    :raises HTTPException: 500 Internal Server Error if any IOErrors
-    :return: Dataset
-    :rtype: DatasetModel
+    Args:
+        file (UploadFile, optional): Archived dataset (e.g zip). Defaults to File(...).
+        dataset_name (str, optional): Name of dataset. Defaults to Form(...).
+        project_name (str, optional): Name of project to uplaod to. Defaults to Form(...).
+        output_url (Optional[str], optional): Remote URL to upload file to. Defaults to Form(default=None).
+
+    Raises:
+        HTTPException: 413 Request Entity Too Large if dataset size is too large
+        HTTPException: 415 Unsupported Media Type if wrong file type
+        HTTPException: 500 Internal Server Error if any IOErrors
+
+    Returns:
+        DatasetModel : Created dataset
     """
     # Write dataset to temp directory
     # NOTE: not using aiofiles for async read and write as performance is slow

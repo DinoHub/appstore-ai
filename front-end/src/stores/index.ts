@@ -1,7 +1,7 @@
 import { Cookies } from 'quasar';
-import { Router } from 'vue-router';
 import { createPinia } from 'pinia';
 import { createQuasarCookiesPersistedState } from 'pinia-plugin-persistedstate/quasar';
+import { Router } from 'vue-router';
 import { store } from 'quasar/wrappers';
 
 /*

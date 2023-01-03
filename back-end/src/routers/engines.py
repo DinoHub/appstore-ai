@@ -1,4 +1,6 @@
+"""Endpoints for Inference Engine Services"""
 import datetime
+from typing import Dict, Tuple
 from urllib.error import HTTPError
 from uuid import uuid4
 
@@ -13,13 +15,14 @@ from fastapi import (
 from fastapi.encoders import jsonable_encoder
 from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import DuplicateKeyError
 from yaml import safe_load
 
 from ..config.config import config
 from ..internal.auth import get_current_user
-from ..internal.db import get_db
-from ..internal.k8s_client import get_k8s_client
+from ..internal.dependencies.k8s_client import get_k8s_client
+from ..internal.dependencies.mongo_client import get_db
 from ..internal.tasks import delete_orphan_services
 from ..internal.templates import template_env
 from ..internal.utils import k8s_safe_name, uncased_to_snake_case
@@ -33,22 +36,51 @@ from ..models.iam import TokenData
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 
 
-@router.get("/{service_name}")
+@router.get("/{service_name}", response_model=InferenceEngineService)
 async def get_inference_engine_service(
     service_name: str,
-    db=Depends(get_db),
-):
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+) -> Dict:
+    """Get Inference Engine Service
+
+    Args:
+        service_name (str): Name of the service
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 404 Not Found if service does not exist
+
+    Returns:
+        Dict: Service details
+    """
     db, _ = db
     service = await db["services"].find_one({"serviceName": service_name})
     if service is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Service not found"
+        )
     return service
 
 
 @router.get("/{service_name}/status")
 def get_inference_engine_service_status(
     service_name: str, k8s_client: ApiClient = Depends(get_k8s_client)
-):
+) -> Dict:
+    """Get status of an inference service. This is typically
+    used to give liveness/readiness probes for the service.
+
+    Args:
+        service_name (str): Name of the service
+        k8s_client (ApiClient, optional): K8S Client. Defaults to Depends(get_k8s_client).
+
+    Raises:
+        HTTPException: 404 Not Found if service does not exist
+        HTTPException: 500 Internal Server Error if there is an error getting the service status
+
+    Returns:
+        Dict: Service status
+    """
     # Sync endpoint to allow for concurrent request
     try:
         with k8s_client as client:
@@ -61,22 +93,34 @@ def get_inference_engine_service_status(
                 name=service_name,
             )
             return result["status"]  # type: ignore
-    except K8sAPIException as e:
-        if e.status == 404:
+    except K8sAPIException as err:
+        if err.status == 404:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Service {service_name} not found",
-            )
+            ) from err
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error getting service status",
-        )
+        ) from err
 
 
 @router.get("/")
 async def get_available_inference_engine_services(
     k8s_client: ApiClient = Depends(get_k8s_client),
 ):
+    """Get all available inference engine services
+
+    Args:
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error getting the services
+        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+
+    Returns:
+        Object: List of services # TODO: Figure out what type this is
+    """
     try:
         with k8s_client as client:
             api = CustomObjectsApi(client)
@@ -99,13 +143,32 @@ async def get_available_inference_engine_services(
         ) from err
 
 
-@router.post("/")
+@router.post("/", response_model=InferenceEngineService)
 async def create_inference_engine_service(
     service: CreateInferenceEngineService,
     k8s_client: ApiClient = Depends(get_k8s_client),
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     user: TokenData = Depends(get_current_user),
-):
+) -> Dict:
+    """Create an inference engine service
+
+    Args:
+        service (CreateInferenceEngineService): Service details
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User details. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error creating the service
+        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+        HTTPException: 500 Internal Server Error if there is an error creating the service in the DB
+        HTTPException: 422 Unprocessable Entity if the service already exists
+        HTTPException: 422 Unprocessable Entity if the namespace is not set
+
+    Returns:
+        Dict: Service details
+    """
     # Create Deployment Template
     if not user.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
@@ -182,22 +245,22 @@ async def create_inference_engine_service(
         except (K8sAPIException, HTTPError) as err:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when creating inference engine: {e}",
+                detail=f"Error when creating inference engine: {err}",
             ) from err
         except TypeError as err:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"API has no access to the K8S cluster: {e}",
+                detail=f"API has no access to the K8S cluster: {err}",
             ) from err
         except DuplicateKeyError as err:
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail="No Namespace specified",
+                detail="Duplicate service name",
             ) from err
         except Exception as err:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error when creating inference engine: {e}",
+                detail=f"Error when creating inference engine: {err}",
             ) from err
 
 
@@ -249,7 +312,7 @@ async def delete_inference_engine_service(
                     session.abort_transaction()  # if failed to remove in k8s, rollback db change
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Error when deleting inference engine: {e}",
+                        detail=f"Error when deleting inference engine: {err}",
                     ) from err
                 except TypeError as err:
                     session.abort_transaction()
@@ -261,7 +324,7 @@ async def delete_inference_engine_service(
                     session.abort_transaction()
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=f"Error when deleting inference engine: {e}",
+                        detail=f"Error when deleting inference engine: {err}",
                     ) from err
 
 
@@ -349,7 +412,7 @@ async def update_inference_engine_service(
                         session.abort_transaction()
                         raise HTTPException(
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Error when updating inference engine: {e}",
+                            detail=f"Error when updating inference engine: {err}",
                         ) from err
                     except TypeError as err:
                         session.abort_transaction()
@@ -361,5 +424,5 @@ async def update_inference_engine_service(
                         session.abort_transaction()
                         raise HTTPException(
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            detail=f"Error when updating inference engine: {e}",
+                            detail=f"Error when updating inference engine: {err}",
                         ) from err

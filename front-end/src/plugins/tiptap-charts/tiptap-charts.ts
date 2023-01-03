@@ -1,6 +1,5 @@
-import { Node, mergeAttributes } from '@tiptap/core';
-
 import ChartDisplay from 'src/components/editor/TiptapChart.vue';
+import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
 
 export interface ChartOptions {

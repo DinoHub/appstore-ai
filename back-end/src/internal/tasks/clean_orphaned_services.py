@@ -1,12 +1,14 @@
+"""Task to remove orphaned KNative services."""
 from kubernetes.client import CustomObjectsApi
 from kubernetes.client.rest import ApiException
 
 from ...config.config import config
-from ..db import get_db
-from ..k8s_client import get_k8s_client
+from ..dependencies.mongo_client import get_db
+from ..dependencies.k8s_client import get_k8s_client
 
 
 async def delete_orphan_services():
+    """Delete any services that are not referenced in any model card."""
     print("INFO: Starting task to remove orphaned services")
     db, mongo_client = get_db()
     k8s_client = get_k8s_client()

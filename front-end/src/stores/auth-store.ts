@@ -1,6 +1,6 @@
+import jwt_decode from 'jwt-decode';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
-import jwt_decode from 'jwt-decode';
 import { Notify } from 'quasar';
 export enum Role {
   user = 'user',
@@ -44,7 +44,6 @@ export const useAuthStore = defineStore('auth', {
           console.error('Failed to decode');
         }
         this.user = {
-          // TODO: Replace with actual api call
           userId: jwt_data.sub,
           name: jwt_data.name,
           role: jwt_data.role,
@@ -52,7 +51,6 @@ export const useAuthStore = defineStore('auth', {
       } catch (err) {
         Notify.create({
           type: 'negative',
-          position: 'top',
           message: 'Failed to login',
         });
       }
@@ -67,7 +65,8 @@ export const useAuthStore = defineStore('auth', {
         creds.append('username', userId);
         creds.append('password', password);
         const response = await api.post('/auth/', creds);
-        const admin_check = await api.get('/auth/is_admin');
+        // Validate admin, if not admin, error will be thrown
+        await api.get('/auth/is_admin');
         // Decode JWT
         const { access_token }: LoginResponse = response.data;
         const jwt_data = jwt_decode(access_token) as JWT;
@@ -87,7 +86,6 @@ export const useAuthStore = defineStore('auth', {
         this.admin_logout();
         Notify.create({
           type: 'negative',
-          position: 'top',
           message:
             'Failed to login, credentials invalid or insufficient privileges',
         });

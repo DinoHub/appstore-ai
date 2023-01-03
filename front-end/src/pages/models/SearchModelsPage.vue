@@ -33,7 +33,6 @@
 import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
 import { Pagination, SearchFilter } from 'src/components/models';
 import { ref } from 'vue';
-import { useModelStore } from 'src/stores/model-store';
 
 const filter: SearchFilter = {
   tags: [],

@@ -1,3 +1,4 @@
+"""This module contains functions for preprocessing HTML before it is saved to the database."""
 from base64 import b64decode
 from mimetypes import guess_extension
 from uuid import uuid4
@@ -7,10 +8,22 @@ from lxml.etree import ParserError
 from lxml.html.clean import Cleaner
 
 from ..config.config import config
-from .minio_client import minio_api_client, upload_data
+from .dependencies.minio_client import minio_api_client, upload_data
 
 
 def preprocess_html(html: str) -> str:
+    """Preprocessing pipeline for HTML.
+
+    This function performs the following steps:
+    1. Convert base64 encoded images to data URIs (upload to S3 Compliant Storage)
+    2. Sanitize HTML
+
+    Args:
+        html (str): Raw HTML
+
+    Returns:
+        str: Preprocessed HTML
+    """
     # Convert base64 encoded images to data URIs
     soup = BeautifulSoup(html, "lxml")
     soup = upload_b64_media(soup)
@@ -22,6 +35,14 @@ def preprocess_html(html: str) -> str:
 
 
 def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
+    """Uploads base64 encoded images to S3 Compliant Storage.
+
+    Args:
+        parser (BeautifulSoup): HTML parser
+
+    Returns:
+        BeautifulSoup: Parser with base64 encoded images replaced with data URIs
+    """
     s3_client = minio_api_client()
     if not s3_client:
         return parser
@@ -61,6 +82,17 @@ def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
 
 
 def sanitize_html(html: str) -> str:
+    """Sanitize HTML.
+
+    Args:
+        html (str): Input HTML
+
+    Raises:
+        TypeError: If the output of the cleaner is not a string
+
+    Returns:
+        str: Sanitized HTML
+    """
     cleaner = Cleaner(
         comments=True,
         meta=True,
@@ -73,7 +105,7 @@ def sanitize_html(html: str) -> str:
         remove_unknown_tags=False,
     )
     try:
-        cleaned: str = cleaner.clean_html(html)
+        cleaned: str = cleaner.clean_html(html)  # type: ignore
         if not isinstance(cleaned, str):
             raise TypeError
         return cleaned

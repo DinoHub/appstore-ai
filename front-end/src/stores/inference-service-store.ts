@@ -1,8 +1,7 @@
-import { defineStore } from 'pinia';
-
-import { AxiosError } from 'axios';
-import { Notify } from 'quasar';
 import { api } from 'src/boot/axios';
+import { AxiosError } from 'axios';
+import { defineStore } from 'pinia';
+import { Notify } from 'quasar';
 
 export interface InferenceEngineService {
   serviceName: string;
@@ -31,7 +30,7 @@ export const useInferenceServiceStore = defineStore('service', {
       serviceName: string,
       maxRetries = 10,
       initialWaitSeconds = 10,
-      maxDeadlineSeconds = 300,
+      maxDeadlineSeconds = 300
     ): Promise<boolean> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
@@ -70,7 +69,7 @@ export const useInferenceServiceStore = defineStore('service', {
       }
     },
     async getServiceByName(
-      serviceName: string,
+      serviceName: string
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.get(`engines/${serviceName}`);
@@ -88,7 +87,7 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
-      env?: Record<string, any>,
+      env?: Record<string, any>
     ): Promise<InferenceEngineService> {
       try {
         // TODO: Ability to set resource limits starving
@@ -111,7 +110,7 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
-      env?: Record<string, any>,
+      env?: Record<string, any>
     ) {
       Notify.create({
         message: 'Creating service, please wait...',
@@ -120,7 +119,7 @@ export const useInferenceServiceStore = defineStore('service', {
         modelId,
         imageUri,
         port,
-        env,
+        env
       );
       const ready = await this.getServiceReady(serviceName);
       if (ready) {
@@ -138,7 +137,7 @@ export const useInferenceServiceStore = defineStore('service', {
       serviceName: string,
       imageUri?: string,
       port?: number,
-      env?: Record<string, any>,
+      env?: Record<string, any>
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.patch(`/engines/${serviceName}`, {

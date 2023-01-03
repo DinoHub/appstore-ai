@@ -1,0 +1,32 @@
+rootUser: <REPLACE_ME>
+rootPassword: <REPLACE_ME>
+replicas: 1
+mode: standalone
+
+users:
+  - accessKey: <REPLACE_ME>
+    secretKey: <REPLACE_ME>
+    policy: readwrite
+svcaccts:
+  - accessKey: <REPLACE_ME>
+    secretKey: <REPLACE_ME>
+    user: <REPLACE_ME>
+
+ingress:
+  enabled: true
+  hosts: 
+    - <REPLACE_ME>
+
+# consoleService:
+#   type: LoadBalancer
+
+buckets:
+  - name: <REPLACE_ME>
+    policy: download
+
+persistence:
+  size: 10Gi
+
+resources:
+  requests:
+    memory: 512Mi

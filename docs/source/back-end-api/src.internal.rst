@@ -27,7 +27,6 @@ Submodules
    src.internal.clearml_client
    src.internal.db
    src.internal.file_validator
-   src.internal.inference
    src.internal.k8s_client
    src.internal.minio_client
    src.internal.preprocess_html

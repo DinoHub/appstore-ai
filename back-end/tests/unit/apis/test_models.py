@@ -1,10 +1,79 @@
-from time import sleep
+from datetime import datetime
 from typing import Dict, List, Tuple
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
+
+@pytest.fixture
+def model_metadata() -> List[Dict]:
+    fake_model_metadata = [
+        {
+            # "_id": f"test-model-card-{idx}",
+            "modelId": f"test-model-card-{idx}",
+            "creatorUserId": f"test_{idx}",
+            "title": f"Test Model {idx}",
+            "markdown": "<h1>Test</h1>",
+            "performance": "<h2>Performance</h2>",
+            "description": "Lorum ipsum",
+            "explanation": "Lorum ipsum",
+            "usage": "Lorum ipsum",
+            "limitations": "Lorum ipsum",
+            "created": str(datetime.now()),
+            "lastModified": str(datetime.now()),
+            "tags": ["Test Tag", f"Tag {idx}"],
+            "task": "Testing Model Card",
+            "frameworks": ["pytest", f"Framework {idx}"],
+            "pointOfContact": "Santa Claus",
+            "owner": "Rudolph",
+            "inferenceServiceName": "test-service",
+            "experiment": {
+                "connector": "clearml",
+                "experiment_id": "e-047f991269004aceaf18a25c3c1def20",
+            },
+            "artifacts": [
+                {
+                    "artifact_type": "model",
+                    "name": "Model Weights",
+                    "url": "https://allegro-examples.s3.amazonaws.com/clearml-public-resources/v1.6.4/examples/ClearML%20examples/ML%20%255C%20DL%20Frameworks/Keras/Keras%20with%20TensorBoard%20example.d82abfd682fb4f8cbd12b6bfb5a7c7cf/models/weight.1.hdf5",
+                    "timestamp": "2022-10-31T01:57:47.194Z",
+                    "framework": "Keras",
+                }
+            ],
+        }
+        for idx in range(1, 11)
+    ]
+    return fake_model_metadata
+
+
+@pytest.fixture
+def create_model_card() -> Dict:
+    return {
+        "title": "Test Model",
+        "markdown": "# Markdown Text",
+        "performance": "# Markdown Text",
+        "tags": ["Test Tag", "Insert"],
+        "task": "Testing Model Card",
+        "frameworks": ["pytest"],
+        "pointOfContact": "Santa Claus",
+        "owner": "Rudolph",
+        "inferenceServiceName": "test-service",
+        "experiment": {
+            "connector": "clearml",
+            "experiment_id": "e-047f991269004aceaf18a25c3c1def20",
+        },
+        "artifacts": [
+            {
+                "artifact_type": "model",
+                "name": "Model Weights",
+                "url": "https://allegro-examples.s3.amazonaws.com/clearml-public-resources/v1.6.4/examples/ClearML%20examples/ML%20%255C%20DL%20Frameworks/Keras/Keras%20with%20TensorBoard%20example.d82abfd682fb4f8cbd12b6bfb5a7c7cf/models/weight.1.hdf5",
+                "timestamp": "2022-10-31T01:57:47.194Z",
+                "framework": "Keras",
+            }
+        ],
+    }
 
 
 @pytest.mark.asyncio
@@ -77,7 +146,6 @@ def test_create_model_card_metadata(
     client: TestClient,
     create_model_card: Dict,
 ):
-    print(create_model_card)
     response = client.post("/models/", json=create_model_card)
     assert response.status_code == status.HTTP_201_CREATED
 

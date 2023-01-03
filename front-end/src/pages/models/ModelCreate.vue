@@ -436,7 +436,7 @@
               class="float-left"
               style="width: 95.6%"
               unelevated
-              href="https://github.com/DinoHub/appstore-ai/blob/main/ai-model/inference-engine/README.md"
+              href="https://dinohub.github.io/appstore-ai/user-guide/inference-services/building-inference-services.html"
               target="_blank"
             />
           </div>
@@ -477,13 +477,6 @@
               title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
               fieldset-class="q-ml-md"
             ></env-var-editor>
-            <h6 class="text-left text-bold q-mb-sm">Important Note:</h6>
-            <p class="text-left">
-              Note that the image provided should be an application that can be
-              embedded using Gradio, with input and output already defined by
-              you. If unsure please check instructions and examples listed under
-              GitHub page.
-            </p>
           </div>
         </div>
       </q-step>
@@ -804,7 +797,7 @@ import { useExperimentStore } from 'src/stores/experiment-store';
 import { useCreationStore } from 'src/stores/create-model-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useInferenceServiceStore } from 'src/stores/inference-service-store';
-import { ModelCard, useModelStore } from 'src/stores/model-store';
+import { useModelStore } from 'src/stores/model-store';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 
@@ -818,9 +811,7 @@ import { useDatasetStore } from 'src/stores/dataset-store';
 const router = useRouter();
 // constants for stores
 const experimentStore = useExperimentStore();
-const inferenceServiceStore = useInferenceServiceStore();
 const datasetStore = useDatasetStore();
-const authStore = useAuthStore();
 const creationStore = useCreationStore();
 const modelStore = useModelStore();
 

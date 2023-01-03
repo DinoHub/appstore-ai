@@ -1,4 +1,4 @@
 {
-  "autoDocstring.docstringFormat": "sphinx",
+  "autoDocstring.docstringFormat": "google",
   "python.analysis.typeCheckingMode": "basic"
 }

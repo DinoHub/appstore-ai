@@ -1,7 +1,7 @@
 import datetime
 import json
 import re
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from bson import json_util
 from fastapi import (
@@ -13,22 +13,23 @@ from fastapi import (
     status,
 )
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import DuplicateKeyError
 
 from ..config.config import config
 from ..internal.auth import get_current_user
-from ..internal.db import get_db
-from ..internal.file_validator import ValidateFileUpload
+from ..internal.dependencies.file_validator import ValidateFileUpload
+from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import preprocess_html
 from ..internal.tasks import delete_orphan_images, delete_orphan_services
 from ..internal.utils import uncased_to_snake_case
 from ..models.iam import TokenData
 from ..models.model import (
+    GetFilterResponseModel,
     ModelCardModelDB,
     ModelCardModelIn,
+    SearchModelResponse,
     UpdateModelCardModel,
 )
 
@@ -57,9 +58,21 @@ router = APIRouter(prefix="/models", tags=["Models"])
 
 
 @router.get(
-    "/_db/options/filters/"
+    "/_db/options/filters/", response_model=GetFilterResponseModel
 )  # prevent accidently matching with user/model id
-async def get_available_filters(db=Depends(get_db)):
+async def get_available_filters(
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db)
+) -> Dict[str, List[str]]:
+    """Get available filters for model zoo search page
+
+    Args:
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+
+    Returns:
+        Dict[str, List[str]]: All available tags, frameworks, and tasks
+    """
+    # TODO: Optimize retrieval through Redis cache
     db, _ = db
     models = db["models"]
     tags = await models.distinct("tags")
@@ -70,20 +83,41 @@ async def get_available_filters(db=Depends(get_db)):
 
 @router.get("/{creator_user_id}/{model_id}")
 async def get_model_card_by_id(
-    model_id: str, creator_user_id: str, db=Depends(get_db)
-):
+    model_id: str,
+    creator_user_id: str,
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+) -> Dict:
+    """Get model card by composite ID: creator_user_id/model_id
+
+    Args:
+        model_id (str): Model ID to search for
+        creator_user_id (str): Creator user ID to search for
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 404 if model card not found
+
+    Returns:
+        Dict: Model card
+    """
     db, _ = db
     # Get model card by database id (NOT clearml id)
     model = await db["models"].find_one(
         {"modelId": model_id, "creatorUserId": creator_user_id}
     )
     if model is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unable to find: {creator_user_id}/{model_id}",
+        )
     model = json.loads(json_util.dumps(model))
-    return JSONResponse(status_code=status.HTTP_200_OK, content=model)
+    return model
 
 
-@router.get("/")
+@router.get(
+    "/", response_model=SearchModelResponse, response_model_exclude_unset=True
+)
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
@@ -99,7 +133,26 @@ async def search_cards(
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
     return_attr: Optional[List[str]] = Query(default=None, alias="return[]"),
     all: Optional[bool] = Query(default=None),
-):
+) -> Dict:
+    """Search model cards
+
+    Args:
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection. Defaults to Depends(get_db).
+        page (int, optional): Page number. Defaults to Query(default=1, alias="p", gt=0).
+        rows_per_page (int, optional): Rows per page. Defaults to Query(default=10, alias="n", ge=0).
+        descending (bool, optional): Order to return results in. Defaults to Query(default=False, alias="desc").
+        sort_by (str, optional): Sort by field. Defaults to Query(default="_id", alias="sort").
+        title (Optional[str], optional): Search by model title. Defaults to Query(default=None).
+        tasks (Optional[List[str]], optional): Search by task. Defaults to Query(default=None, alias="tasks[]").
+        tags (Optional[List[str]], optional): Search by task. Defaults to Query(default=None, alias="tags[]").
+        frameworks (Optional[List[str]], optional): Search by framework. Defaults to Query( default=None, alias="frameworks[]" ).
+        creator_user_id (Optional[str], optional): Search by creator. Defaults to Query(default=None, alias="creator").
+        return_attr (Optional[List[str]], optional): Which fields to return. Defaults to Query(default=None, alias="return[]").
+        all (Optional[bool], optional): Whether to return all results. Defaults to Query(default=None).
+
+    Returns:
+        Dict: A dictionary containing the results and pagination information
+    """
     db, client = db
     query = {}
     if title:
@@ -135,12 +188,28 @@ async def search_cards(
     return {"results": results, "total": total_rows}
 
 
-@router.get("/{creator_user_id}")
+@router.get(
+    "/{creator_user_id}",
+    response_model=SearchModelResponse,
+    response_model_exclude_unset=True,
+)
 async def get_model_cards_by_user(
     creator_user_id: str,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     return_attr: Optional[List[str]] = Query(None, alias="return"),
-):
+) -> Dict:
+    """Get all model cards by a user
+
+    Args:
+        creator_user_id (str): Creator user id
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        return_attr (Optional[List[str]], optional): Fields to return.
+            Defaults to Query(None, alias="return").
+
+    Returns:
+        Dict: Results and pagination information
+    """
     results = await search_cards(
         db=db,
         all=True,
@@ -155,13 +224,33 @@ async def get_model_cards_by_user(
     return results
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=ModelCardModelDB,
+    response_model_exclude_unset=True,
+)
 async def create_model_card_metadata(
     card: ModelCardModelIn,
     tasks: BackgroundTasks,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     user: TokenData = Depends(get_current_user),
-):
+) -> Dict:
+    """Create model card metadata
+
+    Args:
+        card (ModelCardModelIn): Model card
+        tasks (BackgroundTasks): Background tasks to run
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 409 if model card already exists
+
+    Returns:
+        Dict: Model card metadata
+    """
     # NOTE: After this, still need to submit inference engine
     db, mongo_client = db
     card.tags = list(set(card.tags))  # remove duplicates
@@ -196,15 +285,37 @@ async def create_model_card_metadata(
     return card_dict
 
 
-@router.put("/{creator_user_id}/{model_id}", response_model=ModelCardModelDB)
+@router.put(
+    "/{creator_user_id}/{model_id}",
+    response_model=ModelCardModelDB,
+    response_model_exclude_unset=True,
+)
 async def update_model_card_metadata_by_id(
     model_id: str,
     creator_user_id: str,
     card: UpdateModelCardModel,
     tasks: BackgroundTasks,
-    db=Depends(get_db),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     user: TokenData = Depends(get_current_user),
-):
+) -> Optional[Dict]:
+    """Update model card metadata by ID
+
+    Args:
+        model_id (str): Model Id
+        creator_user_id (str): Creator user id
+        card (UpdateModelCardModel): Updated model card
+        tasks (BackgroundTasks): Background tasks to run
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 404 if model card does not exist
+        HTTPException: 403 if user does not have permission to update model card
+
+    Returns:
+        Optional[Dict]: Updated model card metadata
+    """
     tasks.add_task(
         delete_orphan_images
     )  # After update, check if any images were removed and sync with Minio

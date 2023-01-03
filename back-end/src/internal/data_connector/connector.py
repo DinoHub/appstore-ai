@@ -1,3 +1,4 @@
+"""Provides a base class for all dataset connectors to inherit from."""
 from abc import ABC, abstractmethod
 from logging import Logger
 from pathlib import Path
@@ -5,6 +6,8 @@ from typing import Dict, List, Optional, Union
 
 
 class DatasetConnector(ABC):
+    """Base class for dataset connectors."""
+
     def __init__(self):
         """Initialize a dataset connector.
 
@@ -21,6 +24,15 @@ class DatasetConnector(ABC):
     @property
     @abstractmethod
     def file_entries(self) -> Dict:
+        """Get a dictionary of files in the dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
+        Returns:
+            Dict: Dictionary of files in the dataset
+        """
         raise NotImplementedError(
             "Connector does not have file entries attribute defined."
         )
@@ -28,6 +40,15 @@ class DatasetConnector(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
+        """Get the name of the dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
+        Returns:
+            str: Name of the dataset
+        """
         raise NotImplementedError(
             "Connector does not have file entries attribute defined."
         )
@@ -35,6 +56,15 @@ class DatasetConnector(ABC):
     @property
     @abstractmethod
     def project(self) -> str:
+        """Get the project associated with the dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
+        Returns:
+            str: Project associated with the dataset
+        """
         raise NotImplementedError(
             "Connector does not have file entries attribute defined."
         )
@@ -80,11 +110,14 @@ class DatasetConnector(ABC):
     ) -> None:
         """Add files to a dataset.
 
-        Note that this will not upload the dataset yet, just stage it.
-
         Args:
             path (Union[str, Path]): Local/remote path to data you want to add
-            recursive (bool, optional): Recursively add sub-files/folders?. Defaults to True.
+            recursive (bool, optional): Recursively add sub-files/folders?.
+                Defaults to True.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
         """
         raise NotImplementedError
 
@@ -97,6 +130,10 @@ class DatasetConnector(ABC):
         Args:
             path (Union[str, Path]): Local/remote path to data you want to remove
             recursive (bool, optional): Recursively add sub-files/folders?. Defaults to True.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
         """
         raise NotImplementedError
 
@@ -111,8 +148,11 @@ class DatasetConnector(ABC):
 
         Raises:
             ValueError: If remote is not defined in arguments
-            and dataset has no default remote, a ValueError
-            should be raised
+                and dataset has no default remote, a ValueError
+                should be raised
+
+            NotImplementedError: If dataset connector
+                does not implement this method.
         """
         if remote is None and self.default_remote is None:
             raise ValueError
@@ -127,6 +167,10 @@ class DatasetConnector(ABC):
             overwrite (bool, optional): If existing files in target folder should be removed.
                 Defaults to True.
 
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
         Returns:
             str: File path to downloaded dataset
         """
@@ -134,15 +178,25 @@ class DatasetConnector(ABC):
 
     @abstractmethod
     def delete(self) -> None:
-        """Deletes the entire dataset."""
+        """Delete dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+        """
         raise NotImplementedError
 
     @staticmethod
     @abstractmethod
-    def list_datasets(cls) -> List[Dict]:
-        """Query list of datasets.
+    def list_datasets() -> List[Dict]:
+        """Obtain a list of all datasets, based on
+            what is available to the dataset connector.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
 
         Returns:
-            List[Dict]: List of dictionaries with dataset metadata.
+            List[Dict]: List of dictionaries containing dataset metadata
         """
         raise NotImplementedError

@@ -1,6 +1,5 @@
 from pathlib import Path
-from typing import Dict, List, Set
-from urllib import response
+from typing import Dict, Set
 
 import pytest
 from fastapi import status

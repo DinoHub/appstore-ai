@@ -17,7 +17,7 @@ deploy:
         # repo: https://kubernetes.github.io/ingress-nginx
         wait: true
         valuesFiles:
-          - k8s/environments/development/cluster/ingress_nginx_values.yaml
+          - k8s/environments/development/cluster/ingress-nginx-values.yaml
       - name: mongodb
         # repo: https://charts.bitnami.com/bitnami
         chartPath: k8s/charts/dependencies/mongodb
@@ -26,20 +26,11 @@ deploy:
         namespace: ai-appstore
         createNamespace: true
         valuesFiles:
-          - k8s/environments/development/mongodb_values.yaml
+          - k8s/environments/development/mongodb-values.yaml
         setValues:
           nameOverride: "aas-mongodb"
           fullnameOverride: "aas-mongodb"
         wait: true
-      # - name: minio
-      #   repo: https://charts.bitnami.com/bitnami
-      #   chartPath: k8s/charts/dependencies/minio
-      #   upgradeOnChange: false
-      #   version: 11.10.24
-      #   namespace: ai-appstore
-      #   wait: true
-      #   valuesFiles:
-      #     - k8s/environments/development/minio_values.yaml
       - name: minio
         # repo: https://charts.min.io/
         chartPath: k8s/charts/dependencies/minio
@@ -47,7 +38,7 @@ deploy:
         namespace: ai-appstore
         wait: true
         valuesFiles:
-          - k8s/environments/development/minio_values.yaml
+          - k8s/environments/development/minio-values.yaml
   kubectl: {}
 profiles:
   - name: dev
@@ -55,6 +46,12 @@ profiles:
       - command: dev
       - kubeContext: kind-(.*)
     patches:
+      - op: add
+        path: /manifests/rawYaml/-
+        value: k8s/environments/development/cluster/metallb-config.yaml
+      - op: add
+        path: /manifests/rawYaml/-
+        value: k8s/environments/development/cluster/metallb-ip-address-pool.yaml
       - op: add
         path: /deploy/helm/releases/0
         value:
@@ -70,29 +67,7 @@ profiles:
       - op: add
         path: /manifests/rawYaml/-
         value: k8s/environments/development/dashboard/admin.yaml
-      - op: add
-        path: /manifests/rawYaml/-
-        value: k8s/environments/development/cluster/metallb-config.yaml
 ---
-# apiVersion: skaffold/v3
-# kind: Config
-# metadata:
-#   name: aas-knative-backend
-# deploy:
-#   helm:
-#     releases:
-#       - name: aas-knative-backend
-#         chartPath: k8s/charts/aas-knative-backend
-#         namespace: inference-engine
-#         upgradeOnChange: false
-        
-# profiles:
-#   - name: dev
-#     activation:
-#       - command: dev
-#       - kubeContext: kind-(.*)
-#       - kubeContext: minikube
-# ---
 apiVersion: skaffold/v3
 kind: Config
 metadata:
@@ -125,6 +100,8 @@ deploy:
         chartPath: k8s/charts/aas-knative-backend
         namespace: inference-engine
         upgradeOnChange: false
+        valuesFiles:
+          - k8s/environments/development/aas-knative-backend-values.yaml
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore
@@ -134,7 +111,7 @@ deploy:
         setValues:
           image.pullPolicy: "IfNotPresent"
         valuesFiles:
-          - k8s/environments/development/aas_frontend_values.yaml
+          - k8s/environments/development/aas-frontend-values.yaml
         wait: true
       - name: aas-backend
         chartPath: k8s/charts/aas-backend
@@ -145,7 +122,7 @@ deploy:
         setValues:
           image.pullPolicy: "IfNotPresent"
         valuesFiles:
-          - k8s/environments/development/aas_backend_values.yaml
+          - k8s/environments/development/aas-backend-values.yaml
         wait: true
 profiles:
   - name: dev

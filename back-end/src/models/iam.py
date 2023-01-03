@@ -1,7 +1,8 @@
+"""Data models for user management"""
 import secrets
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Union
+from typing import Dict, List, Literal, Optional, Union
 
 from bson import ObjectId
 from password_strength import PasswordPolicy
@@ -19,16 +20,22 @@ policy = PasswordPolicy.from_names(
 
 
 class UserRoles(str, Enum):
+    """Possible user roles."""
+
     user = "user"
     admin = "admin"
 
 
 class UsersEdit(BaseModel):
+    """Request model for editing many users."""
+
     users: List[str] = []
     priv: bool = False
 
 
 class UserInsert(BaseModel):
+    """Request model for creating a user."""
+
     name: str
     user_id: str
     password: str
@@ -36,15 +43,41 @@ class UserInsert(BaseModel):
     admin_priv: bool = False
 
     @validator("user_id")
-    def generate_if_empty(cls, v, values, **kwargs):
+    def generate_if_empty(
+        cls, v: Optional[str], values: Dict, **kwargs
+    ) -> str:
+        """Generates a user id if one is not provided.
+
+        Args:
+            v (Optional[str]): The user id.
+            values (Dict): User data.
+
+        Returns:
+            str: Generated user id.
+        """
+        # Get name from user data and strip whitespace
         name_string = "".join(values["name"].lower().split())
+        # if user id is empty, generate a new one
         if v is None or v == "":
             new_id = f"{name_string[0:7]}-{secrets.token_hex(8)}"
             return new_id
         return v
 
     @validator("password_confirm")
-    def match_passwords(cls, v, values, **kwargs):
+    def match_passwords(cls, v: str, values: Dict, **kwargs) -> str:
+        """Checks that password is strong and check confirm password matches.
+
+        Args:
+            v (str): Password
+            values (Dict): User data.
+
+        Raises:
+            ValueError: If confirmation password does not match password.
+            ValueError: If password is not strong.
+
+        Returns:
+            str: _description_
+        """
         if v != values["password"]:
             raise ValueError("Passwords do not match")
         strength = policy.test(values["password"])
@@ -56,12 +89,17 @@ class UserInsert(BaseModel):
 
 
 class UserInsertDB(BaseModel):
+    """Request model for creating a user."""
+
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     user_id: str
     name: str
     admin_priv: bool = False
 
     class Config:
+        """Pydantic config to allow creation of data model
+        from a JSON object with camelCase keys."""
+
         alias_generator = to_camel_case
         allow_population_by_field_name = True
         arbitrary_types_allowed = True
@@ -69,12 +107,16 @@ class UserInsertDB(BaseModel):
 
 
 class Token(BaseModel):
+    """Data model for user tokens"""
+
     access_token: str
     refresh_token: str
-    token_type: str
+    token_type: Literal["bearer"]
 
 
 class TokenData(BaseModel):
+    """Decoded JWT token data."""
+
     user_id: Optional[str] = None
     name: Optional[str] = None
     role: Optional[UserRoles] = None
@@ -82,19 +124,27 @@ class TokenData(BaseModel):
 
 
 class User(BaseModel):
+    """Data model for user."""
+
     userId: str
     adminPriv: bool
 
 
 class UserInDB(User):
+    """Data model for user in database."""
+
     hashed_password: str
 
 
 class UserRemoval(BaseModel):
+    """Request model for removing many users."""
+
     users: List[str]
 
 
 class UserPage(BaseModel):
+    """Request model for finding users"""
+
     page_num: int = 1
     user_num: int = 5
     name: str = ""
@@ -104,31 +154,77 @@ class UserPage(BaseModel):
     date_created_range: Union[str, dict, None] = {"from": "", "to": ""}
 
     @validator("page_num")
-    def page_number_check(cls, v):
+    def page_number_check(cls, v: int) -> int:
+        """Validate pagination page number is valid
+
+        Args:
+            v (int): Page number
+
+        Raises:
+            ValueError: If page number is less than 1
+
+        Returns:
+            int: Page number
+        """
         if v <= 0:
             raise ValueError("Page number should be above one")
         return v
 
     @validator("user_num")
-    def num_of_user_more_than_one(cls, v):
+    def num_of_user_more_than_one(cls, v: int) -> int:
+        """Validate number of users displayed is one or more
+
+        Args:
+            v (int): Number of users displayed
+
+        Raises:
+            ValueError: If number of users displayed is less than 1
+
+        Returns:
+            int: Number of users displayed
+        """
         if v <= 0:
             raise ValueError("Number of users displayed must be more than one")
         return v
 
     @validator("name")
-    def name_is_empty(cls, v):
+    def name_is_empty(cls, v: str) -> Optional[str]:
+        """Check if search name field is empty
+
+        Args:
+            v (str): Search name field
+
+        Returns:
+            Optional[str]: name if not empty, None if empty
+        """
         if v.strip() == "":
             return None
         return v
 
     @validator("userId")
-    def id_is_empty(cls, v):
+    def id_is_empty(cls, v: str) -> Optional[str]:
+        """Validate user id search field is not empty
+
+        Args:
+            v (str): User id
+
+        Returns:
+            Optional[str]: user id if not empty, None if empty
+        """
         if v.strip() == "":
             return None
         return v
 
     @validator("admin_priv")
-    def admin_priv_check(cls, v):
+    def admin_priv_check(cls, v: int) -> Optional[bool]:
+        """Validate if user is admin
+
+        Args:
+            v (int): Admin priv level
+
+        Returns:
+            Optional[bool]: True if admin, False if not admin, None if not set
+        """
         if v == 0:
             return False
         elif v == 1:
@@ -137,13 +233,29 @@ class UserPage(BaseModel):
             return None
 
     @validator("last_modified_range")
-    def last_modified_check(cls, v):
+    def last_modified_check(cls, v: Dict) -> Optional[Dict]:
+        """Check if last modified search range is empty
+
+        Args:
+            v (Dict): Last modified search range
+
+        Returns:
+            Optional[Dict]: Search range if not empty, None if empty
+        """
         if v["from"] == "" or v["to"] == "" or v == "":
             return None
         return v
 
     @validator("date_created_range")
-    def date_created_check(cls, v):
+    def date_created_check(cls, v: Dict) -> Optional[Dict]:
+        """Check if date created search range is empty
+
+        Args:
+            v (Dict): Search range
+
+        Returns:
+            Optional[Dict]: Search range if not empty, None if empty
+        """
         if v["from"] == "" or v["to"] == "" or v == "":
             return None
         return v

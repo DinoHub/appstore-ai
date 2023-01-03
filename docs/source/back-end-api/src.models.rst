@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    src.models.auth
+   src.models.buckets
    src.models.common
    src.models.dataset
    src.models.engine

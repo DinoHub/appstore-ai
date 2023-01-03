@@ -549,8 +549,6 @@ import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import { useModelStore } from 'src/stores/model-store';
 import { useDatasetStore } from 'src/stores/dataset-store';
 
-const emit = defineEmits(['update-exp']);
-
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
 const experimentStore = useExperimentStore();
@@ -572,17 +570,6 @@ const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 
-const checkMetadata = (stepper: QStepper) => {
-  if (editMetadataStore.metadataValid) {
-    stepper.next();
-  } else {
-    Notify.create({
-      message: 'Enter all values into required fields first before proceeding',
-      icon: 'warning',
-      color: 'negative',
-    });
-  }
-};
 const saveEdit = () => {
   editMetadataStore
     .submitEdit(modelId)
@@ -682,6 +669,7 @@ const addExpPlots = (store: typeof editMetadataStore) => {
           message: 'Failed to insert plots',
           color: 'negative',
         });
+        console.error(err);
       })
       .finally(() => {
         buttonDisable.value = false;

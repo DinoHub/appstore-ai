@@ -158,15 +158,18 @@ import { useModelStore } from 'src/stores/model-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useUploadStore } from 'src/stores/upload-store';
 import { useRoute, useRouter } from 'vue-router';
-import { ref, onMounted } from 'vue';
-import { Notify, QStepper } from 'quasar';
+import { ref } from 'vue';
+import { QStepper } from 'quasar';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const modelStore = useModelStore();
 const uploadStore = useUploadStore();
+
 const cancel = ref(false);
+const buttonDisable = ref(false);
+const loading = ref(false);
 const step = ref(1);
 const videoExample = ref();
 const selectedVideo = ref();
@@ -174,8 +177,6 @@ const selectedVideo = ref();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 
-const buttonDisable = ref(false);
-const loading = ref(false);
 
 let currentData = {};
 
