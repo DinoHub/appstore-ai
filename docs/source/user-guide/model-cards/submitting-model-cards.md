@@ -101,6 +101,14 @@ When you click on "Submit Image", we will temporarily create a service to allow 
 
 Once you've tested out your inference service, submit your model card with the "Confirm Model Card Creation" button.
 
+## Submitting an Example Video in place of Inference Service
+
+In some cases, such as with Reinforcement Learning tasks, an Inference Service may not always work.
+
+Hence, the option of submitting an example video is provided for such tasks and situations, allowing you to showcase the agent's/model's performance in the chosen environment.
+
+![Submit Example Video]
+
 # Conclusion
 
 Congratulations, you have successfully submitted your model card! The final output should look something like this:
