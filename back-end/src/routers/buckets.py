@@ -36,11 +36,11 @@ video_validator = ValidateFileUpload(
 @router.post(
     "/video",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(video_validator)],
+    #dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
 def upload_video(
-    video: UploadFile,
+    video: UploadFile = Form(),
     s3_client: Minio = Depends(minio_api_client),
 ) -> Dict[str, str]:
     """Uploads a video to the MinIO bucket
@@ -75,7 +75,7 @@ def upload_video(
 @router.put(
     "/video",
     status_code=status.HTTP_200_OK,
-    dependencies=[Depends(video_validator)],
+    #dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
 def replace_video(
