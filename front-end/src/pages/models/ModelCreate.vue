@@ -458,6 +458,7 @@
               class="q-ml-md q-pb-xl"
               autogrow
               hint="Image URI"
+              placeholder="e.g <registry>/<image>:<tag>"
               v-model="creationStore.imageUri"
               :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"

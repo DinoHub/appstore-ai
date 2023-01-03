@@ -27,6 +27,7 @@
               v-model="editInferenceServiceStore.imageUri"
               class="q-ml-md q-pb-xl"
               label="Container Image URI"
+              placeholder="e.g <registry>/<image>:<tag>"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
