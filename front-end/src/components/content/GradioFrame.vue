@@ -9,15 +9,19 @@
 <template>
   <q-card class="gradio-container bg-white">
     <q-card-section>
+      <q-inner-loading
+        v-if="loading"
+        :showing="loading"
+        label="Loading Inference App..."
+      >
+        <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
+      </q-inner-loading>
       <iframe
         @load="loading = false"
         v-show="!loading"
         :src="iframeUrl"
       ></iframe>
     </q-card-section>
-    <!-- <q-inner-loading :showing="loading" label="Loading Inference App...">
-      <q-spinner-gears size="50px" color="primary"></q-spinner-gears>
-    </q-inner-loading> -->
   </q-card>
 </template>
 
