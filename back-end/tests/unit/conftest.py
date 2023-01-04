@@ -10,21 +10,23 @@ from src.internal.auth import check_is_admin, get_current_user
 from src.config.config import Environment
 
 from .utils import fake_login_admin, fake_login_user
+from src.config import config
 
-@pytest.fixture
-def app() -> TestClient:
-    from src.config import config
+config.config.DB_NAME = "appStoreTestDB"
 
-    config.ENV_STATE = Environment.TEST
-    config.config = config.TestingConfig(ENV_STATE=Environment.TEST)
-    from src.main import app
+from src.main import app
+
+@pytest.fixture(scope="module")
+def application() -> TestClient:
+
     app.dependency_overrides[get_current_user] = fake_login_user
     if check_is_admin in app.dependency_overrides:
         del app.dependency_overrides[check_is_admin]
     return app
 
-@pytest.fixture
-def client(app) -> TestClient:
+
+@pytest.fixture(scope="module")
+def client(application) -> TestClient:
     # from src.config import config
 
     # config.ENV_STATE = "test"
@@ -34,16 +36,11 @@ def client(app) -> TestClient:
     # app.dependency_overrides[get_current_user] = fake_login_user
     # if check_is_admin in app.dependency_overrides:
     #     del app.dependency_overrides[check_is_admin]
-    return TestClient(app)
+    return TestClient(application)
 
 
 @pytest.fixture
 def admin_client(client: TestClient) -> TestClient:
-    from src.config import config
-
-    config.ENV_STATE = Environment.TEST
-    config.config = config.TestingConfig()
-    from src.main import app
 
     app.dependency_overrides[get_current_user] = fake_login_user
     app.dependency_overrides[check_is_admin] = fake_login_admin
@@ -53,11 +50,6 @@ def admin_client(client: TestClient) -> TestClient:
 
 @pytest.fixture
 def anonymous_client(client: TestClient) -> TestClient:
-    from src.config import config
-
-    config.ENV_STATE = "test"
-    config.config = config.TestingConfig()
-    from src.main import app
 
     if check_is_admin in app.dependency_overrides:
         del app.dependency_overrides[check_is_admin]
@@ -76,10 +68,7 @@ def get_fake_db(client) -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
 
 
 @pytest_asyncio.fixture
-async def flush_db(
-    get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]
-):
+async def flush_db(get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]):
     db, client = get_fake_db
     for collection in await db.list_collection_names():
         await db.drop_collection(collection)
-
