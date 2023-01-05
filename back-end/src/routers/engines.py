@@ -29,6 +29,7 @@ from ..internal.utils import k8s_safe_name, uncased_to_snake_case
 from ..models.engine import (
     CreateInferenceEngineService,
     InferenceEngineService,
+    ServiceBackend,
     UpdateInferenceEngineService,
 )
 from ..models.iam import TokenData
@@ -84,7 +85,7 @@ def get_inference_engine_service_status(
     # Sync endpoint to allow for concurrent request
     try:
         with k8s_client as client:
-            if config.IE_SERVICE_TYPE == "knative":
+            if config.IE_SERVICE_TYPE == ServiceBackend.knative:
                 api = CustomObjectsApi(client)
                 result = api.get_namespaced_custom_object(
                     group="serving.knative.dev",
@@ -103,7 +104,7 @@ def get_inference_engine_service_status(
 
                 # if didn't return yet, service is ready
                 return {"ready": True}
-            elif config.IE_SERVICE_TYPE == "emissary":
+            elif config.IE_SERVICE_TYPE == ServiceBackend.emissary:
                 api = AppsV1Api(client)
                 result = api.read_namespaced_deployment_status(
                     name=service_name + "-deployment",
@@ -219,8 +220,30 @@ async def create_inference_engine_service(
         try:
             core_api = CoreV1Api(client)
             custom_api = CustomObjectsApi(client)
-            service_backend = config.IE_SERVICE_TYPE or "emissary"
-            if service_backend == "knative":
+            service_backend = config.IE_SERVICE_TYPE or ServiceBackend.emissary
+            if config.IE_DOMAIN:
+                host = config.IE_DOMAIN
+            else:
+                if service_backend == ServiceBackend.knative:
+                    ingress_name = "kourier"
+                    ingress_namespace = "kourier-system"
+                elif service_backend == ServiceBackend.emissary:
+                    ingress_name = "emissary-ingress"
+                    ingress_namespace = "emissary"
+                else:
+                    if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
+                        ingress_name = config.IE_INGRESS_NAME
+                        ingress_namespace = config.IE_INGRESS_NAMESPACE
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="No Ingress specified",
+                        )
+                ingress = core_api.read_namespaced_service(
+                    name=ingress_name, namespace=ingress_namespace
+                )
+                host = ingress.status.load_balancer.ingress[0].ip
+            if service_backend == ServiceBackend.knative:
                 service_template = template_env.get_template(
                     "knative/inference-engine-knative-service.yaml.j2"
                 )
@@ -234,13 +257,6 @@ async def create_inference_engine_service(
                         }
                     )
                 )
-                if config.IE_DOMAIN:
-                    host = config.IE_DOMAIN
-                else:
-                    kourier_ingress = core_api.read_namespaced_service(
-                        name="kourier", namespace="kourier-system"
-                    )
-                    host = kourier_ingress.status.load_balancer.ingress[0].ip
                 url = (
                     f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
                 )
@@ -254,19 +270,9 @@ async def create_inference_engine_service(
                     plural="services",
                     body=service,
                 )
-            elif service_backend == "emissary":
-                if not config.IE_DOMAIN:
-
-                    # Get Ambassador Ext Ip
-                    # ambassador_ingress = core_api.read_namespaced_service(
-                    #     name="emissary-ingress",
-                    #     namespace="ambassador"
-                    # )
-                    # host = ambassador_ingress.status.load_balancer.ingress[0].ip
-                    # TODO: Fix access to ambassador ingress
-                    host = "172.20.255.1"
-                else:
-                    host = config.IE_DOMAIN
+            elif service_backend == ServiceBackend.emissary:
+                url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
+                # else css and js files are not loaded properly
                 service_template = template_env.get_template(
                     "ambassador/inference-engine-service.yaml.j2"
                 )
@@ -316,8 +322,6 @@ async def create_inference_engine_service(
                     plural="mappings",
                     body=mapping_render,
                 )
-                url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
-                # else css and js files are not loaded properly
             else:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -406,7 +410,7 @@ async def delete_inference_engine_service(
                     detail="User does not have owner access to KService",
                 )
             # Get the service type
-            service_type = existing_service.get(
+            service_type: ServiceBackend = existing_service.get(
                 "backend", config.IE_SERVICE_TYPE
             )
             await db["services"].delete_one({"serviceName": service_name})
@@ -414,7 +418,7 @@ async def delete_inference_engine_service(
             with k8s_client as client:
                 # Create instance of API class
                 try:
-                    if service_type == "knative":
+                    if service_type == ServiceBackend.knative:
                         api = CustomObjectsApi(client)
                         api.delete_namespaced_custom_object(
                             group="serving.knative.dev",
@@ -423,7 +427,7 @@ async def delete_inference_engine_service(
                             namespace=config.IE_NAMESPACE,
                             name=service_name,
                         )
-                    elif service_type == "emissary":
+                    elif service_type == ServiceBackend.emissary:
                         # Delete service, mapping, and deployment
                         # TODO: Test if this works
                         app_api = AppsV1Api(client)
@@ -491,6 +495,48 @@ async def update_inference_engine_service(
 
     if len(updated_metadata) > 0:
         updated_metadata["lastModified"] = str(datetime.datetime.now())
+        service_type = config.IE_SERVICE_TYPE
+        # Use configured cluster service type
+        # NOTE: This overrides the service type in the original service
+        # TODO: Find a better way to do this
+        updated_metadata["backend"] = service_type
+        protocol = "http"
+        if config.IE_DOMAIN:
+            host = config.IE_DOMAIN
+        else:
+            with k8s_client as client:
+                core_api = CoreV1Api(client)
+                if service_type == ServiceBackend.knative:
+                    ingress_name = "kourier"
+                    ingress_namespace = "kourier-system"
+                elif service_type == ServiceBackend.emissary:
+                    ingress_name = "emissary-ingress"
+                    ingress_namespace = "emissary"
+                else:
+                    if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
+                        ingress_name = config.IE_INGRESS_NAME
+                        ingress_namespace = config.IE_INGRESS_NAMESPACE
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            detail="Error when trying to determine hostname of Ingress. Unsupported service type",
+                        )
+                ingress = core_api.read_namespaced_service(
+                    name=ingress_name, namespace=ingress_namespace
+                )
+                host = ingress.status.load_balancer.ingress[0].ip
+        updated_metadata["protocol"] = protocol
+        updated_metadata["host"] = host
+        if service_type == ServiceBackend.knative:
+            updated_metadata[
+                "inferenceUrl"
+            ] = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
+            if not config.IE_DOMAIN:
+                updated_metadata["inferenceUrl"] += ".sslip.io"
+        elif service_type == ServiceBackend.emissary:
+            updated_metadata[
+                "inferenceUrl"
+            ] = f"{protocol}://{host}/{service_name}/"
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # Check if user has editor access
@@ -507,6 +553,11 @@ async def update_inference_engine_service(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="User does not have owner access to KService",
                     )
+                # Check if service type is changed
+                # if so, we need to use replace instead of patch
+                recreate_service = (
+                    updated_metadata["backend"] != existing_service["backend"]
+                )
                 result = await db["services"].update_one(
                     {"serviceName": service_name}, {"$set": updated_metadata}
                 )
@@ -517,16 +568,15 @@ async def update_inference_engine_service(
                     # Not necessary to update service?
                     return updated_service
                 # Get the backend
-                service_type = updated_service.get(
-                    "backend", config.IE_SERVICE_TYPE
-                )
                 # Deploy Service on K8S
                 with k8s_client as client:
                     # Create instance of API class
                     try:
-                        if service_type == "knative":
+                        core_api = CoreV1Api(client)
+                        custom_api = CustomObjectsApi(client)
+                        if service_type == ServiceBackend.knative:
                             template = template_env.get_template(
-                                "inference-engine-service.yaml.j2"
+                                "knative/inference-engine-service.yaml.j2"
                             )
                             service_template = safe_load(
                                 template.render(
@@ -542,17 +592,101 @@ async def update_inference_engine_service(
                                     }
                                 )
                             )
-                            api = CustomObjectsApi(client)
-                            api.patch_namespaced_custom_object(
-                                group="serving.knative.dev",
-                                version="v1",
-                                plural="services",
-                                namespace=config.IE_NAMESPACE,
-                                name=service_name,
-                                body=service_template,
+                            if recreate_service:
+                                # Use replacement strategy to update service
+                                custom_api.replace_namespaced_custom_object(
+                                    group="serving.knative.dev",
+                                    version="v1",
+                                    plural="services",
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name,
+                                    body=service_template,
+                                )
+                            else:
+                                custom_api.patch_namespaced_custom_object(
+                                    group="serving.knative.dev",
+                                    version="v1",
+                                    plural="services",
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name,
+                                    body=service_template,
+                                )
+                        elif service_type == ServiceBackend.emissary:
+                            pass
+                            service_template = template_env.get_template(
+                                "ambassador/inference-engine-service.yaml.j2"
                             )
-                        elif service_type == "emissary":
-                            raise NotImplementedError
+                            deployment_template = template_env.get_template(
+                                "ambassador/inference-engine-deployment.yaml.j2"
+                            )
+                            mapping_template = template_env.get_template(
+                                "ambassador/ambassador-mapping.yaml.j2"
+                            )
+                            service_render = safe_load(
+                                service_template.render(
+                                    {
+                                        "engine_name": service_name,
+                                        "port": service.container_port,
+                                    }
+                                )
+                            )
+                            deployment_render = safe_load(
+                                deployment_template.render(
+                                    {
+                                        "engine_name": service_name,
+                                        "image_name": service.image_uri,
+                                        "port": service.container_port,
+                                        "env": service.env,
+                                    }
+                                )
+                            )
+                            mapping_render = safe_load(
+                                mapping_template.render(
+                                    {
+                                        "engine_name": service_name,
+                                    }
+                                )
+                            )
+                            app_api = AppsV1Api(client)
+                            if recreate_service:
+                                # Use replacement strategy to update service
+                                app_api.replace_namespaced_deployment(
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name + "-deployment",
+                                    body=deployment_render,
+                                )
+                                core_api.replace_namespaced_service(
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name,
+                                    body=service_render,
+                                )
+                                custom_api.replace_namespaced_custom_object(
+                                    group="getambassador.io",
+                                    version="v2",
+                                    plural="mappings",
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name + "-ingress",
+                                    body=mapping_render,
+                                )
+                            else:
+                                app_api.patch_namespaced_deployment(
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name + "-deployment",
+                                    body=deployment_render,
+                                )
+                                core_api.patch_namespaced_service(
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name,
+                                    body=service_render,
+                                )
+                                custom_api.patch_namespaced_custom_object(
+                                    group="getambassador.io",
+                                    version="v2",
+                                    plural="mappings",
+                                    namespace=config.IE_NAMESPACE,
+                                    name=service_name + "-ingress",
+                                    body=mapping_render,
+                                )
                         return updated_service
                     except (K8sAPIException, HTTPError) as err:
                         session.abort_transaction()

@@ -1,5 +1,6 @@
 """Data models for inference engine services."""
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 from bson import ObjectId
@@ -20,6 +21,13 @@ from .common import PyObjectId
 #         lt=32,
 #         description="Memory in GB (1, 2, 4, 8, 16, 32)",
 #     )
+
+
+class ServiceBackend(str, Enum):
+    """Enum for service backend."""
+
+    knative = "knative"  # knative-serving
+    emissary = "emissary"  # emissary-ingress
 
 
 class CreateInferenceEngineService(BaseModel):
@@ -51,7 +59,7 @@ class InferenceEngineService(CreateInferenceEngineService):
     host: str
     path: str
     protocol: str = Field(default="http")
-    backend: str
+    backend: ServiceBackend
 
     class Config:
         """Pydantic config to allow creation of data model
