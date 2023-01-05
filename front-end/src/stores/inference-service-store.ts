@@ -14,12 +14,7 @@ export interface InferenceEngineService {
 }
 
 export interface InferenceServiceStatus {
-  conditions: {
-    lastTransitionTime: string;
-    status: string;
-    type: string;
-  }[];
-  url: string;
+  ready: boolean;
 }
 
 export const useInferenceServiceStore = defineStore('service', {
@@ -30,32 +25,24 @@ export const useInferenceServiceStore = defineStore('service', {
       serviceName: string,
       maxRetries = 10,
       initialWaitSeconds = 10,
-      maxDeadlineSeconds = 300
+      maxDeadlineSeconds = 300,
     ): Promise<boolean> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
-          let ready = true;
           const res = await api.get(`engines/${serviceName}/status`);
           const data: InferenceServiceStatus = res.data;
 
-          for (const status of data.conditions) {
-            if (status.status !== 'True') {
-              ready = false;
-              console.error('Service not ready, retrying...');
-              console.error(data);
-              break;
-            }
-          }
-          if (ready) {
+          if (data.ready) {
             console.log('Service is ready');
-            console.log(data);
             return true;
           }
           // exponential backoff algo to wait for service to be ready
           // Sleep for backoffSeconds
           const backoffSeconds =
             Math.pow(2, noRetries) + Math.random() + initialWaitSeconds;
-          console.warn(`Backing off for ${backoffSeconds} seconds`);
+          console.warn(
+            `Service not yet ready. Backing off for ${backoffSeconds} seconds (${noRetries}/${maxRetries})`,
+          );
           if (backoffSeconds > maxDeadlineSeconds) {
             console.error('Service not ready, max retries exceeded');
             console.error(data);
@@ -69,7 +56,7 @@ export const useInferenceServiceStore = defineStore('service', {
       }
     },
     async getServiceByName(
-      serviceName: string
+      serviceName: string,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.get(`engines/${serviceName}`);
@@ -87,7 +74,7 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
-      env?: Record<string, any>
+      env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
         // TODO: Ability to set resource limits starving
@@ -110,7 +97,7 @@ export const useInferenceServiceStore = defineStore('service', {
       modelId: string,
       imageUri: string,
       port?: number,
-      env?: Record<string, any>
+      env?: Record<string, any>,
     ) {
       Notify.create({
         message: 'Creating service, please wait...',
@@ -119,8 +106,10 @@ export const useInferenceServiceStore = defineStore('service', {
         modelId,
         imageUri,
         port,
-        env
+        env,
       );
+      // wait for a few seconds first to give time for the service to be created
+      await new Promise((r) => setTimeout(r, 1000 * 5));
       const ready = await this.getServiceReady(serviceName);
       if (ready) {
         return { serviceName, inferenceUrl };
@@ -137,7 +126,7 @@ export const useInferenceServiceStore = defineStore('service', {
       serviceName: string,
       imageUri?: string,
       port?: number,
-      env?: Record<string, any>
+      env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.patch(`/engines/${serviceName}`, {

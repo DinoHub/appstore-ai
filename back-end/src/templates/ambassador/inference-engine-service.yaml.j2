@@ -6,7 +6,6 @@ spec:
   selector:
     app: {{ engine_name }}
   type: ClusterIP
-
   ports:
     - protocol: TCP
       port: {{ port if port else 8080 }}

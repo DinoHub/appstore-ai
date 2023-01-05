@@ -1,4 +1,4 @@
-apiVersion: getambassador.io/v3alpha1
+apiVersion: getambassador.io/v2
 kind:  Mapping
 metadata:
   name:  {{ engine_name }}-ingress
@@ -6,3 +6,7 @@ spec:
     hostname: "*"
     prefix: /{{ engine_name }}/
     service: {{ engine_name }}:{{ port if port else 8080 }}
+    retry_policy:
+      retry_on: "5xx"
+      num_retries: 10
+      per_try_timeout: "5s"

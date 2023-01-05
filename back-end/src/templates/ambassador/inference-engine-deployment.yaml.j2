@@ -31,3 +31,13 @@ spec:
               value: {{ value }}
           {% endfor %}
           {% endif %}
+          readinessProbe:
+            tcpSocket:
+              port: {{ port if port else 8080 }}
+            initialDelaySeconds: 3
+            periodSeconds: 3
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 360
+            periodSeconds: 20

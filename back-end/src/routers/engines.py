@@ -82,9 +82,9 @@ def get_inference_engine_service_status(
         Dict: Service status
     """
     # Sync endpoint to allow for concurrent request
-    if config.IE_SERVICE_TYPE == "knative":
-        try:
-            with k8s_client as client:
+    try:
+        with k8s_client as client:
+            if config.IE_SERVICE_TYPE == "knative":
                 api = CustomObjectsApi(client)
                 result = api.get_namespaced_custom_object(
                     group="serving.knative.dev",
@@ -93,56 +93,85 @@ def get_inference_engine_service_status(
                     plural="services",
                     name=service_name,
                 )
-                status = result["status"]
-                return result["status"]  # type: ignore
-        except K8sAPIException as err:
-            if err.status == 404:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=f"Service {service_name} not found",
-                ) from err
+                status_conditions = result["status"]["conditions"]
+
+                # Check if service is ready
+                for condition in status_conditions:
+                    # if not ready return response
+                    if condition["status"] != "True":
+                        return {"ready": False}
+
+                # if didn't return yet, service is ready
+                return {"ready": True}
+            elif config.IE_SERVICE_TYPE == "emissary":
+                api = AppsV1Api(client)
+                result = api.read_namespaced_deployment_status(
+                    name=service_name + "-deployment",
+                    namespace=config.IE_NAMESPACE,
+                )
+                for condition in result.status.conditions:
+                    if condition.status != "True":
+                        return {"ready": False}
+                return {"ready": True}
+            else:
+                raise NotImplementedError
+    except K8sAPIException as err:
+        if err.status == 404:
             raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Error getting service status",
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Service {service_name} not found",
             ) from err
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error getting service status. {err}",
+        ) from err
 
 
 @router.get("/")
 async def get_available_inference_engine_services(
-    k8s_client: ApiClient = Depends(get_k8s_client),
-):
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+) -> list:
     """Get all available inference engine services
 
     Args:
-        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional):
+            MongoDB Connection. Defaults to Depends(get_db).
 
     Raises:
         HTTPException: 500 Internal Server Error if there is an error getting the services
-        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
 
     Returns:
-        Object: List of services # TODO: Figure out what type this is
+        list : List of available services
     """
     try:
-        with k8s_client as client:
-            api = CustomObjectsApi(client)
-            results = api.list_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                namespace=config.IE_NAMESPACE,
-                plural="services",
-            )
-        return results
-    except TypeError as err:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="API has no access to the K8S cluster",
-        ) from err
+        db, _ = db
+        services = await db["services"].find().to_list(None)
+        return services
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal Server Error",
         ) from err
+    # try:
+    #     with k8s_client as client:
+    #         api = CustomObjectsApi(client)
+    #         results = api.list_namespaced_custom_object(
+    #             group="serving.knative.dev",
+    #             version="v1",
+    #             namespace=config.IE_NAMESPACE,
+    #             plural="services",
+    #         )
+    #     return results
+    # except TypeError as err:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #         detail="API has no access to the K8S cluster",
+    #     ) from err
+    # except Exception as err:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #         detail="Internal Server Error",
+    #     ) from err
 
 
 @router.post("/", response_model=InferenceEngineService)
@@ -282,7 +311,7 @@ async def create_inference_engine_service(
                 )
                 custom_api.create_namespaced_custom_object(
                     group="getambassador.io",
-                    version="v3alpha1",
+                    version="v2",
                     namespace=config.IE_NAMESPACE,
                     plural="mappings",
                     body=mapping_render,
@@ -312,6 +341,7 @@ async def create_inference_engine_service(
                     last_modified=datetime.datetime.now(),
                     inference_url=url,
                     service_name=service_name,
+                    backend=service_backend
                     # resource_limits=service.resource_limits,
                 ),
                 by_alias=True,  # convert snake_case to camelCase
@@ -375,18 +405,44 @@ async def delete_inference_engine_service(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="User does not have owner access to KService",
                 )
+            # Get the service type
+            service_type = existing_service.get(
+                "backend", config.IE_SERVICE_TYPE
+            )
             await db["services"].delete_one({"serviceName": service_name})
+
             with k8s_client as client:
                 # Create instance of API class
-                api = CustomObjectsApi(client)
                 try:
-                    api.delete_namespaced_custom_object(
-                        group="serving.knative.dev",
-                        version="v1",
-                        plural="services",
-                        namespace=config.IE_NAMESPACE,
-                        name=service_name,
-                    )
+                    if service_type == "knative":
+                        api = CustomObjectsApi(client)
+                        api.delete_namespaced_custom_object(
+                            group="serving.knative.dev",
+                            version="v1",
+                            plural="services",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name,
+                        )
+                    elif service_type == "emissary":
+                        # Delete service, mapping, and deployment
+                        # TODO: Test if this works
+                        app_api = AppsV1Api(client)
+                        core_api = CoreV1Api(client)
+                        custom_api = CustomObjectsApi(client)
+                        app_api.delete_namespaced_deployment(
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name + "-deployment",
+                        )
+                        core_api.delete_namespaced_service(
+                            namespace=config.IE_NAMESPACE, name=service_name
+                        )
+                        custom_api.delete_namespaced_custom_object(
+                            group="getambassador.io",
+                            version="v2",
+                            plural="mappings",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name + "-ingress",
+                        )
                 except (K8sAPIException, HTTPError) as err:
                     session.abort_transaction()  # if failed to remove in k8s, rollback db change
                     raise HTTPException(
@@ -460,32 +516,43 @@ async def update_inference_engine_service(
                 if result.modified_count != 1:
                     # Not necessary to update service?
                     return updated_service
-                template = template_env.get_template(
-                    "inference-engine-service.yaml.j2"
-                )
-                deployment_template = safe_load(
-                    template.render(
-                        {
-                            "engine_name": service_name,
-                            "image_name": updated_service["imageUri"],
-                            "port": updated_service["containerPort"],
-                            "env": updated_service["env"],
-                        }
-                    )
+                # Get the backend
+                service_type = updated_service.get(
+                    "backend", config.IE_SERVICE_TYPE
                 )
                 # Deploy Service on K8S
                 with k8s_client as client:
                     # Create instance of API class
-                    api = CustomObjectsApi(client)
                     try:
-                        api.patch_namespaced_custom_object(
-                            group="serving.knative.dev",
-                            version="v1",
-                            plural="services",
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name,
-                            body=deployment_template,
-                        )
+                        if service_type == "knative":
+                            template = template_env.get_template(
+                                "inference-engine-service.yaml.j2"
+                            )
+                            service_template = safe_load(
+                                template.render(
+                                    {
+                                        "engine_name": service_name,
+                                        "image_name": updated_service[
+                                            "imageUri"
+                                        ],
+                                        "port": updated_service[
+                                            "containerPort"
+                                        ],
+                                        "env": updated_service["env"],
+                                    }
+                                )
+                            )
+                            api = CustomObjectsApi(client)
+                            api.patch_namespaced_custom_object(
+                                group="serving.knative.dev",
+                                version="v1",
+                                plural="services",
+                                namespace=config.IE_NAMESPACE,
+                                name=service_name,
+                                body=service_template,
+                            )
+                        elif service_type == "emissary":
+                            raise NotImplementedError
                         return updated_service
                     except (K8sAPIException, HTTPError) as err:
                         session.abort_transaction()
