@@ -51,6 +51,7 @@ class InferenceEngineService(CreateInferenceEngineService):
     host: str
     path: str
     protocol: str = Field(default="http")
+    backend: str
 
     class Config:
         """Pydantic config to allow creation of data model
