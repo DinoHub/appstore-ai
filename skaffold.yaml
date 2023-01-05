@@ -6,6 +6,7 @@ metadata:
 manifests:
   rawYaml:
     - k8s/namespaces.yaml
+    - k8s/emissary-crds.yaml
 deploy:
   helm:
     releases:
@@ -95,12 +96,17 @@ manifests: {}
 deploy:
   helm:
     releases:
-      - name: aas-knative-backend
-        chartPath: k8s/charts/aas-knative-backend-private
-        namespace: inference-engine
-        upgradeOnChange: false
-        valuesFiles:
-          - k8s/environments/development/aas-knative-backend-values.yaml
+      # - name: aas-knative-backend
+      #   chartPath: k8s/charts/aas-knative-backend-private
+      #   namespace: inference-engine
+      #   upgradeOnChange: false
+      #   valuesFiles:
+      #     - k8s/environments/development/aas-knative-backend-values.yaml
+      - name: emissary-ingress
+        repo: https://app.getambassador.io
+        remoteChart: emissary-ingress
+        namespace: emissary
+        createNamespace: true
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore

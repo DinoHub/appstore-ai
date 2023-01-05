@@ -4,12 +4,11 @@ metadata:
   # "namespace" omitted since ClusterRoles are not namespaced
   name: inference-engine-manager
 rules:
-  - apiGroups: ["serving.knative.dev", "knative.serving.dev"]
-    resources: ["services"]
+  - apiGroups: ["", "apps", "getambassador.io", "serving.knative.dev", "knative.serving.dev"]
+    resources: ["services", "deployments", "mappings", "listeners"]
     verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
 kind: RoleBinding
 metadata:
   name: manage-inference-engine
@@ -27,17 +26,30 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   # "namespace" omitted since ClusterRoles are not namespaced
-  name: read-kourier-dns
+  name: read-gateway-dns
 rules:
   - apiGroups: [""]
     resources: ["services"]
     verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
-# This cluster role binding allows anyone in the "manager" group to read secrets in any namespace.
 kind: RoleBinding
 metadata:
-  name: read-kourier-dns
+  name: read-gateway-dns-emissary
+  namespace: emissary
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: read-gateway-dns
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-gateway-dns-kourier
   namespace: kourier-system
 subjects:
   - kind: ServiceAccount
@@ -45,5 +57,5 @@ subjects:
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
-  name: read-kourier-dns
+  name: read-gateway-dns
   apiGroup: rbac.authorization.k8s.io

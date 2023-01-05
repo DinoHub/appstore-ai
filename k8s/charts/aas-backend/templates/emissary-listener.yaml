@@ -1,0 +1,24 @@
+apiVersion: getambassador.io/v3alpha1
+kind: Listener
+metadata:
+  name: emissary-ingress-listener-8080
+  namespace: emissary
+spec:
+  port: 8080
+  protocol: HTTP
+  securityModel: XFP
+  hostBinding:
+    namespace:
+      from: ALL
+---
+apiVersion: getambassador.io/v2
+kind: Host
+metadata:
+  name: ambassador
+spec:
+  hostname: '*'
+  acmeProvider:
+    authority: none
+  requestPolicy:
+    insecure:
+      action: Route
