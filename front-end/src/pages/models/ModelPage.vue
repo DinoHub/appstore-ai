@@ -315,7 +315,21 @@ modelStore
     inferenceServiceStore
       .getServiceByName(model.inferenceServiceName)
       .then((service) => {
-        inferenceUrl.value = service.inferenceUrl;
+        inferenceServiceStore
+          .getServiceReady(service.serviceName)
+          .then((ready) => {
+            if (!ready) {
+              Notify.create({
+                message: 'Inference service is down',
+                color: 'negative',
+              });
+              return Promise.reject('Inference service is down');
+            }
+            inferenceUrl.value = service.inferenceUrl;
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       })
       .catch((err) => {
         Notify.create({
