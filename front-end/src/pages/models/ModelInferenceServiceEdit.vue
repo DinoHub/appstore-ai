@@ -31,7 +31,8 @@
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-            <q-input
+            <!-- NOTE: Disable ability to set port number temporarily as Emissary backend is hard coded to port 8080 -->
+            <!-- <q-input
               outlined
               v-model="editInferenceServiceStore.containerPort"
               class="q-ml-md q-pb-xl"
@@ -39,7 +40,7 @@
               hint="If not specified, container will listen on $PORT environment variable, which is set to 8080 by default."
               type="number"
               autogrow
-            ></q-input>
+            ></q-input> -->
             <!-- Define Environment Variables -->
             <env-var-editor
               mode="edit"

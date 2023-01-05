@@ -81,12 +81,21 @@ export const useInferenceServiceStore = defineStore('service', {
         // the cluster of resources
         // see wip/set-knative-resource-limits branch
         // which has partial implementation
-        const res = await api.post('/engines/', {
+        const serviceData: Record<string, any> = {
           modelId: modelId,
           imageUri: imageUri,
-          port: port,
           env: env,
-        });
+        };
+        if (port) {
+          // NOTE: currently frontend has tmp disabled
+          // the ability to set port, assume port is always 8080
+          // this is because backend code for Emissary
+          // does not yet support creating new Listener for
+          // that port
+          serviceData.containerPort = port;
+        }
+
+        const res = await api.post('/engines/', serviceData);
         const data: InferenceEngineService = res.data;
         return data;
       } catch (error) {

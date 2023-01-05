@@ -463,7 +463,8 @@
               :loading="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
             ></q-input>
-            <q-input
+            <!-- NOTE: temporarily disabled for now. See inferenceServiceStore to see reason why -->
+            <!-- <q-input
               outlined
               v-model="creationStore.containerPort"
               class="q-ml-md q-pb-xl"
@@ -472,7 +473,7 @@
               type="number"
               :loading="loadingExp"
               autogrow
-            ></q-input>
+            ></q-input> -->
             <env-var-editor
               mode="create"
               title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
