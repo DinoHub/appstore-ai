@@ -29,7 +29,6 @@ class CreateInferenceEngineService(BaseModel):
     image_uri: str
     # resource_limits: ResourceLimits
     container_port: Optional[int] = None
-    external_dns: Optional[str] = None
     env: Optional[dict] = None
 
     class Config:
@@ -49,6 +48,9 @@ class InferenceEngineService(CreateInferenceEngineService):
     service_name: str
     created: datetime
     last_modified: datetime
+    host: str
+    path: str
+    protocol: str = Field(default="http")
 
     class Config:
         """Pydantic config to allow creation of data model

@@ -53,6 +53,10 @@ class GlobalConfig(BaseSettings):
 
     # Kubernetes and Inference Service Settings
     IE_NAMESPACE: Optional[str] = None
+    IE_SERVICE_TYPE: str = Field(default="emissary")
+    IE_DOMAIN: Optional[str] = None
+    IE_INGRESS_NAME: Optional[str] = None  # TODO: Integrate this
+    IE_INGRESS_NAMESPACE: Optional[str] = None  # TODO: Integrate this
     K8S_HOST: Optional[str] = None
     K8S_API_KEY: Optional[str] = None
 

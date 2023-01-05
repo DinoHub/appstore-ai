@@ -13,7 +13,7 @@ from fastapi import (
     status,
 )
 from fastapi.encoders import jsonable_encoder
-from kubernetes.client import ApiClient, CoreV1Api, CustomObjectsApi
+from kubernetes.client import ApiClient, AppsV1Api, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import DuplicateKeyError
@@ -82,27 +82,29 @@ def get_inference_engine_service_status(
         Dict: Service status
     """
     # Sync endpoint to allow for concurrent request
-    try:
-        with k8s_client as client:
-            api = CustomObjectsApi(client)
-            result = api.get_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                namespace=config.IE_NAMESPACE,
-                plural="services",
-                name=service_name,
-            )
-            return result["status"]  # type: ignore
-    except K8sAPIException as err:
-        if err.status == 404:
+    if config.IE_SERVICE_TYPE == "knative":
+        try:
+            with k8s_client as client:
+                api = CustomObjectsApi(client)
+                result = api.get_namespaced_custom_object(
+                    group="serving.knative.dev",
+                    version="v1",
+                    namespace=config.IE_NAMESPACE,
+                    plural="services",
+                    name=service_name,
+                )
+                status = result["status"]
+                return result["status"]  # type: ignore
+        except K8sAPIException as err:
+            if err.status == 404:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Service {service_name} not found",
+                ) from err
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Service {service_name} not found",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error getting service status",
             ) from err
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error getting service status",
-        ) from err
 
 
 @router.get("/")
@@ -172,52 +174,126 @@ async def create_inference_engine_service(
     # Create Deployment Template
     if not user.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
-    template = template_env.get_template("inference-engine-service.yaml.j2")
     service_name = k8s_safe_name(
         f"{user.user_id}-{service.model_id}-{uuid4()}"
-    )
-    deployment_template = safe_load(
-        template.render(
-            {
-                "engine_name": service_name,
-                "image_name": service.image_uri,
-                "port": service.container_port,
-                "env": service.env,
-                # "resource_limits": service.resource_limits.dict(),
-            }
-        )
     )
     if not config.IE_NAMESPACE:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="No Namespace specified",
         )
+    protocol = "http"  # TODO: Make this configurable
+    path = service_name
     # Deploy Service on K8S
     with k8s_client as client:
         # Get KNative Serving Ext Ip
-        core_api = CoreV1Api(client)
-        kourier_ingress = core_api.read_namespaced_service(
-            name="kourier",
-            namespace="kourier-system",  # TODO: Make this configurable
-        )
-        lb_ip = kourier_ingress.status.load_balancer.ingress[0].ip  # type: ignore
-        if service.external_dns:
-            # TODO: Support for https
-            url = f"http://{service_name}.{config.IE_NAMESPACE}.{service.external_dns}"
-        else:
-            url = (
-                f"http://{service_name}.{config.IE_NAMESPACE}.{lb_ip}.sslip.io"
-            )
-        # Create instance of API class
-        api = CustomObjectsApi(client)
         try:
-            api.create_namespaced_custom_object(
-                group="serving.knative.dev",
-                version="v1",
-                plural="services",
-                namespace=config.IE_NAMESPACE,
-                body=deployment_template,
-            )
+            core_api = CoreV1Api(client)
+            custom_api = CustomObjectsApi(client)
+            service_backend = config.IE_SERVICE_TYPE or "emissary"
+            if service_backend == "knative":
+                service_template = template_env.get_template(
+                    "knative/inference-engine-knative-service.yaml.j2"
+                )
+                service = safe_load(
+                    service_template.render(
+                        {
+                            "engine_name": service_name,
+                            "image_name": service.image_uri,
+                            "port": service.container_port,
+                            "env": service.env,
+                        }
+                    )
+                )
+                if config.IE_DOMAIN:
+                    host = config.IE_DOMAIN
+                else:
+                    kourier_ingress = core_api.read_namespaced_service(
+                        name="kourier", namespace="kourier-system"
+                    )
+                    host = kourier_ingress.status.load_balancer.ingress[0].ip
+                url = (
+                    f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
+                )
+                if not config.IE_DOMAIN:
+                    # use sslip dns service to get a hostname for the service
+                    url += ".sslip.io"
+                custom_api.create_namespaced_custom_object(
+                    group="serving.knative.dev",
+                    version="v1",
+                    namespace=config.IE_NAMESPACE,
+                    plural="services",
+                    body=service,
+                )
+            elif service_backend == "emissary":
+                if not config.IE_DOMAIN:
+
+                    # Get Ambassador Ext Ip
+                    # ambassador_ingress = core_api.read_namespaced_service(
+                    #     name="emissary-ingress",
+                    #     namespace="ambassador"
+                    # )
+                    # host = ambassador_ingress.status.load_balancer.ingress[0].ip
+                    # TODO: Fix access to ambassador ingress
+                    host = "172.20.255.1"
+                else:
+                    host = config.IE_DOMAIN
+                service_template = template_env.get_template(
+                    "ambassador/inference-engine-service.yaml.j2"
+                )
+                deployment_template = template_env.get_template(
+                    "ambassador/inference-engine-deployment.yaml.j2"
+                )
+                mapping_template = template_env.get_template(
+                    "ambassador/ambassador-mapping.yaml.j2"
+                )
+                service_render = safe_load(
+                    service_template.render(
+                        {
+                            "engine_name": service_name,
+                            "port": service.container_port,
+                        }
+                    )
+                )
+                deployment_render = safe_load(
+                    deployment_template.render(
+                        {
+                            "engine_name": service_name,
+                            "image_name": service.image_uri,
+                            "port": service.container_port,
+                            "env": service.env,
+                        }
+                    )
+                )
+                mapping_render = safe_load(
+                    mapping_template.render(
+                        {
+                            "engine_name": service_name,
+                        }
+                    )
+                )
+                app_api = AppsV1Api(client)
+                core_api = CoreV1Api(client)
+                app_api.create_namespaced_deployment(
+                    namespace=config.IE_NAMESPACE, body=deployment_render
+                )
+                core_api.create_namespaced_service(
+                    namespace=config.IE_NAMESPACE, body=service_render
+                )
+                custom_api.create_namespaced_custom_object(
+                    group="getambassador.io",
+                    version="v3alpha1",
+                    namespace=config.IE_NAMESPACE,
+                    plural="mappings",
+                    body=mapping_render,
+                )
+                url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
+                # else css and js files are not loaded properly
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Invalid service type",
+                )
             # Save info into DB
             db, mongo_client = db
             service_metadata = jsonable_encoder(
@@ -225,8 +301,10 @@ async def create_inference_engine_service(
                     image_uri=service.image_uri,
                     container_port=service.container_port,
                     env=service.env,
-                    external_dns=service.external_dns,
                     owner_id=user.user_id,
+                    protocol=protocol,
+                    host=host,
+                    path=path,
                     model_id=uncased_to_snake_case(
                         service.model_id
                     ),  # convert title to ID
