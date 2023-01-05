@@ -14,4 +14,4 @@ if __name__ == "__main__":
         description="Inference service for AI App Store",
         examples=examples,
     )
-    app.queue().launch(server_port=config.port)
+    app.launch(server_name="0.0.0.0", server_port=config.port)
