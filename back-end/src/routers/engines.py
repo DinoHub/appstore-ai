@@ -112,7 +112,11 @@ def get_inference_engine_service_status(
                 )
                 for condition in result.status.conditions:
                     if condition.status != "True":
-                        return {"ready": False}
+                        return {
+                            "ready": False,
+                            "reason": condition.reason,
+                            "message": condition.message,
+                        }
                 return {"ready": True}
             else:
                 raise NotImplementedError
@@ -212,7 +216,7 @@ async def create_inference_engine_service(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="No Namespace specified",
         )
-    protocol = "http"  # TODO: Make this configurable
+    protocol = config.IE_DEFAULT_PROTOCOL
     path = service_name
     # Deploy Service on K8S
     with k8s_client as client:
@@ -500,7 +504,7 @@ async def update_inference_engine_service(
         # NOTE: This overrides the service type in the original service
         # TODO: Find a better way to do this
         updated_metadata["backend"] = service_type
-        protocol = "http"
+        protocol = config.IE_DEFAULT_PROTOCOL
         if config.IE_DOMAIN:
             host = config.IE_DOMAIN
         else:
