@@ -1,3 +1,8 @@
+image:
+  repository: <REGISTRY>/ai-appstore/aas-backend
+  pullPolicy: "IfNotPresent"
+  tag: "1.0.1"
+
 env:
   PROD_FRONTEND_HOST: <REPLACE_ME>
   PROD_SECRET_KEY: <REPLACE_ME>
@@ -10,6 +15,7 @@ env:
   PROD_MONGO_PASSWORD: <REPLACE_ME>
   PROD_IE_NAMESPACE: inference-engine
   PROD_IE_SERVICE_TYPE: emissary
+  PROD_IE_DEFAULT_PROTOCOL: http
   PROD_MINIO_DSN: minio:9000
   PROD_MINIO_BUCKET_NAME: <REPLACE_ME>
   PROD_MINIO_TLS: "False"

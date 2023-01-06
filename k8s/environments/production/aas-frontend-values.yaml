@@ -1,3 +1,8 @@
+image:
+  repository: <REGISTRY>/ai-appstore/aas-frontend
+  pullPolicy: "IfNotPresent"
+  tag: "1.0.1"
+
 ingress:
   enabled: true
   className: "nginx"
