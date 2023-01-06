@@ -22,6 +22,10 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: "backend-service"
 
+inferenceServiceBackend:
+  emissary: true
+  knative: false
+
 env:
   PROD_FRONTEND_HOST: http://appstore.ai
   PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
@@ -33,6 +37,7 @@ env:
   PROD_MONGO_USERNAME: <TO-REPLACE>
   PROD_MONGO_PASSWORD: <TO-REPLACE>
   PROD_IE_NAMESPACE: inference-engine
+  PROD_IE_SERVICE_TYPE: emissary
   PROD_FIRST_SUPERUSER_ID: <TO-REPLACE>
   PROD_FIRST_SUPERUSER_PASSWORD: <TO-REPLACE>
   CLEARML_WEB_HOST:  <TO-REPLACE> # https://app.clear.ml

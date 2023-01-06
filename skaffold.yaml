@@ -6,7 +6,6 @@ metadata:
 manifests:
   rawYaml:
     - k8s/namespaces.yaml
-    - k8s/emissary-crds.yaml
 deploy:
   helm:
     releases:
@@ -39,6 +38,13 @@ deploy:
         wait: true
         valuesFiles:
           - k8s/environments/development/minio-values.yaml
+      - name: emissary-ingress
+        upgradeOnChange: false
+        namespace: emissary
+        chartPath: k8s/charts/dependencies/emissary-ingress
+        createNamespace: true
+        valuesFiles:
+          - k8s/environments/development/emissary-values.yaml
   kubectl: {}
 profiles:
   - name: dev
@@ -102,11 +108,6 @@ deploy:
       #   upgradeOnChange: false
       #   valuesFiles:
       #     - k8s/environments/development/aas-knative-backend-values.yaml
-      - name: emissary-ingress
-        repo: https://app.getambassador.io
-        remoteChart: emissary-ingress
-        namespace: emissary
-        createNamespace: true
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore
