@@ -20,6 +20,8 @@ async def delete_orphan_services():
         )  # include only service names
     ).to_list(length=None)
     # Do a search of all services NOT IN modelServices
+    # This should detect any services that are not referenced in any model card
+    # all new services have uuid in the service name, so this should be safe
     orphaned_services = db["services"].find(
         {
             "serviceName": {
