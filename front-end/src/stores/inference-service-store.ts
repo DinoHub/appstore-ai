@@ -18,14 +18,16 @@ export interface InferenceServiceStatus {
 }
 
 export const useInferenceServiceStore = defineStore('service', {
-  state: () => ({}),
+  state: () => ({
+    previewServiceName: null as string | null,
+  }),
   getters: {},
   actions: {
     async getServiceReady(
       serviceName: string,
       maxRetries = 10,
       initialWaitSeconds = 10,
-      maxDeadlineSeconds = 300,
+      maxDeadlineSeconds = 300, // 5 minutes
     ): Promise<boolean> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
@@ -117,6 +119,8 @@ export const useInferenceServiceStore = defineStore('service', {
         port,
         env,
       );
+      // store service name so we can delete it later
+      this.previewServiceName = serviceName;
       // wait for a few seconds first to give time for the service to be created
       await new Promise((r) => setTimeout(r, 1000 * 5));
       const ready = await this.getServiceReady(serviceName);

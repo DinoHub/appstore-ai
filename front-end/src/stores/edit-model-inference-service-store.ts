@@ -36,7 +36,7 @@ export const useEditInferenceServiceStore = defineStore(
 
         const data = await modelStore.getModelById(
           authStore.user?.userId ?? '',
-          modelId
+          modelId,
         );
         const serviceName = data.inferenceServiceName;
 
@@ -46,7 +46,7 @@ export const useEditInferenceServiceStore = defineStore(
 
         // Get the inference service
         const service = await inferenceServiceStore.getServiceByName(
-          serviceName
+          serviceName,
         );
 
         // Load the data
@@ -70,7 +70,7 @@ export const useEditInferenceServiceStore = defineStore(
               modelId,
               this.imageUri,
               this.containerPort,
-              this.uniqueEnv
+              this.uniqueEnv,
             );
           this.previewServiceName = serviceName;
           this.previewServiceUrl = inferenceUrl;
@@ -80,11 +80,15 @@ export const useEditInferenceServiceStore = defineStore(
       },
       async updateInferenceService() {
         const inferenceServiceStore = useInferenceServiceStore();
+        // Remove any existing preview service
+        if (this.previewServiceName) {
+          await inferenceServiceStore.deleteService(this.previewServiceName);
+        }
         const { serviceName } = await inferenceServiceStore.updateService(
           this.serviceName,
           this.imageUri,
           this.containerPort,
-          this.uniqueEnv
+          this.uniqueEnv,
         );
         // Check status of updated service
         const ready = await inferenceServiceStore.getServiceReady(serviceName);
@@ -95,5 +99,5 @@ export const useEditInferenceServiceStore = defineStore(
         }
       },
     },
-  }
+  },
 );
