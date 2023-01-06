@@ -3,11 +3,17 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import (
+    get_redoc_html,
+    get_swagger_ui_html,
+    get_swagger_ui_oauth2_redirect_html,
+)
+from fastapi.staticfiles import StaticFiles
 
 from .config.config import config
 from .internal.auth import check_is_admin, get_current_user
-from .routers import auth, buckets, datasets, engines, experiments, iam, models
 from .internal.tasks import init_db
+from .routers import auth, buckets, datasets, engines, experiments, iam, models
 
 with open(
     Path(__file__).parent.parent.joinpath("README.md"), "r", encoding="utf-8"
@@ -45,9 +51,14 @@ tags_metadata = [
     },
 ]
 app = FastAPI(
-    title="Model Zoo", description=description, openapi_tags=tags_metadata,
-    on_startup=[init_db]
+    title="Model Zoo",
+    description=description,
+    openapi_tags=tags_metadata,
+    on_startup=[init_db],
+    docs_url=None,
+    redoc_url=None,
 )
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=list(
@@ -72,6 +83,32 @@ app.add_middleware(
     ],
 )
 
+
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - Swagger UI",
+        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
+        swagger_js_url="/static/swagger-ui-bundle.js",
+        swagger_css_url="/static/swagger-ui.css",
+    )
+
+
+@app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
+async def swagger_ui_redirect():
+    return get_swagger_ui_oauth2_redirect_html()
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_html():
+    return get_redoc_html(
+        openapi_url=app.openapi_url,
+        title=app.title + " - ReDoc",
+        redoc_js_url="/static/redoc.standalone.js",
+    )
+
+
 app.include_router(auth.router)
 app.include_router(buckets.router, dependencies=[Depends(get_current_user)])
 app.include_router(models.router, dependencies=[Depends(get_current_user)])
@@ -81,6 +118,7 @@ app.include_router(
 app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
 app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
 app.include_router(engines.router, dependencies=[Depends(get_current_user)])
+
 
 @app.get("/")
 def root():
