@@ -37,6 +37,9 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          env:
+            - name: BACKEND_URL
+              value: {{ .Values.env.BACKEND_URL | quote }}
           livenessProbe:
             httpGet:
               path: /

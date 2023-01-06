@@ -63,13 +63,11 @@ module.exports = configure(function (ctx) {
       // publicPath: '/',
       // analyze: true,
       env: {
-        backendAPI: ctx.dev
-          ? 'http://localhost:7070'
-          : 'http://api.appstore.ai',
+        DEV_BACKEND_URL: 'http://localhost:7070',
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
-      // minify: false, 
+      // minify: false,
       // polyfillModulePreload: true,
       // distDir
 

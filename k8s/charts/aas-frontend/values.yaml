@@ -41,6 +41,9 @@ service:
   type: ClusterIP
   port: 80
 
+env:
+  BACKEND_URL: http://appstore.ai
+
 ingress:
   enabled: false
   className: ""

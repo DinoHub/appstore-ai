@@ -16,3 +16,6 @@ ingress:
 
 service:
   type: LoadBalancer
+
+env:
+  BACKEND_URL: test.com
