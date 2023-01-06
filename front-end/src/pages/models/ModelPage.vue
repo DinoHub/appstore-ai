@@ -91,8 +91,8 @@
               ></gradio-frame>
               <q-card v-show="!inferenceUrl">
                 <q-card-section class="headline-small"
-                  >Inference service is not available for this
-                  model</q-card-section
+                  >Inference service is not yet ready for this
+                  model.</q-card-section
                 >
               </q-card>
             </q-tab-panel>
