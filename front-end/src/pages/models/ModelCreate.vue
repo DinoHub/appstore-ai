@@ -476,8 +476,10 @@
             ></q-input> -->
             <env-var-editor
               mode="create"
-              title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
+              title-class="text-h6 text-left q-mt-md q-mb-lg"
               fieldset-class="q-ml-md"
+              :loading="loadingExp"
+              :disable="loadingExp"
             ></env-var-editor>
           </div>
         </div>
@@ -592,7 +594,6 @@
                 label="Cancel"
                 class="q-mr-md"
                 padding="sm xl"
-                :disable="buttonDisable"
               />
             </div>
             <div class="text-right col-6">
@@ -862,6 +863,13 @@ const counterLabelFn = ({ totalSize, filesNumber, maxFiles }: any) => {
 };
 
 const flushCreator = () => {
+  // also remove any preview images
+  const inferenceServiceStore = useInferenceServiceStore();
+  if (inferenceServiceStore.previewServiceName) {
+    inferenceServiceStore.deleteService(
+      inferenceServiceStore.previewServiceName,
+    );
+  }
   creationStore.$reset();
   localStorage.removeItem(`${creationStore.$id}`);
 };
@@ -874,9 +882,9 @@ const launchPreview = (stepper: QStepper) => {
     .then(() => {
       stepper.next();
     })
-    .catch(() => {
+    .catch((err) => {
       Notify.create({
-        message: 'Failed to launch preview!',
+        message: `Failed to launch preview! Error: ${err}`,
         color: 'negative',
       });
     })

@@ -62,7 +62,7 @@
               :label="`${
                 experimentStore.experimentConnectors.find(
                   (connector) =>
-                    connector.value === editMetadataStore.experimentPlatform
+                    connector.value === editMetadataStore.experimentPlatform,
                 )?.label + ' ' ?? ''
               }Experiment ID`"
               autogrow
@@ -88,7 +88,7 @@
               :label="`${
                 datasetStore.datasetConnectors.find(
                   (connector) =>
-                    connector.value === editMetadataStore.datasetPlatform
+                    connector.value === editMetadataStore.datasetPlatform,
                 )?.label + ' ' ?? ''
               }Dataset ID`"
               autogrow
@@ -268,12 +268,12 @@
         icon="assignment"
         :done="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)'
+            '(Example Text to Replace)',
           ) == false
         "
         :error="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)'
+            '(Example Text to Replace)',
           ) != false
         "
       >
@@ -289,7 +289,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -325,12 +325,12 @@
         icon="leaderboard"
         :done="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -353,7 +353,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -396,7 +396,6 @@
                 label="Cancel"
                 class="q-mr-md"
                 padding="sm xl"
-                :disable="buttonDisable"
               />
             </div>
             <div class="text-right col-6 q-gutter-md">
@@ -584,7 +583,7 @@ const saveEdit = () => {
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
         router.push(`/model/${authStore.user?.userId}/${modelId}`);
-      }
+      },
     )
     .catch(() => {
       Notify.create({
@@ -644,11 +643,11 @@ const addExpPlots = (store: typeof editMetadataStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;'
+            '&quot;',
           )}" data-data="${JSON.stringify(chart.data).replace(
-              /["]/g,
-              '&quot;'
-            )}"></chart>
+            /["]/g,
+            '&quot;',
+          )}"></chart>
           <p></p>
         `;
           } catch (err) {

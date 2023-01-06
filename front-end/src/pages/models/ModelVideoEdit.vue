@@ -73,7 +73,6 @@
                 label="Cancel"
                 class="q-mr-md"
                 padding="sm xl"
-                :disable="buttonDisable"
               />
             </div>
             <div class="text-right col-6">
@@ -177,7 +176,6 @@ const selectedVideo = ref();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 
-
 let currentData = {};
 
 modelStore.getModelById(userId, modelId).then((card) => {
@@ -190,7 +188,7 @@ const replaceVideo = () => {
       selectedVideo.value,
       currentData.videoLocation,
       userId,
-      modelId
+      modelId,
     )
     .then(() => {
       router.push(`/model/${authStore.user?.userId}/${modelId}`);
