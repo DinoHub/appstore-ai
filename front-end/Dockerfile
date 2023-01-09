@@ -11,4 +11,5 @@ RUN quasar build
 # COPY --from=build-stage /app/dist /user/share/nginx/html
 EXPOSE 80
 # CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT [ "sh", "entrypoint.sh" ]
 CMD ["quasar", "serve", "dist/spa", "-p", "80", "--history"]

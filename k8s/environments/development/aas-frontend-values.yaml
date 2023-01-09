@@ -18,4 +18,4 @@ service:
   type: LoadBalancer
 
 env:
-  BACKEND_URL: test.com
+  VUE_APP_BACKEND_URL: http://api.appstore.ai

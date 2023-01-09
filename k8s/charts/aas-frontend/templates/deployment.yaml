@@ -38,8 +38,8 @@ spec:
               containerPort: 80
               protocol: TCP
           env:
-            - name: BACKEND_URL
-              value: {{ .Values.env.BACKEND_URL | quote }}
+            - name: VUE_APP_BACKEND_URL
+              value: {{ .Values.env.VUE_APP_BACKEND_URL | quote }}
           livenessProbe:
             httpGet:
               path: /

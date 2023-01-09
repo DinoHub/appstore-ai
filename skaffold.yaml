@@ -96,7 +96,6 @@ build:
       context: front-end
       docker:
         dockerfile: Dockerfile
-
 manifests: {}
 
 deploy:
