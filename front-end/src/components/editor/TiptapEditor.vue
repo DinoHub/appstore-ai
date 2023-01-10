@@ -3,7 +3,11 @@
   <!-- TODO: Make each button+dialog menu a component-->
   <!-- TODO: Move logic e.g add table to component. See HyperlinkEditor component for example on how this is to be done-->
   <div v-if="editor" style="overflow: none">
-    <q-toolbar v-if="props.editable" class="q-gutter-sm row">
+    <q-toolbar
+      v-if="props.editable"
+      class="q-gutter-sm row"
+      style="flex-wrap: wrap !important"
+    >
       <!-- Bold -->
       <q-btn
         dense
@@ -497,6 +501,6 @@ watch(props, (newVal) => {
   }
 });
 </script>
-<style lang="scss" scoped>
+<style lang="scss">
 @import '../../css/markup.scss';
 </style>
