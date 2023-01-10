@@ -1,0 +1,10 @@
+image:
+  repository: docker.io/emissaryingress/emissary
+  tag: 3.4.0
+
+agent:
+  image:
+    repository: docker.io/ambassador/ambassador-agent
+    tag: 1.0.3
+
+createDefaultListeners: true

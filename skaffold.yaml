@@ -38,6 +38,15 @@ deploy:
         wait: true
         valuesFiles:
           - k8s/environments/development/minio-values.yaml
+      - name: emissary-crds
+        chartPath: k8s/charts/dependencies/emissary-crds
+      - name: emissary-ingress
+        upgradeOnChange: false
+        namespace: emissary
+        chartPath: k8s/charts/dependencies/emissary-ingress
+        createNamespace: true
+        valuesFiles:
+          - k8s/environments/development/emissary-values.yaml
   kubectl: {}
 profiles:
   - name: dev
@@ -89,18 +98,17 @@ build:
       context: front-end
       docker:
         dockerfile: Dockerfile
-
 manifests: {}
 
 deploy:
   helm:
     releases:
-      - name: aas-knative-backend
-        chartPath: k8s/charts/aas-knative-backend-private
-        namespace: inference-engine
-        upgradeOnChange: false
-        valuesFiles:
-          - k8s/environments/development/aas-knative-backend-values.yaml
+      # - name: aas-knative-backend
+      #   chartPath: k8s/charts/aas-knative-backend-private
+      #   namespace: inference-engine
+      #   upgradeOnChange: false
+      #   valuesFiles:
+      #     - k8s/environments/development/aas-knative-backend-values.yaml
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore

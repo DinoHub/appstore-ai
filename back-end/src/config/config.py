@@ -10,6 +10,8 @@ from typing import Optional, Union
 
 from pydantic import BaseSettings, Field, MongoDsn
 
+from ..models.engine import ServiceBackend
+
 
 class Environment(str, Enum):
     """Enum for the different environments."""
@@ -53,6 +55,11 @@ class GlobalConfig(BaseSettings):
 
     # Kubernetes and Inference Service Settings
     IE_NAMESPACE: Optional[str] = None
+    IE_SERVICE_TYPE: ServiceBackend = Field(default=ServiceBackend.emissary)
+    IE_DEFAULT_PROTOCOL: str = Field(default="http")
+    IE_DOMAIN: Optional[str] = None
+    IE_INGRESS_NAME: Optional[str] = None  # TODO: Integrate this
+    IE_INGRESS_NAMESPACE: Optional[str] = None  # TODO: Integrate this
     K8S_HOST: Optional[str] = None
     K8S_API_KEY: Optional[str] = None
 

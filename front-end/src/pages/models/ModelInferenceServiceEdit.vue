@@ -30,8 +30,11 @@
               placeholder="e.g <registry>/<image>:<tag>"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              :loading="loading"
+              :disable="loading"
             ></q-input>
-            <q-input
+            <!-- NOTE: Disable ability to set port number temporarily as Emissary backend is hard coded to port 8080 -->
+            <!-- <q-input
               outlined
               v-model="editInferenceServiceStore.containerPort"
               class="q-ml-md q-pb-xl"
@@ -39,12 +42,14 @@
               hint="If not specified, container will listen on $PORT environment variable, which is set to 8080 by default."
               type="number"
               autogrow
-            ></q-input>
+            ></q-input> -->
             <!-- Define Environment Variables -->
             <env-var-editor
               mode="edit"
               title-class="text-h6 text-left q-mt-md q-ml-md q-mb-lg"
               fieldset-class="q-ml-md"
+              :loading="loading"
+              :disable="loading"
             >
             </env-var-editor>
           </div>
@@ -74,7 +79,6 @@
                 label="Cancel"
                 class="q-mr-md"
                 padding="sm xl"
-                :disable="buttonDisable"
               />
             </div>
             <div class="text-right col-6">
@@ -140,6 +144,7 @@
               label="Cancel"
               padding="sm xl"
               color="error"
+              @click="onCancel"
               v-close-popup
             />
             <q-space />
@@ -212,13 +217,20 @@ const updateService = () => {
       router.push(`/model/${authStore.user?.userId}/${modelId}`);
     })
     .catch((err) => {
-      console.error(err);
       Notify.create({
-        message: 'Failed to update Inference Service',
+        message: `Failed to update Inference Service. Error: ${err}`,
         icon: 'warning',
         color: 'negative',
       });
     });
+  if (previewServiceName) {
+    // Remove preview service
+    inferenceServiceStore.deleteService(previewServiceName);
+  }
+};
+
+const onCancel = () => {
+  const previewServiceName = editInferenceServiceStore.previewServiceName;
   if (previewServiceName) {
     // Remove preview service
     inferenceServiceStore.deleteService(previewServiceName);

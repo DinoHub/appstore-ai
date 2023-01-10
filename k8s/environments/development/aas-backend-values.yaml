@@ -9,6 +9,8 @@ env:
   PROD_MONGO_USERNAME: aas-backend-serviceAcct
   PROD_MONGO_PASSWORD: TempPassword1234 # Replace in prod
   PROD_IE_NAMESPACE: inference-engine
+  PROD_IE_SERVICE_TYPE: emissary
+  PROD_IE_DEFAULT_PROTOCOL: http
   PROD_MINIO_DSN: minio:9000
   PROD_MINIO_BUCKET_NAME: model-zoo
   PROD_MINIO_TLS: "False"
@@ -26,6 +28,10 @@ environment: prod
 
 service:
   type: LoadBalancer
+
+inferenceServiceBackend:
+  emissary: true
+  knative: false
 
 ingress:
   enabled: true

@@ -13,6 +13,7 @@
       class="row q-ml-md q-mb-md"
       padding="sm xl"
       @click="addField"
+      :disable="disable"
     ></q-btn>
     <div
       class="row"
@@ -27,12 +28,16 @@
         class="col q-mr-sm"
         reactive-rules
         :rules="[(val) => !checkDuplicateEnvVar(val)]"
+        :disable="disable"
+        :loading="loading"
       ></q-input>
       <q-input
         outlined
         label="Value"
         v-model="store.env[idx].value"
         class="col q-mr-sm"
+        :disable="disable"
+        :loading="loading"
       ></q-input>
       <q-btn
         rounded
@@ -42,6 +47,7 @@
         color="error"
         class="col-1 q-mb-md"
         @click="deleteField(idx)"
+        :disable="disable"
       ></q-btn>
     </div>
   </form>
@@ -56,6 +62,8 @@ export interface EnvVarEditorProps {
   containerClass: string;
   fieldsetClass: string;
   titleClass: string;
+  loading: boolean;
+  disable: boolean;
 }
 
 const props = withDefaults(defineProps<EnvVarEditorProps>(), {

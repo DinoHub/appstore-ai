@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: aas-frontend
   pullPolicy: Never
-  tag: "1.0"
+  tag: "1.0.3"
 
 imagePullSecrets: []
 nameOverride: "aas-frontend"
@@ -40,6 +40,9 @@ securityContext:
 service:
   type: ClusterIP
   port: 80
+
+env:
+  VUE_APP_BACKEND_URL: http://appstore.ai
 
 ingress:
   enabled: false

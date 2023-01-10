@@ -16,3 +16,6 @@ ingress:
 
 service:
   type: LoadBalancer
+
+env:
+  VUE_APP_BACKEND_URL: http://api.appstore.ai

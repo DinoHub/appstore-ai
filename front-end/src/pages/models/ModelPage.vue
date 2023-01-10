@@ -91,8 +91,8 @@
               ></gradio-frame>
               <q-card v-show="!inferenceUrl">
                 <q-card-section class="headline-small"
-                  >Inference service is not available for this
-                  model</q-card-section
+                  >Inference service is not yet ready for this
+                  model.</q-card-section
                 >
               </q-card>
             </q-tab-panel>
@@ -315,7 +315,21 @@ modelStore
     inferenceServiceStore
       .getServiceByName(model.inferenceServiceName)
       .then((service) => {
-        inferenceUrl.value = service.inferenceUrl;
+        inferenceServiceStore
+          .getServiceReady(service.serviceName)
+          .then((ready) => {
+            if (!ready) {
+              Notify.create({
+                message: 'Inference service is down',
+                color: 'negative',
+              });
+              return Promise.reject('Inference service is down');
+            }
+            inferenceUrl.value = service.inferenceUrl;
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       })
       .catch((err) => {
         Notify.create({

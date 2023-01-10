@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: aas-backend
   pullPolicy: Never
-  tag: "1.0"
+  tag: "1.0.2"
 
 imagePullSecrets: []
 nameOverride: "aas-backend"
@@ -22,6 +22,10 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: "backend-service"
 
+inferenceServiceBackend:
+  emissary: true
+  knative: false
+
 env:
   PROD_FRONTEND_HOST: http://appstore.ai
   PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
@@ -33,6 +37,8 @@ env:
   PROD_MONGO_USERNAME: <TO-REPLACE>
   PROD_MONGO_PASSWORD: <TO-REPLACE>
   PROD_IE_NAMESPACE: inference-engine
+  PROD_IE_SERVICE_TYPE: emissary
+  PROD_IE_DEFAULT_PROTOCOL: http
   PROD_FIRST_SUPERUSER_ID: <TO-REPLACE>
   PROD_FIRST_SUPERUSER_PASSWORD: <TO-REPLACE>
   CLEARML_WEB_HOST:  <TO-REPLACE> # https://app.clear.ml
@@ -40,6 +46,9 @@ env:
   CLEARML_FILES_HOST: <TO-REPLACE>  # https://files.clear.ml
   CLEARML_API_ACCESS_KEY: <TO-REPLACE>
   CLEARML_API_SECRET_KEY: <TO-REPLACE>
+
+certs: {}
+  # CA_CERT: ''
 
 environment: prod
 
