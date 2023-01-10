@@ -21,6 +21,7 @@ export interface Pagination {
 export interface SearchFilter {
   title?: string;
   creator?: string;
+  creatorUserIdPartial?: string;
   tasks?: string[] | LocationQueryValue[];
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
