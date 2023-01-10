@@ -83,7 +83,7 @@
               no-caps
             ></q-tab>
           </q-tabs>
-          <q-tab-panels v-model="tab" animated>
+          <q-tab-panels v-model="tab" animated keep-alive>
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
               <gradio-frame
                 :url="inferenceUrl"
