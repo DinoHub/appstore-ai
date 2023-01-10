@@ -73,6 +73,26 @@
 }
 
 .ProseMirror {
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+  }
+
+  h2 {
+    font-size: 2rem;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 0.1em;
+    margin-top: 0.1em;
+  }
+}
+
+.ProseMirror {
   table {
     border-collapse: collapse;
     table-layout: fixed;
