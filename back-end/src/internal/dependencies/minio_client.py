@@ -44,6 +44,29 @@ def minio_api_client() -> Optional[minio.Minio]:
         )
 
 
+def get_presigned_url(
+    client: minio.Minio, object_name: str, bucket_name: str
+) -> str:
+    """Get presigned URL to object in S3 bucket
+
+    Args:
+        client (minio.Minio): S3 Client
+        object_name (str): Name of object to get signedurl for
+        bucket_name (str): Name of bucket where bucket is stored
+
+    Returns:
+        str: presigned url
+    """
+    url = client.presigned_get_object(
+        bucket_name=bucket_name,
+        object_name=object_name,
+    )
+    url = url.removeprefix("https://")
+    url = url.removeprefix("http://")
+    url = url.replace(config.MINIO_DSN or "", config.MINIO_API_HOST or "")
+    return url
+
+
 def remove_data(
     client: minio.Minio,
     object_name: str,
@@ -80,7 +103,7 @@ def upload_data(
         content_type (str, optional): Content type of object. Defaults to "application/octet-stream".
 
     Returns:
-        str: URL to object
+        str: an S3 URL to the object (need to be further processed)
     """
     data_stream = BytesIO(blob)
     # read whole stream to get length
@@ -97,4 +120,4 @@ def upload_data(
     )
 
     # NOTE: if bucket policy is not set to download, then this URL will not work
-    return f"{config.MINIO_API_HOST}/{bucket_name}/{object_name}"
+    return f"s3://{bucket_name}/{object_name}"

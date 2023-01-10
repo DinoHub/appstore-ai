@@ -69,6 +69,8 @@ When generating a Cookiecutter template, we offer the option to generate a proje
 
 Gradio applications provide the AI App Store with a way to enable model developers to share their models, and let end users to try out the models.
 
+> NOTE: As Gradio 3 does not yet support working in an fully offline environment (as it needs to pull in fonts, css, js from a CDN), developers working in an offline environment will need to develop using version 2.9.4.
+
 ### Creating a Gradio Application
 
 The simplified structure of the generated project is as follows:

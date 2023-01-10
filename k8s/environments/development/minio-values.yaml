@@ -14,8 +14,15 @@ svcaccts:
 
 ingress:
   enabled: true
+  path: /?(.*)
   hosts: 
     - storage.appstore.ai
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    # nginx.ingress.kubernetes.io/configuration-snippet: |
+    #   more_set_input_headers 'Host: minio:9000';
+    nginx.ingress.kubernetes.io/upstream-vhost: "minio:9000"
 
 # consoleService:
 #   type: LoadBalancer

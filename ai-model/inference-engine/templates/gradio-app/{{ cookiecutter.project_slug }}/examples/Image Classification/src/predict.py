@@ -1,15 +1,15 @@
 import logging
 from typing import Any, Dict, List, Optional, Union
 
-import gradio as gr
+import gradio.inputs as gr_inputs
+import gradio.outputs as gr_outputs
 import numpy as np
 import tritonclient.grpc as tr
+from config import TensorFormat, config
 from triton_utils import get_client, load_model, unload_model
 
-from config import TensorFormat, config
-
-inputs = gr.Image(shape=(config.img_width, config.img_height))
-outputs = gr.Label(num_top_classes=config.top_k)
+inputs = gr_inputs.Image(shape=(config.img_width, config.img_height))
+outputs = gr_outputs.Label(num_top_classes=config.top_k)
 examples: Optional[Union[List[Any], List[List[Any]], str]] = None
 
 

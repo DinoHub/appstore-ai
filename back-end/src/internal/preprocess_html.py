@@ -8,10 +8,14 @@ from lxml.etree import ParserError
 from lxml.html.clean import Cleaner
 
 from ..config.config import config
-from .dependencies.minio_client import minio_api_client, upload_data
+from .dependencies.minio_client import (
+    get_presigned_url,
+    minio_api_client,
+    upload_data,
+)
 
 
-def preprocess_html(html: str) -> str:
+def preprocess_html_post(html: str) -> str:
     """Preprocessing pipeline for HTML.
 
     This function performs the following steps:
@@ -31,6 +35,13 @@ def preprocess_html(html: str) -> str:
     # Sanitize HTML
     html = sanitize_html(str(soup))
 
+    return html
+
+
+def preprocess_html_get(html: str) -> str:
+    soup = BeautifulSoup(html, "lxml")
+    soup = s3_url_to_presigned_url(soup)
+    html = str(soup)
     return html
 
 
@@ -111,3 +122,24 @@ def sanitize_html(html: str) -> str:
         return cleaned
     except (ParserError, TypeError):
         return "Error!"
+
+
+def s3_url_to_presigned_url(
+    parser: BeautifulSoup,
+):
+    s3_client = minio_api_client()
+    if not s3_client:
+        return parser
+    # Get all images
+    images = parser.find_all("img")
+    for image in images:
+        # Filter out images that are not base64 encoded
+        if not image["src"].startswith("s3://"):
+            continue
+        # Extract bucket name and object name
+        # s3://<bucket>/<object>
+        bucket_name, object_name = image["src"].split("s3://")[1].split("/", 1)
+
+        # Replace the base64 encoded image with the URL of the uploaded image
+        image["src"] = get_presigned_url(s3_client, object_name, bucket_name)
+    return parser

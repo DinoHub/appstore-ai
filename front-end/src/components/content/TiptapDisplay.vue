@@ -73,3 +73,7 @@ watch(
   },
 );
 </script>
+
+<style lang="scss">
+@import '../../css/markup.scss';
+</style>

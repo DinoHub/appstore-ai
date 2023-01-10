@@ -14,4 +14,4 @@ if __name__ == "__main__":
         description="{{ cookiecutter.short_description }}",
         examples=examples,
     )
-    app.queue().launch(server_port=config.port)
+    app.launch(server_port=config.port, enable_queue=True)
