@@ -30,9 +30,12 @@ api.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !localStorage.get('requestRetry')) {
+    if (
+      error.response?.status === 401 &&
+      !localStorage.getItem('requestRetry')
+    ) {
       // Set indicator to prevent infinite loop
-      localStorage.set('requestRetry', 'true');
+      localStorage.setItem('requestRetry', 'true');
       // get refresh token
       const authStore = useAuthStore();
       await authStore.refresh();
