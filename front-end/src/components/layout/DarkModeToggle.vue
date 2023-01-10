@@ -9,14 +9,27 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
 import { useQuasar } from 'quasar';
 const $q = useQuasar();
 const toggleDarkMode = () => {
   $q.dark.toggle();
+  localStorage.setItem('theme', $q.dark.isActive ? 'dark' : 'light');
   if (document.documentElement.getAttribute('data-theme') === 'dark') {
     document.documentElement.setAttribute('data-theme', 'light');
   } else {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
 };
+
+onMounted(() => {
+  // Check localStorage for theme
+  const theme = localStorage.getItem('theme');
+  $q.dark.set(theme === 'dark');
+  if (theme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+});
 </script>
