@@ -65,7 +65,6 @@ const routes: RouteRecordRaw[] = [
             auth.logout();
             Notify.create({
               type: 'warning',
-              position: 'top',
               message: 'This account does not have sufficient privileges',
             });
             return '/login/admin';
@@ -82,7 +81,6 @@ const routes: RouteRecordRaw[] = [
             auth.logout();
             Notify.create({
               type: 'warning',
-              position: 'top',
               message: 'This account does not have sufficient privileges',
             });
             return '/login/admin';

@@ -139,7 +139,6 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: `${removeUsers.length} user(s) have been removed from database`,
         });
       } catch (err) {
@@ -148,7 +147,6 @@ export const useUsersStore = defineStore('users', {
           message:
             'Error occurred while removing user(s). Ensure values have been input correctly.',
           type: 'negative',
-          position: 'top',
         });
       }
     },
@@ -161,7 +159,6 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: `${editUsersMulti.length} users edit request completed successfully`,
         });
       } catch (err) {
@@ -170,7 +167,6 @@ export const useUsersStore = defineStore('users', {
           message:
             'Error occurred while send request to edit users. Ensure values have been input correctly.',
           type: 'negative',
-          position: 'top',
         });
       }
     },
@@ -197,7 +193,6 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: 'Successfully edited user',
         });
       } catch (err) {
@@ -205,7 +200,6 @@ export const useUsersStore = defineStore('users', {
           message:
             'Error occurred while editing user. Ensure values have been input correctly.',
           type: 'negative',
-          position: 'top',
         });
       }
     },
@@ -232,7 +226,6 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: 'Successfully created user',
         });
       } catch (err) {
@@ -240,7 +233,6 @@ export const useUsersStore = defineStore('users', {
           Notify.create({
             type: 'warning',
             message: 'The user ID already exists. Please enter a new one.',
-            position: 'top',
           });
           throw new Error();
         } else {
@@ -248,7 +240,6 @@ export const useUsersStore = defineStore('users', {
             message:
               'Error occurred while creating user. Ensure values have been input correctly.',
             color: 'negative',
-            position: 'top',
             icon: 'error',
           });
           throw new Error();

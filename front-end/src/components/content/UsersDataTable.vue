@@ -485,7 +485,6 @@ function callMultiEditUsers() {
     Notify.create({
       message: 'Set value for permssions to update users to!',
       type: 'warning',
-      position: 'top',
     });
   } else {
     userStore
@@ -499,7 +498,6 @@ function callMultiEditUsers() {
         Notify.create({
           message: 'Failed to update users',
           type: 'negative',
-          position: 'top',
         });
         console.error(err);
       });
@@ -516,13 +514,11 @@ function callEditUser() {
   ) {
     Notify.create({
       type: 'negative',
-      position: 'top',
       message: 'Fill in all required fields',
     });
   } else if (editUser.value.password != editUser.value.confirm_password) {
     Notify.create({
       type: 'negative',
-      position: 'top',
       message: 'Ensure both password fields match',
     });
   } else {
@@ -543,7 +539,6 @@ function callEditUser() {
         Notify.create({
           message: 'Failed to update user',
           type: 'negative',
-          position: 'top',
         });
         console.error(err);
       });
@@ -561,7 +556,6 @@ function callDeleteUsers() {
       Notify.create({
         message: 'Failed to delete users',
         type: 'negative',
-        position: 'top',
       });
       console.error(err);
     });
@@ -577,13 +571,11 @@ function callCreateUser() {
   ) {
     Notify.create({
       type: 'negative',
-      position: 'top',
       message: 'Fill in all required fields',
     });
   } else if (createUser.value.password != createUser.value.confirm_password) {
     Notify.create({
       type: 'negative',
-      position: 'top',
       message: 'Ensure both password fields match',
     });
   } else {
@@ -706,7 +698,6 @@ const onSearchRequest = (props: QTableProps) => {
       Notify.create({
         message: 'Failed to get users',
         type: 'negative',
-        position: 'top',
       });
       console.error(err);
     });
