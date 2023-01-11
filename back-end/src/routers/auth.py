@@ -19,6 +19,7 @@ from ..internal.auth import (
 )
 from ..internal.dependencies.mongo_client import get_db
 from ..models.iam import Token, UserRoles
+from ..config.config import config
 
 # use openssl rand -hex 32 to generate secret key
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -81,7 +82,7 @@ async def auth_user(
                         "access_token",
                         value=f"Bearer {access_token}",
                         httponly=True,
-                        secure=True,
+                        secure=config.SECURE_COOKIES,
                         expires=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
                         max_age=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
                     )
@@ -89,7 +90,7 @@ async def auth_user(
                         "refresh_token",
                         value=f"Bearer {refresh_token}",
                         httponly=True,
-                        secure=True,
+                        secure=config.SECURE_COOKIES,
                         expires=60 * REFRESH_TOKEN_EXPIRE_MINUTES,
                         max_age=60 * REFRESH_TOKEN_EXPIRE_MINUTES,
                     )
@@ -180,6 +181,7 @@ async def get_refresh_token(
                             "access_token",
                             value=f"Bearer {access_token}",
                             httponly=True,
+                            secure=config.SECURE_COOKIES,
                             expires=60 * ACCESS_TOKEN_EXPIRE_MINUTES,
                         )
                         csrf = CsrfProtect()

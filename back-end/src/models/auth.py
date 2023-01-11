@@ -15,7 +15,7 @@ class CsrfSettings(BaseModel):
     """Cross-site request forgery protection config"""
 
     secret_key: str = config.SECRET_KEY
-    cookie_secure: bool = True
+    cookie_secure: bool = config.SECURE_COOKIES
 
 
 # NOTE: Should this be moved to internal/auth.py?

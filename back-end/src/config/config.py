@@ -30,6 +30,7 @@ class GlobalConfig(BaseSettings):
     # General Settings
     FRONTEND_HOST: str = Field(default="http://localhost:9000")
     MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=10)
+    SECURE_COOKIES: bool = Field(default=False)  # set to True if site is HTTPS
 
     # Authentication Settings
     ALGORITHM: str = Field(default="HS256")
