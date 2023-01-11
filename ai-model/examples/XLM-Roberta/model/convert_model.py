@@ -43,4 +43,4 @@ class PyTorch_to_TorchScript(torch.nn.Module):
 
 model = PyTorch_to_TorchScript().eval()
 tracer = torch.jit.trace(model, (x, mask))
-tracer.save("model.pt")
+tracer.save("xlm_roberta_zsl/1/model.pt")

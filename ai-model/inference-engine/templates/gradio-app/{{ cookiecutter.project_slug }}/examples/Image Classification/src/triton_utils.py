@@ -27,14 +27,6 @@ def triton_health_check(
     )
 
 
-def get_model_config(
-    client: tr.InferenceServerClient, name: str, version: str = ""
-):
-    # TODO: Get model config dynamically so dev does not need to specify
-    model_config: dict = client.get_model_config(name, version, as_json=True)
-    raise NotImplementedError
-
-
 def get_client(
     url: str,
     ssl: bool = False,
