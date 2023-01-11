@@ -355,11 +355,10 @@ async def update_model_card_metadata_by_id(
         card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
         card_dict["performance"] = preprocess_html_post(card_dict["performance"])
-    if "videoLocation" in card_dict:
-        if card_dict["videoLocation"] is not None:
+    if "task" in card_dict:
+        if card_dict["task"] == "Reinforcement Learning":
             card_dict["inferenceServiceName"] = None
-    if "inferenceServiceName" in card_dict:
-        if card_dict["inferenceServiceName"] is not None:
+        else:
             card_dict["videoLocation"] = None
 
     if len(card_dict) > 0:
