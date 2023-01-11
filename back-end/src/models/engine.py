@@ -38,6 +38,7 @@ class CreateInferenceEngineService(BaseModel):
     # resource_limits: ResourceLimits
     container_port: Optional[int] = None
     env: Optional[dict] = None
+    num_gpu: float = Field(default=0, ge=0, le=2)
 
     class Config:
         """Pydantic config to allow creation of data model

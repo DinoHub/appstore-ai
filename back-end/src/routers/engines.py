@@ -32,9 +32,60 @@ from ..models.engine import (
     ServiceBackend,
     UpdateInferenceEngineService,
 )
-from ..models.iam import TokenData
+from ..models.iam import TokenData, UserRoles
 
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
+
+# TODO: Endpoints to add
+# - [ ] Service logs (websocket)
+# - [x] Scale down service to 0
+# - [x] Scale up service to 1
+# - [x] Restore deleted service
+
+
+@router.patch("/{service_name}/scale/{replicas}")
+async def scale_inference_engine_deployments(
+    service_name: str,
+    replicas: int = Path(ge=0, le=3),
+    k8s_client: ApiClient = Depends(get_k8s_client),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+) -> Dict:
+    """Scale the number of replicas of the deployment
+
+    Args:
+        service_name (str): Name of the service
+        replicas (int, optional): Number of replicas. Defaults to Path(ge=0, le=3).
+        k8s_client (ApiClient, optional): K8S Client. Defaults to Depends(get_k8s_client).
+
+    Raises:
+        HTTPException: 404 Not Found if service does not exist
+        HTTPException: 500 Internal Server Error if there is an error scaling the service
+    """
+    with k8s_client:
+        apps_v1 = AppsV1Api(k8s_client)
+        db, _ = db
+        service = await db["services"].find_one({"serviceName": service_name})
+        if service is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Service not found",
+            )
+        # Scale deployment
+        try:
+            apps_v1.patch_namespaced_deployment_scale(
+                name=service_name + "-deployment",
+                namespace=config.IE_NAMESPACE,
+                body={"spec": {"replicas": replicas}},
+            )
+            return {
+                "message": "Deployment scaled successfully",
+                "replicas": replicas,
+            }
+        except K8sAPIException as err:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error scaling deployment: {err}",
+            ) from err
 
 
 @router.get("/{service_name}", response_model=InferenceEngineService)
@@ -408,6 +459,7 @@ async def delete_inference_engine_service(
             if (
                 existing_service is not None
                 and existing_service["ownerId"] != user.user_id
+                and user.role != UserRoles.admin
             ):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
@@ -552,7 +604,10 @@ async def update_inference_engine_service(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"KService with name {service_name} not found",
                     )
-                elif existing_service["ownerId"] != user.user_id:
+                elif (
+                    existing_service["ownerId"] != user.user_id
+                    and user.role != UserRoles.admin
+                ):
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="User does not have owner access to KService",
@@ -616,7 +671,6 @@ async def update_inference_engine_service(
                                     body=service_template,
                                 )
                         elif service_type == ServiceBackend.emissary:
-                            pass
                             service_template = template_env.get_template(
                                 "ambassador/inference-engine-service.yaml.j2"
                             )
@@ -710,3 +764,121 @@ async def update_inference_engine_service(
                             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                             detail=f"Error when updating inference engine: {err}",
                         ) from err
+
+
+@router.post("/{service_name}/restore")
+async def restore_inference_engine_service(
+    service_name: str,
+    mongodb: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+    k8s_client: ApiClient = Depends(get_k8s_client),
+) -> Dict:
+    """Restore a deleted service (i.e someone accidently removed the deployment).
+    This will do the following:
+    1. Grab information about the service from the database
+    2. Call the delete endpoint to delete the service
+    3. Call the create endpoint to create the service using the information from the database
+    """
+    # Get service information from database
+    db, _ = mongodb
+
+    service = await db["services"].find_one({"serviceName": service_name})
+    if service is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Service not found"
+        )
+    with k8s_client as client:
+        custom_api = CustomObjectsApi(client)
+        core_api = CoreV1Api(client)
+        app_api = AppsV1Api(client)
+        service_backend = service["backend"]
+        if service_backend == ServiceBackend.knative:
+            service_template = template_env.get_template(
+                "knative/inference-engine-knative-service.yaml.j2"
+            )
+            service = safe_load(
+                service_template.render(
+                    {
+                        "engine_name": service_name,
+                        "image_name": service["imageUri"],
+                        "port": service["containerPort"],
+                        "env": service["env"],
+                    }
+                )
+            )
+            custom_api.create_namespaced_custom_object(
+                group="serving.knative.dev",
+                version="v1",
+                namespace=config.IE_NAMESPACE,
+                plural="services",
+                body=service,
+            )
+        elif service_backend == ServiceBackend.emissary:
+            service_template = template_env.get_template(
+                "ambassador/inference-engine-service.yaml.j2"
+            )
+            deployment_template = template_env.get_template(
+                "ambassador/inference-engine-deployment.yaml.j2"
+            )
+            mapping_template = template_env.get_template(
+                "ambassador/ambassador-mapping.yaml.j2"
+            )
+            service_render = safe_load(
+                service_template.render(
+                    {
+                        "engine_name": service_name,
+                        "port": service["containerPort"],
+                    }
+                )
+            )
+            deployment_render = safe_load(
+                deployment_template.render(
+                    {
+                        "engine_name": service_name,
+                        "image_name": service["imageUri"],
+                        "port": service["containerPort"],
+                        "env": service["env"],
+                    }
+                )
+            )
+            mapping_render = safe_load(
+                mapping_template.render(
+                    {
+                        "engine_name": service_name,
+                    }
+                )
+            )
+            app_api = AppsV1Api(client)
+            core_api = CoreV1Api(client)
+            try:
+                app_api.create_namespaced_deployment(
+                    namespace=config.IE_NAMESPACE, body=deployment_render
+                )
+            except K8sAPIException as err:
+                print("Deployment probably already exists")
+                print(f"Error: {err}")
+
+            try:
+                core_api.create_namespaced_service(
+                    namespace=config.IE_NAMESPACE, body=service_render
+                )
+            except K8sAPIException as err:
+                print("Service probably already exists")
+                print(f"Error: {err}")
+
+            try:
+                custom_api.create_namespaced_custom_object(
+                    group="getambassador.io",
+                    version="v2",
+                    namespace=config.IE_NAMESPACE,
+                    plural="mappings",
+                    body=mapping_render,
+                )
+            except K8sAPIException as err:
+                print("Mapping probably already exists")
+                print(f"Error: {err}")
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Invalid service type",
+            )
+    return {"message": "Service restored", "service": service}

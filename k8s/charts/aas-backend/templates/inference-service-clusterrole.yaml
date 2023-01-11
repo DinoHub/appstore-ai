@@ -5,7 +5,7 @@ metadata:
   name: inference-engine-manager
 rules:
   - apiGroups: ["", "apps", "getambassador.io", "serving.knative.dev", "knative.serving.dev"]
-    resources: ["services", "deployments", "mappings", "listeners", "deployments/status"]
+    resources: ["services", "deployments", "mappings", "listeners", "deployments/status", "deployments/scale"]
     verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
