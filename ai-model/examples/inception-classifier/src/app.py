@@ -10,8 +10,8 @@ if __name__ == "__main__":
         predict,
         inputs=inputs,
         outputs=outputs,
-        title="{{ cookiecutter.project_name }}",
-        description="{{ cookiecutter.short_description }}",
+        title="Inception Classifier",
+        description="Inference service for AI App Store",
         examples=examples,
     )
     app.launch(

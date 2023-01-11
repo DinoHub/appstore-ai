@@ -91,7 +91,7 @@ Alongside your application, you will also need to submit an Inference Service im
 
 Assuming that your service has already been built and loaded into the cluster, you will need to provide the full image URI (including the registry). You may also provide additional settings such as specifiying the values of environment variables (allowing you to customize the behaviour of your application).
 
-> It's recommended to leave the Container Port field empty, and just configure your application to listen to the $PORT environment variable (which will be automatically set by default to 8080)
+> For now, we'll require you to ensure your application app listens to port 8080.
 
 ![Submit Inference Engine](../../_static/model-cards/submit-inference-engine.png)
 

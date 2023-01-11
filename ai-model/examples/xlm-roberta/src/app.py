@@ -10,8 +10,8 @@ if __name__ == "__main__":
         predict,
         inputs=inputs,
         outputs=outputs,
-        title="{{ cookiecutter.project_name }}",
-        description="{{ cookiecutter.short_description }}",
+        title="XLM Roberta",
+        description="Zero Shot Inference using a Roberta model",
         examples=examples,
     )
     app.launch(
