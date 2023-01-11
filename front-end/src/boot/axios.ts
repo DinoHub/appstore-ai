@@ -32,7 +32,7 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     if (
       error.response?.status === 401 &&
-      !localStorage.getItem('requestRetry')
+      localStorage.getItem('requestRetry') === 'false'
     ) {
       // Set indicator to prevent infinite loop
       localStorage.setItem('requestRetry', 'true');
@@ -42,7 +42,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 export default boot(({ app }) => {
