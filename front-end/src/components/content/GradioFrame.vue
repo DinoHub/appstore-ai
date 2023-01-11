@@ -14,11 +14,7 @@
         :showing="loading"
         label="Loading Inference App..."
       >
-        <q-spinner-gears
-          class="q-py-xl"
-          size="50px"
-          color="primary"
-        ></q-spinner-gears>
+        <q-spinner-gears size="100px" color="primary"></q-spinner-gears>
       </q-inner-loading>
       <iframe
         @load="loading = false"
