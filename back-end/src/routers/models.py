@@ -133,13 +133,17 @@ async def get_model_card_by_id(
         model["performance"] = preprocess_html_get(model["performance"])
         if "videoLocation" in model and model["videoLocation"] is not None:
             url: str = model["videoLocation"]
-            url = url.removeprefix((config.MINIO_API_HOST or "") + "/")
+            url = url.removeprefix("s3://")
             bucket, object_name = url.split("/", 1)
-            model["videoLocation"] = get_presigned_url(s3_client, object_name, bucket)
+            model["videoLocation"] = get_presigned_url(
+                s3_client, object_name, bucket
+            )
     return model
 
 
-@router.get("/", response_model=SearchModelResponse, response_model_exclude_unset=True)
+@router.get(
+    "/", response_model=SearchModelResponse, response_model_exclude_unset=True
+)
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
@@ -149,7 +153,9 @@ async def search_cards(
     title: Optional[str] = Query(default=None),
     tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
-    frameworks: Optional[List[str]] = Query(default=None, alias="frameworks[]"),
+    frameworks: Optional[List[str]] = Query(
+        default=None, alias="frameworks[]"
+    ),
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
     creator_user_id_partial: Optional[str] = Query(
         default=None, alias="creatorUserIdPartial"
@@ -348,13 +354,17 @@ async def update_model_card_metadata_by_id(
     )  # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
-    card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
+    card_dict = {
+        k: v for k, v in card.dict(by_alias=True).items() if v is not None
+    }
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
         card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
-        card_dict["performance"] = preprocess_html_post(card_dict["performance"])
+        card_dict["performance"] = preprocess_html_post(
+            card_dict["performance"]
+        )
     if "videoLocation" in card_dict:
         if card_dict["videoLocation"] is not None:
             card_dict["inferenceServiceName"] = None
@@ -409,7 +419,9 @@ async def update_model_card_metadata_by_id(
         return existing_card
 
 
-@router.delete("/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_model_card_by_id(
     model_id: str,
     creator_user_id: str,
