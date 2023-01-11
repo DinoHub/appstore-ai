@@ -20,7 +20,7 @@
     @click.stop="$router.push(`/model/${props.creatorUserId}/${props.modelId}`)"
   >
     <span class="q-focus-helper"></span>
-    <q-card-section>
+    <q-card-section class="q-pb-sm">
       <div class="headline-small clamp-text">{{ props.title }}</div>
       <div>
         <material-chip
@@ -49,7 +49,7 @@
         </material-chip>
       </div>
     </q-card-section>
-    <q-card-section class="clamp-text q-pb-xl">
+    <q-card-section class="clamp-text q-mb-xl q-pt-none">
       {{ props.description ?? 'No description provided' }}
     </q-card-section>
     <q-card-actions align="right" class="action-row" v-if="isModelOwner">
