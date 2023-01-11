@@ -26,7 +26,7 @@ class Config(BaseSettings):
     )
 
     # Triton Settings
-    triton_url: str = Field(default="172.20.0.5:8001", env="TRITON_URL")
+    triton_url: str = Field(default="localhost:8001", env="TRITON_URL")
     triton_mode: TritonMode = Field(
         default=TritonMode.polling,
         env="TRITON_MODE",

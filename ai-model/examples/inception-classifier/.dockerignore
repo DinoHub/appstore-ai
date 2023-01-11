@@ -1,6 +1,8 @@
+# Ignore any automated tests
+tests
 # Created by https://www.toptal.com/developers/gitignore/api/python
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
-*.pt
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/

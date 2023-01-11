@@ -10,8 +10,10 @@ if __name__ == "__main__":
         predict,
         inputs=inputs,
         outputs=outputs,
-        title="test-roberta",
+        title="Inception Classifier",
         description="Inference service for AI App Store",
         examples=examples,
     )
-    app.launch(server_port=config.port, enable_queue=True)
+    app.launch(
+        server_name="0.0.0.0", server_port=config.port, enable_queue=True
+    )

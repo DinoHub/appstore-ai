@@ -1,7 +1,8 @@
 import logging
 from typing import Dict, Optional
 
-import gradio as gr
+import gradio.inputs as gr_inputs
+import gradio.outputs as gr_outputs
 import numpy as np
 import tritonclient.grpc as tr
 from config import config
@@ -9,12 +10,12 @@ from transformers import XLMRobertaTokenizer
 from triton_utils import get_client, load_model, unload_model
 
 inputs = [
-    gr.Text(placeholder="Text to classify", label="Text"),
-    gr.Text(
+    gr_inputs.Textbox(placeholder="Text to classify", label="Text"),
+    gr_inputs.Textbox(
         placeholder="Possible class names", label="Comma Separated Labels"
     ),
 ]
-outputs = gr.Label(num_top_classes=config.top_k)
+outputs = gr_outputs.Label(num_top_classes=config.top_k)
 examples = [["Hello world", "greeting,insult"]]
 
 tokenizer = XLMRobertaTokenizer.from_pretrained(
