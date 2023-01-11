@@ -105,6 +105,8 @@ Under `predict.py`, you will find the following variables:
 
 Relevant Documentation:
 
+> NOTE: If using Gradio 2.9, the input and output components can be accessed via importing `gradio.inputs` and `gradio.outputs`. These must be explicitly imported in order to use them.
+
 - [Gradio - The Interface Class](https://gradio.app/getting_started/#the-interface-class)
 - [Gradio IO Components API Reference](https://gradio.app/docs/#components)
 - [Gradio Guide on Providing Examples](https://gradio.app/key_features/#example-inputs)
@@ -112,6 +114,8 @@ Relevant Documentation:
 #### Prediction Function
 
 Under `predict.py` you will also find the `predict` function, which you will need to define. The inputs to the function correspond to the inputs specified in the `inputs` variable, while the returned variables must correspond to the `outputs` variable.
+
+How this function is defined depends on the task you are trying to solve. For example, if you are trying to build a obj
 
 #### Setting up Configuration
 
