@@ -126,6 +126,7 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('creationStore');
         console.error(err);
         this.logout();
+        return Promise.reject(err);
       }
     },
   },
