@@ -443,18 +443,19 @@ async def delete_model_card_by_id(
 
 @router.delete("/multi", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_multiple_model_cards(
-    card_package: List[deleteCardPackage],
+    card_package: deleteCardPackage,
     tasks: BackgroundTasks,
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
     db, mongo_client = db
+    pkg = card_package.dict()["card_package"]
     async with await mongo_client.start_session() as session:
         async with session.start_transaction():
-            for x in card_package:
+            for x in pkg:
                 # First, check that user actually has access
                 existing_card = await db["models"].find_one(
-                    {"modelId": x.model_id, "creatorUserId": x.creator_user_id}
+                    {"modelId": x["model_id"], "creatorUserId": x["creator_user_id"]}
                 )
                 if existing_card is not None and user.role != "admin":
                     raise HTTPException(
@@ -462,7 +463,7 @@ async def delete_multiple_model_cards(
                         detail="User does not have editor access to this model card",
                     )
                 await db["models"].delete_one(
-                    {"modelId": x.model_id, "creatorUserId": x.creator_user_id}
+                    {"modelId": x["model_id"], "creatorUserId": x["creator_user_id"]}
                 )
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     tasks.add_task(delete_orphan_images)  # Remove any related media
