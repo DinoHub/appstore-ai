@@ -417,25 +417,45 @@ async def delete_model_card_by_id(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    db, mongo_client = db
-    async with await mongo_client.start_session() as session:
-        async with session.start_transaction():
-            # First, check that user actually has access
-            existing_card = await db["models"].find_one(
-                {"modelId": model_id, "creatorUserId": creator_user_id}
-            )
-            if (
-                existing_card is not None
-                and existing_card["creatorUserId"] != user.user_id
-                and user.role != "admin"
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User does not have editor access to this model card",
+    """Delete model card by composite key of Creator User ID and Model ID
+
+    Args:
+        model_id (str): Model Id
+        creator_user_id (str): Creator user id
+        card (UpdateModelCardModel): Updated model card
+        tasks (BackgroundTasks): Background tasks to run
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 if arbitrary error occurs
+    """
+    try:
+        db, mongo_client = db
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                # First, check that user actually has access
+                existing_card = await db["models"].find_one(
+                    {"modelId": model_id, "creatorUserId": creator_user_id}
                 )
-            await db["models"].delete_one(
-                {"modelId": model_id, "creatorUserId": creator_user_id}
-            )
+                if (
+                    existing_card is not None
+                    and existing_card["creatorUserId"] != user.user_id
+                    and user.role != "admin"
+                ):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="User does not have editor access to this model card",
+                    )
+                await db["models"].delete_one(
+                    {"modelId": model_id, "creatorUserId": creator_user_id}
+                )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Removal failed",
+        ) from err
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     tasks.add_task(delete_orphan_images)  # Remove any related media
     tasks.add_task(delete_orphan_services)  # Remove any related services
@@ -448,23 +468,48 @@ async def delete_multiple_model_cards(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    db, mongo_client = db
-    pkg = card_package.dict()["card_package"]
-    async with await mongo_client.start_session() as session:
-        async with session.start_transaction():
-            for x in pkg:
-                # First, check that user actually has access
-                existing_card = await db["models"].find_one(
-                    {"modelId": x["model_id"], "creatorUserId": x["creator_user_id"]}
-                )
-                if existing_card is not None and user.role != "admin":
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="User does not have editor access to this model card",
+    """Delete multiple model cards by List of composite keys of Creator User ID and Model ID
+
+    Args:
+        card_package (deleteCardPackage): List of Dictionaries containing models with composite ID identifiers to be removed
+        card (UpdateModelCardModel): Updated model card
+        tasks (BackgroundTasks): Background tasks to run
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 if arbitrary error occurs
+    """
+    try:
+        db, mongo_client = db
+        pkg = card_package.dict()["card_package"]
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                for x in pkg:
+                    # First, check that user actually has access
+                    existing_card = await db["models"].find_one(
+                        {
+                            "modelId": x["model_id"],
+                            "creatorUserId": x["creator_user_id"],
+                        }
                     )
-                await db["models"].delete_one(
-                    {"modelId": x["model_id"], "creatorUserId": x["creator_user_id"]}
-                )
+                    if existing_card is not None and user.role != "admin":
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User does not have editor access to this model card",
+                        )
+                    await db["models"].delete_one(
+                        {
+                            "modelId": x["model_id"],
+                            "creatorUserId": x["creator_user_id"],
+                        }
+                    )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Removal failed",
+        ) from err
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     tasks.add_task(delete_orphan_images)  # Remove any related media
     tasks.add_task(delete_orphan_services)  # Remove any related services
