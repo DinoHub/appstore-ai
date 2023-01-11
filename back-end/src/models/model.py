@@ -116,7 +116,12 @@ class SearchModelResponse(BaseModel):
     total: int
 
 
-class deleteCardPackage(BaseModel):
+class deleteCard(BaseModel):
 
     model_id: str
     creator_user_id: str
+
+
+class deleteCardPackage(BaseModel):
+
+    card_package: List[deleteCard]
