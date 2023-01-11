@@ -129,6 +129,14 @@
         <div class="text-h6 q-mb-md">Create User</div>
         <q-input
           filled
+          class="q-mb-md q-pb-md"
+          color="on-surface-variant"
+          label="User ID"
+          placeholder="Will be auto-generated if left blank"
+          v-model="createUser.userId"
+        />
+        <q-input
+          filled
           class="q-mb-md"
           color="on-surface-variant"
           label="Username"
@@ -230,7 +238,7 @@
           rounded
           outline
           label="Cancel"
-          padding="sm xl"
+          padding="sm md"
           color="error"
           v-close-popup
         />
@@ -239,7 +247,7 @@
           rounded
           label="Confirm"
           color="primary"
-          padding="sm xl"
+          padding="sm md"
           outline
           v-close-popup
           @click="callDeleteUsers"
@@ -297,7 +305,7 @@
           rounded
           outline
           label="Cancel"
-          padding="sm xl"
+          padding="sm md"
           color="error"
           v-close-popup
           @click="exitMultiEdit"
@@ -307,7 +315,7 @@
           rounded
           label="Confirm"
           color="primary"
-          padding="sm xl"
+          padding="sm md"
           outline
           @click="callMultiEditUsers"
         />
@@ -423,6 +431,7 @@ const passwordErrorMsg = `Password must at least be
 const pattern = /[`!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/;
 
 const createUser = ref({
+  userId: '',
   name: '',
   adminPriv: '',
   password: '',
@@ -523,7 +532,7 @@ function callEditUser() {
         editUser.value.name,
         editUser.value.adminPriv,
         editUser.value.password,
-        editUser.value.confirm_password,
+        editUser.value.confirm_password
       )
       .then(() => {
         clearEditUser();
@@ -580,10 +589,11 @@ function callCreateUser() {
   } else {
     userStore
       .createUser(
+        createUser.value.userId,
         createUser.value.name,
         createUser.value.adminPriv,
         createUser.value.password,
-        createUser.value.confirm_password,
+        createUser.value.confirm_password
       )
       .then(() => {
         clearCreateUser();
@@ -591,12 +601,7 @@ function callCreateUser() {
         persistent.value = false;
       })
       .catch((err) => {
-        Notify.create({
-          message: 'Failed to create user',
-          type: 'negative',
-          position: 'top',
-        });
-        console.error(err);
+        persistent.value = true;
       });
   }
 }
@@ -609,6 +614,7 @@ function clearEditUser() {
 }
 
 function clearCreateUser() {
+  createUser.value.userId = '';
   createUser.value.name = '';
   createUser.value.adminPriv = '';
   createUser.value.password = '';
@@ -650,7 +656,7 @@ const columns: QTableColumn[] = [
     field: 'created',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val,
+        val
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
@@ -661,7 +667,7 @@ const columns: QTableColumn[] = [
     field: 'lastModified',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val,
+        val
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
