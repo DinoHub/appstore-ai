@@ -14,7 +14,7 @@ class Artifact(BaseModel):
     artifact_type: str = Field(..., alias="artifactType")
     name: str
     url: str
-    timestamp: Optional[datetime] = None
+    timestamp: Optional[str] = None
     framework: Optional[str] = None
 
     class Config:
