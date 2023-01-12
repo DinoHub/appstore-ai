@@ -461,7 +461,24 @@
               placeholder="e.g <registry>/<image>:<tag>"
               v-model="creationStore.imageUri"
               :loading="loadingExp"
+              :disable="loadingExp"
               :rules="[(val) => !!val || 'Field is required']"
+            ></q-input>
+            <q-input
+              outlined
+              label="Number of GPUs"
+              v-model="creationStore.numGpus"
+              class="q-ml-md q-pb-xl"
+              type="number"
+              :rules="[
+                (val) => !!val || 'Field is required',
+                (val) => val >= 0 || 'Must be greater than or equal to 0',
+                (val) => val <= 1 || 'Must be less than or equal to 1',
+              ]"
+              :loading="loadingExp"
+              :disable="loadingExp"
+              min="0"
+              max="1"
             ></q-input>
             <!-- NOTE: temporarily disabled for now. See inferenceServiceStore to see reason why -->
             <!-- <q-input

@@ -44,7 +44,7 @@ async def delete_orphan_services():
                         await db["services"].delete_one(
                             {"serviceName": service_name}
                         )
-                        if backend_type == ServiceBackend.knative:
+                        if backend_type == ServiceBackend.KNATIVE:
                             custom_api.delete_namespaced_custom_object(
                                 group="serving.knative.dev",
                                 version="v1",
@@ -52,7 +52,7 @@ async def delete_orphan_services():
                                 namespace=config.IE_NAMESPACE,
                                 name=service_name,
                             )
-                        elif backend_type == ServiceBackend.emissary:
+                        elif backend_type == ServiceBackend.EMISSARY:
                             core_api.delete_namespaced_service(
                                 name=service_name,
                                 namespace=config.IE_NAMESPACE,

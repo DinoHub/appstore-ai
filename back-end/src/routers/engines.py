@@ -29,6 +29,7 @@ from ..internal.utils import k8s_safe_name, uncased_to_snake_case
 from ..models.engine import (
     CreateInferenceEngineService,
     InferenceEngineService,
+    InferenceServiceStatus,
     ServiceBackend,
     UpdateInferenceEngineService,
 )
@@ -115,7 +116,7 @@ async def get_inference_engine_service(
     return service
 
 
-@router.get("/{service_name}/status")
+@router.get("/{service_name}/status", response_model=InferenceServiceStatus)
 def get_inference_engine_service_status(
     service_name: str, k8s_client: ApiClient = Depends(get_k8s_client)
 ) -> Dict:
@@ -135,8 +136,12 @@ def get_inference_engine_service_status(
     """
     # Sync endpoint to allow for concurrent request
     try:
+        return_status = InferenceServiceStatus(
+            service_name=service_name,
+        )
+
         with k8s_client as client:
-            if config.IE_SERVICE_TYPE == ServiceBackend.knative:
+            if config.IE_SERVICE_TYPE == ServiceBackend.KNATIVE:
                 api = CustomObjectsApi(client)
                 result = api.get_namespaced_custom_object(
                     group="serving.knative.dev",
@@ -145,32 +150,52 @@ def get_inference_engine_service_status(
                     plural="services",
                     name=service_name,
                 )
-                status_conditions = result["status"]["conditions"]
+                status_conditions = result.status.condition
 
                 # Check if service is ready
                 for condition in status_conditions:
                     # if not ready return response
-                    if condition["status"] != "True":
-                        return {"ready": False}
-
-                # if didn't return yet, service is ready
-                return {"ready": True}
-            elif config.IE_SERVICE_TYPE == ServiceBackend.emissary:
+                    if condition.status != "True":
+                        return_status.ready = False
+                        return_status.message += f"Message: {condition.message}\nReason: {condition.reason}"
+                        break
+                # TODO: Check if pod can even be scheduled
+            elif config.IE_SERVICE_TYPE == ServiceBackend.EMISSARY:
                 api = AppsV1Api(client)
+
+                # Get status
                 result = api.read_namespaced_deployment_status(
                     name=service_name + "-deployment",
                     namespace=config.IE_NAMESPACE,
                 )
+                # Get replicas (expected)
+                return_status.expected_replicas = int(
+                    result.status.replicas if result.status.replicas else 0
+                )
                 for condition in result.status.conditions:
                     if condition.status != "True":
-                        return {
-                            "ready": False,
-                            "reason": condition.reason,
-                            "message": condition.message,
-                        }
-                return {"ready": True}
+                        return_status.ready = False
+                        return_status.message += f"Message: {condition.message}\nReason: {condition.reason}"
+                # Find out if pods in deployment are schedulable
+                # Get pods in deployment
+                core_api = CoreV1Api(client)
+                pods = core_api.list_namespaced_pod(
+                    namespace=config.IE_NAMESPACE,
+                    label_selector=f"app={service_name}",
+                )
+                for pod in pods.items:
+                    pod_status = pod.status
+                    return_status.status = pod_status.phase
+                    for condition in pod_status.conditions:
+                        if (
+                            condition.type == "PodScheduled"
+                            and condition.status != "True"
+                        ):
+                            return_status.schedulable = False
+                            return_status.message += f"Message: {condition.message}\nReason: {condition.reason}"
             else:
                 raise NotImplementedError
+            return return_status.dict(by_alias=True)
     except K8sAPIException as err:
         if err.status == 404:
             raise HTTPException(
@@ -275,14 +300,14 @@ async def create_inference_engine_service(
         try:
             core_api = CoreV1Api(client)
             custom_api = CustomObjectsApi(client)
-            service_backend = config.IE_SERVICE_TYPE or ServiceBackend.emissary
+            service_backend = config.IE_SERVICE_TYPE or ServiceBackend.EMISSARY
             if config.IE_DOMAIN:
                 host = config.IE_DOMAIN
             else:
-                if service_backend == ServiceBackend.knative:
+                if service_backend == ServiceBackend.KNATIVE:
                     ingress_name = "kourier"
                     ingress_namespace = "kourier-system"
-                elif service_backend == ServiceBackend.emissary:
+                elif service_backend == ServiceBackend.EMISSARY:
                     ingress_name = "emissary-ingress"
                     ingress_namespace = "emissary"
                 else:
@@ -298,7 +323,7 @@ async def create_inference_engine_service(
                     name=ingress_name, namespace=ingress_namespace
                 )
                 host = ingress.status.load_balancer.ingress[0].ip
-            if service_backend == ServiceBackend.knative:
+            if service_backend == ServiceBackend.KNATIVE:
                 service_template = template_env.get_template(
                     "knative/inference-engine-knative-service.yaml.j2"
                 )
@@ -309,6 +334,7 @@ async def create_inference_engine_service(
                             "image_name": service.image_uri,
                             "port": service.container_port,
                             "env": service.env,
+                            "num_gpus": service.num_gpus,
                         }
                     )
                 )
@@ -325,7 +351,7 @@ async def create_inference_engine_service(
                     plural="services",
                     body=service,
                 )
-            elif service_backend == ServiceBackend.emissary:
+            elif service_backend == ServiceBackend.EMISSARY:
                 url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
                 # else css and js files are not loaded properly
                 service_template = template_env.get_template(
@@ -352,6 +378,7 @@ async def create_inference_engine_service(
                             "image_name": service.image_uri,
                             "port": service.container_port,
                             "env": service.env,
+                            "num_gpus": service.num_gpus,
                         }
                     )
                 )
@@ -389,6 +416,7 @@ async def create_inference_engine_service(
                     image_uri=service.image_uri,
                     container_port=service.container_port,
                     env=service.env,
+                    num_gpus=service.num_gpus,
                     owner_id=user.user_id,
                     protocol=protocol,
                     host=host,
@@ -474,7 +502,7 @@ async def delete_inference_engine_service(
             with k8s_client as client:
                 # Create instance of API class
                 try:
-                    if service_type == ServiceBackend.knative:
+                    if service_type == ServiceBackend.KNATIVE:
                         api = CustomObjectsApi(client)
                         api.delete_namespaced_custom_object(
                             group="serving.knative.dev",
@@ -483,7 +511,7 @@ async def delete_inference_engine_service(
                             namespace=config.IE_NAMESPACE,
                             name=service_name,
                         )
-                    elif service_type == ServiceBackend.emissary:
+                    elif service_type == ServiceBackend.EMISSARY:
                         # Delete service, mapping, and deployment
                         # TODO: Test if this works
                         app_api = AppsV1Api(client)
@@ -562,10 +590,10 @@ async def update_inference_engine_service(
         else:
             with k8s_client as client:
                 core_api = CoreV1Api(client)
-                if service_type == ServiceBackend.knative:
+                if service_type == ServiceBackend.KNATIVE:
                     ingress_name = "kourier"
                     ingress_namespace = "kourier-system"
-                elif service_type == ServiceBackend.emissary:
+                elif service_type == ServiceBackend.EMISSARY:
                     ingress_name = "emissary-ingress"
                     ingress_namespace = "emissary"
                 else:
@@ -583,13 +611,13 @@ async def update_inference_engine_service(
                 host = ingress.status.load_balancer.ingress[0].ip
         updated_metadata["protocol"] = protocol
         updated_metadata["host"] = host
-        if service_type == ServiceBackend.knative:
+        if service_type == ServiceBackend.KNATIVE:
             updated_metadata[
                 "inferenceUrl"
             ] = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
             if not config.IE_DOMAIN:
                 updated_metadata["inferenceUrl"] += ".sslip.io"
-        elif service_type == ServiceBackend.emissary:
+        elif service_type == ServiceBackend.EMISSARY:
             updated_metadata[
                 "inferenceUrl"
             ] = f"{protocol}://{host}/{service_name}/"
@@ -633,7 +661,7 @@ async def update_inference_engine_service(
                     try:
                         core_api = CoreV1Api(client)
                         custom_api = CustomObjectsApi(client)
-                        if service_type == ServiceBackend.knative:
+                        if service_type == ServiceBackend.KNATIVE:
                             template = template_env.get_template(
                                 "knative/inference-engine-service.yaml.j2"
                             )
@@ -648,6 +676,7 @@ async def update_inference_engine_service(
                                             "containerPort"
                                         ],
                                         "env": updated_service["env"],
+                                        "num_gpus": updated_service["numGpus"],
                                     }
                                 )
                             )
@@ -670,7 +699,7 @@ async def update_inference_engine_service(
                                     name=service_name,
                                     body=service_template,
                                 )
-                        elif service_type == ServiceBackend.emissary:
+                        elif service_type == ServiceBackend.EMISSARY:
                             service_template = template_env.get_template(
                                 "ambassador/inference-engine-service.yaml.j2"
                             )
@@ -684,7 +713,9 @@ async def update_inference_engine_service(
                                 service_template.render(
                                     {
                                         "engine_name": service_name,
-                                        "port": service.container_port,
+                                        "port": updated_service[
+                                            "containerPort"
+                                        ],
                                     }
                                 )
                             )
@@ -692,9 +723,14 @@ async def update_inference_engine_service(
                                 deployment_template.render(
                                     {
                                         "engine_name": service_name,
-                                        "image_name": service.image_uri,
-                                        "port": service.container_port,
-                                        "env": service.env,
+                                        "image_name": updated_service[
+                                            "imageUri"
+                                        ],
+                                        "port": updated_service[
+                                            "containerPort"
+                                        ],
+                                        "env": updated_service["env"],
+                                        "num_gpus": updated_service["numGpus"],
                                     }
                                 )
                             )
@@ -777,6 +813,10 @@ async def restore_inference_engine_service(
     1. Grab information about the service from the database
     2. Call the delete endpoint to delete the service
     3. Call the create endpoint to create the service using the information from the database
+
+    TODO: Refactor so that I don't have to repeat code. Preferably factor out
+    stuff into a controller submodule (split up the code for adding to mongodb and k8s)
+    to allow router to simply compose functions together for better reusability of code
     """
     # Get service information from database
     db, _ = mongodb
@@ -791,7 +831,7 @@ async def restore_inference_engine_service(
         core_api = CoreV1Api(client)
         app_api = AppsV1Api(client)
         service_backend = service["backend"]
-        if service_backend == ServiceBackend.knative:
+        if service_backend == ServiceBackend.KNATIVE:
             service_template = template_env.get_template(
                 "knative/inference-engine-knative-service.yaml.j2"
             )
@@ -802,6 +842,7 @@ async def restore_inference_engine_service(
                         "image_name": service["imageUri"],
                         "port": service["containerPort"],
                         "env": service["env"],
+                        "num_gpus": service["numGpus"],
                     }
                 )
             )
@@ -812,7 +853,7 @@ async def restore_inference_engine_service(
                 plural="services",
                 body=service,
             )
-        elif service_backend == ServiceBackend.emissary:
+        elif service_backend == ServiceBackend.EMISSARY:
             service_template = template_env.get_template(
                 "ambassador/inference-engine-service.yaml.j2"
             )
@@ -837,6 +878,7 @@ async def restore_inference_engine_service(
                         "image_name": service["imageUri"],
                         "port": service["containerPort"],
                         "env": service["env"],
+                        "num_gpus": service["numGpus"],
                     }
                 )
             )

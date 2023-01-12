@@ -86,14 +86,31 @@
           <q-tab-panels v-model="tab" animated keep-alive>
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
               <gradio-frame
-                :url="inferenceUrl"
-                v-if="inferenceUrl"
+                :url="inferenceUrl ?? ''"
+                :status="inferenceStatus"
+                v-if="inferenceStatus !== undefined"
               ></gradio-frame>
-              <q-card v-show="!inferenceUrl">
-                <q-card-section class="headline-small"
-                  >Inference service is not yet ready for this
-                  model.</q-card-section
-                >
+              <q-card v-else>
+                <q-card-section>
+                  <div class="text-h6">
+                    Service is unavailable at the moment.
+                  </div>
+                </q-card-section>
+                <q-card-actions>
+                  <q-btn
+                    rounded
+                    no-caps
+                    padding="sm xl"
+                    label="Repair Instance"
+                    @click="
+                      () =>
+                        inferenceServiceStore.restoreService(
+                          model.inferenceServiceName ?? '',
+                        )
+                    "
+                  ></q-btn>
+                  <!-- Move this to manage -->
+                </q-card-actions>
               </q-card>
             </q-tab-panel>
             <q-tab-panel v-if="model.videoLocation" name="video">
@@ -249,7 +266,10 @@ import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute } from 'vue-router';
-import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import {
+  InferenceServiceStatus,
+  useInferenceServiceStore,
+} from 'src/stores/inference-service-store';
 import { Notify } from 'quasar';
 
 enum Tabs {
@@ -265,6 +285,7 @@ const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 const tab: Ref<Tabs> = ref(Tabs.inference);
 const inferenceUrl: Ref<string | null> = ref(null);
+const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
 const authStore = useAuthStore();
 const modelStore = useModelStore();
 const inferenceServiceStore = useInferenceServiceStore();
@@ -317,8 +338,8 @@ modelStore
       .then((service) => {
         inferenceServiceStore
           .getServiceReady(service.serviceName)
-          .then((ready) => {
-            if (!ready) {
+          .then((status) => {
+            if (!status.ready) {
               Notify.create({
                 message: 'Inference service is down',
                 color: 'negative',
@@ -326,6 +347,7 @@ modelStore
               return Promise.reject('Inference service is down');
             }
             inferenceUrl.value = service.inferenceUrl;
+            inferenceStatus.value = status;
           })
           .catch((err) => {
             return Promise.reject(err);

@@ -2,6 +2,7 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: {{ engine_name }}
+  labels: aas-inference-service
 spec:
   template:
     spec:
@@ -20,6 +21,9 @@ spec:
               value: {{ value }}
           {% endfor %}
           {% endif %}
+          resources:
+            limits:
+              nvidia.com/gpu: {{ num_gpus if num_gpus else 0 }}
           # {% if resource_limits %}
           # resources:
           #   limits:

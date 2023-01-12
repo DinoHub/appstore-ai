@@ -26,8 +26,35 @@ from .common import PyObjectId
 class ServiceBackend(str, Enum):
     """Enum for service backend."""
 
-    knative = "knative"  # knative-serving
-    emissary = "emissary"  # emissary-ingress
+    KNATIVE = "knative"  # knative-serving
+    EMISSARY = "emissary"  # emissary-ingress
+
+
+class K8SPhase(str, Enum):
+    """Enum for K8S phase."""
+
+    PENDING = "Pending"
+    RUNNING = "Running"
+    SUCCEEDED = "Succeeded"
+    FAILED = "Failed"
+    UNKNOWN = "Unknown"
+
+
+class InferenceServiceStatus(BaseModel):
+    service_name: str
+    status: K8SPhase = K8SPhase.UNKNOWN
+    message: str = ""
+    ready: bool = True
+    schedulable: bool = True
+    expected_replicas: int = Field(default=1, ge=0)
+
+    class Config:
+        """Pydantic config to allow creation of data model
+        from a JSON object with camelCase keys.
+        """
+
+        allow_population_by_field_name = True
+        alias_generator = to_camel_case
 
 
 class CreateInferenceEngineService(BaseModel):
@@ -38,7 +65,7 @@ class CreateInferenceEngineService(BaseModel):
     # resource_limits: ResourceLimits
     container_port: Optional[int] = None
     env: Optional[dict] = None
-    num_gpu: float = Field(default=0, ge=0, le=2)
+    num_gpus: float = Field(default=0, ge=0, le=2)
 
     class Config:
         """Pydantic config to allow creation of data model
@@ -81,6 +108,7 @@ class UpdateInferenceEngineService(BaseModel):
     container_port: Optional[int] = None
     # resource_limits: ResourceLimits
     env: Optional[dict] = None
+    num_gpus: float = Field(default=0, ge=0, le=2)
 
     class Config:
         """Pydantic config to allow creation of data model

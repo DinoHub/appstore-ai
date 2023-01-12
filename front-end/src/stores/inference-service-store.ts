@@ -14,7 +14,12 @@ export interface InferenceEngineService {
 }
 
 export interface InferenceServiceStatus {
+  status: 'Running' | 'Failed' | 'Pending' | 'Unknown' | 'Succeeded';
+  serviceName: string;
   ready: boolean;
+  schedulable: boolean;
+  expectedReplicas: number;
+  message?: string;
 }
 
 export const useInferenceServiceStore = defineStore('service', {
@@ -28,15 +33,24 @@ export const useInferenceServiceStore = defineStore('service', {
       maxRetries = 10,
       initialWaitSeconds = 10,
       maxDeadlineSeconds = 300, // 5 minutes
-    ): Promise<boolean> {
+    ): Promise<InferenceServiceStatus> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
           const res = await api.get(`engines/${serviceName}/status`);
           const data: InferenceServiceStatus = res.data;
-
+          console.log(data);
+          if (data.expectedReplicas === 0) {
+            console.warn('Service has no replicas');
+            return data;
+          }
+          // if unschedulable, don't keep waiting, return to inform user
+          if (!data.schedulable) {
+            console.warn('Service is not schedulable');
+            return data;
+          }
           if (data.ready) {
             console.log('Service is ready');
-            return true;
+            return data;
           }
           // exponential backoff algo to wait for service to be ready
           // Sleep for backoffSeconds
@@ -48,13 +62,13 @@ export const useInferenceServiceStore = defineStore('service', {
           if (backoffSeconds > maxDeadlineSeconds) {
             console.error('Service not ready, max retries exceeded');
             console.error(data);
-            return false;
+            return data;
           }
           await new Promise((r) => setTimeout(r, 1000 * backoffSeconds));
         }
-        return false;
+        return Promise.reject('Unable to get status of service');
       } catch (error) {
-        return Promise.reject('Unable to get status of KNative service');
+        return Promise.reject('Unable to get status of service');
       }
     },
     async getServiceByName(
@@ -75,6 +89,7 @@ export const useInferenceServiceStore = defineStore('service', {
     async createService(
       modelId: string,
       imageUri: string,
+      numGpus: number,
       port?: number,
       env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
@@ -87,6 +102,7 @@ export const useInferenceServiceStore = defineStore('service', {
           modelId: modelId,
           imageUri: imageUri,
           env: env,
+          numGpus: numGpus,
         };
         if (port) {
           // NOTE: currently frontend has tmp disabled
@@ -107,6 +123,7 @@ export const useInferenceServiceStore = defineStore('service', {
     async launchPreviewService(
       modelId: string,
       imageUri: string,
+      numGpus: number,
       port?: number,
       env?: Record<string, any>,
     ) {
@@ -116,6 +133,7 @@ export const useInferenceServiceStore = defineStore('service', {
       const { serviceName, inferenceUrl } = await this.createService(
         modelId,
         imageUri,
+        numGpus,
         port,
         env,
       );
@@ -123,12 +141,12 @@ export const useInferenceServiceStore = defineStore('service', {
       this.previewServiceName = serviceName;
       // wait for a few seconds first to give time for the service to be created
       await new Promise((r) => setTimeout(r, 1000 * 5));
-      const ready = await this.getServiceReady(serviceName);
-      if (ready) {
-        return { serviceName, inferenceUrl };
+      const status = await this.getServiceReady(serviceName);
+      if (status.ready) {
+        return { serviceName, inferenceUrl, status };
       } else {
         Notify.create({
-          message: 'Failed to create service',
+          message: 'Failed to create service. Error: ' + status.message,
           color: 'negative',
         });
         await this.deleteService(serviceName); // Cleanup
@@ -138,6 +156,7 @@ export const useInferenceServiceStore = defineStore('service', {
     async updateService(
       serviceName: string,
       imageUri?: string,
+      numGpus?: number,
       port?: number,
       env?: Record<string, any>,
     ): Promise<InferenceEngineService> {
@@ -146,6 +165,7 @@ export const useInferenceServiceStore = defineStore('service', {
           imageUri: imageUri,
           port: port,
           env: env,
+          numGpus: numGpus,
         });
         const data: InferenceEngineService = res.data;
         return data;
@@ -158,6 +178,20 @@ export const useInferenceServiceStore = defineStore('service', {
         await api.delete(`/engines/${serviceName}`);
       } catch (error) {
         return Promise.reject('Unable to delete inference engine');
+      }
+    },
+    async scaleService(serviceName: string, replicas: number): Promise<void> {
+      try {
+        await api.patch(`/engines/${serviceName}/scale/${replicas}`, {});
+      } catch (error) {
+        return Promise.reject('Unable to scale inference engine');
+      }
+    },
+    async restoreService(serviceName: string): Promise<void> {
+      try {
+        await api.post(`/engines/${serviceName}/restore`, {});
+      } catch (error) {
+        return Promise.reject('Unable to restore inference engine');
       }
     },
   },

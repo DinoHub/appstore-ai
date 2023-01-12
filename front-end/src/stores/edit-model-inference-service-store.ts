@@ -1,7 +1,10 @@
 import { defineStore } from 'pinia';
 import { EnvField } from 'src/components/models';
 import { useAuthStore } from './auth-store';
-import { useInferenceServiceStore } from './inference-service-store';
+import {
+  InferenceServiceStatus,
+  useInferenceServiceStore,
+} from './inference-service-store';
 import { useModelStore } from './model-store';
 
 export const useEditInferenceServiceStore = defineStore(
@@ -10,11 +13,13 @@ export const useEditInferenceServiceStore = defineStore(
     state: () => ({
       step: 1 as number,
       imageUri: '' as string,
+      numGpus: 0 as number,
       containerPort: undefined as number | undefined,
       env: [] as EnvField[],
       serviceName: '' as string,
       previewServiceName: null as string | null,
       previewServiceUrl: null as string | null,
+      previewServiceStatus: null as InferenceServiceStatus | null,
     }),
     getters: {
       metadataValid(): boolean {
@@ -65,15 +70,18 @@ export const useEditInferenceServiceStore = defineStore(
       async launchPreviewService(modelId: string) {
         const inferenceServiceStore = useInferenceServiceStore();
         try {
-          const { serviceName, inferenceUrl } =
+          const { serviceName, inferenceUrl, status } =
             await inferenceServiceStore.launchPreviewService(
               modelId,
               this.imageUri,
+              this.numGpus,
               this.containerPort,
               this.uniqueEnv,
             );
           this.previewServiceName = serviceName;
           this.previewServiceUrl = inferenceUrl;
+          this.previewServiceStatus = status;
+          return Promise.resolve();
         } catch (error) {
           return Promise.reject(error);
         }
@@ -87,12 +95,13 @@ export const useEditInferenceServiceStore = defineStore(
         const { serviceName } = await inferenceServiceStore.updateService(
           this.serviceName,
           this.imageUri,
+          this.numGpus,
           this.containerPort,
           this.uniqueEnv,
         );
         // Check status of updated service
-        const ready = await inferenceServiceStore.getServiceReady(serviceName);
-        if (ready) {
+        const status = await inferenceServiceStore.getServiceReady(serviceName);
+        if (status.ready) {
           return Promise.resolve();
         } else {
           return Promise.reject('Failed to update inference service');

@@ -33,6 +33,22 @@
               :loading="loading"
               :disable="loading"
             ></q-input>
+            <q-input
+              outlined
+              label="Number of GPUs"
+              v-model="editInferenceServiceStore.numGpus"
+              class="q-ml-md q-pb-xl"
+              type="number"
+              :rules="[
+                (val) => !!val || 'Field is required',
+                (val) => val >= 0 || 'Must be greater than or equal to 0',
+                (val) => val <= 1 || 'Must be less than or equal to 1',
+              ]"
+              :loading="loading"
+              :disable="loading"
+              min="0"
+              max="1"
+            ></q-input>
             <!-- NOTE: Disable ability to set port number temporarily as Emissary backend is hard coded to port 8080 -->
             <!-- <q-input
               outlined
@@ -64,6 +80,7 @@
         <gradio-frame
           :v-show="editInferenceServiceStore.previewServiceUrl"
           :url="editInferenceServiceStore.previewServiceUrl ?? ''"
+          :status="editInferenceServiceStore.previewServiceStatus ?? undefined"
         ></gradio-frame>
       </q-step>
       <template v-slot:navigation>
@@ -168,7 +185,10 @@
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
-import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import {
+  useInferenceServiceStore,
+  InferenceServiceStatus,
+} from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useRoute, useRouter } from 'vue-router';
@@ -185,6 +205,7 @@ const modelId = route.params.modelId as string;
 const buttonDisable = ref(false);
 const loading = ref(false);
 const cancel = ref(false);
+const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
 
 const launchPreview = (stepper: QStepper) => {
   buttonDisable.value = true;
