@@ -51,8 +51,8 @@ class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     creator_user_id: str  # to be dynamically put in by FastAPI
     model_id: str  # to be generated on back-end
-    created: datetime
-    last_modified: datetime
+    created: str
+    last_modified: str
 
     class Config:
         """Pydantic config to allow creation of data model
@@ -116,12 +116,14 @@ class SearchModelResponse(BaseModel):
     total: int
 
 
-class deleteCard(BaseModel):
+class modelCard(BaseModel):
+    """General model for the composite key for models of id and creator id"""
 
     model_id: str
     creator_user_id: str
 
 
-class deleteCardPackage(BaseModel):
+class modelCardPackage(BaseModel):
+    """Model for compiling list of composite keys of the models"""
 
-    card_package: List[deleteCard]
+    card_package: List[modelCard]
