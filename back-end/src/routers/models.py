@@ -2,6 +2,11 @@ import datetime
 import json
 import re
 from typing import Dict, List, Optional, Tuple
+from colorama import Fore
+
+import zipfile
+import io
+from minio import Minio
 
 from bson import json_util
 from fastapi import (
@@ -11,6 +16,7 @@ from fastapi import (
     HTTPException,
     Query,
     status,
+    Response,
 )
 from fastapi.encoders import jsonable_encoder
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -23,6 +29,7 @@ from ..internal.dependencies.file_validator import ValidateFileUpload
 from ..internal.dependencies.minio_client import (
     get_presigned_url,
     minio_api_client,
+    get_data,
 )
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
@@ -38,7 +45,7 @@ from ..models.model import (
     ModelCardModelIn,
     SearchModelResponse,
     UpdateModelCardModel,
-    deleteCardPackage,
+    modelCardPackage,
 )
 
 CHUNK_SIZE = 1024
@@ -135,15 +142,11 @@ async def get_model_card_by_id(
             url: str = model["videoLocation"]
             url = url.removeprefix("s3://")
             bucket, object_name = url.split("/", 1)
-            model["videoLocation"] = get_presigned_url(
-                s3_client, object_name, bucket
-            )
+            model["videoLocation"] = get_presigned_url(s3_client, object_name, bucket)
     return model
 
 
-@router.get(
-    "/", response_model=SearchModelResponse, response_model_exclude_unset=True
-)
+@router.get("/", response_model=SearchModelResponse, response_model_exclude_unset=True)
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
@@ -153,9 +156,7 @@ async def search_cards(
     title: Optional[str] = Query(default=None),
     tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
-    frameworks: Optional[List[str]] = Query(
-        default=None, alias="frameworks[]"
-    ),
+    frameworks: Optional[List[str]] = Query(default=None, alias="frameworks[]"),
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
     creator_user_id_partial: Optional[str] = Query(
         default=None, alias="creatorUserIdPartial"
@@ -298,8 +299,8 @@ async def create_model_card_metadata(
             **card.dict(),
             creator_user_id=user.user_id or "unknown",
             model_id=uncased_to_snake_case(card.title),
-            last_modified=datetime.datetime.now(),
-            created=datetime.datetime.now(),
+            last_modified=str(datetime.datetime.now()),
+            created=str(datetime.datetime.now()),
         ),
         by_alias=True,  # Convert snake_case to camelCase
     )
@@ -354,17 +355,13 @@ async def update_model_card_metadata_by_id(
     )  # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
-    card_dict = {
-        k: v for k, v in card.dict(by_alias=True).items() if v is not None
-    }
+    card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
         card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
-        card_dict["performance"] = preprocess_html_post(
-            card_dict["performance"]
-        )
+        card_dict["performance"] = preprocess_html_post(card_dict["performance"])
     if "task" in card_dict:
         if card_dict["task"] == "Reinforcement Learning":
             card_dict["inferenceServiceName"] = None
@@ -372,7 +369,7 @@ async def update_model_card_metadata_by_id(
             card_dict["videoLocation"] = None
 
     if len(card_dict) > 0:
-        card_dict["lastModified"] = str(datetime.datetime.now())
+        card_dict["lastModified"] = datetime.datetime.now()
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
@@ -418,9 +415,7 @@ async def update_model_card_metadata_by_id(
         return existing_card
 
 
-@router.delete(
-    "/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT
-)
+@router.delete("/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_model_card_by_id(
     model_id: str,
     creator_user_id: str,
@@ -474,7 +469,7 @@ async def delete_model_card_by_id(
 
 @router.delete("/multi", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_multiple_model_cards(
-    card_package: deleteCardPackage,
+    card_package: modelCardPackage,
     tasks: BackgroundTasks,
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
@@ -482,7 +477,7 @@ async def delete_multiple_model_cards(
     """Delete multiple model cards by List of composite keys of Creator User ID and Model ID
 
     Args:
-        card_package (deleteCardPackage): List of Dictionaries containing models with composite ID identifiers to be removed
+        card_package (modelCardPackage): List of Dictionaries containing models with composite ID identifiers to be removed
         card (UpdateModelCardModel): Updated model card
         tasks (BackgroundTasks): Background tasks to run
         db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
@@ -524,3 +519,114 @@ async def delete_multiple_model_cards(
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     tasks.add_task(delete_orphan_images)  # Remove any related media
     tasks.add_task(delete_orphan_services)  # Remove any related services
+
+
+@router.post("/export", status_code=status.HTTP_200_OK)
+async def export_models(
+    card_package: modelCardPackage,
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
+    s3_client: Minio = Depends(minio_api_client),
+):
+
+    try:
+        if user.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have sufficient privilege to export models!",
+            )
+        else:
+            db, mongo_client = db
+            pkg = card_package.dict()["card_package"]
+
+            # Grab ZIP file from in-memory, make response with correct MIME-type
+
+            async with await mongo_client.start_session() as session:
+                async with session.start_transaction():
+                    zip_filename = "exports.zip"
+                    s2 = io.BytesIO()
+                    zf2 = zipfile.ZipFile(s2, "w")
+                    for x in pkg:
+                        existing_card = await db["models"].find_one(
+                            {
+                                "modelId": x["model_id"],
+                                "creatorUserId": x["creator_user_id"],
+                            }
+                        )
+                        subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}.zip'
+                        s = io.BytesIO()
+                        zf = zipfile.ZipFile(s, "w")
+                        dumped_JSON: str = json.dumps(
+                            existing_card,
+                            ensure_ascii=False,
+                            indent=4,
+                            sort_keys=True,
+                            default=str,
+                        )
+                        # Write the model card JSON data into the model ZIP file
+                        zf.writestr(
+                            f'{x["creator_user_id"]}-{x["model_id"]}.json',
+                            data=dumped_JSON,
+                        )
+                        if (
+                            existing_card["task"] == "Reinforcement Learning"
+                            and existing_card["videoLocation"] is not None
+                        ):
+                            try:
+                                url: str = existing_card["videoLocation"]
+                                url = url.removeprefix("s3://")
+                                bucket, object_name = url.split("/", 1)
+                                response = get_data(s3_client, object_name, bucket)
+                                file_extension = object_name.split(".")[1]
+                                zf.writestr(
+                                    f'{x["creator_user_id"]}-{x["model_id"]}.{file_extension}',
+                                    data=response.data,
+                                )
+                                response.close()
+                                response.release_conn()
+                            except:
+                                print(
+                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve video from bucket. Skipping...!"
+                                )
+                        else:
+                            try:
+                                existing_service = await db["services"].find_one(
+                                    {
+                                        "modelId": x["model_id"],
+                                        "creatorUserId": x["creator_user_id"],
+                                    }
+                                )
+                                dumped_JSON_service: str = json.dumps(
+                                    existing_service,
+                                    ensure_ascii=False,
+                                    indent=4,
+                                    sort_keys=True,
+                                    default=str,
+                                )
+                                # Write the service JSON data into the model ZIP file
+                                zf.writestr(
+                                    f'{x["creator_user_id"]}-{x["model_id"]}-service.json',
+                                    data=dumped_JSON_service,
+                                )
+                            except:
+                                print(
+                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve service info from database. Skipping...!"
+                                )
+                        zf.close()
+                        s.seek(0)
+                        zf2.writestr(subfile_name, data=s.read())
+
+                    zf2.close()
+
+            resp = Response(
+                s2.getvalue(),
+                media_type="application/x-zip-compressed",
+                headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
+            )
+            return resp
+    except Exception as err:
+        print(err)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Server ran into an unexpected error",
+        )
