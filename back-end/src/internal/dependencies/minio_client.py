@@ -1,6 +1,7 @@
 """Contains functions to connect to MinIO instance and upload data to it"""
 from io import BytesIO
 from typing import Optional
+import urllib3
 
 import minio
 from colorama import Fore
@@ -30,9 +31,7 @@ def minio_api_client() -> Optional[minio.Minio]:
         # create the bucket from env variables if not already created
         if not found_bucket:
             minio_client.make_bucket(bucket_name)
-            print(
-                f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created"
-            )
+            print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created")
         else:
             print(
                 f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' already exists"
@@ -44,9 +43,7 @@ def minio_api_client() -> Optional[minio.Minio]:
         )
 
 
-def get_presigned_url(
-    client: minio.Minio, object_name: str, bucket_name: str
-) -> str:
+def get_presigned_url(client: minio.Minio, object_name: str, bucket_name: str) -> str:
     """Get presigned URL to object in S3 bucket
 
     Args:
@@ -121,3 +118,25 @@ def upload_data(
 
     # NOTE: if bucket policy is not set to download, then this URL will not work
     return f"s3://{bucket_name}/{object_name}"
+
+
+def get_data(
+    client: minio.Minio,
+    object_name: str,
+    bucket_name: str,
+) -> urllib3.response.HTTPResponse:
+    """Retreives object from desired bucket and returns data as a response
+
+    Args:
+        client (minio.Minio): MinIO client
+        object_name (str): Filename of object
+        bucket_name (str): Bucket object is stored in
+
+    Returns:
+        response (urllib3.response.HTTPResponse): Response object containing data of object retrieved from bucket
+    """
+    response = client.get_object(
+        bucket_name=bucket_name,
+        object_name=object_name,
+    )
+    return response
