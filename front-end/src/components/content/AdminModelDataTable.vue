@@ -55,6 +55,7 @@
       v-model:selected="selected"
       selection="multiple"
       v-model:pagination="pagination"
+      wrap-cells
     >
       <template v-slot:top>
         <q-btn
@@ -119,6 +120,32 @@
           </q-input>
         </form>
       </template>
+
+      <template v-slot:body-cell-tags="props">
+        <q-td class="q-gutter-xs" :props="props">
+          <q-badge
+            color="secondary"
+            dense
+            rounded
+            v-for="x in props.value.split(', ')"
+            :key="x"
+            :label="x"
+          />
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-frameworks="props">
+        <q-td class="q-gutter-xs" :props="props">
+          <q-badge
+            color="tertiary"
+            dense
+            rounded
+            v-for="x in props.value.split(', ')"
+            :key="x"
+            :label="x"
+          />
+        </q-td>
+      </template>
     </q-table>
   </div>
 
@@ -138,7 +165,7 @@
               <q-avatar
                 color="primary"
                 text-color="white"
-                icon="tablet_android    "
+                icon="tablet_android"
               />
             </q-item-section>
 
@@ -177,13 +204,8 @@ import { QTable, QTableColumn, QTableProps, Notify } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import ModelCard from './ModelCard.vue';
-import {
-  FormOptionValue,
-  Pagination,
-  SearchFilter,
-  SortOption,
-} from './models';
+
+import { FormOptionValue, Pagination, SearchFilter } from './models';
 
 export interface ModelCardDataTableProps {
   rows?: ModelCardSummary[];
@@ -285,18 +307,10 @@ const columns: QTableColumn[] = [
   },
 
   {
-    name: 'description',
-    required: true,
-    label: 'Description',
-    field: 'description',
-    sortable: true,
-  },
-  {
     name: 'tags',
     required: true,
     label: 'Tags',
     field: 'tags',
-    sortable: true,
     format: (val) => val.join(', '),
   },
   {
@@ -304,7 +318,6 @@ const columns: QTableColumn[] = [
     required: true,
     label: 'Frameworks',
     field: 'frameworks',
-    sortable: true,
     format: (val) => val.join(', '),
   },
   {
