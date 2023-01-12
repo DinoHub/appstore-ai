@@ -176,17 +176,12 @@ const selectedVideo = ref();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 
-let currentData = {};
 
-modelStore.getModelById(userId, modelId).then((card) => {
-  Object.assign(currentData, card);
-});
 
 const replaceVideo = () => {
   uploadStore
     .replaceVideo(
       selectedVideo.value,
-      currentData.videoLocation,
       userId,
       modelId,
     )
