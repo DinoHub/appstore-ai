@@ -13,6 +13,7 @@ from ..internal.dependencies.minio_client import (
     remove_data,
     upload_data,
 )
+from ..internal.dependencies.mongo_client import get_db
 from ..models.buckets import VideoUploadResponse
 
 router = APIRouter(prefix="/buckets", tags=["buckets"])
@@ -78,10 +79,12 @@ def upload_video(
     # dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
-def replace_video(
+async def replace_video(
     new_video: UploadFile = Form(),
-    old_video_location: Optional[str] = Form(None),
+    userId: str = Form(),
+    modelId: str = Form(),
     s3_client: Minio = Depends(minio_api_client),
+    db=Depends(get_db),
 ) -> Dict[str, str]:
     """Replaces a video in the MinIO bucket
 
@@ -99,13 +102,28 @@ def replace_video(
     """
     try:
         # remove the old video inside the bucket
-        if old_video_location is not None:
-            video_location = old_video_location.replace(
-                f"{config.MINIO_API_HOST}/{config.MINIO_BUCKET_NAME}/", ""
-            )
-            remove_data(s3_client, video_location, config.MINIO_BUCKET_NAME)
-        else:
-            print("WARN:\t  No old video location provided")
+        db, mongo_client = db
+
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                existing_card = await db["models"].find_one(
+                    {
+                        "modelId": modelId,
+                        "creatorUserId": userId,
+                    }
+                )
+                if (
+                    existing_card["videoLocation"] is not None
+                    or existing_card["videoLocation"] is not ""
+                ):
+
+                    url: str = existing_card["videoLocation"]
+                    url = url.removeprefix("s3://")
+                    bucket, object_name = url.split("/", 1)
+                    print(object_name)
+                    remove_data(s3_client, object_name, bucket)
+                else:
+                    print("WARN:\t  No old video location provided")
 
         # upload the new video to the bucket
         path = upload_data(
