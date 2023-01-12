@@ -85,7 +85,7 @@ class ClearMLExperiment(ExperimentConnector):
                 artifactType=artifact.type,
                 name=name,
                 url=artifact.url,
-                timestamp=artifact.timestamp,
+                timestamp=str(artifact.timestamp),
                 framework=None,
             )
         return output
