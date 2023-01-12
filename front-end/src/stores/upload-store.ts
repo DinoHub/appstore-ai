@@ -41,15 +41,14 @@ export const useUploadStore = defineStore('users', {
     },
     async replaceVideo(
       videoFile: File,
-      currentVideoLocation: string,
       userId: string,
       modelId: string
     ): Promise<string> {
       const modelStore = useModelStore();
       const form = new FormData();
-      console.log(form);
       form.append('new_video', videoFile[0]);
-      form.append('old_video_location', currentVideoLocation);
+      form.append('userId', userId);
+      form.append('modelId', modelId);
       let videoLocation = '';
       await api
         .put('/buckets/video', form, {
