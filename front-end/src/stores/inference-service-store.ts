@@ -68,6 +68,13 @@ export const useInferenceServiceStore = defineStore('service', {
         }
         return Promise.reject('Unable to get status of service');
       } catch (error) {
+        // find out if its a 404
+        const errRes = error as AxiosError;
+        if (errRes.response?.status === 404) {
+          console.warn('Inference Engine Not Found');
+          return Promise.reject(404);
+        }
+        console.error(error);
         return Promise.reject('Unable to get status of service');
       }
     },
@@ -184,6 +191,12 @@ export const useInferenceServiceStore = defineStore('service', {
       try {
         await api.patch(`/engines/${serviceName}/scale/${replicas}`, {});
       } catch (error) {
+        Notify.create(
+          {
+            message: 'Failed to scale service. Error: ' + error,
+            color: 'negative',
+          }
+        )
         return Promise.reject('Unable to scale inference engine');
       }
     },
@@ -191,6 +204,12 @@ export const useInferenceServiceStore = defineStore('service', {
       try {
         await api.post(`/engines/${serviceName}/restore`, {});
       } catch (error) {
+        Notify.create(
+          {
+            message: 'Failed to restore service. Error: ' + error,
+            color: 'negative',
+          }
+        )
         return Promise.reject('Unable to restore inference engine');
       }
     },
