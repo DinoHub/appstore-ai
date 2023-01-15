@@ -90,7 +90,11 @@ export const useEditInferenceServiceStore = defineStore(
         const inferenceServiceStore = useInferenceServiceStore();
         // Remove any existing preview service
         if (this.previewServiceName) {
-          await inferenceServiceStore.deleteService(this.previewServiceName);
+          try {
+            await inferenceServiceStore.deleteService(this.previewServiceName);
+          } catch (error) {
+            console.error(error);
+          }
         }
         const { serviceName } = await inferenceServiceStore.updateService(
           this.serviceName,

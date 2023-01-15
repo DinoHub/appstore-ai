@@ -200,14 +200,14 @@ def get_inference_engine_service_status(
                     plural="services",
                     name=service_name,
                 )
-                status_conditions = result.status.condition
+                status_conditions = result["status"]["conditions"]
 
                 # Check if service is ready
                 for condition in status_conditions:
                     # if not ready return response
-                    if condition.status != "True":
+                    if condition["status"] != "True":
                         return_status.ready = False
-                        return_status.message += f"Message: {condition.message}\nReason: {condition.reason}"
+                        return_status.message += f"Message: {condition}"
                         break
                 # TODO: Check if pod can even be scheduled
             elif config.IE_SERVICE_TYPE == ServiceBackend.EMISSARY:
@@ -381,7 +381,7 @@ async def create_inference_engine_service(
                 service_template = template_env.get_template(
                     "knative/inference-engine-knative-service.yaml.j2"
                 )
-                service = safe_load(
+                service_render = safe_load(
                     service_template.render(
                         {
                             "engine_name": service_name,
@@ -403,7 +403,7 @@ async def create_inference_engine_service(
                     version="v1",
                     namespace=config.IE_NAMESPACE,
                     plural="services",
-                    body=service,
+                    body=service_render,
                 )
             elif service_backend == ServiceBackend.EMISSARY:
                 url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
@@ -571,7 +571,6 @@ async def delete_inference_engine_service(
                         )
                     elif service_type == ServiceBackend.EMISSARY:
                         # Delete service, mapping, and deployment
-                        # TODO: Test if this works
                         app_api = AppsV1Api(client)
                         core_api = CoreV1Api(client)
                         custom_api = CustomObjectsApi(client)

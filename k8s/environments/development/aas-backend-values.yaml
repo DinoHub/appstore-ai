@@ -32,7 +32,7 @@ service:
 
 inferenceServiceBackend:
   emissary: true
-  knative: false
+  knative: true
 
 ingress:
   enabled: true
