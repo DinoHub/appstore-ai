@@ -1,4 +1,5 @@
 """Endpoints for Inference Engine Services"""
+import asyncio
 import datetime
 from typing import Dict, Tuple
 from urllib.error import HTTPError
@@ -8,11 +9,13 @@ from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
+    Request,
     HTTPException,
     Path,
     status,
 )
 from fastapi.encoders import jsonable_encoder
+from sse_starlette.sse import EventSourceResponse
 from kubernetes.client import ApiClient, AppsV1Api, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -43,6 +46,59 @@ router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 # - [x] Scale up service to 1
 # - [x] Restore deleted service
 
+@router.get("/{service_name}/logs")
+async def get_inference_engine_service_logs(
+    service_name: str,
+    request: Request,
+    k8s_client: ApiClient = Depends(get_k8s_client),
+) -> EventSourceResponse:
+    """Get logs for an inference service
+
+    Args:
+        service_name (str): Name of the service
+        request (Request): FastAPI Request object
+        k8s_client (ApiClient, optional): K8S Client. Defaults to Depends(get_k8s_client).
+
+    Raises:
+        HTTPException: 404 Not Found if service does not exist
+        HTTPException: 500 Internal Server Error if there is an error getting the service logs
+
+    Returns:
+        EventSourceResponse: SSE response with logs
+    """
+    with k8s_client:
+        core_v1 = CoreV1Api(k8s_client)
+        # Get pod name
+        try:
+            pod = core_v1.list_namespaced_pod(
+                namespace=config.IE_NAMESPACE,
+                label_selector=f"app={service_name}",
+            )
+            if len(pod.items) == 0:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Service not found",
+                )
+            pod_name = pod.items[0].metadata.name
+        except K8sAPIException as err:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Error getting service logs: {err}",
+            ) from err
+
+        async def event_streamer():
+            while True:
+                # If the client disconnects, stop the stream
+                if await request.is_disconnected():
+                    break
+                logs = core_v1.read_namespaced_pod_log(
+                name=pod_name,
+                namespace=config.IE_NAMESPACE,
+                pretty=True
+            )
+                yield logs
+                await asyncio.sleep(5)
+        return EventSourceResponse(event_streamer())
 
 @router.patch("/{service_name}/scale/{replicas}")
 async def scale_inference_engine_deployments(
@@ -162,7 +218,11 @@ def get_inference_engine_service_status(
                 # TODO: Check if pod can even be scheduled
             elif config.IE_SERVICE_TYPE == ServiceBackend.EMISSARY:
                 api = AppsV1Api(client)
-
+                # Check that service exists
+                service_api = CoreV1Api(client)
+                service_api.read_namespaced_service(
+                    name=service_name, namespace=config.IE_NAMESPACE
+                )
                 # Get status
                 result = api.read_namespaced_deployment_status(
                     name=service_name + "-deployment",

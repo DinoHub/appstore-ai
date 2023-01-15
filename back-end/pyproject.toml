@@ -25,6 +25,7 @@ lxml = "^4.9.1"
 bs4 = "^0.0.1"
 minio = "^7.1.12"
 colorama = "^0.4.6"
+sse-starlette = "^1.2.1"
 
 [tool.poetry.scripts]
 boot = "main:start"
