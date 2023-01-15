@@ -1,4 +1,3 @@
-gradio==2.9.4
 huggingface-hub==0.11.0
 sentencepiece==0.1.97
 tokenizers==0.13.2
