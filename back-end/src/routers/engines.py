@@ -40,12 +40,6 @@ from ..models.iam import TokenData, UserRoles
 
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
 
-# TODO: Endpoints to add
-# - [ ] Service logs (websocket)
-# - [x] Scale down service to 0
-# - [x] Scale up service to 1
-# - [x] Restore deleted service
-
 @router.get("/{service_name}/logs")
 async def get_inference_engine_service_logs(
     service_name: str,
@@ -554,9 +548,13 @@ async def delete_inference_engine_service(
                     detail="User does not have owner access to KService",
                 )
             # Get the service type
-            service_type: ServiceBackend = existing_service.get(
-                "backend", config.IE_SERVICE_TYPE
-            )
+            try:
+                service_type: ServiceBackend = existing_service.get(
+                    "backend", config.IE_SERVICE_TYPE
+                )
+            except AttributeError:
+                print("Existing service not found")
+                service_type = config.IE_SERVICE_TYPE
             await db["services"].delete_one({"serviceName": service_name})
 
             with k8s_client as client:
@@ -577,10 +575,6 @@ async def delete_inference_engine_service(
                         app_api = AppsV1Api(client)
                         core_api = CoreV1Api(client)
                         custom_api = CustomObjectsApi(client)
-                        app_api.delete_namespaced_deployment(
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name + "-deployment",
-                        )
                         core_api.delete_namespaced_service(
                             namespace=config.IE_NAMESPACE, name=service_name
                         )
@@ -591,20 +585,21 @@ async def delete_inference_engine_service(
                             namespace=config.IE_NAMESPACE,
                             name=service_name + "-ingress",
                         )
+                        app_api.delete_namespaced_deployment(
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name + "-deployment",
+                        )
                 except (K8sAPIException, HTTPError) as err:
-                    session.abort_transaction()  # if failed to remove in k8s, rollback db change
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"Error when deleting inference engine: {err}",
                     ) from err
                 except TypeError as err:
-                    session.abort_transaction()
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail="API has no access to the K8S cluster",
                     ) from err
                 except Exception as err:
-                    session.abort_transaction()
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                         detail=f"Error when deleting inference engine: {err}",
