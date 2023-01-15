@@ -1,3 +1,4 @@
+from subprocess import run, CalledProcessError
 from pathlib import Path
 from shutil import copytree, rmtree
 
@@ -28,3 +29,4 @@ if task_folder.exists():
 
 # Remove examples folder
 rmtree("examples", ignore_errors=True)
+

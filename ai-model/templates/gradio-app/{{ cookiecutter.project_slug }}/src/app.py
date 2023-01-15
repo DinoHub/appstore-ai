@@ -14,6 +14,13 @@ if __name__ == "__main__":
         description="{{ cookiecutter.short_description }}",
         examples=examples,
     )
+    {% if cookiecutter.gradio_version == "v2.9.4" %}
     app.launch(
         server_name="0.0.0.0", server_port=config.port, enable_queue=True
     )
+    {% else %}
+    app.launch(
+        server_name="0.0.0.0",
+        server_port=config.port
+    ).queue()
+    {% endif %}

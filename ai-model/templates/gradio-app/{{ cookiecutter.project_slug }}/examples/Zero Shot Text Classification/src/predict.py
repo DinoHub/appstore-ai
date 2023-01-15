@@ -1,14 +1,19 @@
 import logging
 from typing import Dict, Optional
 
+{% if cookiecutter.gradio_version == "v2.9.4" %}
 import gradio.inputs as gr_inputs
 import gradio.outputs as gr_outputs
+{% else %}
+import gradio as gr
+{% endif %}
 import numpy as np
 import tritonclient.grpc as tr
 from config import config
 from transformers import XLMRobertaTokenizer
 from triton_utils import get_client, load_model, unload_model
 
+{% if cookiecutter.gradio_version == "v2.9.4" %}
 inputs = [
     gr_inputs.Textbox(placeholder="Text to classify", label="Text"),
     gr_inputs.Textbox(
@@ -16,6 +21,15 @@ inputs = [
     ),
 ]
 outputs = gr_outputs.Label(num_top_classes=config.top_k)
+{% else %}
+inputs = [
+    gr.Text(placeholder="Text to classify", label="Text"),
+    gr.Text(
+        placeholder="Possible class names", label="Comma Separated Labels"
+    ),
+]
+outputs = gr.Label(num_top_classes=config.top_k)
+{% endif %}
 examples = [["Hello world", "greeting,insult"]]
 
 tokenizer = XLMRobertaTokenizer.from_pretrained(
