@@ -17,7 +17,7 @@ h11==0.14.0
 idna==3.4
 multidict==6.0.2
 numpy==1.23.3
-Pillow==9.2.0
+Pillow==9.3.0
 protobuf==3.19.5
 pydantic==1.10.2
 python-multipart==0.0.5
