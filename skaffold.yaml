@@ -103,12 +103,12 @@ manifests: {}
 deploy:
   helm:
     releases:
-      - name: aas-knative-backend
-        chartPath: k8s/charts/aas-knative-backend-private
-        namespace: inference-engine
-        upgradeOnChange: false
-        valuesFiles:
-          - k8s/environments/development/aas-knative-backend-values.yaml
+      # - name: aas-knative-backend
+      #   chartPath: k8s/charts/aas-knative-backend-private
+      #   namespace: inference-engine
+      #   upgradeOnChange: false
+      #   valuesFiles:
+      #     - k8s/environments/development/aas-knative-backend-values.yaml
       - name: aas-frontend
         chartPath: k8s/charts/aas-frontend
         namespace: ai-appstore
