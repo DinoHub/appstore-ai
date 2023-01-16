@@ -76,7 +76,7 @@
           color="primary"
           v-if="selected.length > 0"
           :label="`Export (${selected.length})`"
-          @click="exportModels"
+          @click="exportPopup = true"
         />
 
         <q-space />
@@ -193,6 +193,55 @@
           outline
           v-close-popup
           @click="deleteModels"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <q-dialog v-model="exportPopup" persistent>
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Export Models</div>
+        <q-list>
+          <q-item-label header class="text-black text-bold q-pl-none"
+            >Exporting {{ selected.length }} models(s):</q-item-label
+          ><q-item
+            v-for="x in selected"
+            :key="x.creatorUserId"
+            class="q-pl-none q-pt-none"
+          >
+            <q-item-section avatar>
+              <q-avatar
+                color="primary"
+                text-color="white"
+                icon="tablet_android"
+              />
+            </q-item-section>
+
+            <q-item-section>
+              {{ x.title }} {{ ` (${x.creatorUserId})` }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          rounded
+          outline
+          label="Cancel"
+          padding="sm md"
+          color="error"
+          v-close-popup
+        />
+        <q-space></q-space>
+        <q-btn
+          rounded
+          label="Confirm"
+          color="primary"
+          padding="sm md"
+          outline
+          v-close-popup
+          @click="exportModels"
         />
       </q-card-actions>
     </q-card>
