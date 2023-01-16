@@ -278,5 +278,25 @@ export const useModelStore = defineStore('model', {
         console.error(error);
       }
     },
+    async exportModels(models: Array<any>) {
+      try {
+        const exportModels = models.map(({ modelId, creatorUserId }) => {
+          return { model_id: modelId, creator_user_id: creatorUserId };
+        });
+        console.log(exportModels);
+        const response = await api.post(
+          `models/export`,
+          {
+            card_package: exportModels,
+          },
+          {
+            responseType: 'arraybuffer',
+          }
+        );
+        return response;
+      } catch (error) {
+        console.error(error);
+      }
+    },
   },
 });
