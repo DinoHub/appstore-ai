@@ -50,7 +50,7 @@ tags_metadata = [
         "description": "APIs to allow for upload and retrieval of media from S3 Storage (MinIO)",
     },
 ]
-app = FastAPI(
+fastapi_app = FastAPI(
     title="Model Zoo",
     description=description,
     openapi_tags=tags_metadata,
@@ -58,69 +58,85 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=list(
-        set(
-            [
-                "http://localhost:9000",
-                "http://127.0.0.1:9000",
-                "http://172.20.255.203",
-                "http://appstore.ai",
-                (config.FRONTEND_HOST if config else ""),
-            ]
-        )
-    ),
-    allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"],
+fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app = CORSMiddleware(
+    fastapi_app,
+    allow_origins=[config.FRONTEND_HOST, "http://localhost:9000"],
     allow_credentials=True,
-    allow_headers=[
-        "Content-Type",
-        "Set-Cookie",
-        "Access-Control-Allow-Headers",
-        "Authorization",
-        "Access-Control-Allow-Origin",
-    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+# fastapi_app.add_middleware(
+#     CORSMiddleware,
+#     allow_origins=list(
+#         set(
+#             [
+#                 # "http://localhost:9000",
+#                 # "http://127.0.0.1:9000",
+#                 # "http://172.20.255.203",
+#                 # "http://appstore.ai",
+#                 (config.FRONTEND_HOST if config else ""),
+#             ]
+#         )
+#     ),
+#     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"],
+#     allow_credentials=True,
+#     allow_headers=[
+#         "Content-Type",
+#         "Set-Cookie",
+#         "Access-Control-Allow-Headers",
+#         "Authorization",
+#         "Access-Control-Allow-Origin",
+#     ],
+# )
 
 
-@app.get("/docs", include_in_schema=False)
+@app.app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - Swagger UI",
-        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
+        openapi_url=fastapi_app.openapi_url,
+        title=fastapi_app.title + " - Swagger UI",
+        oauth2_redirect_url=fastapi_app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="/static/swagger-ui-bundle.js",
         swagger_css_url="/static/swagger-ui.css",
     )
 
 
-@app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
+@app.app.get(
+    fastapi_app.swagger_ui_oauth2_redirect_url, include_in_schema=False
+)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
 
-@app.get("/redoc", include_in_schema=False)
+@app.app.get("/redoc", include_in_schema=False)
 async def redoc_html():
     return get_redoc_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - ReDoc",
+        openapi_url=app.app.openapi_url,
+        title=fastapi_app.title + " - ReDoc",
         redoc_js_url="/static/redoc.standalone.js",
     )
 
 
-app.include_router(auth.router)
-app.include_router(buckets.router, dependencies=[Depends(get_current_user)])
-app.include_router(models.router, dependencies=[Depends(get_current_user)])
-app.include_router(
+app.app.include_router(auth.router)
+app.app.include_router(
+    buckets.router, dependencies=[Depends(get_current_user)]
+)
+app.app.include_router(models.router, dependencies=[Depends(get_current_user)])
+app.app.include_router(
     experiments.router, dependencies=[Depends(get_current_user)]
 )
-app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
-app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
-app.include_router(engines.router, dependencies=[Depends(get_current_user)])
+app.app.include_router(
+    datasets.router, dependencies=[Depends(get_current_user)]
+)
+app.app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
+app.app.include_router(
+    engines.router, dependencies=[Depends(get_current_user)]
+)
 
 
-@app.get("/")
+@app.app.get("/")
 def root():
     """Return a simple message to test if the server is running.
 

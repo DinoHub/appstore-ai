@@ -40,10 +40,18 @@ spec:
           env:
             - name: ENV_STATE
               value: {{ .Values.environment }}
+            {{- if .Values.certs }}
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/config/ca.crt
+            {{- end }}
           ports:
             - name: http
               containerPort: {{ .Values.probe.containerPort }}
               protocol: TCP
+          volumeMounts:
+            - name: config-certs
+              mountPath: /etc/config
+              readOnly: true
           livenessProbe:
             httpGet:
               path: /
@@ -71,3 +79,11 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+        - name: config-certs
+          configMap:
+            name: config-certs
+            optional: true
+            items:
+              - key: CA_CERT
+                path: ca.crt

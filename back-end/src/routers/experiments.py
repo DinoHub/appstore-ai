@@ -1,3 +1,4 @@
+import logging
 from typing import Dict
 
 from clearml.backend_api.session.client import APIClient
@@ -5,13 +6,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..internal.dependencies.clearml_client import clearml_api_client
 from ..internal.experiment_connector import Experiment
-from ..models.experiment import ClonePackageModel, Connector, ExperimentResponse
+from ..models.experiment import (
+    ClonePackageModel,
+    Connector,
+    ExperimentResponse,
+)
 
 router = APIRouter(prefix="/experiments", tags=["Experiments"])
 
 
 @router.get("/{exp_id}", response_model=ExperimentResponse)
-async def get_experiment(
+def get_experiment(
     exp_id: str,
     connector: Connector,
     return_plots: bool = True,
@@ -62,11 +67,13 @@ async def get_experiment(
 
         return data
     except ValueError as err:
+        logging.error(err)
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Experiment with ID {exp_id} not found.",
         ) from err
     except Exception as err:
+        logging.error(err)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error getting experiment with ID {exp_id}.",
@@ -74,7 +81,7 @@ async def get_experiment(
 
 
 @router.post("/clone")
-async def clone_experiment(
+def clone_experiment(
     item: ClonePackageModel,
     connector: Connector,
 ) -> Dict:
@@ -102,7 +109,7 @@ async def clone_experiment(
 
 
 @router.put("/config/{experiment_id}")
-async def edit_experiment_config(
+def edit_experiment_config(
     experiment_id: str,
     config: Dict,
     clearml_client: APIClient = Depends(clearml_api_client),
