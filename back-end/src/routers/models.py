@@ -16,7 +16,6 @@ from fastapi import (
     HTTPException,
     Query,
     status,
-    Response,
 )
 from fastapi.encoders import jsonable_encoder
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
@@ -30,7 +29,9 @@ from ..internal.dependencies.minio_client import (
     get_presigned_url,
     minio_api_client,
     get_data,
+    upload_data,
 )
+
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
     preprocess_html_get,
@@ -369,7 +370,7 @@ async def update_model_card_metadata_by_id(
             card_dict["videoLocation"] = None
 
     if len(card_dict) > 0:
-        card_dict["lastModified"] = datetime.datetime.now()
+        card_dict["lastModified"] = str(datetime.datetime.now())
         # perform transaction to ensure we can roll back changes
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
@@ -458,6 +459,8 @@ async def delete_model_card_by_id(
                     {"modelId": model_id, "creatorUserId": creator_user_id}
                 )
     except Exception as err:
+        print("failed")
+        print("Error: ", err)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Removal failed",
@@ -521,7 +524,7 @@ async def delete_multiple_model_cards(
     tasks.add_task(delete_orphan_services)  # Remove any related services
 
 
-@router.post("/export", status_code=status.HTTP_200_OK)
+@router.post("/export", status_code=status.HTTP_204_NO_CONTENT)
 async def export_models(
     card_package: modelCardPackage,
     db=Depends(get_db),
@@ -608,6 +611,7 @@ async def export_models(
                                     f'{x["creator_user_id"]}-{x["model_id"]}-service.json',
                                     data=dumped_JSON_service,
                                 )
+
                             except:
                                 print(
                                     f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve service info from database. Skipping...!"
@@ -617,13 +621,16 @@ async def export_models(
                         zf2.writestr(subfile_name, data=s.read())
 
                     zf2.close()
-
-            resp = Response(
+            BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
+            url = upload_data(
+                s3_client,
                 s2.getvalue(),
-                media_type="application/x-zip-compressed",
-                headers={"Content-Disposition": f"attachment;filename={zip_filename}"},
+                f"exports/{datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}/{zip_filename}",
+                BUCKET_NAME,
+                "application/x-zip-compressed",
             )
-            return resp
+            print(url)
+            return
     except Exception as err:
         print(err)
         raise HTTPException(
