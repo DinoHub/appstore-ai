@@ -45,6 +45,8 @@ async def get_inference_engine_service_logs(
     service_name: str,
     request: Request,
     k8s_client: ApiClient = Depends(get_k8s_client),
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
 ) -> EventSourceResponse:
     """Get logs for an inference service
 
@@ -60,6 +62,19 @@ async def get_inference_engine_service_logs(
     Returns:
         EventSourceResponse: SSE response with logs
     """
+    db, _ = db
+    existing_service = await db["services"].find_one(
+        {"serviceName": service_name}
+    )
+    if (
+        existing_service is not None
+        and existing_service["ownerId"] != user.user_id
+        and user.role != UserRoles.admin
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User does not have owner access to KService",
+        )
     with k8s_client:
         core_v1 = CoreV1Api(k8s_client)
         # Get pod name
@@ -122,21 +137,23 @@ async def scale_inference_engine_deployments(
                 detail="Service not found",
             )
         # Scale deployment
-        try:
-            apps_v1.patch_namespaced_deployment_scale(
-                name=service_name + "-deployment",
-                namespace=config.IE_NAMESPACE,
-                body={"spec": {"replicas": replicas}},
-            )
-            return {
-                "message": "Deployment scaled successfully",
-                "replicas": replicas,
-            }
-        except K8sAPIException as err:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Error scaling deployment: {err}",
-            ) from err
+        # Check type of service
+        if service["backend"] == ServiceBackend.EMISSARY:
+            try:
+                apps_v1.patch_namespaced_deployment_scale(
+                    name=service_name + "-deployment",
+                    namespace=config.IE_NAMESPACE,
+                    body={"spec": {"replicas": replicas}},
+                )
+                return {
+                    "message": "Deployment scaled successfully",
+                    "replicas": replicas,
+                }
+            except K8sAPIException as err:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Error scaling deployment: {err}",
+                ) from err
 
 
 @router.get("/{service_name}", response_model=InferenceEngineService)
@@ -167,8 +184,9 @@ async def get_inference_engine_service(
 
 
 @router.get("/{service_name}/status", response_model=InferenceServiceStatus)
-def get_inference_engine_service_status(
-    service_name: str, k8s_client: ApiClient = Depends(get_k8s_client)
+async def get_inference_engine_service_status(
+    service_name: str, k8s_client: ApiClient = Depends(get_k8s_client),
+    db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ) -> Dict:
     """Get status of an inference service. This is typically
     used to give liveness/readiness probes for the service.
@@ -185,13 +203,20 @@ def get_inference_engine_service_status(
         Dict: Service status
     """
     # Sync endpoint to allow for concurrent request
+    db, _ = db
     try:
         return_status = InferenceServiceStatus(
             service_name=service_name,
         )
 
+        service = await db["services"].find_one({"serviceName": service_name})
+        # Get service backend type
+        if "backend" in service:
+            service_backend =  service["backend"]
+        else:
+            service_backend = config.IE_SERVICE_TYPE
         with k8s_client as client:
-            if config.IE_SERVICE_TYPE == ServiceBackend.KNATIVE:
+            if service_backend == ServiceBackend.KNATIVE:
                 api = CustomObjectsApi(client)
                 result = api.get_namespaced_custom_object(
                     group="serving.knative.dev",
@@ -210,7 +235,7 @@ def get_inference_engine_service_status(
                         return_status.message += f"Message: {condition}"
                         break
                 # TODO: Check if pod can even be scheduled
-            elif config.IE_SERVICE_TYPE == ServiceBackend.EMISSARY:
+            elif service_backend == ServiceBackend.EMISSARY:
                 api = AppsV1Api(client)
                 # Check that service exists
                 service_api = CoreV1Api(client)
@@ -549,9 +574,7 @@ async def delete_inference_engine_service(
                 )
             # Get the service type
             try:
-                service_type: ServiceBackend = existing_service.get(
-                    "backend", config.IE_SERVICE_TYPE
-                )
+                service_type: ServiceBackend = existing_service["backend"]
             except AttributeError:
                 print("Existing service not found")
                 service_type = config.IE_SERVICE_TYPE
