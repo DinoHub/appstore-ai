@@ -78,6 +78,7 @@
         done-editable
       >
         <gradio-frame
+          debug-mode
           :v-show="editInferenceServiceStore.previewServiceUrl"
           :url="editInferenceServiceStore.previewServiceUrl ?? ''"
           :status="editInferenceServiceStore.previewServiceStatus ?? undefined"

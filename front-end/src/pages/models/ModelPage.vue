@@ -88,6 +88,7 @@
               <gradio-frame
                 :url="inferenceUrl ?? ''"
                 :status="inferenceStatus"
+                :debug-mode="isModelOwner"
                 v-if="inferenceStatus !== undefined"
               ></gradio-frame>
               <q-card v-else>

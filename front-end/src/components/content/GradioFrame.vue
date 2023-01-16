@@ -29,7 +29,7 @@
             <q-item v-else v-close-popup clickable @click="scaleUp"
               ><q-item-section>Request New Instance</q-item-section>
             </q-item>
-            <q-item clickable @click="showLogs = true">
+            <q-item v-if="props.debugMode" clickable @click="showLogs = true">
               <q-item-section>View Logs</q-item-section>
             </q-item>
           </q-menu>
@@ -98,6 +98,7 @@ import { useRouter } from 'vue-router';
 interface GradioFrameProps {
   url: string;
   dark?: boolean;
+  debugMode?: boolean;
   status?: InferenceServiceStatus;
 }
 
@@ -118,6 +119,7 @@ const iframeUrl: ComputedRef<string | undefined> = computed(() => {
 const serviceInstanceAvailable = computed(() => {
   return (props.status?.expectedReplicas ?? 0) > 0;
 });
+
 
 const scaleUp = () => {
   if (props.status?.serviceName) {

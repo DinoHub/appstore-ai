@@ -559,6 +559,7 @@
         >
           <div class="col-5">
             <gradio-frame
+              debug-mode
               class="shadow-2"
               :v-show="creationStore.previewServiceUrl"
               :url="creationStore.previewServiceUrl ?? ''"
