@@ -5,6 +5,6 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 # Cache model
 ADD ./scripts/save-huggingface-cache.py ./scripts/save-huggingface-cache.py
-RUN python ./scripts/save-huggingface-cache.py -m "joeddav/xlm-roberta-large-xnli" -t  
+RUN python ./scripts/save-huggingface-cache.py -m "joeddav/xlm-roberta-large-xnli" 
 COPY . .
 CMD ["python", "src/app.py"]

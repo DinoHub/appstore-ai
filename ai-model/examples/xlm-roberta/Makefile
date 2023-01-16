@@ -1,4 +1,4 @@
 build:
-	docker build . -t xlm-roberta:gradio-v2.9.4
+	docker build . -t xlm-roberta:1.0.0
 run:
-	docker run -rm it xlm-roberta:gradio-v2.9.4
+	docker run --rm -it -p 8080:8080 xlm-roberta:1.0.0
