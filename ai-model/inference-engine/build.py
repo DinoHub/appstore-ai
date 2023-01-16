@@ -13,6 +13,7 @@ def build_images(
     gradio_version: List[str],
     cuda_version: List[str],
     cudnn_version: List[str],
+    skip_push: bool,
 ):
     build_args = [python_version, cuda_version, cudnn_version, gradio_version]
     combinations = list(product(*build_args))
@@ -67,7 +68,8 @@ def build_images(
             try:
 
                 subprocess.run(tag_command, check=True, shell=True)
-                subprocess.run(push_command, check=True, shell=True)
+                if not skip_push:
+                    subprocess.run(push_command, check=True, shell=True)
             except subprocess.CalledProcessError as err:
                 print(f"Error pushing image for {args} to {repo}: {err}")
 
@@ -108,6 +110,11 @@ if __name__ == "__main__":
         help="List of possible CUDNN versions",
         default=["8.6"]
     )
+    parser.add_argument(
+        "--skip_push",
+        action='store_true',
+        default=False
+    )
     args = parser.parse_args()
     # Call the build_and_push function with the command line arguments
     build_images(
@@ -118,4 +125,5 @@ if __name__ == "__main__":
         args.gradio_version,
         args.cuda_version,
         args.cudnn_version,
+        args.skip_push
     )
