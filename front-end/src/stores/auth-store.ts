@@ -126,6 +126,11 @@ export const useAuthStore = defineStore('auth', {
         localStorage.removeItem('creationStore');
         console.error(err);
         this.logout();
+        Notify.create({
+          type: 'negative',
+          message: 'Invalid tokens. Unable to refresh.',
+        });
+        return Promise.reject(err);
       }
     },
   },

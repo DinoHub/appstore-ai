@@ -74,7 +74,7 @@ module.exports = configure(function (ctx) {
       env: {
         // if not set in docker build,
         // will use value from .env file
-        API: ctx.dev ? 'http://localhost:8080' : process.env.BACKEND_URL,
+        API: ctx.dev ? 'http://localhost:7070' : process.env.BACKEND_URL,
       },
       // rawDefine: {}
       // ignorePublicFolder: true,

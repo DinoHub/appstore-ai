@@ -5,8 +5,8 @@ from bs4 import BeautifulSoup
 from minio.deleteobjects import DeleteObject
 
 from ...config.config import config
-from ..dependencies.mongo_client import get_db
 from ..dependencies.minio_client import minio_api_client
+from ..dependencies.mongo_client import get_db
 
 
 async def delete_orphan_images():
@@ -34,7 +34,7 @@ async def delete_orphan_images():
 
     # From markdown and performance, extract all image tags
     image_sources: Set[str] = set()
-    prefix = f"{config.MINIO_API_HOST}/{bucket_name}/"
+    prefix = f"s3://{bucket_name}/"
 
     for card in model_cards:
         for field in ("markdown", "performance"):

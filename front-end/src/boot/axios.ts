@@ -25,21 +25,18 @@ const api = axios.create({
 api.interceptors.response.use(
   (response) => {
     // If request succeeds, reset indicator
-    Cookies.remove('requestRetry');
     return response;
   },
   async (error) => {
     const originalRequest = error.config;
-    if (error.response?.status === 401 && !Cookies.get('requestRetry')) {
-      // Set indicator to prevent infinite loop
-      Cookies.set('requestRetry', 'true');
-      // get refresh token
+    if (error.response?.status === 401) {
       const authStore = useAuthStore();
+
       await authStore.refresh();
       return api(originalRequest);
     }
     return Promise.reject(error);
-  },
+  }
 );
 
 export default boot(({ app }) => {

@@ -1,0 +1,16 @@
+{
+  "project_name": "Inference Service",
+  "project_slug": "{{ cookiecutter.project_name | slugify }}",
+  "short_description": "Inference service for AI App Store",
+  "version": "1.0.0",
+  "gradio_version" : ["2.9.4", "3.16.1"],
+  "hardware": ["cpu", "cuda11.8-cudnn8.6"],
+  "inference_backend": ["None", "Triton"],
+  "example_task": [
+    "None",
+    "Image Classification",
+    "Zero Shot Text Classification",
+    "YOLOv4"
+  ],
+  "python_version": ["3.9"]
+}

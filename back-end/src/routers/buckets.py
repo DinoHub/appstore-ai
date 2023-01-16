@@ -36,7 +36,7 @@ video_validator = ValidateFileUpload(
 @router.post(
     "/video",
     status_code=status.HTTP_200_OK,
-    #dependencies=[Depends(video_validator)],
+    # dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
 def upload_video(
@@ -75,7 +75,7 @@ def upload_video(
 @router.put(
     "/video",
     status_code=status.HTTP_200_OK,
-    #dependencies=[Depends(video_validator)],
+    # dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
 def replace_video(

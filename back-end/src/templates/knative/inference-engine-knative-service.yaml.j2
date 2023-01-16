@@ -20,6 +20,9 @@ spec:
               value: {{ value }}
           {% endfor %}
           {% endif %}
+          resources:
+            limits:
+              nvidia.com/gpu: {{ num_gpus if num_gpus else 0 }}
           # {% if resource_limits %}
           # resources:
           #   limits:

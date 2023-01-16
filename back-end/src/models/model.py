@@ -111,5 +111,17 @@ class GetFilterResponseModel(BaseModel):
 
 class SearchModelResponse(BaseModel):
     """Response model for searching model cards."""
+
     results: List
     total: int
+
+
+class deleteCard(BaseModel):
+
+    model_id: str
+    creator_user_id: str
+
+
+class deleteCardPackage(BaseModel):
+
+    card_package: List[deleteCard]

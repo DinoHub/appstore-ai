@@ -30,6 +30,7 @@ class GlobalConfig(BaseSettings):
     # General Settings
     FRONTEND_HOST: str = Field(default="http://localhost:9000")
     MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=10)
+    SECURE_COOKIES: bool = Field(default=False)  # set to True if site is HTTPS
 
     # Authentication Settings
     ALGORITHM: str = Field(default="HS256")
@@ -55,7 +56,7 @@ class GlobalConfig(BaseSettings):
 
     # Kubernetes and Inference Service Settings
     IE_NAMESPACE: Optional[str] = None
-    IE_SERVICE_TYPE: ServiceBackend = Field(default=ServiceBackend.emissary)
+    IE_SERVICE_TYPE: ServiceBackend = Field(default=ServiceBackend.EMISSARY)
     IE_DEFAULT_PROTOCOL: str = Field(default="http")
     IE_DOMAIN: Optional[str] = None
     IE_INGRESS_NAME: Optional[str] = None  # TODO: Integrate this

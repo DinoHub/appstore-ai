@@ -1,6 +1,7 @@
 import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
 import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
 import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
+import AdminModelsPage from 'src/pages/admin/AdminModelsPage.vue';
 import CreateModel from 'src/pages/models/ModelCreate.vue';
 import DashboardLayout from 'src/layouts/DashboardLayout.vue';
 import DashboardPage from 'src/pages/DashboardPage.vue';
@@ -64,7 +65,22 @@ const routes: RouteRecordRaw[] = [
             auth.logout();
             Notify.create({
               type: 'warning',
-              position: 'top',
+              message: 'This account does not have sufficient privileges',
+            });
+            return '/login/admin';
+          }
+        },
+      },
+      {
+        path: 'models',
+        name: 'Admin Models Check Page',
+        component: AdminModelsPage,
+        beforeEnter: () => {
+          const auth = useAuthStore();
+          if (auth.user?.role != 'admin') {
+            auth.logout();
+            Notify.create({
+              type: 'warning',
               message: 'This account does not have sufficient privileges',
             });
             return '/login/admin';

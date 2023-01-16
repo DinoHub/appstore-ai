@@ -15,6 +15,7 @@ class CsrfSettings(BaseModel):
     """Cross-site request forgery protection config"""
 
     secret_key: str = config.SECRET_KEY
+    cookie_secure: bool = config.SECURE_COOKIES
 
 
 # NOTE: Should this be moved to internal/auth.py?
@@ -41,9 +42,7 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         flows = OAuthFlowsModel(
             password=OAuthFlowPassword(tokenUrl=tokenUrl, scopes=scopes)
         )
-        super().__init__(
-            flows=flows, scheme_name=scheme_name, auto_error=auto_error
-        )
+        super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
     async def __call__(self, request: Request) -> Optional[str]:
         """Intercept request and check for access token in cookie

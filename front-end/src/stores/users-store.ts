@@ -2,6 +2,7 @@ import { api } from 'src/boot/axios';
 import { AxiosError } from 'axios';
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
+import { Console } from 'console';
 
 export interface CreateUser {
   name: string;
@@ -121,7 +122,8 @@ export const useUsersStore = defineStore('users', {
       } catch (error) {
         const errRes = error as AxiosError;
         Notify.create({
-          message: 'Error occurred while retrieving users. Ensure values have been input correctly.',
+          message:
+            'Error occurred while retrieving users. Ensure values have been input correctly.',
           color: 'negative',
           icon: 'error',
         });
@@ -137,15 +139,14 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: `${removeUsers.length} user(s) have been removed from database`,
         });
       } catch (err) {
         console.log(err);
         Notify.create({
-          message: 'Error occurred while removing user(s). Ensure values have been input correctly.',
+          message:
+            'Error occurred while removing user(s). Ensure values have been input correctly.',
           type: 'negative',
-          position: 'top',
         });
       }
     },
@@ -158,15 +159,14 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: `${editUsersMulti.length} users edit request completed successfully`,
         });
       } catch (err) {
         console.log(err);
         Notify.create({
-          message: 'Error occurred while send request to edit users. Ensure values have been input correctly.',
+          message:
+            'Error occurred while send request to edit users. Ensure values have been input correctly.',
           type: 'negative',
-          position: 'top',
         });
       }
     },
@@ -193,18 +193,18 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: 'Successfully edited user',
         });
       } catch (err) {
         Notify.create({
-          message: 'Error occurred while editing user. Ensure values have been input correctly.',
+          message:
+            'Error occurred while editing user. Ensure values have been input correctly.',
           type: 'negative',
-          position: 'top',
         });
       }
     },
     async createUser(
+      userId: string,
       name: string,
       adminPriv: string,
       password: string,
@@ -218,7 +218,7 @@ export const useUsersStore = defineStore('users', {
           priv = false;
         }
         await api.post('iam/add', {
-          user_id: '',
+          user_id: userId.trim(),
           name: name,
           password: password,
           password_confirm: confirmPassword,
@@ -226,16 +226,24 @@ export const useUsersStore = defineStore('users', {
         });
         Notify.create({
           type: 'positive',
-          position: 'top',
           message: 'Successfully created user',
         });
       } catch (err) {
-        Notify.create({
-          message: 'Error occurred while creating user. Ensure values have been input correctly.',
-          color: 'negative',
-          position: 'top',
-          icon: 'error',
-        });
+        if (err.response.status == 409) {
+          Notify.create({
+            type: 'warning',
+            message: 'The user ID already exists. Please enter a new one.',
+          });
+          throw new Error();
+        } else {
+          Notify.create({
+            message:
+              'Error occurred while creating user. Ensure values have been input correctly.',
+            color: 'negative',
+            icon: 'error',
+          });
+          throw new Error();
+        }
       }
     },
   },

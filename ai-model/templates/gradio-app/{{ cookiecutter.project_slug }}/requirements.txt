@@ -1,0 +1,4 @@
+# Put any extra dependencies here
+{% if cookiecutter.inference_backend == "Triton" %}
+tritonclient[all]>=2.29.0
+{% endif %}

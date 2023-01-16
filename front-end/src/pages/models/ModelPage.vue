@@ -5,7 +5,7 @@
       <div class="col-12 col-sm-8 text-h3">
         {{ model.title }}
       </div>
-      <div class="col-12 col-sm-4 self-center text-right">
+      <!-- <div class="col-12 col-sm-4 self-center text-right">
         <q-btn
           rounded
           no-caps
@@ -13,7 +13,7 @@
           label="Perform Transfer Learning"
           color="primary"
         ></q-btn>
-      </div>
+      </div> -->
     </header>
     <aside class="row q-py-sm">
       <material-chip
@@ -43,11 +43,11 @@
     </aside>
     <q-separator></q-separator>
     <main class="row">
-      <section class="col col-sm-8 q-px-lg q-py-md">
+      <section class="col-12 col-sm-8 q-px-lg q-py-md">
         <tiptap-display :content="model.markdown"></tiptap-display>
         <tiptap-display :content="model.performance"></tiptap-display>
       </section>
-      <aside class="col col-sm-4">
+      <aside class="col-12 col-sm-4">
         <div class="q-gutter-y-md">
           <q-tabs
             v-model="tab"
@@ -83,17 +83,37 @@
               no-caps
             ></q-tab>
           </q-tabs>
-          <q-tab-panels v-model="tab" animated>
+          <q-tab-panels v-model="tab" animated keep-alive>
             <q-tab-panel v-if="model.inferenceServiceName" name="inference">
               <gradio-frame
-                :url="inferenceUrl"
-                v-if="inferenceUrl"
+                :url="inferenceUrl ?? ''"
+                :status="inferenceStatus"
+                :debug-mode="isModelOwner"
+                v-if="inferenceStatus !== undefined"
               ></gradio-frame>
-              <q-card v-show="!inferenceUrl">
-                <q-card-section class="headline-small"
-                  >Inference service is not yet ready for this
-                  model.</q-card-section
-                >
+              <q-card v-else>
+                <q-card-section>
+                  <div class="text-h6 text-center">
+                    <q-icon name="warning" color="warning" />
+                    {{
+                      serviceHealthy
+                        ? 'Service is unavailable at the moment.'
+                        : 'Service is down or not found.'
+                    }}
+                  </div>
+                </q-card-section>
+                <q-card-actions>
+                  <q-btn
+                    v-if="!serviceHealthy"
+                    rounded
+                    no-caps
+                    padding="sm xl"
+                    label="Repair Instance"
+                    @click="restoreService"
+                    class="q-mx-auto"
+                  ></q-btn>
+                  <!-- Move this to manage -->
+                </q-card-actions>
               </q-card>
             </q-tab-panel>
             <q-tab-panel v-if="model.videoLocation" name="video">
@@ -248,8 +268,11 @@ import TiptapDisplay from 'src/components/content/TiptapDisplay.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
-import { useRoute } from 'vue-router';
-import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import { useRoute, useRouter } from 'vue-router';
+import {
+  InferenceServiceStatus,
+  useInferenceServiceStore,
+} from 'src/stores/inference-service-store';
 import { Notify } from 'quasar';
 
 enum Tabs {
@@ -261,10 +284,13 @@ enum Tabs {
 }
 
 const route = useRoute();
+const router = useRouter();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 const tab: Ref<Tabs> = ref(Tabs.inference);
 const inferenceUrl: Ref<string | null> = ref(null);
+const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
+const serviceHealthy: Ref<boolean> = ref(true);
 const authStore = useAuthStore();
 const modelStore = useModelStore();
 const inferenceServiceStore = useInferenceServiceStore();
@@ -317,8 +343,8 @@ modelStore
       .then((service) => {
         inferenceServiceStore
           .getServiceReady(service.serviceName)
-          .then((ready) => {
-            if (!ready) {
+          .then((status) => {
+            if (!status.ready) {
               Notify.create({
                 message: 'Inference service is down',
                 color: 'negative',
@@ -326,14 +352,22 @@ modelStore
               return Promise.reject('Inference service is down');
             }
             inferenceUrl.value = service.inferenceUrl;
+            inferenceStatus.value = status;
           })
           .catch((err) => {
-            return Promise.reject(err);
+            if (err === 404) {
+              serviceHealthy.value = false;
+              Notify.create({
+                message:
+                  'Inference service is down or not found inside cluster',
+                color: 'negative',
+              });
+            }
           });
       })
       .catch((err) => {
         Notify.create({
-          message: 'Failed to retrieve inference service information',
+          message: err,
           color: 'negative',
         });
         console.error(err);
@@ -356,4 +390,35 @@ const confirmDeleteLabel = computed(() => {
 });
 
 const confirmId: Ref<string> = ref('');
+
+const restoreService = () => {
+  if (!model.inferenceServiceName) {
+    Notify.create({
+      message: 'No inference service to restore',
+      color: 'negative',
+    });
+    return;
+  }
+  inferenceServiceStore
+    .restoreService(model.inferenceServiceName)
+    .then(() => {
+      // Attempt to get the service again
+      Notify.create({
+        message: 'Inference service restored',
+        color: 'positive',
+      });
+      inferenceServiceStore
+        .getServiceReady(model.inferenceServiceName)
+        .then(() => {
+          router.go(0);
+        });
+    })
+    .catch((err) => {
+      Notify.create({
+        message: err,
+        color: 'negative',
+      });
+      console.error(err);
+    });
+};
 </script>

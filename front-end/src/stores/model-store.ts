@@ -95,6 +95,7 @@ export interface SearchParams {
   desc?: boolean;
   all?: boolean;
   creatorUserId?: string;
+  creatorUserIdPartial?: string;
   title?: string;
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
@@ -165,7 +166,24 @@ export const useModelStore = defineStore('model', {
         const data: ModelCard = res.data;
         return data;
       } catch (error) {
-        return Promise.reject('Failed to create model card');
+        if (error.response.status == 409) {
+          Notify.create({
+            type: 'warning',
+            message:
+              'The model name already exists under you. Please enter a different one.',
+            position: 'top-right',
+          });
+          return Promise.reject(
+            'The model name already exists under you. Please enter a different one.'
+          );
+        } else {
+          Notify.create({
+            message: 'Failed to create model',
+            type: 'negative',
+            position: 'top-right',
+          });
+          return Promise.reject('Failed to create model card');
+        }
       }
     },
     async createModelVideo(metadata: CreateModelCard): Promise<ModelCard> {
@@ -174,7 +192,24 @@ export const useModelStore = defineStore('model', {
         const data: ModelCard = res.data;
         return data;
       } catch (error) {
-        return Promise.reject('Failed to create model card');
+        if (error.response.status == 409) {
+          Notify.create({
+            type: 'warning',
+            message:
+              'The model name already exists under you. Please enter a different one.',
+            position: 'top-right',
+          });
+          return Promise.reject(
+            'The model name already exists under you. Please enter a different one.'
+          );
+        } else {
+          Notify.create({
+            message: 'Failed to create model',
+            type: 'negative',
+            position: 'top-right',
+          });
+          return Promise.reject('Failed to create model card');
+        }
       }
     },
     async updateModel(
@@ -212,6 +247,32 @@ export const useModelStore = defineStore('model', {
         Notify.create({
           message: `Model ${userId}/${modelId} has been deleted!`,
           type: 'negative',
+        });
+      } catch (error) {
+        console.error(error);
+      }
+    },
+    async deleteModelMultiple(models: Array<any>): Promise<void> {
+      try {
+        console.log(models);
+        // const compositeKeys = [];
+        // for (const element of models) {
+        //   compositeKeys.push({
+        //     model_id: element.modelId,
+        //     creator_user_id: element.creatorUserId,
+        //   });
+        // }
+        const removeModels = models.map(({ modelId, creatorUserId }) => {
+          return { model_id: modelId, creator_user_id: creatorUserId };
+        });
+        console.log(removeModels);
+
+        await api.delete(`models/multi`, {
+          data: { card_package: removeModels },
+        });
+        Notify.create({
+          message: `Models have been deleted!`,
+          type: 'positive',
         });
       } catch (error) {
         console.error(error);

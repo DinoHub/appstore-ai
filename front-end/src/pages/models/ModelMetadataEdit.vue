@@ -124,7 +124,7 @@
               class="q-ml-md q-pb-xl"
               label="Model Name"
               autogrow
-              :rules="[(val) => !!val || 'Field is required']"
+              :rules="[(val) => !!val || 'Field is required', (val) => val.length <= 50 || 'Please use a maximum of 50 characters']"
               reactive-rules
             ></q-input>
             <q-select

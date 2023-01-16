@@ -88,6 +88,7 @@ export const useCreationStore = defineStore('createModel', {
         '<h3>Performance</h3><hr><ul><li><p>This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button! </p></li></ul><chart data-layout="{&quot;title&quot;:{&quot;text&quot;:&quot;Example Graph&quot;},&quot;xaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[0.6391275611368142,7.360872438863185],&quot;autorange&quot;:true},&quot;yaxis&quot;:{&quot;title&quot;:{&quot;text&quot;:&quot;Values&quot;},&quot;type&quot;:&quot;linear&quot;,&quot;range&quot;:[5.6050955414012735,74.39490445859873],&quot;autorange&quot;:true}}" data-data="[{&quot;x&quot;:[1,2,3,4,5,6,7,8,9,10],&quot;y&quot;:[10,20,30,40,50,60,70],&quot;type&quot;:&quot;scatter&quot;}]"></chart>' as string,
       plots: [] as Chart[],
       imageUri: '' as string,
+      numGpus: 0 as number,
       containerPort: undefined as number | undefined,
       serviceName: '' as string,
       previewServiceName: null as string | null,
@@ -205,6 +206,7 @@ export const useCreationStore = defineStore('createModel', {
           await inferenceServiceStore.launchPreviewService(
             modelId,
             this.imageUri,
+            this.numGpus,
             this.containerPort,
             this.uniqueEnv,
           );
@@ -271,6 +273,7 @@ export const useCreationStore = defineStore('createModel', {
         const { serviceName } = await inferenceServiceStore.createService(
           this.modelName,
           this.imageUri,
+          this.numGpus,
           this.containerPort,
           this.uniqueEnv,
         );
@@ -287,11 +290,14 @@ export const useCreationStore = defineStore('createModel', {
         });
         return { modelId, creatorUserId };
       } catch (error) {
-        Notify.create({
-          message: 'Failed to create model',
-          icon: 'warning',
-          color: 'negative',
-        });
+        console.warn(error);
+        if (
+          error ==
+          'The model name already exists under you. Please enter a different one.'
+        ) {
+          this.step = 2;
+          this.modelName = '';
+        }
       }
     },
     async createModelWithVideo() {
@@ -357,10 +363,14 @@ export const useCreationStore = defineStore('createModel', {
         });
         return { modelId, creatorUserId };
       } catch (error) {
-        Notify.create({
-          message: 'Failed to create model',
-          type: 'negative',
-        });
+        console.warn(error);
+        if (
+          error ==
+          'The model name already exists under you. Please enter a different one.'
+        ) {
+          this.step = 2;
+          this.modelName = '';
+        }
       }
     },
   },
@@ -388,6 +398,7 @@ export const useCreationStore = defineStore('createModel', {
       'performanceMarkdown',
       'imageUri',
       'containerPort',
+      'numGpus',
       'serviceName',
       'previewServiceName',
       'previewServiceUrl',

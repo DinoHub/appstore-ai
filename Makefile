@@ -1,5 +1,5 @@
 start-dev-cluster:
-	rm k8s/environments/development/cluster/metallb-ip-address-pool.yaml && sh k8s/environments/development/cluster/generate-ip-address-pool-kind.sh &&	kind create cluster --config k8s/environments/development/cluster/kind.yaml
+	sh k8s/environments/development/cluster/generate-ip-address-pool-kind.sh &&	kind create cluster --config k8s/environments/development/cluster/kind.yaml
 remove-dev-cluster:
 	kind delete cluster
 reset-dev-cluster:

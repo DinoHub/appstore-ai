@@ -20,8 +20,15 @@ from pymongo.errors import DuplicateKeyError
 from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.dependencies.file_validator import ValidateFileUpload
+from ..internal.dependencies.minio_client import (
+    get_presigned_url,
+    minio_api_client,
+)
 from ..internal.dependencies.mongo_client import get_db
-from ..internal.preprocess_html import preprocess_html
+from ..internal.preprocess_html import (
+    preprocess_html_get,
+    preprocess_html_post,
+)
 from ..internal.tasks import delete_orphan_images, delete_orphan_services
 from ..internal.utils import uncased_to_snake_case
 from ..models.iam import TokenData
@@ -31,6 +38,7 @@ from ..models.model import (
     ModelCardModelIn,
     SearchModelResponse,
     UpdateModelCardModel,
+    deleteCardPackage,
 )
 
 CHUNK_SIZE = 1024
@@ -85,7 +93,9 @@ async def get_available_filters(
 async def get_model_card_by_id(
     model_id: str,
     creator_user_id: str,
+    convert_s3: bool = Query(default=True),
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
+    s3_client=Depends(minio_api_client),
 ) -> Dict:
     """Get model card by composite ID: creator_user_id/model_id
 
@@ -111,7 +121,30 @@ async def get_model_card_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Unable to find: {creator_user_id}/{model_id}",
         )
+
     model = json.loads(json_util.dumps(model))
+    # Get HTML and Video Sources, replace URLs with signed URLs
+    # this is done if S3 bucket is private (e.g secure deployment)
+    # and thus we need user credentials to view images and videos
+    # stored on s3
+    if convert_s3:
+        # Get HTML
+        try:
+            model["markdown"] = preprocess_html_get(model["markdown"])
+            model["performance"] = preprocess_html_get(model["performance"])
+        except Exception as err:
+            print(f"Error: {err}")
+        if "videoLocation" in model and model["videoLocation"] is not None:
+            try:
+                url: str = model["videoLocation"]
+                url = url.removeprefix("s3://")
+                bucket, object_name = url.split("/", 1)
+                model["videoLocation"] = get_presigned_url(
+                    s3_client, object_name, bucket
+                )
+            except Exception as err:
+                print(f"Error: {err}")
+                model["videoLocation"] = None
     return model
 
 
@@ -131,6 +164,9 @@ async def search_cards(
         default=None, alias="frameworks[]"
     ),
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
+    creator_user_id_partial: Optional[str] = Query(
+        default=None, alias="creatorUserIdPartial"
+    ),
     return_attr: Optional[List[str]] = Query(default=None, alias="return[]"),
     all: Optional[bool] = Query(default=None),
 ) -> Dict:
@@ -165,7 +201,11 @@ async def search_cards(
         query["frameworks"] = {"$in": frameworks}
     if creator_user_id:
         query["creatorUserId"] = creator_user_id
-
+    if creator_user_id_partial:
+        query["creatorUserId"] = {
+            "$regex": re.escape(creator_user_id_partial),
+            "$options": "i",
+        }
     # How many documents to skip
     if not all or rows_per_page == 0:
         pagination_ptr = (page - 1) * rows_per_page
@@ -257,8 +297,8 @@ async def create_model_card_metadata(
     card.frameworks = list(set(card.frameworks))
 
     # Sanitize html
-    card.markdown = preprocess_html(card.markdown)
-    card.performance = preprocess_html(card.performance)
+    card.markdown = preprocess_html_post(card.markdown)
+    card.performance = preprocess_html_post(card.performance)
 
     card_dict: dict = jsonable_encoder(
         ModelCardModelDB(
@@ -327,9 +367,16 @@ async def update_model_card_metadata_by_id(
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
-        card_dict["markdown"] = preprocess_html(card_dict["markdown"])
+        card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
-        card_dict["performance"] = preprocess_html(card_dict["performance"])
+        card_dict["performance"] = preprocess_html_post(
+            card_dict["performance"]
+        )
+    if "task" in card_dict:
+        if card_dict["task"] == "Reinforcement Learning":
+            card_dict["inferenceServiceName"] = None
+        else:
+            card_dict["videoLocation"] = None
 
     if len(card_dict) > 0:
         card_dict["lastModified"] = str(datetime.datetime.now())
@@ -345,7 +392,10 @@ async def update_model_card_metadata_by_id(
                         status_code=status.HTTP_404_NOT_FOUND,
                         detail=f"Model Card with ID: {model_id} not found",
                     )
-                elif existing_card["creatorUserId"] != user.user_id:
+                elif (
+                    existing_card["creatorUserId"] != user.user_id
+                    and user.role != "admin"
+                ):
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail="User does not have editor access to this model card",
@@ -385,24 +435,99 @@ async def delete_model_card_by_id(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    db, mongo_client = db
-    async with await mongo_client.start_session() as session:
-        async with session.start_transaction():
-            # First, check that user actually has access
-            existing_card = await db["models"].find_one(
-                {"modelId": model_id, "creatorUserId": creator_user_id}
-            )
-            if (
-                existing_card is not None
-                and existing_card["creatorUserId"] != user.user_id
-            ):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="User does not have editor access to this model card",
+    """Delete model card by composite key of Creator User ID and Model ID
+
+    Args:
+        model_id (str): Model Id
+        creator_user_id (str): Creator user id
+        card (UpdateModelCardModel): Updated model card
+        tasks (BackgroundTasks): Background tasks to run
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 if arbitrary error occurs
+    """
+    try:
+        db, mongo_client = db
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                # First, check that user actually has access
+                existing_card = await db["models"].find_one(
+                    {"modelId": model_id, "creatorUserId": creator_user_id}
                 )
-            await db["models"].delete_one(
-                {"modelId": model_id, "creatorUserId": creator_user_id}
-            )
+                if (
+                    existing_card is not None
+                    and existing_card["creatorUserId"] != user.user_id
+                    and user.role != "admin"
+                ):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="User does not have editor access to this model card",
+                    )
+                await db["models"].delete_one(
+                    {"modelId": model_id, "creatorUserId": creator_user_id}
+                )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Removal failed",
+        ) from err
+    # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
+    tasks.add_task(delete_orphan_images)  # Remove any related media
+    tasks.add_task(delete_orphan_services)  # Remove any related services
+
+
+@router.delete("/multi", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_multiple_model_cards(
+    card_package: deleteCardPackage,
+    tasks: BackgroundTasks,
+    db=Depends(get_db),
+    user: TokenData = Depends(get_current_user),
+):
+    """Delete multiple model cards by List of composite keys of Creator User ID and Model ID
+
+    Args:
+        card_package (deleteCardPackage): List of Dictionaries containing models with composite ID identifiers to be removed
+        card (UpdateModelCardModel): Updated model card
+        tasks (BackgroundTasks): Background tasks to run
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 if arbitrary error occurs
+    """
+    try:
+        db, mongo_client = db
+        pkg = card_package.dict()["card_package"]
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                for x in pkg:
+                    # First, check that user actually has access
+                    existing_card = await db["models"].find_one(
+                        {
+                            "modelId": x["model_id"],
+                            "creatorUserId": x["creator_user_id"],
+                        }
+                    )
+                    if existing_card is not None and user.role != "admin":
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="User does not have editor access to this model card",
+                        )
+                    await db["models"].delete_one(
+                        {
+                            "modelId": x["model_id"],
+                            "creatorUserId": x["creator_user_id"],
+                        }
+                    )
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Removal failed",
+        ) from err
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     tasks.add_task(delete_orphan_images)  # Remove any related media
     tasks.add_task(delete_orphan_services)  # Remove any related services
