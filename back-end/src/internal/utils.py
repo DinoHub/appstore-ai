@@ -20,6 +20,7 @@ def k8s_safe_name(string: str) -> str:
     A k8s safe name can only contain alphanum
     chars and hyphens, be lower case and
     names cannot start with hyphens.
+    Should also be <63 characters long
 
     Args:
         string (str): Input string
@@ -27,7 +28,8 @@ def k8s_safe_name(string: str) -> str:
     Returns:
         str: Output string
     """
-    return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix("-")
+    # Give some leeway to allow for adding suffixes (e.g -deployment)
+    return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix("-")[:45]
 
 
 def camel_case_to_snake_case(string: str) -> str:
