@@ -1,4 +1,4 @@
-FROM tiencheng/inference-engine:1.0.0-py3.9-gr2.9.4-cpu
+FROM tiencheng/inference-engine:1.0.0-py3.9-gr2.9.4-cuda11.8-cudnn8.6
 RUN pip install click
 ENV TRANSFORMERS_CACHE=/workdir/.cache
 COPY requirements.txt .
