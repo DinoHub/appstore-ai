@@ -30,7 +30,7 @@ export const useInferenceServiceStore = defineStore('service', {
   actions: {
     async getServiceReady(
       serviceName: string,
-      maxRetries = 10,
+      maxRetries = 5,
       initialWaitSeconds = 10,
       maxDeadlineSeconds = 300, // 5 minutes
     ): Promise<InferenceServiceStatus> {
@@ -191,12 +191,10 @@ export const useInferenceServiceStore = defineStore('service', {
       try {
         await api.patch(`/engines/${serviceName}/scale/${replicas}`, {});
       } catch (error) {
-        Notify.create(
-          {
-            message: 'Failed to scale service. Error: ' + error,
-            color: 'negative',
-          }
-        )
+        Notify.create({
+          message: 'Failed to scale service. Error: ' + error,
+          color: 'negative',
+        });
         return Promise.reject('Unable to scale inference engine');
       }
     },
@@ -204,12 +202,10 @@ export const useInferenceServiceStore = defineStore('service', {
       try {
         await api.post(`/engines/${serviceName}/restore`, {});
       } catch (error) {
-        Notify.create(
-          {
-            message: 'Failed to restore service. Error: ' + error,
-            color: 'negative',
-          }
-        )
+        Notify.create({
+          message: 'Failed to restore service. Error: ' + error,
+          color: 'negative',
+        });
         return Promise.reject('Unable to restore inference engine');
       }
     },
