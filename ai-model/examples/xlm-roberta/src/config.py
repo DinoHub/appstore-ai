@@ -1,7 +1,5 @@
-from enum import Enum
-from typing import Optional
-
-from pydantic import AnyUrl, BaseSettings, Field
+import torch
+from pydantic import BaseSettings, Field
 
 
 class Config(BaseSettings):
@@ -21,7 +19,12 @@ class Config(BaseSettings):
     )
 
     # Model Settings
-    model_name: str = Field(default="joeddav/xlm-roberta-large-xnli", env="MODEL_NAME")
+    model_name: str = Field(
+        default="joeddav/xlm-roberta-large-xnli", env="MODEL_NAME"
+    )
+    device: str = Field(
+        default="cuda:0" if torch.cuda.is_available() else "cpu"
+    )
 
 
 config = Config()

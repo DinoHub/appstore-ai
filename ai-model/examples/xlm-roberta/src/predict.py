@@ -16,9 +16,9 @@ outputs = gr_outputs.Label(num_top_classes=config.top_k)
 examples = [["Hello world", "greeting,insult"]]
 
 classifier = pipeline(
-    "zero-shot-classification",
-    model=config.model_name
+    "zero-shot-classification", model=config.model_name, device=config.device
 )
+
 
 def predict(text: str, classes: str) -> Dict[str, float]:
     """Takes in a text and list of
@@ -37,7 +37,5 @@ def predict(text: str, classes: str) -> Dict[str, float]:
     res = classifier(text, classes)
     labels = res["labels"]
     scores = res["scores"]
-    results = {
-        label : score for label, score in zip(labels, scores)
-    }
+    results = {label: score for label, score in zip(labels, scores)}
     return results
