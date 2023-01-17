@@ -556,9 +556,7 @@ async def export_models(
                                 "creatorUserId": x["creator_user_id"],
                             }
                         )
-                        subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}.zip'
-                        s = io.BytesIO()
-                        zf = zipfile.ZipFile(s, "w")
+                        subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}'
                         dumped_JSON: str = json.dumps(
                             existing_card,
                             ensure_ascii=False,
@@ -567,8 +565,8 @@ async def export_models(
                             default=str,
                         )
                         # Write the model card JSON data into the model ZIP file
-                        zf.writestr(
-                            f'{x["creator_user_id"]}-{x["model_id"]}.json',
+                        zf2.writestr(
+                            f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}.json',
                             data=dumped_JSON,
                         )
                         if (
@@ -580,9 +578,9 @@ async def export_models(
                                 url = url.removeprefix("s3://")
                                 bucket, object_name = url.split("/", 1)
                                 response = get_data(s3_client, object_name, bucket)
-                                file_extension = object_name.split(".")[1]
-                                zf.writestr(
-                                    f'{x["creator_user_id"]}-{x["model_id"]}.{file_extension}',
+                                file_extension = object_name.split(".").pop()
+                                zf2.writestr(
+                                    f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}.{file_extension}',
                                     data=response.data,
                                 )
                                 response.close()
@@ -607,8 +605,8 @@ async def export_models(
                                     default=str,
                                 )
                                 # Write the service JSON data into the model ZIP file
-                                zf.writestr(
-                                    f'{x["creator_user_id"]}-{x["model_id"]}-service.json',
+                                zf2.writestr(
+                                    f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}-service.json',
                                     data=dumped_JSON_service,
                                 )
 
@@ -616,13 +614,10 @@ async def export_models(
                                 print(
                                     f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve service info from database. Skipping...!"
                                 )
-                        zf.close()
-                        s.seek(0)
-                        zf2.writestr(subfile_name, data=s.read())
 
                     zf2.close()
             BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
-            url = upload_data(
+            url = upload_data(  
                 s3_client,
                 s2.getvalue(),
                 f"exports/{datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}/{zip_filename}",
