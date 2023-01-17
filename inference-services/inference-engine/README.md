@@ -4,13 +4,6 @@ This project provides a base image with Gradio and Triton Client installed, as w
 
 ## Getting Started
 
-Start by cloning this repository and cd'ing into the inference-engine project
-
-```bash
-git clone git@github.com:DinoHub/appstore-ai.git
-cd appstore-ai/ai-model/inference-engine
-```
-
 ### Install Cookiecutter
 
 [Cookiecutter](https://github.com/cookiecutter/cookiecutter) is a CLI tool that generates a project from a project template. We will be using this tool for generating a template Inference Engine.
@@ -40,10 +33,9 @@ poetry install
 
 ### Generate Project
 
-Assuming you are in the `inference-engine` folder, you can generate your project as follows:
-
+Generate your project as follows
 ```bash
-cookiecutter templates/gradio-app
+cookiecutter https://github.com/DinoHub/appstore-ai.git --directory inference-services/templates/gradio-app
 ```
 
 Then, follow the prompts to generate a project template.
