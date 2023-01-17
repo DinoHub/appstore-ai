@@ -15,6 +15,20 @@ def build_images(
     cudnn_version: List[str],
     skip_push: bool,
 ):
+    """Build base images for inference services
+
+    # TODO: Check if cuDNN version and CUDA version are compatible
+
+    Args:
+        repo (str): Repository to push images to
+        username (str): Docker registry username
+        password (str): Docker registry password
+        python_version (List[str]): List of Python versions to target
+        gradio_version (List[str]): List of Gradio versions to target
+        cuda_version (List[str]): List of CUDA versions to target
+        cudnn_version (List[str]): CUDNN versions to target
+        skip_push (bool): If should skip push to registry
+    """
     build_args = [python_version, cuda_version, cudnn_version, gradio_version]
     combinations = list(product(*build_args))
 
