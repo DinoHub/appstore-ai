@@ -4,7 +4,7 @@ grpcio==1.41.0
 numpy==1.23.3
 scipy==1.9.1
 sentencepiece==0.1.97
-torch==1.12.1+cpu
+torch==1.13.1
 torchaudio==0.12.1+cpu
 torchvision==0.13.1+cpu
 transformers==4.23.1
