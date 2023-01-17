@@ -5,12 +5,12 @@
 #     branches:
 #       - main
 #     paths:
-#       - "ai-model/inference-engine/**"
+#       - "inference-services/inference-engine/**"
 #   push:
 #     branches:
 #       - main
 #     paths:
-#       - "ai-model/inference-engine/**"
+#       - "inference-services/inference-engine/**"
 #   workflow_dispatch:
 
 # env:
