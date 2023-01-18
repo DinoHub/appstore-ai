@@ -449,31 +449,25 @@ async def delete_model_card_by_id(
     Raises:
         HTTPException: 500 if arbitrary error occurs
     """
-    try:
-        db, mongo_client = db
-        async with await mongo_client.start_session() as session:
-            async with session.start_transaction():
-                # First, check that user actually has access
-                existing_card = await db["models"].find_one(
-                    {"modelId": model_id, "creatorUserId": creator_user_id}
+    db, mongo_client = db
+    async with await mongo_client.start_session() as session:
+        async with session.start_transaction():
+            # First, check that user actually has access
+            existing_card = await db["models"].find_one(
+                {"modelId": model_id, "creatorUserId": creator_user_id}
+            )
+            if (
+                existing_card is not None
+                and existing_card["creatorUserId"] != user.user_id
+                and user.role != "admin"
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User does not have editor access to this model card",
                 )
-                if (
-                    existing_card is not None
-                    and existing_card["creatorUserId"] != user.user_id
-                    and user.role != "admin"
-                ):
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="User does not have editor access to this model card",
-                    )
-                await db["models"].delete_one(
-                    {"modelId": model_id, "creatorUserId": creator_user_id}
-                )
-    except Exception as err:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Removal failed",
-        ) from err
+            await db["models"].delete_one(
+                {"modelId": model_id, "creatorUserId": creator_user_id}
+            )
     # https://stackoverflow.com/questions/6439416/status-code-when-deleting-a-resource-using-http-delete-for-the-second-time
     tasks.add_task(delete_orphan_images)  # Remove any related media
     tasks.add_task(delete_orphan_services)  # Remove any related services
