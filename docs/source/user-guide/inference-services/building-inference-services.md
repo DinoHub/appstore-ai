@@ -4,13 +4,6 @@ This project provides a base image with Gradio and Triton Client installed, as w
 
 ## Getting Started
 
-Start by cloning this repository and cd'ing into the inference-engine project
-
-```bash
-git clone git@github.com:DinoHub/appstore-ai.git
-cd appstore-ai/ai-model/inference-engine
-```
-
 ### Install Cookiecutter
 
 [Cookiecutter](https://github.com/cookiecutter/cookiecutter) is a CLI tool that generates a project from a project template. We will be using this tool for generating a template Inference Engine.
@@ -40,22 +33,18 @@ poetry install
 
 ### Generate Project
 
-Assuming you are in the `inference-engine` folder, you can generate your project as follows:
-
+Generate your project as follows
 ```bash
-cookiecutter templates/gradio-app
+cookiecutter https://github.com/DinoHub/appstore-ai.git --directory inference-services/templates/gradio-app
 ```
-
 Then, follow the prompts to generate a project template.
 
 ### Set up Development Environment
-
-For development, it's suggested to set up a virtual environment for development. You can use any dependency manager you want, but the Dockerfile that is used to build the final image will read from a `requirements.txt` file by default.
-
+For development, it's suggested to set up a virtual environment for development. 
 ```bash
 python -m venv venv
 source ./venv/bin/activate
-pip install -r requirements.txt
+pip install gradio==<your image gradio version>
 ```
 
 ### Example Apps
@@ -93,7 +82,7 @@ Your Gradio App/
 | src/predict.py   | You define the inputs, outputs and prediction function of the application in this file                                                                      |
 | src/config.py    | Contains configuration that the app can use.                                                                                                                |
 | Dockerfile       | Build instructions to build the image                                                                                                                       |
-| requirements.txt | Details dependencies needed for the application to run. Note that by default, the base image already includes the `gradio` and `tritonclient` dependencies. |
+| requirements.txt | Details dependencies needed for the application to run. Note that by default, the base image already includes the `gradio` dependencies. |
 
 #### Defining Inputs, Outputs and Examples
 
@@ -115,7 +104,21 @@ Relevant Documentation:
 
 Under `predict.py` you will also find the `predict` function, which you will need to define. The inputs to the function correspond to the inputs specified in the `inputs` variable, while the returned variables must correspond to the `outputs` variable.
 
-How this function is defined depends on the task you are trying to solve. For example, if you are trying to build a obj
+How this function is defined depends on the task you are trying to solve. For example, if you are trying to build a object detection model, you might define it as follows:
+
+```python
+import numpy as np
+
+
+inputs = ['image']
+outputs = ['image']
+
+def predict(image: np.ndarray) -> np.ndarray:
+    model = load_model()
+    dets = model(image)
+    processed_image = visualize(dets, image)
+    return processed_image
+```
 
 #### Setting up Configuration
 

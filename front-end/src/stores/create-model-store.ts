@@ -4,7 +4,10 @@ import { ModelCard, useModelStore } from './model-store';
 import { Notify } from 'quasar';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
-import { useInferenceServiceStore } from './inference-service-store';
+import {
+  useInferenceServiceStore,
+  InferenceServiceStatus,
+} from './inference-service-store';
 import { useUploadStore } from './upload-store';
 
 export const useCreationStore = defineStore('createModel', {
@@ -93,6 +96,7 @@ export const useCreationStore = defineStore('createModel', {
       serviceName: '' as string,
       previewServiceName: null as string | null,
       previewServiceUrl: null as string | null,
+      previewServiceStatus: null as InferenceServiceStatus | null,
       exampleVideo: undefined as File | undefined,
       env: [] as EnvField[],
     };
@@ -202,7 +206,7 @@ export const useCreationStore = defineStore('createModel', {
     async launchPreviewService(modelId: string): Promise<void> {
       const inferenceServiceStore = useInferenceServiceStore();
       try {
-        const { serviceName, inferenceUrl } =
+        const { serviceName, inferenceUrl, status } =
           await inferenceServiceStore.launchPreviewService(
             modelId,
             this.imageUri,
@@ -212,6 +216,7 @@ export const useCreationStore = defineStore('createModel', {
           );
         this.previewServiceUrl = inferenceUrl;
         this.previewServiceName = serviceName; // save so we know what to clean up
+        this.previewServiceStatus = status;
       } catch (error) {
         console.error(error);
         return Promise.reject(error);

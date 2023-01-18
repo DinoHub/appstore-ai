@@ -131,7 +131,11 @@
               class="q-ml-md q-pb-xl"
               label="Model Name"
               autogrow
-              :rules="[(val) => !!val || 'Field is required', (val) => val.length <= 50 || 'Please use a maximum of 50 characters']"
+              :rules="[
+                (val) => !!val || 'Field is required',
+                (val) =>
+                  val.length <= 50 || 'Please use a maximum of 50 characters',
+              ]"
               reactive-rules
             ></q-input>
             <q-select
@@ -563,6 +567,7 @@
               class="shadow-2"
               :v-show="creationStore.previewServiceUrl"
               :url="creationStore.previewServiceUrl ?? ''"
+              :status="creationStore.previewServiceStatus ?? undefined"
             >
             </gradio-frame>
           </div>
