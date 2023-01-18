@@ -430,11 +430,26 @@ const onSearchRequest = (props: QTableProps) => {
 };
 
 function exportModels() {
-  console.log(selected.value);
+  modelStore
+    .exportModels(selected.value)
+    .then(() => {
+      Notify.create({
+        message: 'Exported models successfully!',
+        type: 'positive',
+      });
+      tableRef.value?.requestServerInteraction();
+    })
+    .catch(() => {
+      Notify.create({
+        message: 'Failed to export models...',
+        type: 'negative',
+      });
+    });
 }
 function deleteModels() {
-  modelStore.deleteModelMultiple(selected.value);
-  console.log(selected.value);
+  modelStore.deleteModelMultiple(selected.value).then(() => {
+    tableRef.value?.requestServerInteraction();
+  });
 }
 
 onMounted(() => {
