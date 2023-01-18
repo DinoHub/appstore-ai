@@ -12,16 +12,15 @@ from src.main import app as fastapi_app
 
 from .utils import fake_login_admin, fake_login_user
 
-
 config.config.DB_NAME = "appStoreTestDB"
 
 
 @pytest.fixture(scope="module")
 def application() -> FastAPI:
-    fastapi_app.dependency_overrides[get_current_user] = fake_login_user
-    if check_is_admin in fastapi_app.dependency_overrides:
-        del fastapi_app.dependency_overrides[check_is_admin]
-    return fastapi_app
+    fastapi_app.app.dependency_overrides[get_current_user] = fake_login_user
+    if check_is_admin in fastapi_app.app.dependency_overrides:
+        del fastapi_app.app.dependency_overrides[check_is_admin]
+    return fastapi_app.app
 
 
 @pytest.fixture(scope="module")
@@ -40,18 +39,18 @@ def client(application) -> TestClient:
 
 @pytest.fixture
 def admin_client(client: TestClient) -> TestClient:
-    fastapi_app.dependency_overrides[get_current_user] = fake_login_user
-    fastapi_app.dependency_overrides[check_is_admin] = fake_login_admin
-    client = TestClient(fastapi_app)
+    fastapi_app.app.dependency_overrides[get_current_user] = fake_login_user
+    fastapi_app.app.dependency_overrides[check_is_admin] = fake_login_admin
+    client = TestClient(fastapi_app.app)
     return client
 
 
 @pytest.fixture
 def anonymous_client(client: TestClient) -> TestClient:
     if check_is_admin in fastapi_app.dependency_overrides:
-        del fastapi_app.dependency_overrides[check_is_admin]
+        del fastapi_app.app.dependency_overrides[check_is_admin]
     if get_current_user in fastapi_app.dependency_overrides:
-        del fastapi_app.dependency_overrides[get_current_user]
+        del fastapi_app.app.dependency_overrides[get_current_user]
     client = TestClient(fastapi_app)
     return client
 

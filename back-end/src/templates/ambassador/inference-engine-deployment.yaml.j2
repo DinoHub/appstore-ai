@@ -42,3 +42,6 @@ spec:
               port: 8080
             initialDelaySeconds: 360
             periodSeconds: 20
+          resources:
+            limits:
+              nvidia.com/gpu: {{ num_gpus if num_gpus else 0 }}

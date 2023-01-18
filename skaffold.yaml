@@ -38,6 +38,8 @@ deploy:
         wait: true
         valuesFiles:
           - k8s/environments/development/minio-values.yaml
+      - name: emissary-crds
+        chartPath: k8s/charts/dependencies/emissary-crds
       - name: emissary-ingress
         upgradeOnChange: false
         namespace: emissary

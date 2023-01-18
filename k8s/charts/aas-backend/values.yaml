@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: aas-backend
   pullPolicy: Never
-  tag: "1.0"
+  tag: "1.0.2"
 
 imagePullSecrets: []
 nameOverride: "aas-backend"
@@ -47,6 +47,9 @@ env:
   CLEARML_FILES_HOST: <TO-REPLACE>  # https://files.clear.ml
   CLEARML_API_ACCESS_KEY: <TO-REPLACE>
   CLEARML_API_SECRET_KEY: <TO-REPLACE>
+
+certs: {}
+  # CA_CERT: ''
 
 environment: prod
 

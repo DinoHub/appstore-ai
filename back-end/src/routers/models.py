@@ -137,13 +137,22 @@ async def get_model_card_by_id(
     # stored on s3
     if convert_s3:
         # Get HTML
-        model["markdown"] = preprocess_html_get(model["markdown"])
-        model["performance"] = preprocess_html_get(model["performance"])
+        try:
+            model["markdown"] = preprocess_html_get(model["markdown"])
+            model["performance"] = preprocess_html_get(model["performance"])
+        except Exception as err:
+            print(f"Error: {err}")
         if "videoLocation" in model and model["videoLocation"] is not None:
-            url: str = model["videoLocation"]
-            url = url.removeprefix("s3://")
-            bucket, object_name = url.split("/", 1)
-            model["videoLocation"] = get_presigned_url(s3_client, object_name, bucket)
+            try:
+                url: str = model["videoLocation"]
+                url = url.removeprefix("s3://")
+                bucket, object_name = url.split("/", 1)
+                model["videoLocation"] = get_presigned_url(
+                    s3_client, object_name, bucket
+                )
+            except Exception as err:
+                print(f"Error: {err}")
+                model["videoLocation"] = None
     return model
 
 

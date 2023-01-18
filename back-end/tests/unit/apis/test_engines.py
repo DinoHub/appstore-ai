@@ -19,6 +19,9 @@ def service_metadata() -> List[Dict]:
             "lastModified": str(datetime.now()),
             "modelId": f"test-{i}",
             "imageUri": f"dev.local/test:1.0",
+            "host": "localhost-{i}",
+            "path": "",
+            "backend": "emissary",
         }
         for i in range(5)
     ]
