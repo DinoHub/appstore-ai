@@ -1,0 +1,28 @@
+name: back-end-tests
+services:
+  back-end:
+    build:
+      context: "../."
+      dockerfile: Dockerfile.test
+    env_file:
+      - "../src/config/.env"
+    environment:
+      - TEST_MONGO_DSN=mongodb://mongodb:27017
+      - CLEARML_WEB_HOST=https://app.clear.ml
+      - CLEARML_API_HOST=https://api.clear.ml
+      - CLEARML_FILES_HOST=https://files.clear.ml
+    depends_on:
+      - mongodb
+    volumes:
+      - ../.:/app
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_INITDB_DATABASE=appStoreTestDB
+  minio:
+    image: quay.io/minio/minio
+    environment:
+      - MINIO_ROOT_USER=aas-minio-uploader
+      - MINIO_ROOT_PASSWORD=TempPassword1234
+    command: server /data --console-address ":9001"
+
