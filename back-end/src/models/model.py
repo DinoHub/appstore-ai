@@ -3,9 +3,9 @@ from datetime import datetime
 from typing import List, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
-from ..internal.utils import to_camel_case
+from ..internal.utils import to_camel_case, sanitize_for_url
 from .common import Artifact, PyObjectId
 from .dataset import LinkedDataset
 from .experiment import LinkedExperiment
@@ -53,6 +53,18 @@ class ModelCardModelDB(ModelCardModelIn):
     model_id: str  # to be generated on back-end
     created: str
     last_modified: str
+
+    @validator("model_id")
+    def sanitize_model_name(cls, v: str) -> str:
+        """Generates a URL safe model id if one is not provided.
+
+        Args:
+            v (str): The model name.
+
+        Returns:
+            str: Generated model id.
+        """
+        return sanitize_for_url(v)
 
     class Config:
         """Pydantic config to allow creation of data model

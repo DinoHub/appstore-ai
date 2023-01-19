@@ -8,7 +8,7 @@ from bson import ObjectId
 from password_strength import PasswordPolicy
 from pydantic import BaseModel, Field, validator
 
-from ..internal.utils import to_camel_case
+from ..internal.utils import to_camel_case, sanitize_for_url
 from .common import PyObjectId
 
 policy = PasswordPolicy.from_names(
@@ -43,10 +43,8 @@ class UserInsert(BaseModel):
     admin_priv: bool = False
 
     @validator("user_id")
-    def generate_if_empty(
-        cls, v: Optional[str], values: Dict, **kwargs
-    ) -> str:
-        """Generates a user id if one is not provided.
+    def generate_if_empty(cls, v: Optional[str], values: Dict, **kwargs) -> str:
+        """Generates a user id if one is not provided and sanitize the id for URL safe usage.
 
         Args:
             v (Optional[str]): The user id.
@@ -59,9 +57,9 @@ class UserInsert(BaseModel):
         name_string = "".join(values["name"].lower().split())
         # if user id is empty, generate a new one
         if v is None or v == "":
-            new_id = f"{name_string[0:7]}-{secrets.token_hex(8)}"
+            new_id = f"{sanitize_for_url(name_string[0:7])}_{secrets.token_hex(8)}"
             return new_id
-        return v
+        return sanitize_for_url(v)
 
     @validator("password_confirm")
     def match_passwords(cls, v: str, values: Dict, **kwargs) -> str:
@@ -88,22 +86,23 @@ class UserInsert(BaseModel):
         )
 
 
-class UserInsertDB(BaseModel):
-    """Request model for creating a user."""
+# NOTE: deprecated and not in use
+# class UserInsertDB(BaseModel):
+#     """Request model for creating a user."""
 
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    user_id: str
-    name: str
-    admin_priv: bool = False
+#     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
+#     user_id: str
+#     name: str
+#     admin_priv: bool = False
 
-    class Config:
-        """Pydantic config to allow creation of data model
-        from a JSON object with camelCase keys."""
+#     class Config:
+#         """Pydantic config to allow creation of data model
+#         from a JSON object with camelCase keys."""
 
-        alias_generator = to_camel_case
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {ObjectId: str}
+#         alias_generator = to_camel_case
+#         allow_population_by_field_name = True
+#         arbitrary_types_allowed = True
+#         json_encoders = {ObjectId: str}
 
 
 class Token(BaseModel):

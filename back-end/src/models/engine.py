@@ -4,9 +4,9 @@ from enum import Enum
 from typing import Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
-from ..internal.utils import to_camel_case
+from ..internal.utils import to_camel_case, sanitize_for_url
 from .common import PyObjectId
 
 # NOTE: disabled ability to set resource limits
@@ -66,6 +66,18 @@ class CreateInferenceEngineService(BaseModel):
     container_port: Optional[int] = None
     env: Optional[dict] = None
     num_gpus: float = Field(default=0, ge=0, le=2)
+
+    @validator("model_id")
+    def sanitize_model_name(cls, v: str) -> str:
+        """Generates a URL safe model id if one is not provided.
+
+        Args:
+            v (str): The model name.
+
+        Returns:
+            str: Generated model id.
+        """
+        return sanitize_for_url(v)
 
     class Config:
         """Pydantic config to allow creation of data model

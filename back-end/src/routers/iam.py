@@ -8,6 +8,7 @@ from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
 
 from ..internal.auth import check_is_admin, get_password_hash
+from ..internal.utils import uncased_to_snake_case, sanitize_for_url
 from ..internal.dependencies.mongo_client import get_db
 from ..models.iam import UserInsert, UserPage, UserRemoval, UsersEdit
 
@@ -40,7 +41,7 @@ async def add_user(
             async with session.start_transaction():
                 user = await db["users"].insert_one(
                     {
-                        "userId": item.user_id,
+                        "userId": uncased_to_snake_case(item.user_id),
                         "name": item.name,
                         "password": item.password,
                         "adminPriv": item.admin_priv,
@@ -91,9 +92,7 @@ async def delete_user(
     try:
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                await db["users"].delete_many(
-                    {"userId": {"$in": userid.users}}
-                )
+                await db["users"].delete_many({"userId": {"$in": userid.users}})
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
