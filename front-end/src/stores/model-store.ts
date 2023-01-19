@@ -97,6 +97,7 @@ export interface SearchParams {
   creatorUserId?: string;
   creatorUserIdPartial?: string;
   title?: string;
+  genericSearchText?: string;
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
   tasks?: string[] | LocationQueryValue[];
@@ -143,6 +144,7 @@ export const useModelStore = defineStore('model', {
               'modelId',
               'creatorUserId',
               'title',
+              'genericSearchText',
               'task',
               'description',
               'tags',
