@@ -195,8 +195,11 @@ async def search_cards(
     """
     db, client = db
     query = {}
+    # TODO: This is a really stupid way to do search
+    # so should prob rely on elasticsearch or something
+    # So set up ES, sync with Mongo with Logstash, then
+    # use ES BM25 search
     if generic_search_text:
-
         query["$or"] = [
             {
                 "title": {
@@ -278,15 +281,23 @@ async def search_cards(
             },
         ]
 
-        print(query)
     if title:
         query["title"] = {"$regex": re.escape(title), "$options": "i"}
     if tasks:
-        query["task"] = {"$in": tasks}
+        query["task"] = {
+            "$in": [re.compile(task, re.IGNORECASE) for task in tasks]
+        }
     if tags:
-        query["tags"] = {"$all": tags}
+        query["tags"] = {
+            "$all": [re.compile(tag, re.IGNORECASE) for tag in tags]
+        }
     if frameworks:
-        query["frameworks"] = {"$in": frameworks}
+        query["frameworks"] = {
+            "$in": [
+                re.compile(framework, re.IGNORECASE)
+                for framework in frameworks
+            ]
+        }
     if creator_user_id:
         query["creatorUserId"] = creator_user_id
     if creator_user_id_partial:

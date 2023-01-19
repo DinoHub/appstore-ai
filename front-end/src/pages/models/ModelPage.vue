@@ -102,14 +102,16 @@
                     }}
                   </div>
                   <div v-if="serviceHealthy">
-                    <q-btn
-                      class="q-my-md"
-                      rounded
-                      no-caps
-                      padding="sm xl"
-                      label="View Status (Debug)"
-                      @click="showDetailedStatus = true"
-                    />
+                    <div class="text-center">
+                      <q-btn
+                        class="q-my-md"
+                        rounded
+                        no-caps
+                        padding="sm xl"
+                        label="View Status (Debug)"
+                        @click="showDetailedStatus = true"
+                      />
+                    </div>
                     <p>This may be due to one of the following reasons:</p>
                     <ol>
                       <li>
