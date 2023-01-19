@@ -25,6 +25,7 @@ export interface InferenceServiceStatus {
 export const useInferenceServiceStore = defineStore('service', {
   state: () => ({
     previewServiceName: null as string | null,
+    currentServiceStatus: null as InferenceServiceStatus | null,
   }),
   getters: {},
   actions: {
@@ -38,6 +39,7 @@ export const useInferenceServiceStore = defineStore('service', {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
           const res = await api.get(`engines/${serviceName}/status`);
           const data: InferenceServiceStatus = res.data;
+          this.currentServiceStatus = data; // Store to allow other components to access
           console.log(data);
           if (data.expectedReplicas === 0) {
             console.warn('Service has no replicas');

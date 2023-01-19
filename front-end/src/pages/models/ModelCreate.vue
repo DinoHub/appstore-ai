@@ -579,7 +579,9 @@
             <p class="text-left q-ml-md">
               The inference engine application will be displayed here. Please
               ensure it works as intended and can receive inputs and outputs as
-              designed by you.
+              designed by you. If the app has not shown up for some time, you
+              may want to click on the "View Status" button to see more details
+              about what is happening.
             </p>
             <q-icon
               class="row q-mx-auto"
@@ -592,6 +594,14 @@
               engine application is working as intended. Once confirmed all
               information will be published.
             </p>
+            <q-btn
+              class="q-my-md"
+              rounded
+              no-caps
+              padding="sm xl"
+              label="View Status (Debug)"
+              @click="showDetailedStatus = true"
+            />
           </div>
         </div>
         <div
@@ -819,6 +829,25 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
+      <q-dialog v-model="showDetailedStatus" persistent>
+        <q-card>
+          <q-card-section>
+            <service-status-display
+              :status="inferenceServiceStore.currentServiceStatus"
+            >
+            </service-status-display>
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              v-close-popup
+              label="Close"
+            ></q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </dialog>
   </q-page>
 </template>
@@ -835,6 +864,7 @@ import { useRouter } from 'vue-router';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
+import ServiceStatusDisplay from 'src/components/content/ServiceStatusDisplay.vue';
 
 import { Notify, QStepper } from 'quasar';
 import { useDatasetStore } from 'src/stores/dataset-store';
@@ -845,6 +875,7 @@ const experimentStore = useExperimentStore();
 const datasetStore = useDatasetStore();
 const creationStore = useCreationStore();
 const modelStore = useModelStore();
+const inferenceServiceStore = useInferenceServiceStore();
 
 const videoExample = ref();
 
@@ -864,6 +895,7 @@ const cancel = ref(false);
 const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
+const showDetailedStatus = ref(false); // pop-up for service status
 
 // function for triggering events that should happen when next step is triggered
 const retrieveExperimentDetails = () => {

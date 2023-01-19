@@ -32,12 +32,17 @@
             <q-item v-if="props.debugMode" clickable @click="showLogs = true">
               <q-item-section>View Logs</q-item-section>
             </q-item>
+            <q-item clickable @click="showDetailedStatus = true">
+              <q-item-section>View Status</q-item-section>
+            </q-item>
           </q-menu>
         </q-btn>
       </div>
     </q-card-section>
     <q-card-section v-if="props.status?.message !== ''">
-      {{ props.status?.message }}
+      <p>
+        {{ props.status?.message }}
+      </p>
     </q-card-section>
     <q-card-section v-if="props.status?.expectedReplicas == 0">
       No instances available. Click the settings button to request a new
@@ -83,12 +88,30 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
+    <q-dialog v-model="showDetailedStatus" persistent>
+      <q-card>
+        <q-card-section>
+          <service-status-display
+            :status="inferenceServiceStore.currentServiceStatus"
+          />
+        </q-card-section>
+        <q-card-actions>
+          <q-btn
+            rounded
+            no-caps
+            padding="sm xl"
+            v-close-popup
+            label="Close"
+          ></q-btn>
+        </q-card-actions> </q-card
+    ></q-dialog>
   </q-card>
 </template>
 
 <script setup lang="ts">
 import { defineProps, ref, computed, ComputedRef } from 'vue';
 import SSELogStream from './SSELogStream.vue';
+import ServiceStatusDisplay from './ServiceStatusDisplay.vue';
 import {
   InferenceServiceStatus,
   useInferenceServiceStore,
@@ -108,6 +131,7 @@ const inferenceServiceStore = useInferenceServiceStore();
 const loading = ref(true);
 const processing = ref(false);
 const showLogs = ref(false);
+const showDetailedStatus = ref(false);
 const router = useRouter();
 
 const iframeUrl: ComputedRef<string | undefined> = computed(() => {
@@ -119,7 +143,6 @@ const iframeUrl: ComputedRef<string | undefined> = computed(() => {
 const serviceInstanceAvailable = computed(() => {
   return (props.status?.expectedReplicas ?? 0) > 0;
 });
-
 
 const scaleUp = () => {
   if (props.status?.serviceName) {

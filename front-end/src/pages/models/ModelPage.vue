@@ -101,6 +101,38 @@
                         : 'Service is down or not found.'
                     }}
                   </div>
+                  <div v-if="serviceHealthy">
+                    <q-btn
+                      class="q-my-md"
+                      rounded
+                      no-caps
+                      padding="sm xl"
+                      label="View Status (Debug)"
+                      @click="showDetailedStatus = true"
+                    />
+                    <p>This may be due to one of the following reasons:</p>
+                    <ol>
+                      <li>
+                        The service is still being created (e.g pulling in
+                        image).
+                      </li>
+                      <li>
+                        The service is unable to be spun up due to a lack of
+                        resources
+                      </li>
+                      <li>
+                        The service container is unable to properly startup
+                      </li>
+                    </ol>
+                  </div>
+                  <div v-else>
+                    <p>This may be due to one of the following reasons:</p>
+                    <ol>
+                      <!-- Currently only unhealthy if status endpoint returns 404 -->
+                      <li>The service has been removed from the cluster.</li>
+                      <li>The service has been renamed.</li>
+                    </ol>
+                  </div>
                 </q-card-section>
                 <q-card-actions>
                   <q-btn
@@ -256,6 +288,27 @@
         </div>
       </aside>
     </main>
+    <aside>
+      <q-dialog v-model="showDetailedStatus" persistent>
+        <q-card>
+          <q-card-section>
+            <service-status-display
+              :status="inferenceServiceStore.currentServiceStatus"
+            >
+            </service-status-display>
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              v-close-popup
+              label="Close"
+            ></q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </aside>
   </q-page>
 </template>
 
@@ -265,6 +318,7 @@ import MaterialChip from 'src/components/content/MaterialChip.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
 import TiptapDisplay from 'src/components/content/TiptapDisplay.vue';
+import ServiceStatusDisplay from 'src/components/content/ServiceStatusDisplay.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
@@ -290,7 +344,8 @@ const userId = route.params.userId as string;
 const tab: Ref<Tabs> = ref(Tabs.inference);
 const inferenceUrl: Ref<string | null> = ref(null);
 const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
-const serviceHealthy: Ref<boolean> = ref(true);
+const serviceHealthy = ref(true);
+const showDetailedStatus = ref(false);
 const authStore = useAuthStore();
 const modelStore = useModelStore();
 const inferenceServiceStore = useInferenceServiceStore();

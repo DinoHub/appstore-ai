@@ -82,7 +82,29 @@
           :v-show="editInferenceServiceStore.previewServiceUrl"
           :url="editInferenceServiceStore.previewServiceUrl ?? ''"
           :status="editInferenceServiceStore.previewServiceStatus ?? undefined"
+          class="col"
         ></gradio-frame>
+        <!-- Redundant to show this once gradio frame is ready as it alr contains status-->
+        <q-card v-if="!editInferenceServiceStore.previewServiceUrl">
+          <q-card-section>
+            <p>Preparing service...</p>
+            <p>
+              If the app has not shown up for some time, you may want to click
+              on the "View Status" button to see more details about what is
+              happening.
+            </p>
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              class="q-my-md"
+              rounded
+              no-caps
+              padding="sm xl"
+              label="View Status (Debug)"
+              @click="showDetailedStatus = true"
+            />
+          </q-card-actions>
+        </q-card>
       </q-step>
       <template v-slot:navigation>
         <q-stepper-navigation>
@@ -146,6 +168,25 @@
       ></q-inner-loading>
     </q-stepper>
     <dialog>
+      <q-dialog v-model="showDetailedStatus" persistent>
+        <q-card>
+          <q-card-section>
+            <service-status-display
+              :status="inferenceServiceStore.currentServiceStatus"
+            >
+            </service-status-display>
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              v-close-popup
+              label="Close"
+            ></q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
       <q-dialog v-model="cancel" persistent>
         <q-card>
           <q-card-section>
@@ -186,6 +227,7 @@
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import EnvVarEditor from 'src/components/form/EnvVarEditor.vue';
+import ServiceStatusDisplay from 'src/components/content/ServiceStatusDisplay.vue';
 import {
   useInferenceServiceStore,
   InferenceServiceStatus,
@@ -206,6 +248,7 @@ const modelId = route.params.modelId as string;
 const buttonDisable = ref(false);
 const loading = ref(false);
 const cancel = ref(false);
+const showDetailedStatus = ref(false);
 const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
 
 const launchPreview = (stepper: QStepper) => {
