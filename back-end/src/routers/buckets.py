@@ -114,7 +114,7 @@ async def replace_video(
                 )
                 if (
                     existing_card["videoLocation"] is not None
-                    or existing_card["videoLocation"] is not ""
+                    or existing_card["videoLocation"] != ""
                 ):
 
                     url: str = existing_card["videoLocation"]
