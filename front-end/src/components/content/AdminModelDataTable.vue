@@ -438,6 +438,7 @@ function exportModels() {
         type: 'positive',
       });
       tableRef.value?.requestServerInteraction();
+      selected.value = [];
     })
     .catch(() => {
       Notify.create({
@@ -449,6 +450,7 @@ function exportModels() {
 function deleteModels() {
   modelStore.deleteModelMultiple(selected.value).then(() => {
     tableRef.value?.requestServerInteraction();
+    selected.value = [];
   });
 }
 
