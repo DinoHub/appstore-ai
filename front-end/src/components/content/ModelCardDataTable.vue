@@ -87,8 +87,8 @@
                 outlined
                 autofocus
                 debounce="500"
-                v-model="filter.title"
-                placeholder="Search by title"
+                v-model="filter.genericSearchText"
+                placeholder="Enter search"
               >
                 <template v-slot:prepend>
                   <q-icon name="search" />
@@ -233,7 +233,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        }),
+        })
       );
       tasks.splice(
         0,
@@ -243,7 +243,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        }),
+        })
       );
     })
     .catch(() => {

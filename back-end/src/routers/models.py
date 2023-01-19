@@ -163,6 +163,7 @@ async def search_cards(
     rows_per_page: int = Query(default=10, alias="n", ge=0),
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="_id", alias="sort"),
+    generic_search_text: Optional[str] = Query(default=None, alias="genericSearchText"),
     title: Optional[str] = Query(default=None),
     tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
@@ -182,7 +183,7 @@ async def search_cards(
         rows_per_page (int, optional): Rows per page. Defaults to Query(default=10, alias="n", ge=0).
         descending (bool, optional): Order to return results in. Defaults to Query(default=False, alias="desc").
         sort_by (str, optional): Sort by field. Defaults to Query(default="_id", alias="sort").
-        title (Optional[str], optional): Search by model title. Defaults to Query(default=None).
+        generic_search_text (Optional[str], optional): Search through any relevant text fields. Defaults to Query(default=None, alias="genericSearchText").
         tasks (Optional[List[str]], optional): Search by task. Defaults to Query(default=None, alias="tasks[]").
         tags (Optional[List[str]], optional): Search by task. Defaults to Query(default=None, alias="tags[]").
         frameworks (Optional[List[str]], optional): Search by framework. Defaults to Query( default=None, alias="frameworks[]" ).
@@ -195,6 +196,75 @@ async def search_cards(
     """
     db, client = db
     query = {}
+    if generic_search_text:
+
+        query["$or"] = [
+            {
+                "title": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {"task": {"$regex": re.escape(generic_search_text), "$options": "i"}},
+            {"tags": {"$regex": re.escape(generic_search_text), "$options": "i"}},
+            {"frameworks": {"$regex": re.escape(generic_search_text), "$options": "i"}},
+            {
+                "creatorUserId": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "owner": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "pointOfContact": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "markdown": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "performance": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "description": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "explanation": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "usage": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "limitations": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+        ]
+
+        print(query)
     if title:
         query["title"] = {"$regex": re.escape(title), "$options": "i"}
     if tasks:
@@ -626,7 +696,7 @@ async def export_models(
 
                     zf2.close()
             BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
-            url = upload_data(  
+            url = upload_data(
                 s3_client,
                 s2.getvalue(),
                 f"exports/{datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}/{zip_filename}",

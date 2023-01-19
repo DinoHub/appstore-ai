@@ -20,6 +20,7 @@ export interface Pagination {
 
 export interface SearchFilter {
   title?: string;
+  genericSearchText?: string;
   creator?: string;
   creatorUserIdPartial?: string;
   tasks?: string[] | LocationQueryValue[];
