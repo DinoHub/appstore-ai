@@ -24,7 +24,7 @@
               v-close-popup
               @click="scaleDown"
             >
-              <q-item-section> Scale Down Instance </q-item-section>
+              <q-item-section>Scale Down Instance </q-item-section>
             </q-item>
             <q-item v-else v-close-popup clickable @click="scaleUp"
               ><q-item-section>Request New Instance</q-item-section>
@@ -119,7 +119,6 @@ const iframeUrl: ComputedRef<string | undefined> = computed(() => {
 const serviceInstanceAvailable = computed(() => {
   return (props.status?.expectedReplicas ?? 0) > 0;
 });
-
 
 const scaleUp = () => {
   if (props.status?.serviceName) {
