@@ -1,5 +1,5 @@
 <template>
-  <q-markup-table>
+  <q-markup-table wrap-cells>
     <thead>
       <tr>
         <th colspan="2">Service Status</th>
