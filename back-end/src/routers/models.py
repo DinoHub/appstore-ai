@@ -1,14 +1,13 @@
 import datetime
+import io
 import json
 import re
-from typing import Dict, List, Optional, Tuple
-from colorama import Fore
-
 import zipfile
-import io
-from minio import Minio
+from typing import Dict, List, Optional, Tuple
+from uuid import uuid4
 
 from bson import json_util
+from colorama import Fore
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -18,6 +17,7 @@ from fastapi import (
     status,
 )
 from fastapi.encoders import jsonable_encoder
+from minio import Minio
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import DuplicateKeyError
@@ -26,12 +26,11 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.dependencies.file_validator import ValidateFileUpload
 from ..internal.dependencies.minio_client import (
+    get_data,
     get_presigned_url,
     minio_api_client,
-    get_data,
     upload_data,
 )
-
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
     preprocess_html_get,
@@ -156,18 +155,24 @@ async def get_model_card_by_id(
     return model
 
 
-@router.get("/", response_model=SearchModelResponse, response_model_exclude_unset=True)
+@router.get(
+    "/", response_model=SearchModelResponse, response_model_exclude_unset=True
+)
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
     rows_per_page: int = Query(default=10, alias="n", ge=0),
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="_id", alias="sort"),
-    generic_search_text: Optional[str] = Query(default=None, alias="genericSearchText"),
+    generic_search_text: Optional[str] = Query(
+        default=None, alias="genericSearchText"
+    ),
     title: Optional[str] = Query(default=None),
     tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
-    frameworks: Optional[List[str]] = Query(default=None, alias="frameworks[]"),
+    frameworks: Optional[List[str]] = Query(
+        default=None, alias="frameworks[]"
+    ),
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
     creator_user_id_partial: Optional[str] = Query(
         default=None, alias="creatorUserIdPartial"
@@ -205,9 +210,24 @@ async def search_cards(
                     "$options": "i",
                 }
             },
-            {"task": {"$regex": re.escape(generic_search_text), "$options": "i"}},
-            {"tags": {"$regex": re.escape(generic_search_text), "$options": "i"}},
-            {"frameworks": {"$regex": re.escape(generic_search_text), "$options": "i"}},
+            {
+                "task": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "tags": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
+            {
+                "frameworks": {
+                    "$regex": re.escape(generic_search_text),
+                    "$options": "i",
+                }
+            },
             {
                 "creatorUserId": {
                     "$regex": re.escape(generic_search_text),
@@ -367,6 +387,13 @@ async def create_model_card_metadata(
     """
     # NOTE: After this, still need to submit inference engine
     db, mongo_client = db
+
+    # Ensure unique model ID
+    # Note that ModelCardModelDB will further sanitize this
+    # Limit length to max size of 64
+    model_id = f"{uncased_to_snake_case(card.title)}-{uuid4()}"[:64]
+
+    # Process tags and frameworks
     card.tags = list(set(card.tags))  # remove duplicates
     card.frameworks = list(set(card.frameworks))
 
@@ -378,7 +405,7 @@ async def create_model_card_metadata(
         ModelCardModelDB(
             **card.dict(),
             creator_user_id=user.user_id or "unknown",
-            model_id=uncased_to_snake_case(card.title),
+            model_id=model_id,
             last_modified=str(datetime.datetime.now()),
             created=str(datetime.datetime.now()),
         ),
@@ -435,13 +462,17 @@ async def update_model_card_metadata_by_id(
     )  # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
-    card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
+    card_dict = {
+        k: v for k, v in card.dict(by_alias=True).items() if v is not None
+    }
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
         card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
-        card_dict["performance"] = preprocess_html_post(card_dict["performance"])
+        card_dict["performance"] = preprocess_html_post(
+            card_dict["performance"]
+        )
     if "task" in card_dict:
         if card_dict["task"] == "Reinforcement Learning":
             card_dict["inferenceServiceName"] = None
@@ -495,7 +526,9 @@ async def update_model_card_metadata_by_id(
         return existing_card
 
 
-@router.delete("/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_model_card_by_id(
     model_id: str,
     creator_user_id: str,
@@ -635,7 +668,9 @@ async def export_models(
                                 "creatorUserId": x["creator_user_id"],
                             }
                         )
-                        subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}'
+                        subfile_name = (
+                            f'{x["creator_user_id"]}-{x["model_id"]}'
+                        )
                         dumped_JSON: str = json.dumps(
                             existing_card,
                             ensure_ascii=False,
@@ -656,7 +691,9 @@ async def export_models(
                                 url: str = existing_card["videoLocation"]
                                 url = url.removeprefix("s3://")
                                 bucket, object_name = url.split("/", 1)
-                                response = get_data(s3_client, object_name, bucket)
+                                response = get_data(
+                                    s3_client, object_name, bucket
+                                )
                                 file_extension = object_name.split(".").pop()
                                 zf2.writestr(
                                     f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}.{file_extension}',
@@ -670,7 +707,9 @@ async def export_models(
                                 )
                         else:
                             try:
-                                existing_service = await db["services"].find_one(
+                                existing_service = await db[
+                                    "services"
+                                ].find_one(
                                     {
                                         "modelId": x["model_id"],
                                         "creatorUserId": x["creator_user_id"],

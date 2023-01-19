@@ -1,6 +1,7 @@
 """This module contains utility functions that are used throughout the project."""
 import re
 
+
 def uncased_to_snake_case(string: str) -> str:
     """Converts a string to snake case.
 
@@ -14,9 +15,9 @@ def uncased_to_snake_case(string: str) -> str:
 
 
 def sanitize_for_url(string: str) -> str:
-    urlString = ";,/?:@&=+$-_.!~*'()"
-    removeUrlString = str.maketrans(urlString, "_" * len(urlString))
-    return string.translate(removeUrlString)
+    url = ";,/?:@&=+$-_.!~*'()"
+    remove_unsafe_chars = str.maketrans(url, "_" * len(url))
+    return string.translate(remove_unsafe_chars)
 
 
 def k8s_safe_name(string: str) -> str:
@@ -34,7 +35,9 @@ def k8s_safe_name(string: str) -> str:
         str: Output string
     """
     # Give some leeway to allow for adding suffixes (e.g -deployment)
-    return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix("-")[:45]
+    return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix(
+        "-"
+    )[:62]
 
 
 def camel_case_to_snake_case(string: str) -> str:
@@ -50,7 +53,8 @@ def camel_case_to_snake_case(string: str) -> str:
     if not string:
         return string
     return (
-        string[0] + re.sub(r"[A-Z]", lambda matched: "_" + matched.group(0), string[1:])
+        string[0]
+        + re.sub(r"[A-Z]", lambda matched: "_" + matched.group(0), string[1:])
     ).lower()
 
 
@@ -65,5 +69,6 @@ def to_camel_case(string: str) -> str:
     """
     string_split = string.split("_")
     return (
-        string_split[0] + "".join(word.capitalize() for word in string_split[1:])
+        string_split[0]
+        + "".join(word.capitalize() for word in string_split[1:])
     ).strip()

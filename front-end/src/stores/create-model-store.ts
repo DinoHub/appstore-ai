@@ -269,37 +269,49 @@ export const useCreationStore = defineStore('createModel', {
             datasetId: this.datasetID,
           };
         }
-        // Create Inference Service
-        const inferenceServiceStore = useInferenceServiceStore();
-        // Remove any existing preview service
-        if (this.previewServiceName) {
-          await inferenceServiceStore.deleteService(this.previewServiceName);
-        }
-        const { serviceName } = await inferenceServiceStore.createService(
-          this.modelName,
-          this.imageUri,
-          this.numGpus,
-          this.containerPort,
-          this.uniqueEnv,
-        );
-        cardPackage.inferenceServiceName = serviceName;
         // Submit Model
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModel(
           cardPackage,
         );
+        // Create Inference Service
+        // TODO: Move video upload into this function
+        if (this.imageUri) {
+          const inferenceServiceStore = useInferenceServiceStore();
+          // Remove any existing preview service
+          if (this.previewServiceName) {
+            console.log(`Removing preview service: ${this.previewServiceName}`);
+            await inferenceServiceStore.deleteService(this.previewServiceName);
+          }
+          const { serviceName } = await inferenceServiceStore.createService(
+            modelId,
+            this.imageUri,
+            this.numGpus,
+            this.containerPort,
+            this.uniqueEnv,
+          );
+          // Update service with serviceName
+          await modelStore.updateModel(
+            {
+              inferenceServiceName: serviceName,
+            },
+            creatorUserId,
+            modelId,
+          );
+        }
         Notify.create({
           message: 'Successfully created model',
           icon: 'success',
           color: 'secondary',
         });
         return { modelId, creatorUserId };
-      } catch (error) {
+      } catch (err) {
+        const error = err as {
+          code: number;
+          message: string;
+        };
         console.warn(error);
-        if (
-          error ==
-          'The model name already exists under you. Please enter a different one.'
-        ) {
+        if (error.code === 409) {
           this.step = 2;
           this.modelName = '';
         }

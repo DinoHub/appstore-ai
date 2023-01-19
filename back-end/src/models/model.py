@@ -5,7 +5,7 @@ from typing import List, Optional
 from bson import ObjectId
 from pydantic import BaseModel, Field, validator
 
-from ..internal.utils import to_camel_case, sanitize_for_url
+from ..internal.utils import sanitize_for_url, to_camel_case
 from .common import Artifact, PyObjectId
 from .dataset import LinkedDataset
 from .experiment import LinkedExperiment
@@ -14,7 +14,7 @@ from .experiment import LinkedExperiment
 class ModelCardModelIn(BaseModel):  # Input spec
     """Request model for creating a model card."""
 
-    title: str
+    title: str = Field(max_length=50)
     markdown: str
     performance: str
     task: str  # a task is a tag

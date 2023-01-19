@@ -168,16 +168,18 @@ export const useModelStore = defineStore('model', {
         const data: ModelCard = res.data;
         return data;
       } catch (error) {
-        if (error.response.status == 409) {
+        const httpError = error as AxiosError;
+        if (httpError.response?.status === 409) {
           Notify.create({
             type: 'warning',
             message:
               'The model name already exists under you. Please enter a different one.',
             position: 'top-right',
           });
-          return Promise.reject(
-            'The model name already exists under you. Please enter a different one.'
-          );
+          return Promise.reject({
+            status: 409,
+            message: 'Duplicate Model ID',
+          });
         } else {
           Notify.create({
             message: 'Failed to create model',
@@ -202,7 +204,7 @@ export const useModelStore = defineStore('model', {
             position: 'top-right',
           });
           return Promise.reject(
-            'The model name already exists under you. Please enter a different one.'
+            'The model name already exists under you. Please enter a different one.',
           );
         } else {
           Notify.create({
@@ -217,7 +219,7 @@ export const useModelStore = defineStore('model', {
     async updateModel(
       metadata: UpdateModelCard,
       userId: string,
-      modelId: string
+      modelId: string,
     ): Promise<void> {
       try {
         console.warn(metadata);
