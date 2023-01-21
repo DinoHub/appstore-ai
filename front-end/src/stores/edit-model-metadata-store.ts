@@ -43,7 +43,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
             'modelOwner',
             'modelPOC',
             'plots',
-          ].includes(item),
+          ].includes(item)
       );
       if (this.tags.length == 0 || this.frameworks.length == 0) {
         return false;
@@ -73,11 +73,11 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       try {
         const metadata = await experimentStore.getExperimentByID(
           this.experimentID,
-          this.experimentPlatform,
+          this.experimentPlatform
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks]),
+          new Set([...this.frameworks, ...metadata.frameworks])
         );
       } catch (error) {
         return Promise.reject(error);
@@ -90,7 +90,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
 
       const original_data = await modelStore.getModelById(
         authStore.user?.userId ?? '',
-        modelId,
+        modelId
       );
 
       // Load the data
@@ -156,7 +156,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
           },
           artifacts: [
             {
-              artifactType: 'model',
+              artifactType: 'mainModel',
               url: this.modelPath,
               name: 'Model',
               timestamp: new Date().toISOString(),
@@ -166,7 +166,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
           pointOfContact: this.modelPOC,
         },
         authStore.user?.userId ?? '',
-        modelId,
+        modelId
       );
     },
   },
