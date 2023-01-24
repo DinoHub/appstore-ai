@@ -4,10 +4,11 @@ from typing import Optional
 import urllib3
 
 import minio
-from minio.commonconfig import CopySource
+from minio.commonconfig import CopySource, ComposeSource
 from colorama import Fore
 
 from ...config.config import config
+from ...models.common import S3Storage
 
 
 def minio_api_client() -> Optional[minio.Minio]:
@@ -169,3 +170,27 @@ def copy_data(
     )
     return f"s3://{target_bucket_name}/{target_object_name}"
 
+
+def compose_data(
+    client: minio.Minio,
+    sources: list[S3Storage],
+    target_object_name: str,
+    target_bucket_name: str,
+) -> str:
+    """Create an object by combining data from different source objects using server-side copy
+
+    Args:
+        client (minio.Minio): MinIO client
+        sources (list[S3Storage]): List of buckets and objects to copy in dictionary form with key values 'bucket_name' and 'object_name'
+        target_object_name (str): Desired name of object
+        target_bucket_name (str): Desired bucket to store copied object in
+
+    Returns:
+        str: an S3 URL to the object (need to be further processed)
+    """
+    copy_source = []
+    for x in sources:
+        copy_source.append(ComposeSource(x.bucket_name, x.object_name))
+    client.compose_object(target_bucket_name, target_object_name, copy_source)
+
+    return f"s3://{target_bucket_name}/{target_object_name}"
