@@ -4,6 +4,7 @@ from typing import Optional
 import urllib3
 
 import minio
+from minio.commonconfig import CopySource
 from colorama import Fore
 
 from ...config.config import config
@@ -140,3 +141,31 @@ def get_data(
         object_name=object_name,
     )
     return response
+
+
+def copy_data(
+    client: minio.Minio,
+    source_object_name: str,
+    source_bucket_name: str,
+    target_object_name: str,
+    target_bucket_name: str,
+) -> str:
+    """Copies object from source bucket to desired bucket
+
+    Args:
+        client (minio.Minio): MinIO client
+        source_object_name (str): Original name of object
+        source_bucket_name (str): Source bucket object is stored in
+        target_object_name (str): Desired name of object
+        target_bucket_name (str): Desired bucket to store copied object in
+
+    Returns:
+        str: an S3 URL to the object (need to be further processed)
+    """
+    client.copy_object(
+        target_bucket_name,
+        target_object_name,
+        CopySource(source_bucket_name, source_object_name),
+    )
+    return f"s3://{target_bucket_name}/{target_object_name}"
+
