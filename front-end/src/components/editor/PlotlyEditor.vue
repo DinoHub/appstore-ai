@@ -17,14 +17,15 @@
       </q-tabs>
       <q-separator></q-separator>
       <q-tab-panels v-model="tab" animated>
-        <q-tab-panel name="data">
+        <q-tab-panel name="data" class="json-editor">
           <div class="text-h6">Data</div>
           <JSONEditorVue
             :onRenderValue="onRenderValueData"
             v-model="data"
+            mode="text"
           ></JSONEditorVue>
           <div class="text-h6">Layout</div>
-          <JSONEditorVue v-model="layout"></JSONEditorVue>
+          <JSONEditorVue v-model="layout" mode="text"></JSONEditorVue>
         </q-tab-panel>
         <q-tab-panel name="preview">
           <plotly-chart
@@ -116,6 +117,7 @@ const layout: Ref<Record<string, any>> = ref(
 
 const updateChart = () => emit('updatePlot', data.value, layout.value);
 const insertChart = () => emit('newPlot', data.value, layout.value);
+// TODO: Use Plotly Schema at https://api.plot.ly/v2/plot-schema?format=json&sha1=%27%27
 const onRenderValueData = (props: RenderValueProps) => renderValue(props);
 
 watch(data, (newData) => {
@@ -136,3 +138,13 @@ watch(layout, (newLayout) => {
   }
 });
 </script>
+
+<style>
+.json-editor {
+  --jse-font-family: var(--md-sys-typescale-body-small-font-family-name);
+  --jse-theme-color: var(--md-sys-color-primary);
+  --jse-theme-color-highlight: var(--md-sys-color-secondary);
+  --jse-error-color: var(--md-sys-color-error);
+  --jse-warning-color: #f2c037;
+}
+</style>
