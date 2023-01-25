@@ -96,7 +96,6 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       // Load the data
       this.tags = original_data.tags;
       this.frameworks = original_data.frameworks;
-      // TODO: what to do with modelPath?
       this.experimentPlatform = original_data.experiment?.connector ?? '';
       this.experimentID = original_data.experiment?.experimentId ?? '';
       this.datasetPlatform = original_data.dataset?.connector ?? '';
@@ -117,7 +116,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       // Look through artifacts to find model
       // TODO: Replace modelPath with something less hard-coded
       for (const artifact of original_data.artifacts) {
-        if (artifact.artifactType === 'model') {
+        if (artifact.artifactType === 'mainModel') {
           this.modelPath = artifact.url;
           break;
         }
