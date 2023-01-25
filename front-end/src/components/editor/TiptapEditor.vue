@@ -122,11 +122,7 @@
       >
       </q-btn>
       <q-dialog v-model="tableCreator">
-        <table-creator
-          @create-table="
-            (noRows, noCols) => insertTable(editor, noRows, noCols)
-          "
-        ></table-creator>
+        <table-creator :editor="editor" />
       </q-dialog>
       <!-- Chart Editor -->
       <q-btn
@@ -474,21 +470,6 @@ const insertChart = (
       },
     })
     .run();
-
-const insertTable = (editor: Editor, noRows: number, noCols: number) => {
-  if (noRows < 1 || noCols < 1) {
-    throw RangeError;
-  }
-  editor
-    ?.chain()
-    .focus()
-    .insertTable({
-      rows: noRows,
-      cols: noCols,
-      withHeaderRow: true,
-    })
-    .run();
-};
 
 watch(props, (newVal) => {
   // ensure that we can replace the content from outside

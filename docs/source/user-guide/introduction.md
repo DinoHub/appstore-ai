@@ -29,6 +29,14 @@ The AI App Store is a platform for browsing and contributing AI model cards. Wit
 - [🖊️ Updating a model card](model-cards/updating-model-cards.md)
 - [🛠 Developing an inference service](inference-services/building-inference-services.md)
 - [🔄 Updating an inference service](inference-services/updating-inference-services.md)
+- [☯ ClearML Integration](integrations/clearml.md)
+
+### 💁 As an administrator...
+- [🪟 Accessing the Admin Portal](admin/accessing-admin-portal.md)
+- [🪪 Managing Users](admin/managing-users.md)
+- [📦 Importing Model Cards](admin/importing-models.md)
+- [📦 Exporting Model Cards](admin/exporting-models.md)
+
 
 ## Roadmap
 

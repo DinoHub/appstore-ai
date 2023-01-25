@@ -24,7 +24,7 @@
               v-close-popup
               @click="scaleDown"
             >
-              <q-item-section> Scale Down Instance </q-item-section>
+              <q-item-section>Scale Down Instance </q-item-section>
             </q-item>
             <q-item v-else v-close-popup clickable @click="scaleUp"
               ><q-item-section>Request New Instance</q-item-section>

@@ -4,15 +4,14 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from minio import Minio
+from minio.deleteobjects import DeleteObject
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from src.config import config
 from src.internal.auth import check_is_admin, get_current_user
 from src.main import app as fastapi_app
 
 from .utils import fake_login_admin, fake_login_user
-
-config.config.DB_NAME = "appStoreTestDB"
 
 
 @pytest.fixture(scope="module")
@@ -25,15 +24,6 @@ def application() -> FastAPI:
 
 @pytest.fixture(scope="module")
 def client(application) -> TestClient:
-    # from src.config import config
-
-    # config.ENV_STATE = "test"
-    # config.config = config.TestingConfig()
-    # from src.main import app
-
-    # app.dependency_overrides[get_current_user] = fake_login_user
-    # if check_is_admin in app.dependency_overrides:
-    #     del app.dependency_overrides[check_is_admin]
     return TestClient(application)
 
 
@@ -62,9 +52,25 @@ def get_fake_db(client) -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
     db, db_client = get_db()
     return db, db_client
 
-
 @pytest_asyncio.fixture
 async def flush_db(get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]):
     db, client = get_fake_db
     for collection in await db.list_collection_names():
         await db.drop_collection(collection)
+
+@pytest.fixture
+def s3_client(client: TestClient) -> Minio:
+    from src.internal.dependencies.minio_client import minio_api_client
+    s3_client = minio_api_client()
+    return s3_client
+
+@pytest.fixture
+def flush_s3(s3_client: Minio):
+    from src.config.config import config
+    objects = s3_client.list_objects(config.MINIO_BUCKET_NAME, recursive=True)
+    objects_to_delete = [
+        DeleteObject(obj.object_name) for obj in objects
+    ]
+    results = s3_client.remove_objects(config.MINIO_BUCKET_NAME, objects_to_delete)
+    for result in results:
+        pass

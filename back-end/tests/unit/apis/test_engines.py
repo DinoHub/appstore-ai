@@ -1,4 +1,8 @@
 # TODO: Mock K8S API Calls to allow testing of inference engine endpoints
+# NOTE: Currently no mock clients exist yet
+# https://github.com/kubernetes-client/python/issues/524
+# So for now, probably only feasible to use integration testing
+# with actual k3s/kind cluster
 from datetime import datetime
 from typing import Dict, List, Tuple
 

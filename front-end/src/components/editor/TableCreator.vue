@@ -48,11 +48,23 @@
 <script setup lang="ts">
 import { Notify } from 'quasar';
 import { ref } from 'vue';
+import { Editor } from '@tiptap/vue-3';
 
-const noRows = ref(3);
-const noCols = ref(3);
+export interface TableCreatorProps {
+  editor: Editor;
+  defaultHeaderRow: boolean;
+  defaultRows: number;
+  defaultCols: number;
+}
 
-const emit = defineEmits(['createTable']);
+const props = withDefaults(defineProps<TableCreatorProps>(), {
+  defaultHeaderRow: true,
+  defaultRows: 3,
+  defaultCols: 3,
+});
+
+const noRows = ref(props.defaultRows);
+const noCols = ref(props.defaultCols);
 
 const createTable = () => {
   if (noRows.value < 1 || noCols.value < 1) {
@@ -62,7 +74,15 @@ const createTable = () => {
     });
     return;
   } else {
-    emit('createTable', noRows.value, noCols.value);
+    props.editor
+      ?.chain()
+      .focus()
+      .insertTable({
+        rows: noRows.value,
+        cols: noCols.value,
+        withHeaderRow: props.defaultHeaderRow,
+      })
+      .run();
   }
 };
 </script>
