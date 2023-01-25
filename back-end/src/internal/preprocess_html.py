@@ -62,34 +62,40 @@ def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
     images = parser.find_all("img")
     for image in images:
         # Filter out images that are not base64 encoded
-        if not image["src"].startswith("data:image"):
-            continue
-        # Extract the base64 encoded image
-        # e.g data:image/jpeg;base64,<BASE64 ENCODED IMAGE>
-        b64_image = image["src"].split(",")
-        # Get the image type
-        image_type = b64_image[0].split(":")[1].split(";")[0]
-        # Get the base64 encoded image
-        b64_image = b64_image[1]
-        # Decode the base64 encoded image
-        decoded_image = b64decode(b64_image)
+        if image["src"].startswith("data:image"):
+            # Extract the base64 encoded image
+            # e.g data:image/jpeg;base64,<BASE64 ENCODED IMAGE>
+            b64_image = image["src"].split(",")
+            # Get the image type
+            image_type = b64_image[0].split(":")[1].split(";")[0]
+            # Get the base64 encoded image
+            b64_image = b64_image[1]
+            # Decode the base64 encoded image
+            decoded_image = b64decode(b64_image)
 
-        # Generate a unique name for the image
-        # note guess_extension returns a dot before the extension
-        path = f"images/{uuid4()}{guess_extension(image_type)}"
+            # Generate a unique name for the image
+            # note guess_extension returns a dot before the extension
+            path = f"images/{uuid4()}{guess_extension(image_type)}"
 
-        # Upload the image to S3
-        # TODO: Allow customization of upload method
-        url = upload_data(
-            s3_client,
-            decoded_image,
-            path,
-            config.MINIO_BUCKET_NAME,
-            image_type,
-        )
+            # Upload the image to S3
+            # TODO: Allow customization of upload method
+            url = upload_data(
+                s3_client,
+                decoded_image,
+                path,
+                config.MINIO_BUCKET_NAME,
+                image_type,
+            )
 
-        # Replace the base64 encoded image with the URL of the uploaded image
-        image["src"] = url
+            # Replace the base64 encoded image with the URL of the uploaded image
+            image["src"] = url
+        elif image["src"].startswith(config.MINIO_API_HOST):
+            # When editing markdown, image retrieved will be a presignedurl, which needs to be converted back
+            url = image["src"].removeprefix(config.MINIO_API_HOST).strip("/")
+            bucket, path = url.split("/", 1)
+            path = path.split("?", 1)[0]
+            url = f"s3://{bucket}/{path}"
+            image["src"] = url
     return parser
 
 
