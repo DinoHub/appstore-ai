@@ -1,6 +1,6 @@
 """This module contains functions for preprocessing HTML before it is saved to the database."""
-from base64 import b64decode
-from mimetypes import guess_extension
+from base64 import b64decode, b64encode
+from mimetypes import guess_extension, guess_type
 from uuid import uuid4
 
 from bs4 import BeautifulSoup
@@ -10,6 +10,7 @@ from lxml.html.clean import Cleaner
 from ..config.config import config
 from .dependencies.minio_client import (
     get_presigned_url,
+    get_data,
     minio_api_client,
     upload_data,
 )
@@ -142,4 +143,33 @@ def s3_url_to_presigned_url(
 
         # Replace the base64 encoded image with the URL of the uploaded image
         image["src"] = get_presigned_url(s3_client, object_name, bucket_name)
+    return parser
+
+
+def process_html_to_base64(html: str) -> str:
+    soup = BeautifulSoup(html, "lxml")
+    soup = s3_url_to_base64(soup)
+    html = sanitize_html(str(soup))
+    return html
+
+
+def s3_url_to_base64(
+    parser: BeautifulSoup,
+):
+    s3_client = minio_api_client()
+    if not s3_client:
+        return parser
+    # Get all images
+    images = parser.find_all("img")
+    for image in images:
+        # Filter out images that are not base64 encoded
+        if not image["src"].startswith("s3://"):
+            continue
+        # Extract bucket name and object name
+        # s3://<bucket>/<object>
+        bucket_name, object_name = image["src"].split("s3://")[1].split("/", 1)
+        bytes_image = get_data(s3_client, object_name, bucket_name)
+        base64_image = b64encode(bytes_image.data).decode("utf-8")
+        data_type = guess_type(object_name)[0]
+        image["src"] = f"data:{data_type};base64,{base64_image}"
     return parser
