@@ -16,7 +16,7 @@
         <q-tab name="preview" label="Preview Graph"> </q-tab>
       </q-tabs>
       <q-separator></q-separator>
-      <q-tab-panels v-model="tab" animated>
+      <q-tab-panels v-model="tab" animated keep-alive>
         <q-tab-panel name="data" class="json-editor">
           <div class="text-h6">Data</div>
           <JSONEditorVue
@@ -30,8 +30,8 @@
         <q-tab-panel name="preview">
           <plotly-chart
             v-if="tab == Tabs.preview"
-            :data="data"
-            :layout="layout"
+            :data="parsedData"
+            :layout="parsedLayout"
           ></plotly-chart>
         </q-tab-panel>
       </q-tab-panels>
@@ -72,7 +72,8 @@ import {
   renderValue,
   RenderValueProps,
 } from 'vanilla-jsoneditor';
-import { Ref, ref, watch } from 'vue';
+import { Ref, ref } from 'vue';
+import { computedEager } from '@vueuse/core';
 
 export interface PlotlyEditorProps {
   data?: Record<string, any>[];
@@ -100,7 +101,7 @@ const data: Ref<Record<string, any>[]> = ref(
       y: [],
       type: 'scatter',
     },
-  ],
+  ]
 );
 
 const layout: Ref<Record<string, any>> = ref(
@@ -112,31 +113,55 @@ const layout: Ref<Record<string, any>> = ref(
     yaxis: {
       title: 'Y Axis Label',
     },
-  },
+  }
 );
 
-const updateChart = () => emit('updatePlot', data.value, layout.value);
-const insertChart = () => emit('newPlot', data.value, layout.value);
+const updateChart = () => { 
+  if (typeof data.value === 'string') {
+    data.value = JSON.parse(data.value);
+  }
+  if (typeof layout.value === 'string') {
+    layout.value = JSON.parse(layout.value);
+  }
+  emit('updatePlot', data.value, layout.value);
+}
+const insertChart = () => { 
+  if (typeof data.value === 'string') {
+    data.value = JSON.parse(data.value);
+  }
+  if (typeof layout.value === 'string') {
+    layout.value = JSON.parse(layout.value);
+  }
+  emit('newPlot', data.value, layout.value);
+}
 // TODO: Use Plotly Schema at https://api.plot.ly/v2/plot-schema?format=json&sha1=%27%27
 const onRenderValueData = (props: RenderValueProps) => renderValue(props);
 
-watch(data, (newData) => {
+// Need computed eager as lazy evaluation
+// will cause an infinite loop even when
+// data does not change
+// causing app to crash due to the chart
+// always updating
+const parsedData = computedEager(() => {
   // Sometimes new data is a string, so we need to parse it
   // Check if string
-  if (typeof newData === 'string') {
+  if (typeof data.value === 'string') {
     // Parse string
-    data.value = JSON.parse(newData);
+    return JSON.parse(data.value);
   }
+  return data.value;
 });
 
-watch(layout, (newLayout) => {
+const parsedLayout = computedEager(() => {
   // Sometimes new data is a string, so we need to parse it
   // Check if string
-  if (typeof newLayout === 'string') {
+  if (typeof layout.value === 'string') {
     // Parse string
-    layout.value = JSON.parse(newLayout);
+    return JSON.parse(layout.value);
   }
+  return layout.value;
 });
+
 </script>
 
 <style>

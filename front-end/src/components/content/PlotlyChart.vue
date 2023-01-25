@@ -23,6 +23,7 @@ function renderPlot(
   { data, layout }: PlotlyChartProps,
 ) {
   chartRef.innerHTML = '';
+  Plotly.purge(chartRef);
   Plotly.newPlot(chartRef, data, layout, {
     responsive: props.responsive,
   });
