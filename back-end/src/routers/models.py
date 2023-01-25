@@ -35,6 +35,7 @@ from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
     preprocess_html_get,
     preprocess_html_post,
+    process_html_to_base64,
 )
 from ..internal.tasks import delete_orphan_images, delete_orphan_services
 from ..internal.utils import uncased_to_snake_case
@@ -284,19 +285,12 @@ async def search_cards(
     if title:
         query["title"] = {"$regex": re.escape(title), "$options": "i"}
     if tasks:
-        query["task"] = {
-            "$in": [re.compile(task, re.IGNORECASE) for task in tasks]
-        }
+        query["task"] = {"$in": [re.compile(task, re.IGNORECASE) for task in tasks]}
     if tags:
-        query["tags"] = {
-            "$all": [re.compile(tag, re.IGNORECASE) for tag in tags]
-        }
+        query["tags"] = {"$all": [re.compile(tag, re.IGNORECASE) for tag in tags]}
     if frameworks:
         query["frameworks"] = {
-            "$in": [
-                re.compile(framework, re.IGNORECASE)
-                for framework in frameworks
-            ]
+            "$in": [re.compile(framework, re.IGNORECASE) for framework in frameworks]
         }
     if creator_user_id:
         query["creatorUserId"] = creator_user_id
@@ -652,91 +646,177 @@ async def export_models(
         else:
             db, mongo_client = db
             pkg = card_package.dict()["card_package"]
-
-            # Grab ZIP file from in-memory, make response with correct MIME-type
+            current_time_stringified = datetime.datetime.now().strftime(
+                "%Y-%m-%d_%H:%M:%S.%f"
+            )
+            current_time = str(datetime.datetime.now())
+            BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
 
             async with await mongo_client.start_session() as session:
                 async with session.start_transaction():
-                    zip_filename = "exports.zip"
-                    s2 = io.BytesIO()
-                    zf2 = zipfile.ZipFile(s2, "w")
+                    await db["exports"].insert_one(
+                        {
+                            "userId": user.user_id,
+                            "timeInitiated": current_time,
+                            "models": pkg,
+                        }
+                    )
                     for x in pkg:
-                        existing_card = await db["models"].find_one(
-                            {
-                                "modelId": x["model_id"],
-                                "creatorUserId": x["creator_user_id"],
-                            }
-                        )
-                        subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}'
-                        dumped_JSON: str = json.dumps(
-                            existing_card,
-                            ensure_ascii=False,
-                            indent=4,
-                            sort_keys=True,
-                            default=str,
-                        )
-                        # Write the model card JSON data into the model ZIP file
-                        zf2.writestr(
-                            f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}.json',
-                            data=dumped_JSON,
-                        )
-                        print(existing_card["artifacts"])
-                        if (
-                            existing_card["task"] == "Reinforcement Learning"
-                            and existing_card["videoLocation"] is not None
-                        ):
+                        try:
+                            existing_card = await db["models"].find_one(
+                                {
+                                    "modelId": x["model_id"],
+                                    "creatorUserId": x["creator_user_id"],
+                                }
+                            )
+                            existing_card["markdown"] = process_html_to_base64(
+                                existing_card["markdown"]
+                            )
+                            existing_card["performance"] = process_html_to_base64(
+                                existing_card["performance"]
+                            )
+                            subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}'
+                            dumped_JSON: str = json.dumps(
+                                existing_card,
+                                ensure_ascii=False,
+                                indent=4,
+                                sort_keys=True,
+                                default=str,
+                            )
                             try:
-                                url: str = existing_card["videoLocation"]
-                                url = url.removeprefix("s3://")
-                                bucket, object_name = url.split("/", 1)
-                                response = get_data(s3_client, object_name, bucket)
-                                file_extension = object_name.split(".").pop()
-                                zf2.writestr(
-                                    f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}.{file_extension}',
-                                    data=response.data,
+                                upload_data(
+                                    s3_client,
+                                    dumped_JSON.encode("utf-8"),
+                                    f"exports/{current_time_stringified}/{subfile_name}/card-metadata.json",
+                                    BUCKET_NAME,
+                                    "application/json",
                                 )
-                                response.close()
-                                response.release_conn()
                             except:
-                                print(
-                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve video from bucket. Skipping...!"
-                                )
-                        else:
-                            try:
-                                existing_service = await db["services"].find_one(
+                                await db["exports"].update_one(
                                     {
-                                        "modelId": x["model_id"],
-                                        "creatorUserId": x["creator_user_id"],
-                                    }
+                                        "userId": user.user_id,
+                                        "timeInitiated": current_time,
+                                        "models.model_id": x["model_id"],
+                                        "models.creator_user_id": x["creator_user_id"],
+                                    },
+                                    {
+                                        "$set": {
+                                            "models.$.progress": "Failed",
+                                        },
+                                        "$push": {
+                                            "models.$.reason": "Card metadata could not be retrieved",
+                                        },
+                                    },
                                 )
-                                dumped_JSON_service: str = json.dumps(
-                                    existing_service,
-                                    ensure_ascii=False,
-                                    indent=4,
-                                    sort_keys=True,
-                                    default=str,
-                                )
-                                # Write the service JSON data into the model ZIP file
-                                zf2.writestr(
-                                    f'{subfile_name}/{x["creator_user_id"]}-{x["model_id"]}-service.json',
-                                    data=dumped_JSON_service,
-                                )
+                            if (
+                                existing_card["task"] == "Reinforcement Learning"
+                                and existing_card["videoLocation"] is not None
+                            ):
+                                try:
+                                    url: str = existing_card["videoLocation"]
+                                    url = url.removeprefix("s3://")
+                                    bucket, object_name = url.split("/", 1)
+                                    response = get_data(s3_client, object_name, bucket)
 
-                            except:
-                                print(
-                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve service info from database. Skipping...!"
-                                )
+                                    file_extension = object_name.split(".").pop()
+                                    upload_data(
+                                        s3_client,
+                                        response.data,
+                                        f"exports/{current_time_stringified}/{subfile_name}/example-video.{file_extension}",
+                                        BUCKET_NAME,
+                                        f"video/{file_extension}",
+                                    )
+                                    response.close()
+                                    response.release_conn()
 
-                    zf2.close()
-            BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
-            url = upload_data(
-                s3_client,
-                s2.getvalue(),
-                f"exports/{datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')}/{zip_filename}",
-                BUCKET_NAME,
-                "application/x-zip-compressed",
-            )
-            print(url)
+                                except:
+                                    await db["exports"].update_one(
+                                        {
+                                            "userId": user.user_id,
+                                            "timeInitiated": current_time,
+                                            "models.model_id": x["model_id"],
+                                            "models.creator_user_id": x[
+                                                "creator_user_id"
+                                            ],
+                                        },
+                                        {
+                                            "$set": {
+                                                "models.$.progress": "Failed",
+                                            },
+                                            "$push": {
+                                                "models.$.reason": "Example video could not be retrieved",
+                                            },
+                                        },
+                                    )
+                                    print(
+                                        f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve video from bucket. Skipping...!"
+                                    )
+                            else:
+                                try:
+                                    existing_service = await db["services"].find_one(
+                                        {
+                                            "modelId": x["model_id"],
+                                            "creatorUserId": x["creator_user_id"],
+                                        }
+                                    )
+                                    dumped_JSON_service: str = json.dumps(
+                                        existing_service,
+                                        ensure_ascii=False,
+                                        indent=4,
+                                        sort_keys=True,
+                                        default=str,
+                                    )
+                                    upload_data(
+                                        s3_client,
+                                        dumped_JSON_service.encode("utf-8"),
+                                        f"exports/{current_time_stringified}/{subfile_name}/service-metadata.json",
+                                        BUCKET_NAME,
+                                        "application/json",
+                                    )
+                                    await db["exports"].update_one(
+                                        {
+                                            "userId": user.user_id,
+                                            "timeInitiated": current_time,
+                                            "models.model_id": x["model_id"],
+                                            "models.creator_user_id": x[
+                                                "creator_user_id"
+                                            ],
+                                        },
+                                        {"$set": {"models.$.progress": "Completed"}},
+                                    )
+                                except:
+                                    await db["exports"].update_one(
+                                        {
+                                            "userId": user.user_id,
+                                            "timeInitiated": current_time,
+                                            "models.model_id": x["model_id"],
+                                            "models.creator_user_id": x[
+                                                "creator_user_id"
+                                            ],
+                                        },
+                                        {
+                                            "$set": {
+                                                "models.$.progress": "Failed",
+                                            },
+                                            "$push": {
+                                                "models.$.reason": "Service metadata could not be retrieved",
+                                            },
+                                        },
+                                    )
+                                    print(
+                                        f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve service info from database. Skipping...!"
+                                    )
+                            await db["exports"].update_one(
+                                {
+                                    "userId": user.user_id,
+                                    "timeInitiated": current_time,
+                                    "models.model_id": x["model_id"],
+                                    "models.creator_user_id": x["creator_user_id"],
+                                },
+                                {"$set": {"models.$.progress": "Completed"}},
+                            )
+                        except:
+                            continue
             return
     except Exception as err:
         print(err)
