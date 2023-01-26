@@ -1,6 +1,6 @@
 import { Chart, EnvField } from 'src/components/models';
 import { defineStore } from 'pinia';
-import { ModelCard, useModelStore } from './model-store';
+import { Artifact, ModelCard, useModelStore } from './model-store';
 import { Notify } from 'quasar';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
@@ -16,7 +16,7 @@ export const useCreationStore = defineStore('createModel', {
       step: 1 as number,
       tags: [] as string[],
       frameworks: [] as string[],
-      modelPath: '' as string,
+      artifacts: [] as Artifact[],
       experimentPlatform: '' as string, // todo: enum
       experimentID: '' as string,
       datasetPlatform: '' as string,
@@ -111,14 +111,14 @@ export const useCreationStore = defineStore('createModel', {
           'performanceMarkdown',
           'markdownContent',
           'modelName',
-          'modelPath',
+          'artifacts',
           'modelTask',
           'modelDesc',
           'modelExplain',
           'modelUsage',
           'modelLimitations',
           'exampleVideo',
-        ].includes(item)
+        ].includes(item),
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -148,13 +148,13 @@ export const useCreationStore = defineStore('createModel', {
           'performanceMarkdown',
           'markdownContent',
           'modelName',
-          'modelPath',
+          'artifacts',
           'modelTask',
           'modelDesc',
           'modelExplain',
           'modelUsage',
           'modelLimitations',
-        ].includes(item)
+        ].includes(item),
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -193,11 +193,11 @@ export const useCreationStore = defineStore('createModel', {
       try {
         const metadata = await experimentStore.getExperimentByID(
           this.experimentID,
-          this.experimentPlatform
+          this.experimentPlatform,
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks])
+          new Set([...this.frameworks, ...metadata.frameworks]),
         );
       } catch (error) {
         return Promise.reject(error);
@@ -212,7 +212,7 @@ export const useCreationStore = defineStore('createModel', {
             this.imageUri,
             this.numGpus,
             this.containerPort,
-            this.uniqueEnv
+            this.uniqueEnv,
           );
         this.previewServiceUrl = inferenceUrl;
         this.previewServiceName = serviceName; // save so we know what to clean up
@@ -243,13 +243,7 @@ export const useCreationStore = defineStore('createModel', {
           pointOfContact: this.modelPOC,
           markdown: this.markdownContent,
           performance: this.performanceMarkdown,
-          artifacts: [
-            {
-              name: 'model',
-              artifactType: 'mainModel',
-              url: this.modelPath,
-            },
-          ],
+          artifacts: this.artifacts,
           description: this.modelDesc,
           explanation: this.modelExplain,
           usage: this.modelUsage,
@@ -272,7 +266,7 @@ export const useCreationStore = defineStore('createModel', {
         // Submit Model
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModel(
-          cardPackage
+          cardPackage,
         );
         // Create Inference Service
         // TODO: Move video upload into this function
@@ -288,7 +282,7 @@ export const useCreationStore = defineStore('createModel', {
             this.imageUri,
             this.numGpus,
             this.containerPort,
-            this.uniqueEnv
+            this.uniqueEnv,
           );
           // Update service with serviceName
           await modelStore.updateModel(
@@ -296,7 +290,7 @@ export const useCreationStore = defineStore('createModel', {
               inferenceServiceName: serviceName,
             },
             creatorUserId,
-            modelId
+            modelId,
           );
         }
         Notify.create({
@@ -372,7 +366,7 @@ export const useCreationStore = defineStore('createModel', {
         }
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModelVideo(
-          cardPackage
+          cardPackage,
         );
         Notify.create({
           message: 'Successfully created model',
@@ -397,7 +391,7 @@ export const useCreationStore = defineStore('createModel', {
       'step',
       'tags',
       'frameworks',
-      'modelPath',
+      'artifacts',
       'experimentPlatform',
       'experimentID',
       'datasetPlatform',

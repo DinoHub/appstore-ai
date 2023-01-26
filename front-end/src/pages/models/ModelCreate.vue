@@ -28,20 +28,7 @@
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
           <div class="col-4 q-pr-md shadow-2 rounded">
-            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Links</h6>
-            <p class="text-left q-ml-md q-mb-lg">
-              To start, please provide us with some metadata about your model,
-              such as the URL to the model (e.g a Git Repository), and any
-              experiment or dataset that you would like to associate with it.
-            </p>
-            <q-input
-              outlined
-              v-model="creationStore.modelPath"
-              class="q-ml-md q-pb-xl"
-              label="Model URL"
-              autogrow
-              :rules="[(val) => !!val || 'Field is required']"
-            ></q-input>
+            <h6 class="text-left q-mt-md q-ml-md q-mb-sm">Integrations</h6>
             <span class="text-h6 text-left q-ml-md q-mb-sm"
               >Linked Experiments & Datasets</span
             >
@@ -207,8 +194,9 @@
           </div>
         </div>
       </q-step>
+      <q-step :name="3" title="Artifacts" icon="save"> </q-step>
       <q-step
-        :name="3"
+        :name="4"
         title="Model Card Attributes"
         icon="person"
         :done="
@@ -276,7 +264,7 @@
         </q-card>
       </q-step>
       <q-step
-        :name="4"
+        :name="5"
         title="Card Markdown"
         icon="assignment"
         :done="
@@ -330,7 +318,7 @@
       </q-step>
 
       <q-step
-        :name="5"
+        :name="6"
         title="Performance Metrics"
         icon="leaderboard"
         :done="
@@ -397,10 +385,10 @@
       </q-step>
 
       <q-step
-        :name="6"
+        :name="7"
         title="Inference Service"
         icon="code"
-        :done="creationStore.step > 6"
+        :done="creationStore.step > 7"
         v-if="creationStore.modelTask != 'Reinforcement Learning'"
       >
         <div
@@ -448,10 +436,10 @@
       </q-step>
 
       <q-step
-        :name="7"
+        :name="8"
         title="Submission"
         icon="publish"
-        :done="creationStore.step > 7"
+        :done="creationStore.step > 8"
         v-if="creationStore.modelTask != 'Reinforcement Learning'"
       >
         <div class="row justify-center">
@@ -506,10 +494,10 @@
         </div>
       </q-step>
       <q-step
-        :name="7"
+        :name="8"
         title="Submission"
         icon="publish"
-        :done="creationStore.step > 7"
+        :done="creationStore.step > 8"
         v-if="creationStore.modelTask == 'Reinforcement Learning'"
       >
         <div
@@ -556,7 +544,7 @@
           </div>
         </div>
       </q-step>
-      <q-step :name="8" title="Confirm" icon="task">
+      <q-step :name="9" title="Confirm" icon="task">
         <div
           class="row justify-center"
           v-if="creationStore.modelTask != 'Reinforcement Learning'"
@@ -643,7 +631,7 @@
                 :disable="buttonDisable"
               />
               <q-btn
-                v-if="creationStore.step < 6"
+                v-if="creationStore.step < 7"
                 @click="$refs.stepper.next()"
                 no-caps
                 rounded
@@ -654,7 +642,7 @@
               />
 
               <q-btn
-                v-if="creationStore.step == 7 && creationStore.imageUri != ''"
+                v-if="creationStore.step == 8 && creationStore.imageUri != ''"
                 @click="launchPreview($refs.stepper)"
                 no-caps
                 rounded
@@ -664,7 +652,7 @@
               />
               <q-btn
                 v-if="
-                  creationStore.step == 7 && creationStore.exampleVideo != null
+                  creationStore.step == 8 && creationStore.exampleVideo != null
                 "
                 @click="$refs.stepper.next()"
                 no-caps
@@ -675,7 +663,7 @@
               />
 
               <q-btn
-                v-if="creationStore.step == 8"
+                v-if="creationStore.step == 9"
                 @click="finalSubmit($refs.stepper)"
                 no-caps
                 rounded
@@ -1082,9 +1070,9 @@ const addExpPlots = (store: typeof creationStore) => {
 };
 
 if (
-  creationStore.step == 8 &&
+  creationStore.step == 9 &&
   creationStore.modelTask == 'Reinforcement Learning'
 ) {
-  creationStore.$patch({ step: 7 });
+  creationStore.$patch({ step: 8 });
 }
 </script>

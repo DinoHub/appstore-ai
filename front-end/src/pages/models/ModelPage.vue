@@ -221,8 +221,7 @@
               <artifact-card
                 v-for="artifact in model.artifacts"
                 v-bind:key="artifact.name"
-                :name="artifact.name"
-                :url="artifact.url"
+                :artifact="artifact"
               ></artifact-card>
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
