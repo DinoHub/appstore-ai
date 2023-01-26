@@ -1,10 +1,9 @@
 image:
   repository: <REGISTRY>/ai-appstore/aas-backend
   pullPolicy: "IfNotPresent"
-  tag: "1.0.1"
 
 env:
-  PROD_FRONTEND_HOST: <REPLACE_ME>
+  PROD_FRONTEND_HOST: "['<REPLACE_ME>']"
   PROD_SECURE_COOKIES: <REPLACE_ME>
   PROD_SECRET_KEY: <REPLACE_ME>
   PROD_ADMIN_SECRET_KEY: <REPLACE_ME>

@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: aas-backend
   pullPolicy: Never
-  tag: "1.0.6"
+  tag: ""
 
 imagePullSecrets: []
 nameOverride: "aas-backend"
@@ -27,7 +27,7 @@ inferenceServiceBackend:
   knative: false
 
 env:
-  PROD_FRONTEND_HOST: http://appstore.ai
+  PROD_FRONTEND_HOST: '["http://appstore.ai"]'
   PROD_SECURE_COOKIES: 'false'
   PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
   PROD_ADMIN_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119

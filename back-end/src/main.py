@@ -62,7 +62,7 @@ fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app = CORSMiddleware(
     fastapi_app,
-    allow_origins=[config.FRONTEND_HOST, "http://localhost:9000"],
+    allow_origins=[str(origin) for origin in config.FRONTEND_HOST],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

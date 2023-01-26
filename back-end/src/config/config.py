@@ -6,9 +6,9 @@ Depending on the environment, the configuration will be different.
 # https://rednafi.github.io/digressions/python/2020/06/03/python-configs.html
 import os
 from enum import Enum
-from typing import Optional, Union
+from typing import List, Optional, Union
 
-from pydantic import BaseSettings, Field, MongoDsn
+from pydantic import AnyHttpUrl, BaseSettings, Field, MongoDsn, validator
 
 from ..models.engine import ServiceBackend
 
@@ -28,7 +28,10 @@ class GlobalConfig(BaseSettings):
     ENV_STATE: Environment = Field(default=Environment.DEV, env="ENV_STATE")
 
     # General Settings
-    FRONTEND_HOST: str = Field(default="http://localhost:9000")
+    # CORS ORIGINS
+    # e.g: '["http://localhost", "http://localhost:4200", "http://localhost:3000", \
+    # "http://localhost:8080", "http://local.dockertoolbox.tiangolo.com"]'
+    FRONTEND_HOST: List[AnyHttpUrl] = []
     MAX_UPLOAD_SIZE_GB: Union[int, float] = Field(default=10)
     SECURE_COOKIES: bool = Field(default=False)  # set to True if site is HTTPS
 
@@ -71,6 +74,28 @@ class GlobalConfig(BaseSettings):
     CLEARML_FILES_HOST: Optional[str] = None
     CLEARML_API_ACCESS_KEY: Optional[str] = None
     CLEARML_API_SECRET_KEY: Optional[str] = None
+
+    @validator("FRONTEND_HOST", pre=True)
+    def assemble_cors_origins(
+        cls, v: Union[str, List[str]]
+    ) -> Union[List[str], str]:
+        """Convert a string array of the frontend origins
+        to an actual array
+
+        Args:
+            v (Union[str, List[str]]): _description_
+
+        Raises:
+            ValueError: _description_
+
+        Returns:
+            Union[List[str], str]: _description_
+        """
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
 
     class Config:
         """Pydantic config class."""
