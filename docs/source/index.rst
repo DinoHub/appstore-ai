@@ -13,6 +13,11 @@ Welcome to AI App Store documentation!
    
    back-end-api/src
 
+.. toctree::
+   :maxdepth: 3
+   :caption: Deployment Guide
+   
+   developer-guide/deployment/deployment-on-k8s.md
 
 Indices and tables
 ==================

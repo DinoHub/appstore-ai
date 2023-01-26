@@ -14,6 +14,7 @@ Subpackages
    :maxdepth: 4
 
    src.internal.data_connector
+   src.internal.dependencies
    src.internal.experiment_connector
    src.internal.tasks
 
@@ -24,11 +25,6 @@ Submodules
    :maxdepth: 4
 
    src.internal.auth
-   src.internal.clearml_client
-   src.internal.db
-   src.internal.file_validator
-   src.internal.k8s_client
-   src.internal.minio_client
    src.internal.preprocess_html
    src.internal.templates
    src.internal.utils

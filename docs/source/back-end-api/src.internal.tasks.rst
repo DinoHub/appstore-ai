@@ -15,3 +15,4 @@ Submodules
 
    src.internal.tasks.clean_orphaned_media
    src.internal.tasks.clean_orphaned_services
+   src.internal.tasks.init_db
