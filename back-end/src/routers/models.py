@@ -30,6 +30,7 @@ from ..internal.dependencies.minio_client import (
     get_presigned_url,
     minio_api_client,
     upload_data,
+    compose_data,
 )
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
@@ -708,6 +709,31 @@ async def export_models(
                                         },
                                     },
                                 )
+                                print(
+                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve card metadata info. Skipping...!"
+                                )
+                            try:
+                                print('test')
+                            except:
+                                await db["exports"].update_one(
+                                    {
+                                        "userId": user.user_id,
+                                        "timeInitiated": current_time,
+                                        "models.model_id": x["model_id"],
+                                        "models.creator_user_id": x["creator_user_id"],
+                                    },
+                                    {
+                                        "$set": {
+                                            "models.$.progress": "Failed",
+                                        },
+                                        "$push": {
+                                            "models.$.reason": "Card metadata could not be retrieved",
+                                        },
+                                    },
+                                )
+                                print(
+                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Main model. Skipping...!"
+                                )
                             if (
                                 existing_card["task"] == "Reinforcement Learning"
                                 and existing_card["videoLocation"] is not None
@@ -728,7 +754,6 @@ async def export_models(
                                     )
                                     response.close()
                                     response.release_conn()
-
                                 except:
                                     await db["exports"].update_one(
                                         {
@@ -749,7 +774,7 @@ async def export_models(
                                         },
                                     )
                                     print(
-                                        f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve video from bucket. Skipping...!"
+                                        f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve video from bucket. Skipping...!"
                                     )
                             else:
                                 try:
@@ -773,17 +798,6 @@ async def export_models(
                                         BUCKET_NAME,
                                         "application/json",
                                     )
-                                    await db["exports"].update_one(
-                                        {
-                                            "userId": user.user_id,
-                                            "timeInitiated": current_time,
-                                            "models.model_id": x["model_id"],
-                                            "models.creator_user_id": x[
-                                                "creator_user_id"
-                                            ],
-                                        },
-                                        {"$set": {"models.$.progress": "Completed"}},
-                                    )
                                 except:
                                     await db["exports"].update_one(
                                         {
@@ -804,8 +818,34 @@ async def export_models(
                                         },
                                     )
                                     print(
-                                        f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Could not retrieve service info from database. Skipping...!"
+                                        f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve service info from database. Skipping...!"
                                     )
+                            log = await db["exports"].find_one(
+                                {"userId": user.user_id, "timeInitiated": current_time},
+                                {
+                                    "models": {
+                                        "$elemMatch": {
+                                            "model_id": x["model_id"],
+                                            "creator_user_id": x["creator_user_id"],
+                                        }
+                                    },
+                                },
+                            )
+                            if log["models"][0]["progress"] != "Failed":
+                                await db["exports"].update_one(
+                                    {
+                                        "userId": user.user_id,
+                                        "timeInitiated": current_time,
+                                        "models.model_id": x["model_id"],
+                                        "models.creator_user_id": x["creator_user_id"],
+                                    },
+                                    {
+                                        "$set": {
+                                            "models.$.progress": "Completed",
+                                        }
+                                    },
+                                )
+                        except Exception as err:
                             await db["exports"].update_one(
                                 {
                                     "userId": user.user_id,
@@ -813,10 +853,31 @@ async def export_models(
                                     "models.model_id": x["model_id"],
                                     "models.creator_user_id": x["creator_user_id"],
                                 },
-                                {"$set": {"models.$.progress": "Completed"}},
+                                {
+                                    "$set": {
+                                        "models.$.progress": "Failed",
+                                    },
+                                    "$push": {
+                                        "models.$.reason": "Unexpected error",
+                                    },
+                                },
                             )
-                        except:
+                            print(
+                                f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Unexpected error was returned. Skipping...!"
+                            )
                             continue
+                    await db["exports"].update_one(
+                        {
+                            "userId": user.user_id,
+                            "timeInitiated": current_time,
+                        },
+                        {
+                            "$set": {
+                                "timeCompleted": str(datetime.datetime.now()),
+                                "exportLocation": f"s3://{BUCKET_NAME}/exports/{current_time_stringified}",
+                            }
+                        },
+                    )
             return
     except Exception as err:
         print(err)

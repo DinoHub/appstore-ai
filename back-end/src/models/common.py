@@ -54,7 +54,7 @@ class PyObjectId(ObjectId):
 
 
 class S3Storage(BaseModel):
-    """Custom Pydantic type for storing S3 bucket and object information"""
+    """Custom Pydantic type for storing S3 bucket and object information as a dict"""
 
     bucket_name: str
     object_name: str
