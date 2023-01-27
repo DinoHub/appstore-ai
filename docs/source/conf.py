@@ -70,6 +70,7 @@ js_source_path = "../../front-end/src"
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_favicon = "_static/favicon.ico"
 html_theme_options = {
     "light_logo": "logo-dark.png",
     "dark_logo": "logo-dark.png",
