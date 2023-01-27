@@ -3,7 +3,7 @@ image:
   pullPolicy: "IfNotPresent"
 
 env:
-  PROD_FRONTEND_HOST: "['<REPLACE_ME>']"
+  PROD_FRONTEND_HOST: '["<REPLACE_ME>"]' # inner quote must be double quote to fit JSON format
   PROD_SECURE_COOKIES: <REPLACE_ME>
   PROD_SECRET_KEY: <REPLACE_ME>
   PROD_ADMIN_SECRET_KEY: <REPLACE_ME>
