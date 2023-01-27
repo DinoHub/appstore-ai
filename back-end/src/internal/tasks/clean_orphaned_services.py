@@ -38,7 +38,11 @@ async def delete_orphan_services():
             async for service in orphaned_services:
                 # Remove service
                 service_name = service["serviceName"]
-                backend_type = service["backend"]
+                if "backend" not in service:
+                    # If backend not present, check config for default
+                    backend_type = config.IE_SERVICE_TYPE
+                else:
+                    backend_type = service["backend"]
                 async with session.start_transaction():
                     try:
                         await db["services"].delete_one(
