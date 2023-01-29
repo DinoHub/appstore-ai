@@ -27,8 +27,8 @@ spec:
           {% if env %}
           env:
           {% for key, value in env.items()  %}
-            - name: {{ key }}
-              value: {{ value }}
+            - name: "{{ key|string }}"
+              value: "{{ value|string }}"
           {% endfor %}
           {% endif %}
           readinessProbe:
