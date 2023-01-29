@@ -233,17 +233,16 @@ import {
   InferenceServiceStatus,
 } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
-import { useAuthStore } from 'src/stores/auth-store';
 import { useRoute, useRouter } from 'vue-router';
 import { ref, onMounted } from 'vue';
 import { Notify, QStepper } from 'quasar';
 
 const route = useRoute();
 const router = useRouter();
-const authStore = useAuthStore();
 const inferenceServiceStore = useInferenceServiceStore();
 const editInferenceServiceStore = useEditInferenceServiceStore();
 const modelId = route.params.modelId as string;
+const userId = route.params.userId as string;
 
 const buttonDisable = ref(false);
 const loading = ref(false);
@@ -272,14 +271,14 @@ const launchPreview = (stepper: QStepper) => {
 const updateService = () => {
   const previewServiceName = editInferenceServiceStore.previewServiceName;
   editInferenceServiceStore
-    .updateInferenceService()
+    .updateInferenceService(userId, modelId)
     .then(() => {
       Notify.create({
         message: 'Inference Service updated',
         icon: 'check',
         color: 'primary',
       });
-      router.push(`/model/${authStore.user?.userId}/${modelId}`);
+      router.push(`/model/${userId}/${modelId}`);
     })
     .catch((err) => {
       Notify.create({
