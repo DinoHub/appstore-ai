@@ -238,9 +238,9 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md" v-if="model.inferenceServiceName">
+              <div class="q-py-md" v-if="model.task !== 'Reinforcement Learning'">
                 <q-btn
-                  label="Edit Model Inference Service"
+                  :label="model.inferenceServiceName ? 'Edit Model Inference Service' : 'Create Model Inference Service'"
                   :to="`/model/${userId}/${modelId}/edit/inference`"
                   rounded
                   color="tertiary"
@@ -248,9 +248,9 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md" v-if="model.videoLocation">
+              <div class="q-py-md" v-if="model.task === 'Reinforcement Learning'">
                 <q-btn
-                  label="Edit Example Video"
+                  :label="model.videoLocation ? 'Edit Example Video' : 'Upload Example Video'"
                   :to="`/model/${userId}/${modelId}/edit/video`"
                   rounded
                   color="tertiary"

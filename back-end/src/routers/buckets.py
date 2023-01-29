@@ -112,19 +112,15 @@ async def replace_video(
                         "creatorUserId": userId,
                     }
                 )
-                if (
-                    existing_card["videoLocation"] is not None
-                    or existing_card["videoLocation"] != ""
-                ):
-
+                try:
                     url: str = existing_card["videoLocation"]
                     url = url.removeprefix("s3://")
                     bucket, object_name = url.split("/", 1)
                     print(object_name)
                     remove_data(s3_client, object_name, bucket)
-                else:
+                except Exception as err:
+                    print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {err}")
                     print("WARN:\t  No old video location provided")
-
         # upload the new video to the bucket
         path = upload_data(
             s3_client,

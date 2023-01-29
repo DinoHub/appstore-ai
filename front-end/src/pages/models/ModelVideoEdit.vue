@@ -179,6 +179,8 @@ const userId = route.params.userId as string;
 
 
 const replaceVideo = () => {
+  // backend will handle the case where video
+  // did not exist beforehand
   uploadStore
     .replaceVideo(
       selectedVideo.value,
