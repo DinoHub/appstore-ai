@@ -594,14 +594,16 @@
               engine application is working as intended. Once confirmed all
               information will be published.
             </p>
-            <q-btn
-              class="q-my-md"
-              rounded
-              no-caps
-              padding="sm xl"
-              label="View Status (Debug)"
-              @click="showDetailedStatus = true"
-            />
+            <div class="text-center">
+              <q-btn
+                class="q-my-md"
+                rounded
+                no-caps
+                padding="sm xl"
+                label="View Status (Debug)"
+                @click="showDetailedStatus = true"
+              />
+            </div>
           </div>
         </div>
         <div
