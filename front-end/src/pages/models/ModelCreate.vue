@@ -68,7 +68,7 @@
               :label="`${
                 experimentStore.experimentConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.experimentPlatform,
+                    connector.value === creationStore.experimentPlatform
                 )?.label + ' ' ?? ''
               }Experiment ID`"
               autogrow
@@ -94,7 +94,7 @@
               :label="`${
                 datasetStore.datasetConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.datasetPlatform,
+                    connector.value === creationStore.datasetPlatform
                 )?.label + ' ' ?? ''
               }Dataset ID`"
               autogrow
@@ -300,7 +300,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)',
+                  '(Example Text to Replace)'
                 ) != false
               "
             >
@@ -335,12 +335,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) != false
         "
       >
@@ -363,7 +363,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
                 ) != false
               "
             >
@@ -607,12 +607,13 @@
           </div>
         </div>
         <div
-          class="row justify-center"
+          class="row justify-center q-mx-auto"
           v-if="creationStore.modelTask == 'Reinforcement Learning'"
+          style="width: 37.5%;"
         >
           <vue-plyr
             ><video controls playsinline>
-              <source size="1080" :src="videoExample" /></video
+              <source :src="videoExample" /></video
           ></vue-plyr>
         </div>
       </q-step>
@@ -853,7 +854,11 @@
     </dialog>
   </q-page>
 </template>
-
+<style>
+.plyr--video {
+  width: 100%;
+}
+</style>
 <script setup lang="ts">
 import { useExperimentStore } from 'src/stores/experiment-store';
 import { useCreationStore } from 'src/stores/create-model-store';
@@ -924,7 +929,7 @@ const flushCreator = () => {
   const inferenceServiceStore = useInferenceServiceStore();
   if (inferenceServiceStore.previewServiceName) {
     inferenceServiceStore.deleteService(
-      inferenceServiceStore.previewServiceName,
+      inferenceServiceStore.previewServiceName
     );
   }
   creationStore.$reset();
@@ -1050,11 +1055,11 @@ const addExpPlots = (store: typeof creationStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;',
+            '&quot;'
           )}" data-data="${JSON.stringify(chart.data).replace(
-            /["]/g,
-            '&quot;',
-          )}"></chart>
+              /["]/g,
+              '&quot;'
+            )}"></chart>
           <p></p>
         `;
           } catch (err) {

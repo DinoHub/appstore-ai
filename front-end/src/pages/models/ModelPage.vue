@@ -156,11 +156,12 @@
                   <div class="text-h6">Video Preview</div>
                 </q-card-section>
                 <q-separator></q-separator>
-                <q-card-actions>
-                  <vue-plyr
-                    ><video controls playsinline>
-                      <source size="1080" :src="model.videoLocation" /></video
-                  ></vue-plyr>
+                <q-card-actions class="justify-center">
+                  <vue-plyr playsinline>
+                    <video controls playsinline>
+                      <source :src="model.videoLocation" />
+                    </video>
+                  </vue-plyr>
                 </q-card-actions>
               </q-card>
             </q-tab-panel>
@@ -238,9 +239,16 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md" v-if="model.task !== 'Reinforcement Learning'">
+              <div
+                class="q-py-md"
+                v-if="model.task !== 'Reinforcement Learning'"
+              >
                 <q-btn
-                  :label="model.inferenceServiceName ? 'Edit Model Inference Service' : 'Create Model Inference Service'"
+                  :label="
+                    model.inferenceServiceName
+                      ? 'Edit Model Inference Service'
+                      : 'Create Model Inference Service'
+                  "
                   :to="`/model/${userId}/${modelId}/edit/inference`"
                   rounded
                   color="tertiary"
@@ -248,9 +256,16 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md" v-if="model.task === 'Reinforcement Learning'">
+              <div
+                class="q-py-md"
+                v-if="model.task === 'Reinforcement Learning'"
+              >
                 <q-btn
-                  :label="model.videoLocation ? 'Edit Example Video' : 'Upload Example Video'"
+                  :label="
+                    model.videoLocation
+                      ? 'Edit Example Video'
+                      : 'Upload Example Video'
+                  "
                   :to="`/model/${userId}/${modelId}/edit/video`"
                   rounded
                   color="tertiary"
@@ -314,6 +329,11 @@
   </q-page>
 </template>
 
+<style>
+.plyr--video {
+  width: 100%;
+}
+</style>
 <script setup lang="ts">
 import { ModelCard } from 'src/stores/model-store';
 import MaterialChip from 'src/components/content/MaterialChip.vue';
