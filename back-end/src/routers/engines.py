@@ -1015,9 +1015,8 @@ async def restore_inference_engine_service(
     return {"message": "Service restored", "service": service}
 
 
-@router.delete("/clear")
+@router.delete("/admin/clear", status_code=status.HTTP_204_NO_CONTENT)
 async def wipe_orphaned_services(
-    tasks: BackgroundTasks,
     user: TokenData = Depends(get_current_user),
 ):
     try:
@@ -1026,10 +1025,10 @@ async def wipe_orphaned_services(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User does not have sufficient privilege to clear orphan services!",
             )
-        tasks.add_task(delete_orphan_services)
+        await delete_orphan_services()
         return
-    except:
+    except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error when trying to wipe orphaned services",
+            detail=f"Error when trying to wipe orphaned services: {err}",
         )
