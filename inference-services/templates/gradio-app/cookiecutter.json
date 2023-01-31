@@ -10,7 +10,6 @@
     "None",
     "Image Classification",
     "Zero Shot Text Classification",
-    "YOLOv4"
   ],
   "python_version": ["3.9"]
 }
