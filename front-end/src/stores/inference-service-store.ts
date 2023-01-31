@@ -31,9 +31,9 @@ export const useInferenceServiceStore = defineStore('service', {
   actions: {
     async getServiceReady(
       serviceName: string,
-      maxRetries = 5,
+      maxRetries = 15,
       initialWaitSeconds = 10,
-      maxDeadlineSeconds = 300, // 5 minutes
+      maxDeadlineSeconds = 300 // 5 minutes
     ): Promise<InferenceServiceStatus> {
       try {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
@@ -59,7 +59,7 @@ export const useInferenceServiceStore = defineStore('service', {
           const backoffSeconds =
             Math.pow(2, noRetries) + Math.random() + initialWaitSeconds;
           console.warn(
-            `Service not yet ready. Backing off for ${backoffSeconds} seconds (${noRetries}/${maxRetries})`,
+            `Service not yet ready. Backing off for ${backoffSeconds} seconds (${noRetries}/${maxRetries})`
           );
           if (backoffSeconds > maxDeadlineSeconds) {
             console.error('Service not ready, max retries exceeded');
@@ -81,7 +81,7 @@ export const useInferenceServiceStore = defineStore('service', {
       }
     },
     async getServiceByName(
-      serviceName: string,
+      serviceName: string
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.get(`engines/${serviceName}`);
@@ -100,7 +100,7 @@ export const useInferenceServiceStore = defineStore('service', {
       imageUri: string,
       numGpus: number,
       port?: number,
-      env?: Record<string, any>,
+      env?: Record<string, any>
     ): Promise<InferenceEngineService> {
       try {
         // TODO: Ability to set resource limits starving
@@ -134,7 +134,7 @@ export const useInferenceServiceStore = defineStore('service', {
       imageUri: string,
       numGpus: number,
       port?: number,
-      env?: Record<string, any>,
+      env?: Record<string, any>
     ) {
       Notify.create({
         message: 'Creating service, please wait...',
@@ -144,7 +144,7 @@ export const useInferenceServiceStore = defineStore('service', {
         imageUri,
         numGpus,
         port,
-        env,
+        env
       );
       // store service name so we can delete it later
       this.previewServiceName = serviceName;
@@ -167,7 +167,7 @@ export const useInferenceServiceStore = defineStore('service', {
       imageUri?: string,
       numGpus?: number,
       port?: number,
-      env?: Record<string, any>,
+      env?: Record<string, any>
     ): Promise<InferenceEngineService> {
       try {
         const res = await api.patch(`/engines/${serviceName}`, {
