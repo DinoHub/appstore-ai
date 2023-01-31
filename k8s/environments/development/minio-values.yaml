@@ -15,7 +15,7 @@ svcaccts:
 ingress:
   enabled: true
   ingressClassName: "nginx"
-  path: /?(.*)
+  path: /
   hosts: 
     - storage.appstore.ai
   annotations:
