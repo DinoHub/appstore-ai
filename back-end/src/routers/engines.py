@@ -64,9 +64,7 @@ async def get_inference_engine_service_logs(
         EventSourceResponse: SSE response with logs
     """
     db, _ = db
-    existing_service = await db["services"].find_one(
-        {"serviceName": service_name}
-    )
+    existing_service = await db["services"].find_one({"serviceName": service_name})
     if (
         existing_service is not None
         and existing_service["ownerId"] != user.user_id
@@ -256,7 +254,9 @@ async def get_inference_engine_service_status(
                 for condition in result.status.conditions:
                     if condition.status != "True":
                         return_status.ready = False
-                        return_status.message += f"Message: {condition.message}\nReason: {condition.reason}"
+                        return_status.message += (
+                            f"Message: {condition.message}\nReason: {condition.reason}"
+                        )
                 # Find out if pods in deployment are schedulable
                 # Get pods in deployment
                 core_api = CoreV1Api(client)
@@ -420,9 +420,7 @@ async def create_inference_engine_service(
                         }
                     )
                 )
-                url = (
-                    f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
-                )
+                url = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
                 if not config.IE_DOMAIN:
                     # use sslip dns service to get a hostname for the service
                     url += ".sslip.io"
@@ -674,9 +672,7 @@ async def update_inference_engine_service(
     :raises HTTPException: 500 Internal Server Error if failed to update
     """
     # Create Deployment Template
-    tasks.add_task(
-        delete_orphan_services
-    )  # Remove preview services created in testing
+    tasks.add_task(delete_orphan_services)  # Remove preview services created in testing
     db, mongo_client = db
     updated_metadata = {
         k: v for k, v in service.dict(by_alias=True).items() if v is not None
@@ -723,9 +719,7 @@ async def update_inference_engine_service(
             if not config.IE_DOMAIN:
                 updated_metadata["inferenceUrl"] += ".sslip.io"
         elif service_type == ServiceBackend.EMISSARY:
-            updated_metadata[
-                "inferenceUrl"
-            ] = f"{protocol}://{host}/{service_name}/"
+            updated_metadata["inferenceUrl"] = f"{protocol}://{host}/{service_name}/"
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # Check if user has editor access
@@ -774,12 +768,8 @@ async def update_inference_engine_service(
                                 template.render(
                                     {
                                         "engine_name": service_name,
-                                        "image_name": updated_service[
-                                            "imageUri"
-                                        ],
-                                        "port": updated_service[
-                                            "containerPort"
-                                        ],
+                                        "image_name": updated_service["imageUri"],
+                                        "port": updated_service["containerPort"],
                                         "env": updated_service["env"],
                                         "num_gpus": updated_service["numGpus"],
                                     }
@@ -818,9 +808,7 @@ async def update_inference_engine_service(
                                 service_template.render(
                                     {
                                         "engine_name": service_name,
-                                        "port": updated_service[
-                                            "containerPort"
-                                        ],
+                                        "port": updated_service["containerPort"],
                                     }
                                 )
                             )
@@ -828,12 +816,8 @@ async def update_inference_engine_service(
                                 deployment_template.render(
                                     {
                                         "engine_name": service_name,
-                                        "image_name": updated_service[
-                                            "imageUri"
-                                        ],
-                                        "port": updated_service[
-                                            "containerPort"
-                                        ],
+                                        "image_name": updated_service["imageUri"],
+                                        "port": updated_service["containerPort"],
                                         "env": updated_service["env"],
                                         "num_gpus": updated_service["numGpus"],
                                     }
@@ -1029,3 +1013,23 @@ async def restore_inference_engine_service(
                 detail="Invalid service type",
             )
     return {"message": "Service restored", "service": service}
+
+
+@router.delete("/clear")
+async def wipe_orphaned_services(
+    tasks: BackgroundTasks,
+    user: TokenData = Depends(get_current_user),
+):
+    try:
+        if user.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have sufficient privilege to clear orphan services!",
+            )
+        tasks.add_task(delete_orphan_services)
+        return
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error when trying to wipe orphaned services",
+        )
