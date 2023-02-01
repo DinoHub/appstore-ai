@@ -5,6 +5,8 @@ from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel, Field
 
+from .common import Artifact
+
 
 class Connector(str, Enum):
     """Allowed connectors for datasets."""
@@ -31,11 +33,12 @@ class DatasetModel(BaseModel):
 
     id: str
     name: Optional[str] = None
-    created: Optional[datetime] = None
+    created: Optional[str] = None
     tags: Optional[List[str]] = None
     project: Optional[str] = None
     files: Optional[Dict] = None
     default_remote: Optional[str] = None
+    artifacts: Optional[List[Artifact]] = None
 
 
 class FindDatasetModel(BaseModel):

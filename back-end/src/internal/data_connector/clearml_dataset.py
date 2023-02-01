@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Sequence, Union
 
 from clearml import Dataset
 
+from ...models.common import Artifact
 from .connector import DatasetConnector
 
 
@@ -28,6 +29,35 @@ class ClearMLDataset(DatasetConnector):
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
         return self.dataset.file_entries_dict  # type: ignore
+
+    @property
+    def artifacts(self) -> List[Artifact]:
+        """Get a list of artifacts in the dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
+        Returns:
+            List[Artifact]: List of artifacts in the dataset
+        """
+        if self.dataset is None:
+            raise AttributeError("Dataset has not been initialized")
+        data = []
+        for entry in self.dataset.file_entries:
+            relative_path = entry.relative_path
+            if relative_path in self.dataset.link_entries_dict:
+                url = self.dataset.link_entries_dict[relative_path].link
+            else:
+                # Not accessible as it's just a relative path
+                # TODO: How should we handle this?
+                url = relative_path
+            data.append(
+                Artifact(
+                    artifactType="dataset", name=entry.artifact_name, url=url
+                )
+            )
+        return data
 
     @property
     def name(self) -> str:
@@ -72,6 +102,8 @@ class ClearMLDataset(DatasetConnector):
         )
         dataset.id = dataset.dataset.id
         dataset.default_remote = dataset.dataset.get_default_storage()
+        for entry in dataset.dataset.file_entries:
+            entry.local_path
         return dataset
 
     @classmethod

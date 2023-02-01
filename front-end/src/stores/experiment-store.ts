@@ -3,6 +3,7 @@ import { AxiosError } from 'axios';
 import { Chart } from 'src/components/models';
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
+import { Artifact } from './model-store';
 
 export interface Config {
   [key: string]: string;
@@ -18,6 +19,7 @@ export interface Experiment {
   owner: string;
   scalars?: Chart[];
   plots?: Chart[];
+  artifacts?: Record<string, Artifact>;
 }
 
 export const useExperimentStore = defineStore('experiment', {

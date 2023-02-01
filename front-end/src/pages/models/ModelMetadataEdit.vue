@@ -93,6 +93,7 @@
               }Dataset ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              @update:model-value="setStateFromDatasetDetails()"
             >
             </q-input>
           </div>
@@ -124,7 +125,11 @@
               class="q-ml-md q-pb-xl"
               label="Model Name"
               autogrow
-              :rules="[(val) => !!val || 'Field is required', (val) => val.length <= 50 || 'Please use a maximum of 50 characters']"
+              :rules="[
+                (val) => !!val || 'Field is required',
+                (val) =>
+                  val.length <= 50 || 'Please use a maximum of 50 characters',
+              ]"
               reactive-rules
             ></q-input>
             <q-select
@@ -622,6 +627,16 @@ const setStateFromExperimentDetails = () => {
   loadingExp.value = true;
 
   editMetadataStore.loadMetadataFromExperiment().finally(() => {
+    buttonDisable.value = false;
+    loadingExp.value = false;
+  });
+};
+
+const setStateFromDatasetDetails = () => {
+  buttonDisable.value = true;
+  loadingExp.value = true;
+
+  editMetadataStore.loadMetadataFromDataset().finally(() => {
     buttonDisable.value = false;
     loadingExp.value = false;
   });

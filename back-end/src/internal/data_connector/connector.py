@@ -4,6 +4,8 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
+from ...models.common import Artifact
+
 
 class DatasetConnector(ABC):
     """Base class for dataset connectors."""
@@ -32,6 +34,22 @@ class DatasetConnector(ABC):
 
         Returns:
             Dict: Dictionary of files in the dataset
+        """
+        raise NotImplementedError(
+            "Connector does not have file entries attribute defined."
+        )
+
+    @property
+    @abstractmethod
+    def artifacts(self) -> List[Artifact]:
+        """Get a list of artifacts in the dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
+        Returns:
+            List[Artifact]: List of artifacts in the dataset
         """
         raise NotImplementedError(
             "Connector does not have file entries attribute defined."
