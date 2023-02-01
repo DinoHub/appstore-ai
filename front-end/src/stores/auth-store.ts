@@ -59,6 +59,7 @@ export const useAuthStore = defineStore('auth', {
       }
       this.router.push(this.returnUrl || '/');
     },
+    // TODO: change to camelCase
     async admin_login(userId: string, password: string): Promise<void> {
       try {
         const creds = new FormData();
@@ -104,6 +105,7 @@ export const useAuthStore = defineStore('auth', {
         console.warn(err);
       }
     },
+    // TODO: change to camelCase
     admin_logout(): void {
       try {
         api.delete('/auth/logout');
