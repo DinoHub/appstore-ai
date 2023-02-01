@@ -4,7 +4,7 @@ A interface to interact with ClearML datasets.
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-from clearml import Dataset
+from clearml import Dataset, Task
 
 from ...models.common import Artifact
 from .connector import DatasetConnector
@@ -23,6 +23,7 @@ class ClearMLDataset(DatasetConnector):
         super().__init__()
         self.dataset: Optional[Dataset] = None
         self.output_path: Optional[Union[Path, str]] = None
+        self._task: Optional[Task] = None
 
     @property
     def file_entries(self) -> Dict:
@@ -44,18 +45,11 @@ class ClearMLDataset(DatasetConnector):
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
         data = []
-        for entry in self.dataset.file_entries:
-            relative_path = entry.relative_path
-            if relative_path in self.dataset.link_entries_dict:
-                url = self.dataset.link_entries_dict[relative_path].link
-            else:
-                # Not accessible as it's just a relative path
-                # TODO: How should we handle this?
-                url = relative_path
+        if not self._task:
+            self._task = Task.get_task(task_id=self.dataset.id)
+        for name, entry in self._task.artifacts.items():
             data.append(
-                Artifact(
-                    artifactType="dataset", name=entry.artifact_name, url=url
-                )
+                Artifact(artifactType="dataset", name=name, url=entry.url)
             )
         return data
 
@@ -102,8 +96,10 @@ class ClearMLDataset(DatasetConnector):
         )
         dataset.id = dataset.dataset.id
         dataset.default_remote = dataset.dataset.get_default_storage()
-        for entry in dataset.dataset.file_entries:
-            entry.local_path
+        try:
+            dataset._task = Task.get_task(task_id=dataset.id)
+        except Exception:
+            pass
         return dataset
 
     @classmethod
