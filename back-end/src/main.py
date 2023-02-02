@@ -67,29 +67,6 @@ app = CORSMiddleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# fastapi_app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=list(
-#         set(
-#             [
-#                 # "http://localhost:9000",
-#                 # "http://127.0.0.1:9000",
-#                 # "http://172.20.255.203",
-#                 # "http://appstore.ai",
-#                 (config.FRONTEND_HOST if config else ""),
-#             ]
-#         )
-#     ),
-#     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS", "HEAD"],
-#     allow_credentials=True,
-#     allow_headers=[
-#         "Content-Type",
-#         "Set-Cookie",
-#         "Access-Control-Allow-Headers",
-#         "Authorization",
-#         "Access-Control-Allow-Origin",
-#     ],
-# )
 
 
 @app.app.get("/docs", include_in_schema=False)
