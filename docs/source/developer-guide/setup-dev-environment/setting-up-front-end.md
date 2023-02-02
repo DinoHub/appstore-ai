@@ -6,7 +6,7 @@ You will need to have the following installed:
 
 - [Node.js](https://nodejs.org/en/download/package-manager/) (version 16 or higher)
 
-See [Setting Up Development Tools](../development-tools.md#installing-nodejs) for more information on setting up your development environment.
+See [Setting Up Development Tools](development-tools.md#installing-nodejs) for more information on setting up your development environment.
 
 ## Installing Quasar
 

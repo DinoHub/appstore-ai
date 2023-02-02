@@ -7,7 +7,7 @@ Before setting up the back-end for development, you will need to have the follow
 - [Python](https://www.python.org/downloads/) (version 3.8 or higher)
 - [Poetry](https://python-poetry.org/docs/#installation)
 
-See [Setting Up Development Tools](../development-tools.md#installing-python) for more information on setting up your development environment.
+See [Setting Up Development Tools](development-tools.md#installing-python) for more information on setting up your development environment.
 
 ## Setting Up MongoDB
 
@@ -96,7 +96,7 @@ This will start up the app on port 7070. You can access the app at `http://local
 Run the following command to start up the app:
 
 ```bash
-docker compose up -d backend
+docker compose up -d back-end
 ```
 
 This starts up the app on port 8080. Currently hot-reloading is not supported, so you will need to restart the docker compose (which will rebuild the image) to see changes.

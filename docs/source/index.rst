@@ -2,22 +2,29 @@ Welcome to AI App Store documentation!
 ================================================
 
 .. toctree::
-   :maxdepth: 3
    :caption: User Guide
+   :maxdepth: 3
+   :glob:
    
-   user-guide/introduction
+   user-guide/*
+   
 
 .. toctree::
    :maxdepth: 3
    :caption: Developer Guide
+   :glob:
    
-   back-end-api/src
+   Technical Overview <developer-guide/overview>
+   Back-End Python APIs <back-end-api/src>
+   developer-guide/setup-dev-environment/*
+   developer-guide/front-end/*
+   developer-guide/back-end/*
 
 .. toctree::
    :maxdepth: 3
    :caption: Deployment Guide
    
-   developer-guide/deployment/deployment-on-k8s.md
+   developer-guide/deployment/*
 
 Indices and tables
 ==================
