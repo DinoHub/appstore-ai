@@ -1,7 +1,7 @@
 <style scoped>
 .log-view {
   max-width: 100ch;
-  height: 75vh; 
+  height: 75vh;
   overflow: auto;
 }
 </style>
