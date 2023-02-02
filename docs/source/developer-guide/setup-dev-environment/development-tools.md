@@ -102,3 +102,41 @@ docker compose up -d minio
 ### Manual Installation
 
 You can also install MinIO manually. We recommend using the [recommended installation method](https://docs.min.io/docs/minio-quickstart-guide.html) for your operating system.
+
+## Installing Pre-Commit
+
+Pre-commit is a tool that can be used to run a set of checks before committing code. It can be used to ensure that code is formatted correctly, that it passes linting checks, and that it passes tests. It can also be used to automatically format code and fix linting errors.
+
+As pre-commit is a Python package, we recommend using [pipx](https://pipxproject.github.io/pipx/) to install it. Pipx is a tool that allows you to install Python packages in isolated environments, allowing you to easily install and manage Python packages. To install pipx, run the following command:
+
+```bash
+python3 -m pip install --user pipx
+```
+
+Then, to install pre-commit, run the following command:
+
+```bash
+pipx install pre-commit
+```
+
+To install the pre-commit hooks, run the following command from the root of the repository:
+
+```bash
+pre-commit install
+```
+
+The pre-commit hooks will run automatically when you commit code. If you would like to run the pre-commit hooks manually, run the following command from the root of the repository:
+
+```bash
+pre-commit run --all-files
+```
+
+In the case that you would like to skip the pre-commit hooks, you can use the `--no-verify` flag when committing code. For example:
+
+```bash
+git commit -m "Commit message" --no-verify
+```
+
+## VS Code Extensions
+
+The repository contains a list of recommended VS Code extensions. You can install these extensions by opening the Command Palette (Ctrl+Shift+P) and running the "Extensions: Show Recommended Extensions" command.

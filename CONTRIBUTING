@@ -41,8 +41,14 @@ git checkout -b <tag>/<feature-name>
 
 ### Make changes and test
 
-Make your changes, and test to make sure they work as expected.
+Make your changes, and test to make sure they work as expected. Check the style guide in the documentation for more information on how to format your code. But in general Python code should be formatted using Black and isort, and Typescript/HTML/CSS code should be formatted using Prettier.
 
+#### Using Pre-Commit Hooks
+If you want to use pre-commit hooks to automatically format your code, you can install the pre-commit package and run the following command:
+
+```bash
+pre-commit install
+```
 ### Push changes and open a pull request
 
 Push your changes to your fork on Github. Then, go to the original repository and open a pull request.
