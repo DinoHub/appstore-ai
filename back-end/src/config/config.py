@@ -172,6 +172,7 @@ config: GlobalConfig = FactoryConfig(
 
 if config is not None:
     # Set environment variables based on config
-    # NOTE: not actually sure if this is necessary
-    # anymore
+    # this is useful for clearml credentials
+    # where the api key needs to be set as an
+    # environment variable
     config.set_envvar()
