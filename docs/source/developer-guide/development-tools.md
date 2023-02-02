@@ -82,7 +82,7 @@ Skaffold is a tool that facilitates continuous development for Kubernetes applic
 The repository contains a Docker Compose file that can be used to run MongoDB. To run MongoDB using Docker Compose, run the following command from the root of the repository:
 
 ```bash
-docker-compose up -d mongodb
+docker compose up -d mongodb
 ```
 
 ### Manual Installation
@@ -96,7 +96,7 @@ You can also install MongoDB manually. We recommend using the [recommended insta
 The repository contains a Docker Compose file that can be used to run MinIO. To run MinIO using Docker Compose, run the following command from the root of the repository:
 
 ```bash
-docker-compose up -d minio
+docker compose up -d minio
 ```
 
 ### Manual Installation
