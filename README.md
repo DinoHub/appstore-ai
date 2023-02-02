@@ -1,7 +1,7 @@
 # AI App Store
 
 ![AAS Logo](.github/media/logo-dark.png)
-![Documentation](https://dinohub.github.io/appstore-ai/index.html)
+[Documentation](https://dinohub.github.io/appstore-ai/index.html)
 [![CodeQL](https://github.com/DinoHub/appstore-ai/actions/workflows/codeql.yml/badge.svg)](https://github.com/DinoHub/appstore-ai/actions/workflows/codeql.yml)
 [![Back End CI](https://github.com/DinoHub/appstore-ai/actions/workflows/back-end-ci.yml/badge.svg)](https://github.com/DinoHub/appstore-ai/actions/workflows/back-end-ci.yml)
 The AI App Store is a self-hosted platform for browsing and contributing AI model cards. With the AI App Store, you can easily browse a wide variety of models and use them in your projects. You can also contribute your own models to the store, making them available for others to use.
