@@ -120,7 +120,6 @@ const serviceInstanceAvailable = computed(() => {
   return (props.status?.expectedReplicas ?? 0) > 0;
 });
 
-
 const scaleUp = () => {
   if (props.status?.serviceName) {
     processing.value = true;
