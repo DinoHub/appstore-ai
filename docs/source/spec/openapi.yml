@@ -23,7 +23,7 @@ info:
     [Mathias Ho](https://github.com/OrionSolaris)\n- [Tien Cheng](https://github.com/Tien-Cheng)\n\n###
     Special Thanks\n\n- Our project supervisor and mentor in DSTA Digital Hub, [Kah
     Siong](https://github.com/jax79sg)\n"
-  version: 0.1.0
+  version: 1.0.10
 paths:
   "/auth/":
     post:
