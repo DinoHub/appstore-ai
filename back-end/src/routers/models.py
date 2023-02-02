@@ -713,7 +713,22 @@ async def export_models(
                                     f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve card metadata info. Skipping...!"
                                 )
                             try:
-                                print('test')
+
+                                artifactSet = existing_card["artifacts"]
+                                modelFileLocation = str(
+                                    list(
+                                        filter(
+                                            lambda d: d["artifactType"] == "mainModel",
+                                            artifactSet,
+                                        )
+                                    )[0]["url"]
+                                )
+                                print(modelFileLocation)
+                                model_bucket, model_object = modelFileLocation.split(
+                                    "s3://"
+                                )[1].split("/", 1)
+                                print(model_bucket, model_object)
+                                # compose_data(s3_client,[])
                             except:
                                 await db["exports"].update_one(
                                     {
@@ -727,12 +742,12 @@ async def export_models(
                                             "models.$.progress": "Failed",
                                         },
                                         "$push": {
-                                            "models.$.reason": "Card metadata could not be retrieved",
+                                            "models.$.reason": "Model file could not be retrieved",
                                         },
                                     },
                                 )
                                 print(
-                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Main model. Skipping...!"
+                                    f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve model file. Skipping...!"
                                 )
                             if (
                                 existing_card["task"] == "Reinforcement Learning"
@@ -831,7 +846,21 @@ async def export_models(
                                     },
                                 },
                             )
-                            if log["models"][0]["progress"] != "Failed":
+                            if not "progress" in log["models"][0].keys():
+                                await db["exports"].update_one(
+                                    {
+                                        "userId": user.user_id,
+                                        "timeInitiated": current_time,
+                                        "models.model_id": x["model_id"],
+                                        "models.creator_user_id": x["creator_user_id"],
+                                    },
+                                    {
+                                        "$set": {
+                                            "models.$.progress": "Completed",
+                                        }
+                                    },
+                                )
+                            elif log["models"][0]["progress"] != "Failed":
                                 await db["exports"].update_one(
                                     {
                                         "userId": user.user_id,
@@ -863,7 +892,7 @@ async def export_models(
                                 },
                             )
                             print(
-                                f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Unexpected error was returned. Skipping...!"
+                                f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Unexpected error was returned: {err}. Skipping...!"
                             )
                             continue
                     await db["exports"].update_one(
