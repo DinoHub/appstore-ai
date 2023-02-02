@@ -1,28 +1,7 @@
 openapi: 3.0.2
 info:
   title: Model Zoo
-  description: "# AI App Store Back-End\n[Documentation](https://dinohub.github.io/appstore-ai/)\n\nBack-end
-    component of the AI App Store\n\n## How to Use\n> Work In Progress\n\n## Deployment
-    Guide\n> Work In Progress\n## Contributing\n> As of right now, contributions to
-    this repo will be closed with exception to core contributors. When opened up again,
-    the hidden text below which contains contribution instructions will be uncommented.\n\n<!--
-    Contributions to this repo are welcome, so long as these guidelines as followed:\n\n1.
-    Open an issue first to discuss any changes\n2. For each main module (e.g back-end,
-    front-end), there should exist a `CONTRIBUTING.md` file. Do follow the guidelines
-    there as applicable to whatever changes you want to contrbribute\n3. For any changes,
-    you'll need to make a pull request first. -->\n\n## Roadmap\n\n### v1.0\n\n- [x]
-    Model Card CRUD APIs\n- [x] ClearML Integration for Experiments\n- [x] SysAdmin
-    User Management\n- [x] Submit Test Inference API\n- [x] Deploy Inference Engine
-    API\n- [x] K8S Deployment \n- [x] Endpoint Authentication \n\n### v1.1\n\n- [x]
-    Dataset CRUD APIs\n- [ ] Automated Transfer Learning APIs (10%)\n\n## Licence\n\nThis
-    project is under the [GNU General Public License, version 3](https://www.gnu.org/licenses/gpl-3.0.en.html).\n\n###
-    TL;DR\n\nYou may copy, distribute and modify the software as long as you track
-    changes/dates in source files. Any modifications to or software including (via
-    compiler) GPL-licensed code must also be made available under the GPL along with
-    build & install instructions.\n\n## Contributors\n\n### Core Contributors\n\n-
-    [Mathias Ho](https://github.com/OrionSolaris)\n- [Tien Cheng](https://github.com/Tien-Cheng)\n\n###
-    Special Thanks\n\n- Our project supervisor and mentor in DSTA Digital Hub, [Kah
-    Siong](https://github.com/jax79sg)\n"
+  description: ""
   version: 1.0.10
 paths:
   "/auth/":
