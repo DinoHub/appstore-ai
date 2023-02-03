@@ -27,6 +27,10 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     plots: [] as Chart[],
   }),
   getters: {
+    /**
+     * Checks if model card is missing any required fields
+     * @returns True if all metadata is valid
+     */
     metadataValid(): boolean {
       const keys = Object.keys(this).filter(
         (item) =>
@@ -65,6 +69,10 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     },
   },
   actions: {
+    /**
+     * Attempt to populate the store with data from the experiment
+     * @returns Promise that resolves when data is loaded
+     */
     async loadMetadataFromExperiment(): Promise<void> {
       if (!this.experimentID || !this.experimentPlatform) {
         return Promise.reject();
@@ -83,6 +91,12 @@ export const useEditMetadataStore = defineStore('editMetadata', {
         return Promise.reject(error);
       }
     },
+    /**
+     * Populate the store with data from existing model card
+     * TODO: Instead of retrieving userID from authStore, read
+     * the route and get the userID from the route
+     * @param modelId Model ID to load metadata from
+     */
     async loadFromMetadata(modelId: string): Promise<void> {
       // Get User ID
       const authStore = useAuthStore();
@@ -122,7 +136,11 @@ export const useEditMetadataStore = defineStore('editMetadata', {
         }
       }
     },
-    async submitEdit(modelId: string) {
+    /**
+     * Submit the metadata to the backend
+     * @param modelId ID of the model to update
+     */
+    async submitEdit(modelId: string): Promise<void> {
       const authStore = useAuthStore();
       const modelStore = useModelStore();
       if (authStore.user?.name) {

@@ -16,6 +16,11 @@ export const useUploadStore = defineStore('users', {
     files: [] as File[],
   }),
   actions: {
+    /**
+     * Uploads a video to the server and returns the URL
+     * @param videoFile Video file to upload
+     * @returns Promise that resolves to the location of the uploaded video
+     */
     async uploadVideo(videoFile: File): Promise<string> {
       const form = new FormData();
       form.append('video', videoFile[0]);
@@ -39,6 +44,13 @@ export const useUploadStore = defineStore('users', {
         });
       return videoLocation;
     },
+    /**
+     * Replaces a video on the server and returns the URL
+     * @param videoFile Video file to upload
+     * @param userId user Id of model card to update
+     * @param modelId  model Id of model card to update
+     * @returns Promise that resolves to the location of the uploaded video
+     */
     async replaceVideo(
       videoFile: File,
       userId: string,
@@ -77,6 +89,7 @@ export const useUploadStore = defineStore('users', {
         });
       return videoLocation;
     },
+    // Unsure if this function isneeded
     async uploadMedia(
       url: string,
       fieldName: string | ((file: File) => string)
@@ -90,6 +103,11 @@ export const useUploadStore = defineStore('users', {
       const res = await api.post(url, form);
       return res.data;
     },
+    /**
+     * Converts a file to base64 string
+     * @param file File to convert to base64
+     * @returns The base64 string of the file
+     */
     async toBase64(file: File): Promise<string> {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
