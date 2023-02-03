@@ -71,6 +71,7 @@ const setHyperlink = () => {
       color: 'positive',
     });
   } else {
+    // Otherwise, set the link to the URL
     props.editor.chain().focus().setLink({ href: url.value }).run();
     Notify.create({
       message: `Hyperlink set to ${url.value}`,

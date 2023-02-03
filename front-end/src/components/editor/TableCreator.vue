@@ -1,4 +1,5 @@
 <template>
+  <!-- TODO: Improve the table creator (e.g add rows, columns) -->
   <q-card>
     <q-card-section>
       <div class="text-h5">Create Table</div>

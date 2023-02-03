@@ -1,4 +1,5 @@
 <style scoped>
+/* Prevents text from overflowing the card */
 .clamp-text {
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -6,6 +7,7 @@
   overflow: hidden;
 }
 
+/* Control position of action buttons */
 .action-row {
   position: absolute;
   bottom: 5px;
@@ -23,6 +25,7 @@
     <q-card-section class="q-pb-sm">
       <div class="headline-small clamp-text">{{ props.title }}</div>
       <div>
+        <!-- Display all tags -->
         <material-chip
           :label="props.task"
           type="task"
@@ -65,6 +68,7 @@
         @click.stop
         v-if="isModelOwner"
       ></q-btn>
+      <!-- TODO: Consider Delete button? -->
     </q-card-actions>
   </q-card>
 </template>

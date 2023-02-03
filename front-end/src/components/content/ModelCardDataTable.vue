@@ -5,6 +5,8 @@
 </style>
 <template>
   <div class="row">
+    <!-- Left sidebar for filter options -->
+    <!-- Any change to filter object will automatically make new search request -->
     <q-drawer show-if-above :model-value="props.filterDrawer" v-if="showFilter">
       <aside class="col col-sm-3 q-pt-md">
         <q-form class="q-px-md">
@@ -44,8 +46,6 @@
         </q-form>
       </aside>
     </q-drawer>
-    <!-- <q-page-container> -->
-    <!-- <q-page padding> -->
     <main class="col">
       <q-table
         grid
@@ -65,6 +65,7 @@
         <template v-slot:top-right>
           <div class="row q-gutter-md">
             <div class="col-auto">
+              <!-- requestServerInteraction will do search request on back-end-->
               <q-select
                 dense
                 rounded
@@ -98,6 +99,7 @@
           </div>
         </template>
         <template v-slot:item="props">
+          <!-- Display the table as a card form-->
           <div :class="cardContainerClass ?? ''">
             <model-card
               :card-class="cardClass ?? ''"
@@ -221,6 +223,7 @@ const tags: string[] = reactive([]);
 
 if (props.showFilter) {
   // Dynamically get filter options
+  // from back-end
   modelStore
     .getFilterOptions()
     .then((data) => {
@@ -305,16 +308,21 @@ onMounted(() => {
   if (props.showFilter) {
     const params = route.query;
     // Process tags
+    // check for tag param in route
     if (params.tags) {
       if (!filter.tags) {
         filter.tags = [];
       }
+      // if only a single tag, then add to array
       if (typeof params.tags === 'string') {
         filter.tags.push(params.tags);
       } else {
+        // else, tags will already be an array
+        // so just assign it
         filter.tags = params.tags;
       }
     }
+    // ditto for frameworks
     if (params.frameworks) {
       if (!filter.frameworks) {
         filter.frameworks = [];
@@ -325,6 +333,7 @@ onMounted(() => {
         filter.frameworks = params.frameworks;
       }
     }
+    // ditto for tasks
     if (params.tasks) {
       if (!filter.tasks) {
         filter.tasks = [];
@@ -335,6 +344,7 @@ onMounted(() => {
         filter.tasks = params.tasks;
       }
     }
+    // remove filter params from URL
     router.replace({ query: undefined });
   }
   // Update table with latest value from Server

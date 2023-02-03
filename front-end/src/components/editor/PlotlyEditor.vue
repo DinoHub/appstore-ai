@@ -28,6 +28,7 @@
           <JSONEditorVue v-model="layout" mode="text"></JSONEditorVue>
         </q-tab-panel>
         <q-tab-panel name="preview">
+          <!-- Preview chart -->
           <plotly-chart
             v-if="tab == Tabs.preview"
             :data="parsedData"
@@ -68,7 +69,7 @@
 import PlotlyChart from '../content/PlotlyChart.vue';
 import JSONEditorVue from 'json-editor-vue';
 import {
-  renderJSONSchemaEnum,
+  renderJSONSchemaEnum, // TODO: use this with Plotly json schema to render dropdowns
   renderValue,
   RenderValueProps,
 } from 'vanilla-jsoneditor';
@@ -117,6 +118,7 @@ const layout: Ref<Record<string, any>> = ref(
 );
 
 const updateChart = () => { 
+  // Sometimes new data is a string, so we need to parse it
   if (typeof data.value === 'string') {
     data.value = JSON.parse(data.value);
   }

@@ -51,6 +51,7 @@
         </q-btn>
       </q-card-actions>
       <q-dialog persistent full-width full-height v-model="chartEditor">
+        <!-- Listen to update plot event, and call update callback -->
         <plotly-editor
           @update-plot="update"
           update
@@ -79,6 +80,7 @@ const props = defineProps(nodeViewProps);
 const chartEditor = ref(false);
 const deleteChart = ref(false);
 
+// When the chart is updated, update the attributes
 const update = (data: Record<string, any>[], layout: Record<string, any>) => {
   props.updateAttributes({
     layout: JSON.stringify(layout),
