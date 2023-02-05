@@ -9,7 +9,6 @@
 
 The AI App Store is a self-hosted platform for browsing and contributing AI model cards. With the AI App Store, you can easily browse a wide variety of models and use them in your projects. You can also contribute your own models to the store, making them available for others to use.
 
-> Work In Progress
 
 ## Contributing
 
