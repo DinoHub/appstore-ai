@@ -101,7 +101,7 @@ async def test_search_users(
     db, _ = get_fake_db
     await db["users"].insert_one(
         {
-            "userId": "searchtest-01",
+            "userId": "searchtest_01",
             "name": "Master Searcher",
             "password": "Testing123!",
             "adminPriv": True,
@@ -128,7 +128,7 @@ async def test_search_users(
     assert response.status_code == status.HTTP_200_OK
     assert len(content["results"]) == 1
     assert isinstance(content["results"][0], dict)
-    assert content["results"][0]["userId"] == "searchtest-01"
+    assert content["results"][0]["userId"] == "searchtest_01"
     await db.drop_collection("users")
 
 
@@ -141,7 +141,7 @@ async def test_edit_user(
     db, _ = get_fake_db
     await db["users"].insert_one(
         {
-            "userId": "edittest-01",
+            "userId": "edittest_01",
             "name": "Master Editor",
             "password": "Testing123!",
             "adminPriv": True,
@@ -154,7 +154,7 @@ async def test_edit_user(
     response = admin_client.put(
         "/iam/edit",
         json={
-            "user_id": "edittest-01",
+            "user_id": "edittest_01",
             "name": "Master Editor Edited",
             "password": "Testing123!",
             "password_confirm": "Testing123!",
@@ -178,7 +178,7 @@ async def test_edit_users_many(
     await db["users"].insert_many(
         [
             {
-                "userId": "edittest-01",
+                "userId": "edittest_01",
                 "name": "Master Editor Many 01",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -186,7 +186,7 @@ async def test_edit_users_many(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "edittest-02",
+                "userId": "edittest_02",
                 "name": "Master Editor Many 02",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -194,7 +194,7 @@ async def test_edit_users_many(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "edittest-03",
+                "userId": "edittest_03",
                 "name": "Master Editor Many 03",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -208,7 +208,7 @@ async def test_edit_users_many(
     response = admin_client.put(
         "/iam/edit/multi",
         json={
-            "users": ["edittest-01", "edittest-02", "edittest-03"],
+            "users": ["edittest_01", "edittest_02", "edittest_03"],
             "priv": False,
         },
     )
@@ -230,7 +230,7 @@ async def test_delete_users(
     await db["users"].insert_many(
         [
             {
-                "userId": "deltest-01",
+                "userId": "deltest_01",
                 "name": "Master Deleter 01",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -238,7 +238,7 @@ async def test_delete_users(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "deltest-02",
+                "userId": "deltest_02",
                 "name": "Master Deleter 02",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -246,7 +246,7 @@ async def test_delete_users(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "deltest-03",
+                "userId": "deltest_03",
                 "name": "Master Deleter 03",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -260,7 +260,7 @@ async def test_delete_users(
     response = admin_client.delete(
         "/iam/delete",
         json={
-            "users": ["deltest-03"],
+            "users": ["deltest_03"],
         },
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -269,7 +269,7 @@ async def test_delete_users(
     response = admin_client.delete(
         "/iam/delete",
         json={
-            "users": ["deltest-02", "deltest-01"],
+            "users": ["deltest_02", "deltest_01"],
         },
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
