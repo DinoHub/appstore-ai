@@ -1,12 +1,14 @@
 """Data models for inference engine services."""
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Dict, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, PositiveInt, constr, validator
 
-from ..internal.utils import to_camel_case, sanitize_for_url
+from ..internal.utils import sanitize_for_url, to_camel_case
 from .common import PyObjectId
 
 # NOTE: disabled ability to set resource limits
@@ -21,6 +23,10 @@ from .common import PyObjectId
 #         lt=32,
 #         description="Memory in GB (1, 2, 4, 8, 16, 32)",
 #     )
+
+IMAGE_URI_REGEX = "^(?:(?=[^:\/]{1,253})(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(?:\.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*(?::[0-9]{1,5})?/)?((?![._-])(?:[a-z0-9._-]*)(?<![._-])(?:/(?![._-])[a-z0-9._-]*(?<![._-]))*)(?::(?![.-])[a-zA-Z0-9_.-]{1,128})?$"
+
+ContainerURI = constr(regex=IMAGE_URI_REGEX)
 
 
 class ServiceBackend(str, Enum):
@@ -61,10 +67,10 @@ class CreateInferenceEngineService(BaseModel):
     """Request model for creating an inference engine service."""
 
     model_id: str  # NOTE: actually model title, will convert to model id in backend
-    image_uri: str
+    image_uri: ContainerURI
     # resource_limits: ResourceLimits
-    container_port: Optional[int] = None
-    env: Optional[dict] = None
+    container_port: Optional[PositiveInt] = None
+    env: Optional[Dict[str, str]] = None
     num_gpus: float = Field(default=0, ge=0, le=2)
 
     @validator("model_id")
@@ -116,7 +122,7 @@ class InferenceEngineService(CreateInferenceEngineService):
 class UpdateInferenceEngineService(BaseModel):
     """Request model for updating an inference engine service."""
 
-    image_uri: str
+    image_uri: ContainerURI
     container_port: Optional[int] = None
     # resource_limits: ResourceLimits
     env: Optional[dict] = None
