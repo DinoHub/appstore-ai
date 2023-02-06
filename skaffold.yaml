@@ -52,7 +52,9 @@ profiles:
   - name: dev
     activation:
       - command: dev
-      - kubeContext: kind-(.*)
+      - kubeContext: kind-(.*)  
+      - kubeContext: minikube
+      - kubeContext: k3d-(.*)
     patches:
       - op: add
         path: /manifests/rawYaml/-
