@@ -4,12 +4,10 @@ from datetime import datetime
 from enum import Enum
 from typing import Dict, List, Literal, Optional, Union
 
-from bson import ObjectId
 from password_strength import PasswordPolicy
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, SecretStr, validator
 
-from ..internal.utils import to_camel_case, sanitize_for_url
-from .common import PyObjectId
+from ..internal.utils import sanitize_for_url
 
 policy = PasswordPolicy.from_names(
     length=8,  # min length: 8
@@ -38,12 +36,14 @@ class UserInsert(BaseModel):
 
     name: str
     user_id: str
-    password: str
-    password_confirm: str
+    password: SecretStr
+    password_confirm: SecretStr
     admin_priv: bool = False
 
     @validator("user_id")
-    def generate_if_empty(cls, v: Optional[str], values: Dict, **kwargs) -> str:
+    def generate_if_empty(
+        cls, v: Optional[str], values: Dict, **kwargs
+    ) -> str:
         """Generates a user id if one is not provided and sanitize the id for URL safe usage.
 
         Args:
@@ -57,16 +57,20 @@ class UserInsert(BaseModel):
         name_string = "".join(values["name"].lower().split())
         # if user id is empty, generate a new one
         if v is None or v == "":
-            new_id = f"{sanitize_for_url(name_string[0:7])}_{secrets.token_hex(8)}"
+            new_id = (
+                f"{sanitize_for_url(name_string[0:7])}_{secrets.token_hex(8)}"
+            )
             return new_id
         return sanitize_for_url(v)
 
     @validator("password_confirm")
-    def match_passwords(cls, v: str, values: Dict, **kwargs) -> str:
+    def match_passwords(
+        cls, v: SecretStr, values: Dict, **kwargs
+    ) -> SecretStr:
         """Checks that password is strong and check confirm password matches.
 
         Args:
-            v (str): Password
+            v (SecretStr): Password
             values (Dict): User data.
 
         Raises:
@@ -78,31 +82,12 @@ class UserInsert(BaseModel):
         """
         if v != values["password"]:
             raise ValueError("Passwords do not match")
-        strength = policy.test(values["password"])
+        strength = policy.test(values["password"].get_secret_value())
         if not strength:
             return v
         raise ValueError(
             "Password must at least be length of 8, have 1 uppercase letter, 1 number and 1 special character"
         )
-
-
-# NOTE: deprecated and not in use
-# class UserInsertDB(BaseModel):
-#     """Request model for creating a user."""
-
-#     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-#     user_id: str
-#     name: str
-#     admin_priv: bool = False
-
-#     class Config:
-#         """Pydantic config to allow creation of data model
-#         from a JSON object with camelCase keys."""
-
-#         alias_generator = to_camel_case
-#         allow_population_by_field_name = True
-#         arbitrary_types_allowed = True
-#         json_encoders = {ObjectId: str}
 
 
 class Token(BaseModel):
@@ -132,7 +117,7 @@ class User(BaseModel):
 class UserInDB(User):
     """Data model for user in database."""
 
-    hashed_password: str
+    hashed_password: SecretStr
 
 
 class UserRemoval(BaseModel):

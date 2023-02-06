@@ -467,7 +467,10 @@
               v-model="creationStore.imageUri"
               :loading="loadingExp"
               :disable="loadingExp"
-              :rules="[(val) => !!val || 'Field is required']"
+              :rules="[
+                (val) => !!val || 'Field is required',
+                (val) => imageUriRegex.test(val) || 'Invalid Image URI',
+              ]"
             ></q-input>
             <q-input
               outlined
@@ -864,7 +867,10 @@
 import { useExperimentStore } from 'src/stores/experiment-store';
 import { useCreationStore } from 'src/stores/create-model-store';
 import { useAuthStore } from 'src/stores/auth-store';
-import { useInferenceServiceStore } from 'src/stores/inference-service-store';
+import {
+  useInferenceServiceStore,
+  imageUriRegex,
+} from 'src/stores/inference-service-store';
 import { useModelStore } from 'src/stores/model-store';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';

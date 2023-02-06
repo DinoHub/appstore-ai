@@ -29,7 +29,10 @@
               label="Container Image URI"
               placeholder="e.g <registry>/<image>:<tag>"
               autogrow
-              :rules="[(val) => !!val || 'Field is required']"
+              :rules="[
+                (val) => !!val || 'Field is required',
+                (val) => imageUriRegex.test(val) || 'Invalid Image URI',
+              ]"
               :loading="loading"
               :disable="loading"
             ></q-input>
@@ -231,6 +234,7 @@ import ServiceStatusDisplay from 'src/components/content/ServiceStatusDisplay.vu
 import {
   useInferenceServiceStore,
   InferenceServiceStatus,
+  imageUriRegex,
 } from 'src/stores/inference-service-store';
 import { useEditInferenceServiceStore } from 'src/stores/edit-model-inference-service-store';
 import { useRoute, useRouter } from 'vue-router';

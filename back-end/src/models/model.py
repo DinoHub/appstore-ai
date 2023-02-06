@@ -1,5 +1,4 @@
 """Data models for model cards."""
-from datetime import datetime
 from typing import List, Optional
 
 from bson import ObjectId
