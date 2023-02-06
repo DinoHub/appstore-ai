@@ -19,6 +19,7 @@ Welcome to AI App Store documentation!
    developer-guide/setup-dev-environment/*
    developer-guide/front-end/*
    developer-guide/back-end/*
+   developer-guide/inference-services/*
 
 .. toctree::
    :maxdepth: 3
