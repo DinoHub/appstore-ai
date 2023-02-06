@@ -26,11 +26,11 @@ from ..config.config import config
 from ..internal.auth import get_current_user
 from ..internal.dependencies.file_validator import ValidateFileUpload
 from ..internal.dependencies.minio_client import (
+    compose_data,
     get_data,
     get_presigned_url,
     minio_api_client,
     upload_data,
-    compose_data,
 )
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
@@ -157,18 +157,24 @@ async def get_model_card_by_id(
     return model
 
 
-@router.get("/", response_model=SearchModelResponse, response_model_exclude_unset=True)
+@router.get(
+    "/", response_model=SearchModelResponse, response_model_exclude_unset=True
+)
 async def search_cards(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
     page: int = Query(default=1, alias="p", gt=0),
     rows_per_page: int = Query(default=10, alias="n", ge=0),
     descending: bool = Query(default=False, alias="desc"),
     sort_by: str = Query(default="_id", alias="sort"),
-    generic_search_text: Optional[str] = Query(default=None, alias="genericSearchText"),
+    generic_search_text: Optional[str] = Query(
+        default=None, alias="genericSearchText"
+    ),
     title: Optional[str] = Query(default=None),
     tasks: Optional[List[str]] = Query(default=None, alias="tasks[]"),
     tags: Optional[List[str]] = Query(default=None, alias="tags[]"),
-    frameworks: Optional[List[str]] = Query(default=None, alias="frameworks[]"),
+    frameworks: Optional[List[str]] = Query(
+        default=None, alias="frameworks[]"
+    ),
     creator_user_id: Optional[str] = Query(default=None, alias="creator"),
     creator_user_id_partial: Optional[str] = Query(
         default=None, alias="creatorUserIdPartial"
@@ -286,12 +292,19 @@ async def search_cards(
     if title:
         query["title"] = {"$regex": re.escape(title), "$options": "i"}
     if tasks:
-        query["task"] = {"$in": [re.compile(task, re.IGNORECASE) for task in tasks]}
+        query["task"] = {
+            "$in": [re.compile(task, re.IGNORECASE) for task in tasks]
+        }
     if tags:
-        query["tags"] = {"$all": [re.compile(tag, re.IGNORECASE) for tag in tags]}
+        query["tags"] = {
+            "$all": [re.compile(tag, re.IGNORECASE) for tag in tags]
+        }
     if frameworks:
         query["frameworks"] = {
-            "$in": [re.compile(framework, re.IGNORECASE) for framework in frameworks]
+            "$in": [
+                re.compile(framework, re.IGNORECASE)
+                for framework in frameworks
+            ]
         }
     if creator_user_id:
         query["creatorUserId"] = creator_user_id
@@ -462,13 +475,17 @@ async def update_model_card_metadata_by_id(
     )  # After update, check if any images were removed and sync with Minio
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
-    card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
+    card_dict = {
+        k: v for k, v in card.dict(by_alias=True).items() if v is not None
+    }
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
         card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
-        card_dict["performance"] = preprocess_html_post(card_dict["performance"])
+        card_dict["performance"] = preprocess_html_post(
+            card_dict["performance"]
+        )
     if "task" in card_dict:
         if card_dict["task"] == "Reinforcement Learning":
             card_dict["inferenceServiceName"] = None
@@ -522,7 +539,9 @@ async def update_model_card_metadata_by_id(
         return existing_card
 
 
-@router.delete("/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{creator_user_id}/{model_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_model_card_by_id(
     model_id: str,
     creator_user_id: str,
@@ -564,6 +583,8 @@ async def delete_model_card_by_id(
                 await db["models"].delete_one(
                     {"modelId": model_id, "creatorUserId": creator_user_id}
                 )
+    except HTTPException as err:
+        raise err
     except Exception as err:
         print("failed")
         print("Error: ", err)
@@ -620,6 +641,8 @@ async def delete_multiple_model_cards(
                             "creatorUserId": x["creator_user_id"],
                         }
                     )
+    except HTTPException as err:
+        raise err
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -673,10 +696,14 @@ async def export_models(
                             existing_card["markdown"] = process_html_to_base64(
                                 existing_card["markdown"]
                             )
-                            existing_card["performance"] = process_html_to_base64(
+                            existing_card[
+                                "performance"
+                            ] = process_html_to_base64(
                                 existing_card["performance"]
                             )
-                            subfile_name = f'{x["creator_user_id"]}-{x["model_id"]}'
+                            subfile_name = (
+                                f'{x["creator_user_id"]}-{x["model_id"]}'
+                            )
                             dumped_JSON: str = json.dumps(
                                 existing_card,
                                 ensure_ascii=False,
@@ -692,13 +719,15 @@ async def export_models(
                                     BUCKET_NAME,
                                     "application/json",
                                 )
-                            except:
+                            except Exception as err:
                                 await db["exports"].update_one(
                                     {
                                         "userId": user.user_id,
                                         "timeInitiated": current_time,
                                         "models.model_id": x["model_id"],
-                                        "models.creator_user_id": x["creator_user_id"],
+                                        "models.creator_user_id": x[
+                                            "creator_user_id"
+                                        ],
                                     },
                                     {
                                         "$set": {
@@ -718,24 +747,30 @@ async def export_models(
                                 modelFileLocation = str(
                                     list(
                                         filter(
-                                            lambda d: d["artifactType"] == "mainModel",
+                                            lambda d: d["artifactType"]
+                                            == "mainModel",
                                             artifactSet,
                                         )
                                     )[0]["url"]
                                 )
                                 print(modelFileLocation)
-                                model_bucket, model_object = modelFileLocation.split(
-                                    "s3://"
-                                )[1].split("/", 1)
+                                (
+                                    model_bucket,
+                                    model_object,
+                                ) = modelFileLocation.split("s3://")[1].split(
+                                    "/", 1
+                                )
                                 print(model_bucket, model_object)
                                 # compose_data(s3_client,[])
-                            except:
+                            except Exception as err:
                                 await db["exports"].update_one(
                                     {
                                         "userId": user.user_id,
                                         "timeInitiated": current_time,
                                         "models.model_id": x["model_id"],
-                                        "models.creator_user_id": x["creator_user_id"],
+                                        "models.creator_user_id": x[
+                                            "creator_user_id"
+                                        ],
                                     },
                                     {
                                         "$set": {
@@ -750,16 +785,21 @@ async def export_models(
                                     f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve model file. Skipping...!"
                                 )
                             if (
-                                existing_card["task"] == "Reinforcement Learning"
+                                existing_card["task"]
+                                == "Reinforcement Learning"
                                 and existing_card["videoLocation"] is not None
                             ):
                                 try:
                                     url: str = existing_card["videoLocation"]
                                     url = url.removeprefix("s3://")
                                     bucket, object_name = url.split("/", 1)
-                                    response = get_data(s3_client, object_name, bucket)
+                                    response = get_data(
+                                        s3_client, object_name, bucket
+                                    )
 
-                                    file_extension = object_name.split(".").pop()
+                                    file_extension = object_name.split(
+                                        "."
+                                    ).pop()
                                     upload_data(
                                         s3_client,
                                         response.data,
@@ -769,7 +809,7 @@ async def export_models(
                                     )
                                     response.close()
                                     response.release_conn()
-                                except:
+                                except Exception as err:
                                     await db["exports"].update_one(
                                         {
                                             "userId": user.user_id,
@@ -793,10 +833,14 @@ async def export_models(
                                     )
                             else:
                                 try:
-                                    existing_service = await db["services"].find_one(
+                                    existing_service = await db[
+                                        "services"
+                                    ].find_one(
                                         {
                                             "modelId": x["model_id"],
-                                            "creatorUserId": x["creator_user_id"],
+                                            "creatorUserId": x[
+                                                "creator_user_id"
+                                            ],
                                         }
                                     )
                                     dumped_JSON_service: str = json.dumps(
@@ -813,7 +857,7 @@ async def export_models(
                                         BUCKET_NAME,
                                         "application/json",
                                     )
-                                except:
+                                except Exception as err:
                                     await db["exports"].update_one(
                                         {
                                             "userId": user.user_id,
@@ -836,12 +880,17 @@ async def export_models(
                                         f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Could not retrieve service info from database. Skipping...!"
                                     )
                             log = await db["exports"].find_one(
-                                {"userId": user.user_id, "timeInitiated": current_time},
+                                {
+                                    "userId": user.user_id,
+                                    "timeInitiated": current_time,
+                                },
                                 {
                                     "models": {
                                         "$elemMatch": {
                                             "model_id": x["model_id"],
-                                            "creator_user_id": x["creator_user_id"],
+                                            "creator_user_id": x[
+                                                "creator_user_id"
+                                            ],
                                         }
                                     },
                                 },
@@ -852,7 +901,9 @@ async def export_models(
                                         "userId": user.user_id,
                                         "timeInitiated": current_time,
                                         "models.model_id": x["model_id"],
-                                        "models.creator_user_id": x["creator_user_id"],
+                                        "models.creator_user_id": x[
+                                            "creator_user_id"
+                                        ],
                                     },
                                     {
                                         "$set": {
@@ -866,7 +917,9 @@ async def export_models(
                                         "userId": user.user_id,
                                         "timeInitiated": current_time,
                                         "models.model_id": x["model_id"],
-                                        "models.creator_user_id": x["creator_user_id"],
+                                        "models.creator_user_id": x[
+                                            "creator_user_id"
+                                        ],
                                     },
                                     {
                                         "$set": {
@@ -880,7 +933,9 @@ async def export_models(
                                     "userId": user.user_id,
                                     "timeInitiated": current_time,
                                     "models.model_id": x["model_id"],
-                                    "models.creator_user_id": x["creator_user_id"],
+                                    "models.creator_user_id": x[
+                                        "creator_user_id"
+                                    ],
                                 },
                                 {
                                     "$set": {
@@ -908,6 +963,8 @@ async def export_models(
                         },
                     )
             return
+    except HTTPException as err:
+        raise err
     except Exception as err:
         print(err)
         raise HTTPException(
