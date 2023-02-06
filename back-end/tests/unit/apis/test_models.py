@@ -4,7 +4,11 @@ from typing import Dict, List, Tuple
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from hypothesis import given
+from hypothesis import strategies as st
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
+from src.models.model import ModelCardModelIn
 
 
 @pytest.fixture
@@ -151,6 +155,19 @@ def test_create_model_card_metadata(
 
     result = response.json()
     assert result["title"] == create_model_card["title"]
+
+
+@pytest.mark.usefixtures("flush_db")
+@given(st.builds(ModelCardModelIn))
+def test_create_model_card_metadata_hypothesis(
+    client: TestClient,
+    model_card: ModelCardModelIn,
+):
+    response = client.post("/models/", json=model_card.dict())
+    assert response.status_code == status.HTTP_201_CREATED
+
+    result = response.json()
+    assert result["title"] == model_card.title
 
 
 @pytest.mark.parametrize("card", [{"title": "hello world"}])
