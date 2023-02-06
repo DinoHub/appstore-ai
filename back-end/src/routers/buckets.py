@@ -86,19 +86,20 @@ async def replace_video(
     s3_client: Minio = Depends(minio_api_client),
     db=Depends(get_db),
 ) -> Dict[str, str]:
-    """Replaces a video in the MinIO bucket
+    """Replaces the video of a model
 
     Args:
-        new_video (UploadFile, optional): New video. Defaults to Form().
-        old_video_location (Optional[str], optional): Location of video to replace.
-            Defaults to Form(None).
-        s3_client (Minio, optional): Minio client. Defaults to Depends(minio_api_client).
+        new_video (UploadFile): New video to upload. Defaults to Form().
+        userId (str, optional): userId of model card. Defaults to Form().
+        modelId (str, optional): modelId of model card. Defaults to Form().
+        s3_client (Minio, optional): Connection to S3 storage. Defaults to Depends(minio_api_client).
+        db (_type_, optional): Connection to MongoDB. Defaults to Depends(get_db).
 
     Raises:
         HTTPException: 500 if something went wrong
 
     Returns:
-        Dict[str, str]: Location of the new video in the bucket
+        Dict[str, str]: A dictionary with the location of the new video in the bucket
     """
     try:
         # remove the old video inside the bucket
