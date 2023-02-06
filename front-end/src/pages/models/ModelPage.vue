@@ -224,6 +224,7 @@
                 v-bind:key="artifact.name"
                 :name="artifact.name"
                 :url="artifact.url"
+                class="q-mb-md"
               ></artifact-card>
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">

@@ -4,8 +4,9 @@ A interface to interact with ClearML datasets.
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Union
 
-from clearml import Dataset
+from clearml import Dataset, Task
 
+from ...models.common import Artifact
 from .connector import DatasetConnector
 
 
@@ -22,12 +23,35 @@ class ClearMLDataset(DatasetConnector):
         super().__init__()
         self.dataset: Optional[Dataset] = None
         self.output_path: Optional[Union[Path, str]] = None
+        self._task: Optional[Task] = None
 
     @property
     def file_entries(self) -> Dict:
         if self.dataset is None:
             raise AttributeError("Dataset has not been initialized")
         return self.dataset.file_entries_dict  # type: ignore
+
+    @property
+    def artifacts(self) -> List[Artifact]:
+        """Get a list of artifacts in the dataset.
+
+        Raises:
+            NotImplementedError: If dataset connector
+                does not implement this method.
+
+        Returns:
+            List[Artifact]: List of artifacts in the dataset
+        """
+        if self.dataset is None:
+            raise AttributeError("Dataset has not been initialized")
+        data = []
+        if not self._task:
+            self._task = Task.get_task(task_id=self.dataset.id)
+        for name, entry in self._task.artifacts.items():
+            data.append(
+                Artifact(artifactType="dataset", name=name, url=entry.url)
+            )
+        return data
 
     @property
     def name(self) -> str:
@@ -72,6 +96,10 @@ class ClearMLDataset(DatasetConnector):
         )
         dataset.id = dataset.dataset.id
         dataset.default_remote = dataset.dataset.get_default_storage()
+        try:
+            dataset._task = Task.get_task(task_id=dataset.id)
+        except Exception:
+            pass
         return dataset
 
     @classmethod

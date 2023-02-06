@@ -68,7 +68,7 @@
               :label="`${
                 experimentStore.experimentConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.experimentPlatform
+                    connector.value === creationStore.experimentPlatform,
                 )?.label + ' ' ?? ''
               }Experiment ID`"
               autogrow
@@ -94,12 +94,13 @@
               :label="`${
                 datasetStore.datasetConnectors.find(
                   (connector) =>
-                    connector.value === creationStore.datasetPlatform
+                    connector.value === creationStore.datasetPlatform,
                 )?.label + ' ' ?? ''
               }Dataset ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
               debounce="2000"
+              @update:model-value="retrieveDatasetDetails()"
             >
             </q-input>
           </div>
@@ -300,7 +301,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.markdownContent.includes(
-                  '(Example Text to Replace)'
+                  '(Example Text to Replace)',
                 ) != false
               "
             >
@@ -335,12 +336,12 @@
         icon="leaderboard"
         :done="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) == false
         "
         :error="
           creationStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
           ) != false
         "
       >
@@ -363,7 +364,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 creationStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
                 ) != false
               "
             >
@@ -609,7 +610,7 @@
         <div
           class="row justify-center q-mx-auto"
           v-if="creationStore.modelTask == 'Reinforcement Learning'"
-          style="width: 37.5%;"
+          style="width: 37.5%"
         >
           <vue-plyr
             ><video controls playsinline>
@@ -914,6 +915,15 @@ const retrieveExperimentDetails = () => {
   });
 };
 
+const retrieveDatasetDetails = () => {
+  loadingExp.value = true;
+  buttonDisable.value = true;
+  creationStore.loadMetadataFromDataset().finally(() => {
+    loadingExp.value = false; // don't lock user out when error
+    buttonDisable.value = false;
+  });
+};
+
 const createViewableVideo = () => {
   try {
     videoExample.value = URL.createObjectURL(creationStore.exampleVideo[0]);
@@ -929,7 +939,7 @@ const flushCreator = () => {
   const inferenceServiceStore = useInferenceServiceStore();
   if (inferenceServiceStore.previewServiceName) {
     inferenceServiceStore.deleteService(
-      inferenceServiceStore.previewServiceName
+      inferenceServiceStore.previewServiceName,
     );
   }
   creationStore.$reset();
@@ -1055,11 +1065,11 @@ const addExpPlots = (store: typeof creationStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;'
+            '&quot;',
           )}" data-data="${JSON.stringify(chart.data).replace(
-              /["]/g,
-              '&quot;'
-            )}"></chart>
+            /["]/g,
+            '&quot;',
+          )}"></chart>
           <p></p>
         `;
           } catch (err) {

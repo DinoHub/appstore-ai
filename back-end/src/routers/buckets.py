@@ -1,6 +1,6 @@
 """Endpoints for handling object storage buckets."""
 import uuid
-from typing import Dict, Optional
+from typing import Dict
 
 from colorama import Fore
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status

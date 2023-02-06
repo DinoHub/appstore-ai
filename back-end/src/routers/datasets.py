@@ -7,7 +7,7 @@ from shutil import unpack_archive
 from typing import Dict, List, Optional
 
 import filetype
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status, Query
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 
 from ..config.config import config
@@ -109,6 +109,7 @@ async def get_dataset_by_id(
         files=dataset.file_entries,
         default_remote=dataset.default_remote,
         created=None,
+        artifacts=dataset.artifacts,
     )
 
 

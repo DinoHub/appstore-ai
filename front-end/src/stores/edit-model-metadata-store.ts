@@ -2,11 +2,13 @@ import { Chart } from 'src/components/models';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
-import { useModelStore } from './model-store';
+import { Artifact, useModelStore } from './model-store';
+import { useDatasetStore } from './dataset-store';
 
 export const useEditMetadataStore = defineStore('editMetadata', {
   state: () => ({
     step: 1 as number,
+    artifacts: [] as Artifact[],
     tags: [] as string[],
     frameworks: [] as string[],
     modelPath: '' as string,
@@ -27,6 +29,13 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     plots: [] as Chart[],
   }),
   getters: {
+    mainModelArtifact(): Artifact {
+      return {
+        name: 'Model',
+        artifactType: 'mainModel',
+        url: this.modelPath,
+      };
+    },
     /**
      * Checks if model card is missing any required fields
      * @returns True if all metadata is valid
@@ -47,7 +56,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
             'modelOwner',
             'modelPOC',
             'plots',
-          ].includes(item)
+          ].includes(item),
       );
       if (this.tags.length == 0 || this.frameworks.length == 0) {
         return false;
@@ -81,11 +90,37 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       try {
         const metadata = await experimentStore.getExperimentByID(
           this.experimentID,
-          this.experimentPlatform
+          this.experimentPlatform,
+          false, // returnPlots
+          true, // returnArtifacts
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks])
+          new Set([...this.frameworks, ...metadata.frameworks]),
+        );
+        this.artifacts = Array.from(
+          new Set([
+            ...this.artifacts,
+            ...Object.values(metadata.artifacts ?? {}),
+          ]),
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    async loadMetadataFromDataset(): Promise<void> {
+      if (!this.datasetID || !this.datasetPlatform) {
+        return Promise.reject();
+      }
+      const datasetStore = useDatasetStore();
+      try {
+        const metadata = await datasetStore.getDatasetById(
+          this.datasetID,
+          this.datasetPlatform,
+        );
+        this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
+        this.artifacts = Array.from(
+          new Set([...this.artifacts, ...(metadata.artifacts ?? [])]),
         );
       } catch (error) {
         return Promise.reject(error);
@@ -104,7 +139,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
 
       const original_data = await modelStore.getModelById(
         authStore.user?.userId ?? '',
-        modelId
+        modelId,
       );
 
       // Load the data
@@ -171,19 +206,14 @@ export const useEditMetadataStore = defineStore('editMetadata', {
             connector: this.datasetPlatform,
             datasetId: this.datasetID,
           },
-          artifacts: [
-            {
-              artifactType: 'mainModel',
-              url: this.modelPath,
-              name: 'Model',
-              timestamp: new Date().toISOString(),
-            },
-          ],
+          artifacts: Array.from(
+            new Set([this.mainModelArtifact, ...this.artifacts]),
+          ),
           owner: this.modelOwner,
           pointOfContact: this.modelPOC,
         },
         authStore.user?.userId ?? '',
-        modelId
+        modelId,
       );
     },
   },

@@ -1,11 +1,15 @@
 from pathlib import Path
-from urllib3 import HTTPResponse
+from typing import Dict, List, Tuple
 
 import pytest
 from fastapi.testclient import TestClient
 from minio import Minio
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+from urllib3 import HTTPResponse
 
 from src.config.config import config
+
+from .test_models import model_metadata
 
 BUCKET_NAME = config.MINIO_BUCKET_NAME
 
@@ -36,13 +40,20 @@ def test_upload_video(file_path: str, client: TestClient, s3_client: Minio):
     s3_response.release_conn()
 
 
-@pytest.mark.usefixtures("flush_s3")
+@pytest.mark.asyncio
+@pytest.mark.usefixtures("flush_s3", "flush_db")
 @pytest.mark.parametrize(
     "old_file,new_file", [("./test_data/video1.mp4", "./test_data/video2.mp4")]
 )
-def test_update_video(
-    old_file: str, new_file: str, client: TestClient, s3_client: Minio
+async def test_update_video(
+    old_file: str,
+    new_file: str,
+    client: TestClient,
+    s3_client: Minio,
+    get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+    model_metadata: List[Dict],
 ):
+    db, _ = get_fake_db
     test_upload_video(old_file, client, s3_client)
 
     # Check that file exists
@@ -50,13 +61,20 @@ def test_update_video(
     old_object_name = objects[0].object_name
     assert len(objects) == 1
 
+    # Create a model card containing the old video
+    card = model_metadata[0]
+    del card["inferenceServiceName"]
+    card["videoLocation"] = f"s3://{BUCKET_NAME}/{old_object_name}"
+
+    await db["models"].insert_one(card)
+
     # Now attempt to replace
     response = client.put(
         "/buckets/video",
-        data={
-            "old_video_location": f"{config.MINIO_API_HOST}/{BUCKET_NAME}/{old_object_name}"
+        data={"userId": card["creatorUserId"], "modelId": card["modelId"]},
+        files={
+            "new_video": open(Path(__file__).parent.joinpath(new_file), "rb")
         },
-        files={"new_video": open(Path(__file__).parent.joinpath(new_file), "rb")},
     )
     response.raise_for_status()
     data = response.json()
@@ -64,5 +82,6 @@ def test_update_video(
 
     # Then check whether it has been replaced
     objects = list(s3_client.list_objects(BUCKET_NAME, recursive=True))
+    assert len(objects) == 1
     new_object_name = objects[0].object_name
     assert old_object_name != new_object_name
