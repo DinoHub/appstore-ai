@@ -23,7 +23,9 @@ docker compose up -d mongodb
 
 ### Non-docker Setup
 
-#TODO
+To install MongoDB locally without Docker, follow the instructions [here](https://docs.mongodb.com/manual/installation/)
+
+Follow the instructions to install and start up MongoDB. You should be able to connect to the MongoDB instance at `mongodb://localhost:27017`.
 
 ## Setting Up MinIO
 
@@ -37,7 +39,9 @@ docker compose up -d minio
 
 ### Non-docker Setup
 
-#TODO
+To install Minio locally without Docker, follow the instructions [here](https://min.io/docs/minio/linux/operations/install-deploy-manage/deploy-minio-single-node-single-drive.html)
+
+Once started, you should be able to connect to the MinIO API instance at `http://localhost:9000`. The console can be accessed at `http://localhost:9090`.
 
 ## Installing Dependencies
 
