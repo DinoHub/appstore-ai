@@ -1,6 +1,7 @@
 <template>
   <q-toolbar class="bg-dark">
     <!-- Button to open  navrail -->
+    <!-- as navrail is in layout, we need to emit events to communicate with it -->
     <q-btn
       v-if="loggedIn"
       flat
@@ -49,12 +50,10 @@
 
 <script setup lang="ts">
 import { useAuthStore } from 'src/stores/auth-store';
-import { computed, ref } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed } from 'vue';
 
 import QuickSearchModal from 'src/components/layout/QuickSearchModal.vue';
 // import NotificationsMenu from 'src/components/NotificationsMenu.vue';
-import RouteBreadcrumbs from 'src/components/layout/RouteBreadcrumbs.vue';
 import DarkModeToggle from './DarkModeToggle.vue';
 
 const authStore = useAuthStore();

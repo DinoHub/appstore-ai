@@ -1,5 +1,7 @@
 <template>
+  <!-- This component is similar to the ModelCardDataTable component -->
   <div class="row">
+    <!-- Left sidebar -->
     <q-drawer show-if-above :model-value="props.filterDrawer" class="q-ml-md">
       <aside class="col-4 q-pt-md">
         <q-form>
@@ -59,12 +61,18 @@
     >
       <template v-slot:top>
         <q-btn
+          no-caps
+          rounded
+          padding="sm xl"
           class="q-ml-sm"
           color="secondary"
           v-if="selected.length == 1"
           :label="`Edit`"
         />
         <q-btn
+          no-caps
+          rounded
+          padding="sm xl"
           class="q-ml-sm"
           color="negative"
           v-if="selected.length > 0"
@@ -72,6 +80,9 @@
           @click="removePopup = true"
         />
         <q-btn
+          no-caps
+          rounded
+          padding="sm xl"
           class="q-ml-sm"
           color="primary"
           v-if="selected.length > 0"
@@ -178,6 +189,7 @@
       <q-card-actions align="right">
         <q-btn
           rounded
+          no-caps
           outline
           label="Cancel"
           padding="sm md"
@@ -187,6 +199,7 @@
         <q-space></q-space>
         <q-btn
           rounded
+          no-caps
           label="Confirm"
           color="primary"
           padding="sm md"
@@ -227,6 +240,7 @@
       <q-card-actions align="right">
         <q-btn
           rounded
+          no-caps
           outline
           label="Cancel"
           padding="sm md"
@@ -236,6 +250,7 @@
         <q-space></q-space>
         <q-btn
           rounded
+          no-caps
           label="Confirm"
           color="primary"
           padding="sm md"
@@ -267,11 +282,11 @@ export interface ModelCardDataTableProps {
 }
 
 const persistent = ref(false);
-
 const selected = ref([]);
 const exportPopup = ref(false);
 const removePopup = ref(false);
 const loading = ref(false);
+
 const router = useRouter();
 const route = useRoute();
 
@@ -429,7 +444,7 @@ const onSearchRequest = (props: QTableProps) => {
     });
 };
 
-function exportModels() {
+const exportModels = () => {
   modelStore
     .exportModels(selected.value)
     .then(() => {
@@ -447,7 +462,8 @@ function exportModels() {
       });
     });
 }
-function deleteModels() {
+
+const deleteModels = () => {
   modelStore.deleteModelMultiple(selected.value).then(() => {
     tableRef.value?.requestServerInteraction();
     selected.value = [];

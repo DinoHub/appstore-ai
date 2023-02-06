@@ -44,6 +44,14 @@ export const useUsersStore = defineStore('users', {
     idSearch: '' as string,
   }),
   actions: {
+    /**
+     * Retrives users in a paginated format
+     * @param pageNumber Page number to retrieve
+     * @param userNumber Number of users per page
+     * @param sortBy What field to sort by
+     * @param descending If the sort should be descending instead of ascending
+     * @returns Promise that resolves to the list of users and the total number of users
+     */
     async getUsersPaginated(
       pageNumber: number,
       userNumber: number,

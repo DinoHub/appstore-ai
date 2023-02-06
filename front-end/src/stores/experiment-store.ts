@@ -36,6 +36,14 @@ export const useExperimentStore = defineStore('experiment', {
     ] as Record<string, string>[],
   }),
   actions: {
+    /**
+     * Retrieves experiment data
+     * @param experimentId ID of experiment to get
+     * @param connector Experiment connector to use
+     * @param returnPlots Whether to return plots or not
+     * @param returnArtifacts Whether to return artifacts or not
+     * @returns Experiment data
+     */
     async getExperimentByID(
       experimentId: string,
       connector: string,

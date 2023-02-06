@@ -19,7 +19,7 @@ export const useCreationStore = defineStore('createModel', {
       tags: [] as string[],
       frameworks: [] as string[],
       modelPath: '' as string,
-      experimentPlatform: '' as string, // todo: enum
+      experimentPlatform: '' as string, // todo: type as enum
       experimentID: '' as string,
       datasetPlatform: '' as string,
       datasetID: '' as string,
@@ -111,6 +111,11 @@ export const useCreationStore = defineStore('createModel', {
         url: this.modelPath,
       };
     },
+    /**
+     * A validator for the model card metadata when there is supposed to be a video instead of service
+     * TODO: have a single validator function, but within the function, check if there is a video or service
+     * @returns {boolean} True if the model card metadata is valid, false otherwise
+     */
     noServiceMetadataValid(): boolean {
       // Redundant?
       const keys = Object.keys(this).filter((item) =>
@@ -149,6 +154,11 @@ export const useCreationStore = defineStore('createModel', {
       }
       return true;
     },
+    /**
+     * A validator for the model card metadata when there is supposed to be a service instead of video
+     * TODO: have a single validator function, but within the function, check if there is a video or service
+     * @returns {boolean} True if the model card metadata is valid, false otherwise
+     */
     metadataValid(): boolean {
       const keys = Object.keys(this).filter((item) =>
         [
@@ -185,6 +195,10 @@ export const useCreationStore = defineStore('createModel', {
       }
       return true;
     },
+    /**
+     * Remove duplicates environment variables from inference service
+     * @returns {Record<string, string>} A unique set of environment variables
+     */
     uniqueEnv(): Record<string, string> {
       const uniqueEnvs: Record<string, string> = {};
       this.env.forEach(({ key, value }) => {
@@ -194,6 +208,10 @@ export const useCreationStore = defineStore('createModel', {
     },
   },
   actions: {
+    /**
+     * Based on experiment ID and platform, load the metadata from the experiment
+     * @returns {Promise<void>} A promise that resolves when the metadata is loaded
+     */
     async loadMetadataFromExperiment(): Promise<void> {
       if (!this.experimentID || !this.experimentPlatform) {
         return Promise.reject();
@@ -242,6 +260,12 @@ export const useCreationStore = defineStore('createModel', {
         return Promise.reject(error);
       }
     },
+    /**
+     * Launch a inference service for the purpose of allowing the model
+     * owner to preview the inference service
+     * @param modelId model ID to launch preview service for
+     * @returns {Promise<void>} A promise that resolves when the preview service is launched
+     */
     async launchPreviewService(modelId: string): Promise<void> {
       const inferenceServiceStore = useInferenceServiceStore();
       try {
@@ -261,7 +285,11 @@ export const useCreationStore = defineStore('createModel', {
         return Promise.reject(error);
       }
     },
-    async createModel() {
+    /**
+     * Submit a model card to the backend
+     * @returns {Promise<{ modelId: string, creatorUserId: string }>} A promise that resolves when the model is created
+     */
+    async createModel(): Promise<{ modelId: string; creatorUserId: string }> {
       try {
         const authStore = useAuthStore();
 
@@ -350,10 +378,22 @@ export const useCreationStore = defineStore('createModel', {
           this.step = 2;
           this.modelName = '';
         }
+        return Promise.reject(error);
       }
     },
-    async createModelWithVideo() {
+    /**
+     * Submit a model card to the backend with a video
+     * TODO: Combine with createModel function
+     * @returns {Promise<{ modelId: string, creatorUserId: string }>} A promise that resolves when the model is created
+     */
+    async createModelWithVideo(): Promise<{
+      modelId: string;
+      creatorUserId: string;
+    }> {
       try {
+        if (!this.exampleVideo) {
+          throw new Error('No video file selected');
+        }
         const authStore = useAuthStore();
         const uploadStore = useUploadStore();
         const videoUploader = uploadStore.uploadVideo(this.exampleVideo);
@@ -419,6 +459,7 @@ export const useCreationStore = defineStore('createModel', {
           this.step = 2;
           this.modelName = '';
         }
+        return Promise.reject(error);
       }
     },
   },

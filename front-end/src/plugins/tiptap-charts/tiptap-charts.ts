@@ -1,3 +1,8 @@
+/**
+ * Plotly chart extension for tiptap
+ * Enables plotly json chart data to
+ * be rendered in tiptap editor
+ */
 import ChartDisplay from 'src/components/editor/TiptapChart.vue';
 import { mergeAttributes, Node } from '@tiptap/core';
 import { VueNodeViewRenderer } from '@tiptap/vue-3';
@@ -59,6 +64,7 @@ export const Chart = Node.create<ChartOptions>({
     return ['chart', mergeAttributes(HTMLAttributes)];
   },
   addNodeView() {
+    // Render as vue component
     return VueNodeViewRenderer(ChartDisplay);
   },
 });

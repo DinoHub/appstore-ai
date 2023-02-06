@@ -547,13 +547,20 @@ async def delete_inference_engine_service(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    """Delete a deployed inference engine from the K8S cluster.
+    """
+    Delete a deployed inference engine from the K8S cluster.
 
-    :param service_name: Name of KNative service, defaults to Path(description="Name of KService to Delete")
-    :type service_name: str, optional
-    :param k8s_client: Python K8S Client, defaults to Depends(get_k8s_client)
-    :type k8s_client: ApiClient, optional
-    :raises HTTPException: 500 Internal Server Error if deletion fails
+    Args:
+        service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User details. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error deleting the service
+        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+        HTTPException: 403 Forbidden if user does not have owner access to KService
     """
 
     ## Get User ID from Request
@@ -664,12 +671,23 @@ async def update_inference_engine_service(
     user: TokenData = Depends(get_current_user),
 ):
     """Update an existing inference engine inside the K8S cluster
+    
+    Args:
+        service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        service (UpdateInferenceEngineService) : Configuration (service name and Image URI) of updated Inference Engine
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User details. Defaults to Depends(get_current_user).
 
-    :param service: Configuration (service name and Image URI) of updated Inference Engine
-    :type service: InferenceEngineService
-    :param k8s_client: Python K8S client, defaults to Depends(get_k8s_client)
-    :type k8s_client: ApiClient, optional
-    :raises HTTPException: 500 Internal Server Error if failed to update
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error updating the service
+        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+        HTTPException: 404 Not Found if KService with given name is not found
+        HTTPException: 403 Forbidden if user does not have owner access to KService
+    
+    Returns:
+        Dict: Service details
     """
     # Create Deployment Template
     tasks.add_task(delete_orphan_services)  # Remove preview services created in testing
@@ -1019,6 +1037,14 @@ async def restore_inference_engine_service(
 async def wipe_orphaned_services(
     user: TokenData = Depends(get_current_user),
 ):
+    """Call to delete orphaned inference services
+
+    Args:
+        user (TokenData, optional): User details and info. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error wiping orphaned services
+    """
     try:
         if user.role != "admin":
             raise HTTPException(

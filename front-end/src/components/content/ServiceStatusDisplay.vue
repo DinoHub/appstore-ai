@@ -1,4 +1,5 @@
 <template>
+  <!-- Component that displays data from inference service status endpoint -->
   <q-markup-table wrap-cells>
     <thead>
       <tr>
