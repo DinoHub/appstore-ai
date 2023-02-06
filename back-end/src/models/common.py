@@ -1,5 +1,4 @@
 """Common Pydantic models and functions.""" ""
-from datetime import datetime
 from typing import Optional
 
 from bson import ObjectId

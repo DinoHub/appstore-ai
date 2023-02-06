@@ -49,6 +49,7 @@ class GlobalConfig(BaseSettings):
     MONGO_DSN: Optional[MongoDsn] = None
     MONGO_USERNAME: Optional[str] = None
     MONGO_PASSWORD: Optional[str] = None
+
     # Object Storage Settings
     MINIO_DSN: Optional[str] = None
     MINIO_API_HOST: Optional[str] = None
