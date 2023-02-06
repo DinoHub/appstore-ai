@@ -221,5 +221,5 @@ async def create_dataset(
         project=dataset.project,
         files=dataset.file_entries,
         default_remote=dataset.default_remote,
-        created=datetime.now().isoformat(),
+        created=datetime.now(),
     )

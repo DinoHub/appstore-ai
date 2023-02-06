@@ -33,7 +33,7 @@ class DatasetModel(BaseModel):
 
     id: str
     name: Optional[str] = None
-    created: Optional[str] = None
+    created: Optional[datetime] = None
     tags: Optional[List[str]] = None
     project: Optional[str] = None
     files: Optional[Dict] = None
