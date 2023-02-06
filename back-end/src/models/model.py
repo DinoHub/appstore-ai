@@ -82,7 +82,7 @@ class UpdateModelCardModel(BaseModel):
     All fields are optional, to allow for partial updates.
     """
 
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, max_length=50)
     description: Optional[str] = None
     explanation: Optional[str] = None
     usage: Optional[str] = None
@@ -124,7 +124,7 @@ class SearchModelResponse(BaseModel):
     """Response model for searching model cards."""
 
     results: List
-    total: int
+    total: int = Field(..., ge=0)
 
 
 class modelCard(BaseModel):
