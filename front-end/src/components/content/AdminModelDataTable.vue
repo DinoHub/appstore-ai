@@ -61,18 +61,12 @@
     >
       <template v-slot:top>
         <q-btn
-          no-caps
-          rounded
-          padding="sm xl"
           class="q-ml-sm"
           color="secondary"
           v-if="selected.length == 1"
           :label="`Edit`"
         />
         <q-btn
-          no-caps
-          rounded
-          padding="sm xl"
           class="q-ml-sm"
           color="negative"
           v-if="selected.length > 0"
@@ -80,9 +74,6 @@
           @click="removePopup = true"
         />
         <q-btn
-          no-caps
-          rounded
-          padding="sm xl"
           class="q-ml-sm"
           color="primary"
           v-if="selected.length > 0"
