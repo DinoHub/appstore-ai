@@ -2,16 +2,17 @@
   <!-- This component is similar to the ModelCardDataTable component -->
   <div class="row">
     <!-- Left sidebar -->
-    <q-drawer show-if-above :model-value="props.filterDrawer" class="q-ml-md">
+    <q-drawer show-if-above :model-value="props.filterDrawer">
       <aside class="col-4 q-pt-md">
         <q-form>
-          <div class="text-h6">Query Filters</div>
+          <div class="text-h6 q-pl-md">Query Filters</div>
           <q-expansion-item default-opened icon="task" label="Task">
             <q-option-group
               v-model="filter.tasks"
               :options="tasks"
               color="primary"
               type="checkbox"
+              class="q-pl-sm"
             ></q-option-group>
           </q-expansion-item>
           <q-expansion-item icon="code" label="Frameworks">
@@ -20,6 +21,7 @@
               :options="frameworks"
               color="primary"
               type="checkbox"
+              class="q-pl-sm"
             ></q-option-group>
           </q-expansion-item>
           <q-expansion-item default-opened icon="tag" label="Tags">
@@ -441,7 +443,7 @@ const exportModels = () => {
     .exportModels(selected.value)
     .then(() => {
       Notify.create({
-        message: 'Exported models successfully!',
+        message: 'Export request successfully initiated!',
         type: 'positive',
       });
       tableRef.value?.requestServerInteraction();
@@ -449,18 +451,18 @@ const exportModels = () => {
     })
     .catch(() => {
       Notify.create({
-        message: 'Failed to export models...',
+        message: 'Export request failed...',
         type: 'negative',
       });
     });
-}
+};
 
 const deleteModels = () => {
   modelStore.deleteModelMultiple(selected.value).then(() => {
     tableRef.value?.requestServerInteraction();
     selected.value = [];
   });
-}
+};
 
 onMounted(() => {
   // TODO: overhaul this?

@@ -1,9 +1,9 @@
 <template>
-  <div class="row">
-    <q-drawer show-if-above :model-value="props.filterDrawer" class="q-ml-md">
+  <div class="row ">
+    <q-drawer show-if-above :model-value="props.filterDrawer" class="">
       <aside class="col-4 q-pt-md">
         <q-form>
-          <div class="text-h6">Query Filters</div>
+          <div class="text-h6 q-pl-md">Query Filters</div>
           <q-expansion-item default-opened icon="account_box" label="User Type">
             <q-select
               v-model="userStore.privilege"
@@ -20,7 +20,7 @@
               range
               minimal
               color="primary"
-              class="q-mt-sm q-pl-sm q-mb-sm"
+              class="q-mt-sm q-ml-sm q-mb-sm"
             />
           </q-expansion-item>
           <q-expansion-item icon="event" label="Last Modified">
@@ -29,7 +29,7 @@
               range
               minimal
               color="primary"
-              class="q-mt-sm q-pl-sm"
+              class="q-mt-sm q-ml-sm"
           /></q-expansion-item>
         </q-form>
       </aside>
