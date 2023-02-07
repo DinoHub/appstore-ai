@@ -30,7 +30,7 @@
           <q-expansion-item default-opened icon="tag" label="Tags">
             <q-select
               hint="Type in tags or use dropdown to add available tags"
-              class="q-ma-sm"
+              class="q-ma-sm q-ml-md q-mr-lg"
               color="secondary"
               v-model="filter.tags"
               use-input
@@ -38,6 +38,7 @@
               multiple
               autogrow
               outlined
+              label="Filter by Tags"
               input-debounce="500"
               new-value-mode="add-unique"
               :options="tags"
