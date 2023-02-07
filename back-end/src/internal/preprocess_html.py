@@ -9,8 +9,8 @@ from lxml.html.clean import Cleaner
 
 from ..config.config import config
 from .dependencies.minio_client import (
-    get_presigned_url,
     get_data,
+    get_presigned_url,
     minio_api_client,
     upload_data,
 )
@@ -127,8 +127,9 @@ def sanitize_html(html: str) -> str:
         if not isinstance(cleaned, str):
             raise TypeError
         return cleaned
-    except (ParserError, TypeError):
-        return "Error!"
+    except (ParserError, TypeError) as err:
+        print("Error sanitizing HTML", err)
+        return "<p>Error parsing HTML</p>"
 
 
 def s3_url_to_presigned_url(
