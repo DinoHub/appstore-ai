@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from .config.config import config
 from .internal.auth import check_is_admin, get_current_user
 from .internal.tasks import init_db
-from .routers import auth, buckets, datasets, engines, experiments, iam, models
+from .routers import auth, buckets, datasets, engines, experiments, iam, models, exports
 
 with open(
     Path(__file__).parent.parent.joinpath("README.md"), "r", encoding="utf-8"
@@ -44,6 +44,10 @@ tags_metadata = [
     {
         "name": "Authentication",
         "description": "APIs to allow end users to login to the system",
+    },
+    {
+        "name": "Exports",
+        "description": "APIs for system admins to manage export logs",
     },
     {
         "name": "Buckets",
@@ -103,9 +107,7 @@ async def custom_swagger_ui_html():
     )
 
 
-@app.app.get(
-    fastapi_app.swagger_ui_oauth2_redirect_url, include_in_schema=False
-)
+@app.app.get(fastapi_app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
@@ -120,20 +122,13 @@ async def redoc_html():
 
 
 app.app.include_router(auth.router)
-app.app.include_router(
-    buckets.router, dependencies=[Depends(get_current_user)]
-)
+app.app.include_router(buckets.router, dependencies=[Depends(get_current_user)])
 app.app.include_router(models.router, dependencies=[Depends(get_current_user)])
-app.app.include_router(
-    experiments.router, dependencies=[Depends(get_current_user)]
-)
-app.app.include_router(
-    datasets.router, dependencies=[Depends(get_current_user)]
-)
+app.app.include_router(experiments.router, dependencies=[Depends(get_current_user)])
+app.app.include_router(exports.router, dependencies=[Depends(check_is_admin)])
+app.app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
 app.app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
-app.app.include_router(
-    engines.router, dependencies=[Depends(get_current_user)]
-)
+app.app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 
 @app.app.get("/")
