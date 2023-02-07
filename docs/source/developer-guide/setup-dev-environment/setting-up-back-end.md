@@ -53,6 +53,22 @@ source venv/bin/activate
 poetry install
 ```
 
+The core dependencies are listed in `back-end/pyproject.toml`. The key dependencies are:
+
+- [FastAPI](https://fastapi.tiangolo.com/): a modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
+- [Pydantic](https://pydantic-docs.helpmanual.io/): data validation and settings management using Python type hinting.
+- [Motor](https://motor.readthedocs.io/en/stable/): an asynchronous Python driver for MongoDB.
+- [Minio](https://docs.min.io/docs/python-client-quickstart-guide.html): a Python client for S3-compatible object storage.
+- [ClearML](https://clear.ml/docs/docs/python_sdk/index.html): a Python client for ClearML.
+- [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/): a modern and designer-friendly templating language for Python.
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/): a Python library for parsing HTML and XML documents.
+- [Kubernetes](https://kubernetes.io/docs/reference/using-api/client-libraries/): a Python client for Kubernetes.
+- The core development dependencies are:
+- [Pytest](https://docs.pytest.org/en/stable/): a testing framework for Python.
+- [Hypothesis](https://hypothesis.readthedocs.io/en/latest/): a library for property-based testing.
+- [Black](https://black.readthedocs.io/en/stable/): a Python code formatter.
+- [isort](https://pycqa.github.io/isort/): a Python utility / library to sort imports.
+
 ## Setting up Environment Variables
 
 Configuration for the app is done by dotenv files. The dotenv file is located in `back-end/src/config/.env`. If you do not have this file, you will need to create it as a copy of `back-end/src/config/.env.public` and fill in the values (as we do not want to commit the dotenv file to the repository to avoid leaking sensitive secrets, and thus we gitignored the .env file).
