@@ -30,6 +30,7 @@ extensions = [
     "sphinx.ext.viewcode",  # Add link to source code
     "sphinxcontrib.openapi",  # Use OpenAPI specification to generate documentation
     "sphinxcontrib.apidoc",  # Populate autodoc for API documentation
+    "sphinxcontrib.mermaid",  # Generate diagrams using Mermaid
     "sphinx_copybutton",  # Copy button for code to clipboard
     "sphinx_design",  # Extension for more supporting components
     "sphinx_inline_tabs",  # Extension for inline tabs

@@ -136,6 +136,38 @@ back-end
 └── README.md
 ```
 
+| File / Folder                      | Description                                                                                                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| src/config/.env                    | Contains environment variables for the app. This file is gitignored and should not be committed.                                                                 |
+| src/config/.env.gpg                | Contains the encrypted .env file. This file is decrypted during CICD, with the GPG passphrase stored in the CICD secrets. (currently using symmetric encryption) |
+| src/config/.env.public             | Contains placeholder environment variables for the app.                                                                                                          |
+| src/config/config.py               | Contains the configuration for the app.                                                                                                                          |
+| src/config/decrypt-env.sh          | Contains the script for decrypting the .env file.                                                                                                                |
+| src/config/encrypt-env.sh          | Contains the script for encrypting the .env file.                                                                                                                |
+| src/internal/data_connector/       | Contains the data connectors for the app.                                                                                                                        |
+| src/internal/experiment_connector/ | Contains the experiment connectors for the app.                                                                                                                  |
+| src/internal/dependencies/         | Contains the dependencies for the app.                                                                                                                           |
+| src/internal/tasks/                | Contains the background tasks for the app.                                                                                                                       |
+| src/internal/**init**.py           | Contains the initialization for the internal package.                                                                                                            |
+| src/internal/auth.py               | Contains the authentication for the app.                                                                                                                         |
+| src/internal/preprocess_html.py    | Contains the HTML preprocessor for the app.                                                                                                                      |
+| src/internal/templates.py          | Contains the Jinja template generator for the app.                                                                                                               |
+| src/internal/utils.py              | Contains the utility functions for the app.                                                                                                                      |
+| src/models/                        | Contains the Pydantic data models for the app.                                                                                                                   |
+| src/routers/                       | Contains the router and controllers for the app.                                                                                                                 |
+| src/templates/                     | Contains the Jinja templates for the app.                                                                                                                        |
+| src/**init**.py                    | Contains the initialization for the app.                                                                                                                         |
+| src/main.py                        | Contains the main entrypoint for the app.                                                                                                                        |
+| static/                            | Contains the static files for the app.                                                                                                                           |
+| tests/                             | Contains the tests for the app.                                                                                                                                  |
+| CONTRIBUTING.md                    | Contains the contributing guidelines for the app.                                                                                                                |
+| Dockerfile                         | Contains the Dockerfile for the app.                                                                                                                             |
+| LICENSE                            | Contains the license for the app.                                                                                                                                |
+| Makefile                           | Contains the Makefile for the app.                                                                                                                               |
+| poetry.lock                        | Contains the exact versions of the dependencies for the app.                                                                                                     |
+| pyproject.toml                     | Contains the dependencies for the app.                                                                                                                           |
+| README.md                          | Contains the README for the app.                                                                                                                                 |
+
 ## Contributing
 
 ### Setup Development Environment
@@ -199,5 +231,3 @@ Code formatting is enforced using [Prettier](https://prettier.io/). To format co
 ```bash
 npm run format
 ```
-
-### PR Review Process

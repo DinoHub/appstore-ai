@@ -23,7 +23,9 @@ docker compose up -d mongodb
 
 ### Non-docker Setup
 
-#TODO
+To install MongoDB locally without Docker, follow the instructions [here](https://docs.mongodb.com/manual/installation/)
+
+Follow the instructions to install and start up MongoDB. You should be able to connect to the MongoDB instance at `mongodb://localhost:27017`.
 
 ## Setting Up MinIO
 
@@ -37,7 +39,9 @@ docker compose up -d minio
 
 ### Non-docker Setup
 
-#TODO
+To install Minio locally without Docker, follow the instructions [here](https://min.io/docs/minio/linux/operations/install-deploy-manage/deploy-minio-single-node-single-drive.html)
+
+Once started, you should be able to connect to the MinIO API instance at `http://localhost:9000`. The console can be accessed at `http://localhost:9090`.
 
 ## Installing Dependencies
 
@@ -48,6 +52,22 @@ python -m venv venv
 source venv/bin/activate
 poetry install
 ```
+
+The core dependencies are listed in `back-end/pyproject.toml`. The key dependencies are:
+
+- [FastAPI](https://fastapi.tiangolo.com/): a modern, fast (high-performance), web framework for building APIs with Python 3.6+ based on standard Python type hints.
+- [Pydantic](https://pydantic-docs.helpmanual.io/): data validation and settings management using Python type hinting.
+- [Motor](https://motor.readthedocs.io/en/stable/): an asynchronous Python driver for MongoDB.
+- [Minio](https://docs.min.io/docs/python-client-quickstart-guide.html): a Python client for S3-compatible object storage.
+- [ClearML](https://clear.ml/docs/docs/python_sdk/index.html): a Python client for ClearML.
+- [Jinja2](https://jinja.palletsprojects.com/en/3.0.x/): a modern and designer-friendly templating language for Python.
+- [BeautifulSoup](https://www.crummy.com/software/BeautifulSoup/bs4/doc/): a Python library for parsing HTML and XML documents.
+- [Kubernetes](https://kubernetes.io/docs/reference/using-api/client-libraries/): a Python client for Kubernetes.
+- The core development dependencies are:
+- [Pytest](https://docs.pytest.org/en/stable/): a testing framework for Python.
+- [Hypothesis](https://hypothesis.readthedocs.io/en/latest/): a library for property-based testing.
+- [Black](https://black.readthedocs.io/en/stable/): a Python code formatter.
+- [isort](https://pycqa.github.io/isort/): a Python utility / library to sort imports.
 
 ## Setting up Environment Variables
 
