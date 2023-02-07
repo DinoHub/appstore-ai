@@ -10,14 +10,11 @@
           class="q-py-lg"
         ></q-img></router-link
     ></q-toolbar-title>
-    <div class="q-pl-sm"></div>
-    <!-- <div class="q-pl-sm"> -->
-    <!-- Notifications -->
-    <!-- <notifications-menu v-if="loggedIn"></notifications-menu> -->
-    <!-- </div> -->
-    <!-- <div class="q-pl-sm">
-          <q-btn flat round color="white" icon="account_box" v-if="loggedIn" />
-        </div> -->
+    <q-tabs shrink inline-label>
+      <q-route-tab icon="supervised_user_circle" label="Users" to="/admin" />
+      <q-route-tab icon="devices" label="Models" to="/admin/models" />
+      <q-route-tab icon="import_export" label="Exports" />
+    </q-tabs>
     <div class="q-pl-sm">
       <dark-mode-toggle></dark-mode-toggle>
     </div>
@@ -33,6 +30,8 @@
       ></q-btn>
     </div>
   </q-toolbar>
+
+  <div class="row"></div>
 </template>
 
 <script setup lang="ts">
