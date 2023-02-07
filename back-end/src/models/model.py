@@ -127,14 +127,14 @@ class SearchModelResponse(BaseModel):
     total: int
 
 
-class modelCard(BaseModel):
+class ModelCardCompositeKey(BaseModel):
     """General model for the composite key for models of id and creator id"""
 
     model_id: str
     creator_user_id: str
 
 
-class modelCardPackage(BaseModel):
+class ModelCardPackage(BaseModel):
     """Model for compiling list of composite keys of the models"""
 
-    card_package: List[modelCard]
+    card_package: List[ModelCardCompositeKey]
