@@ -11,7 +11,7 @@ docker exec -it back-end-tests-backend-1 bash
 This will start up the tests container, and then you can run the tests inside the container. To run the tests, run the following command:
 
 ```bash
-pytest
+poetry run pytest
 ```
 
 ## Note
