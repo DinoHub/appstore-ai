@@ -4,7 +4,15 @@ from typing import Dict, Tuple
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
+from src.models.iam import UserInsert
+
+password_strategy = st.from_regex(
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+)
 
 
 @pytest.fixture
@@ -35,60 +43,85 @@ def userConflictData() -> Dict:
 
 @pytest.mark.usefixtures("flush_db")
 @pytest.mark.asyncio
+@settings(
+    suppress_health_check=[
+        HealthCheck.filter_too_much,
+        HealthCheck.function_scoped_fixture,
+    ]
+)
+@given(
+    st.builds(
+        UserInsert,
+        password=st.shared(password_strategy, key="password"),
+        password_confirm=st.shared(password_strategy, key="password"),
+    )
+)
 async def test_add_users(
     admin_client: TestClient,
     get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
-    userAddData: Dict,
+    user: UserInsert,
 ):
     db, _ = get_fake_db
+    await db.drop_collection("users")
+    user_dict = user.dict()
+    user_dict["password"] = user.password.get_secret_value()
+    user_dict["password_confirm"] = user.password_confirm.get_secret_value()
+
     response = admin_client.post(
         "/iam/add",
-        json=userAddData,
+        json=user_dict,
     )
     userList = await db["users"].find().to_list(length=None)
     assert response.status_code == status.HTTP_201_CREATED
     assert len(userList) == 1
-    assert userList[0]["userId"] != ""
+    assert userList[0]["name"] == user.name
+    assert userList[0]["adminPriv"] == user.admin_priv
+
     await db.drop_collection("users")
 
 
 @pytest.mark.xfail(reason="Password mismatch")
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
+@settings(
+    suppress_health_check=[
+        HealthCheck.filter_too_much,
+        HealthCheck.function_scoped_fixture,
+    ]
+)
+@given(
+    st.builds(
+        UserInsert,
+        password=password_strategy,
+        password_confirm=password_strategy,
+    )
+)
 async def test_add_users_password_mismatch(
     admin_client: TestClient,
     get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+    user: UserInsert,
 ):
-    await test_add_users(
+    test_add_users(
         admin_client=admin_client,
         get_fake_db=get_fake_db,
-        userAddData={
-            "user_id": "",
-            "name": "Master Tester",
-            "password": "Testing123!",
-            "password_confirm": "Testing12",
-            "admin_priv": True,
-        },
+        user=user,
     )
 
 
 @pytest.mark.xfail(reason="Password too weak")
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(st.builds(UserInsert))
 async def test_add_users_password_weak(
     admin_client: TestClient,
     get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+    user: UserInsert,
 ):
-    await test_add_users(
+    test_add_users(
         admin_client=admin_client,
         get_fake_db=get_fake_db,
-        userAddData={
-            "user_id": "",
-            "name": "Master Tester",
-            "password": "Testing123",
-            "password_confirm": "Testing123",
-            "admin_priv": True,
-        },
+        user=user,
     )
 
 
