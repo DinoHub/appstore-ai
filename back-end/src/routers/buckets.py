@@ -16,7 +16,7 @@ from ..internal.dependencies.minio_client import (
 from ..internal.dependencies.mongo_client import get_db
 from ..models.buckets import VideoUploadResponse
 
-router = APIRouter(prefix="/buckets", tags=["buckets"])
+router = APIRouter(prefix="/buckets", tags=["Buckets"])
 
 BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
 
