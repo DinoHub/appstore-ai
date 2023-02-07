@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'back-end/**'
+      - 'docs/**'
   workflow_dispatch: # Allow manual invokation of run
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages

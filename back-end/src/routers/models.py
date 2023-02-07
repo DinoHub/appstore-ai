@@ -433,7 +433,7 @@ async def create_model_card_metadata(
 
 @router.put(
     "/{creator_user_id}/{model_id}",
-    response_model=ModelCardModelDB,
+    response_model=Optional[ModelCardModelDB],
     response_model_exclude_unset=True,
 )
 async def update_model_card_metadata_by_id(

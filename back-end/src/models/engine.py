@@ -71,6 +71,7 @@ class CreateInferenceEngineService(BaseModel):
     # resource_limits: ResourceLimits
     container_port: Optional[PositiveInt] = None
     env: Optional[Dict[str, str]] = None
+    # float to allow for fractional GPUs
     num_gpus: float = Field(default=0, ge=0, le=2)
 
     @validator("model_id")
@@ -123,7 +124,7 @@ class UpdateInferenceEngineService(BaseModel):
     """Request model for updating an inference engine service."""
 
     image_uri: ContainerURI
-    container_port: Optional[int] = None
+    container_port: Optional[PositiveInt] = None
     # resource_limits: ResourceLimits
     env: Optional[dict] = None
     num_gpus: float = Field(default=0, ge=0, le=2)
