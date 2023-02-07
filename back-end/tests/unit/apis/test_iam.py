@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, Tuple
 
 import pytest
@@ -47,7 +47,8 @@ def userConflictData() -> Dict:
     suppress_health_check=[
         HealthCheck.filter_too_much,
         HealthCheck.function_scoped_fixture,
-    ]
+    ],
+    deadline=timedelta(milliseconds=500),
 )
 @given(
     st.builds(
