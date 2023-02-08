@@ -16,7 +16,13 @@
           :color="statusColor"
           :label="'Service Status: ' + props.status?.status"
         ></q-badge>
-        <q-btn flat round color="secondary" icon="settings">
+        <q-btn
+          flat
+          round
+          color="secondary"
+          icon="settings"
+          id="gradio-settings-menu"
+        >
           <q-menu>
             <!-- If replicas > 0, then show button to scale replicas to 0 -->
             <q-item
@@ -139,7 +145,6 @@ const loading = ref(true);
 const processing = ref(false);
 const showLogs = ref(false);
 const showDetailedStatus = ref(false);
-
 
 // When a gradio app is used, the param __theme is used to set the theme
 // of the app. This is done by appending the param to the URL.
