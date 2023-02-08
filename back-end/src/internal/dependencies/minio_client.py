@@ -5,6 +5,7 @@ import urllib3
 
 import minio
 from minio.commonconfig import CopySource, ComposeSource
+from minio.deleteobjects import DeleteObject
 from colorama import Fore
 
 from ...config.config import config
@@ -83,6 +84,19 @@ def remove_data(
         bucket_name=bucket_name,
         object_name=object_name,
     )
+
+
+def remove_data_from_prefix(
+    client: minio.Minio,
+    prefix: str,
+    bucket_name: str,
+):
+    delete_object_list = map(
+        lambda x: DeleteObject(x.object_name),
+        client.list_objects(bucket_name=bucket_name, prefix=prefix, recursive=True),
+    )
+    errors = client.remove_objects(bucket_name, delete_object_list)
+    return errors
 
 
 def upload_data(
