@@ -64,7 +64,9 @@ async def get_inference_engine_service_logs(
         EventSourceResponse: SSE response with logs
     """
     db, _ = db
-    existing_service = await db["services"].find_one({"serviceName": service_name})
+    existing_service = await db["services"].find_one(
+        {"serviceName": service_name}
+    )
     if (
         existing_service is not None
         and existing_service["ownerId"] != user.user_id
@@ -158,6 +160,7 @@ async def scale_inference_engine_deployments(
 @router.get("/{service_name}", response_model=InferenceEngineService)
 async def get_inference_engine_service(
     service_name: str,
+    k8s_client: ApiClient = Depends(get_k8s_client),
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ) -> Dict:
     """Get Inference Engine Service
@@ -179,6 +182,56 @@ async def get_inference_engine_service(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Service not found"
         )
+    try:
+        if "protocol" not in service:
+            protocol = config.IE_DEFAULT_PROTOCOL
+        else:
+            protocol = service["protocol"]
+        path = service["path"]
+        # Deploy Service on K8S
+        with k8s_client as client:
+            # Get KNative Serving Ext Ip
+            core_api = CoreV1Api(client)
+            service_backend = config.IE_SERVICE_TYPE or ServiceBackend.EMISSARY
+            if config.IE_DOMAIN:
+                host = config.IE_DOMAIN
+            else:
+                if service_backend == ServiceBackend.KNATIVE:
+                    ingress_name = "kourier"
+                    ingress_namespace = "kourier-system"
+                elif service_backend == ServiceBackend.EMISSARY:
+                    ingress_name = "emissary-ingress"
+                    ingress_namespace = "emissary"
+                else:
+                    if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
+                        ingress_name = config.IE_INGRESS_NAME
+                        ingress_namespace = config.IE_INGRESS_NAMESPACE
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="No Ingress specified",
+                        )
+                ingress = core_api.read_namespaced_service(
+                    name=ingress_name, namespace=ingress_namespace
+                )
+                host = ingress.status.load_balancer.ingress[0].ip
+        # Generate service url
+        if service_backend == ServiceBackend.EMISSARY:
+            url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
+        elif service_backend == ServiceBackend.KNATIVE:
+            url = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
+            if not config.IE_DOMAIN:
+                # use sslip dns service to get a hostname for the service
+                url += ".sslip.io"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid Service Backend",
+            )
+        service["inferenceUrl"] = url
+    except K8sAPIException as err:
+        print(f"Error getting service url: {err}")
+        print("Defaulting to inference URL specified in database")
     return service
 
 
@@ -254,9 +307,7 @@ async def get_inference_engine_service_status(
                 for condition in result.status.conditions:
                     if condition.status != "True":
                         return_status.ready = False
-                        return_status.message += (
-                            f"Message: {condition.message}\nReason: {condition.reason}"
-                        )
+                        return_status.message += f"Message: {condition.message}\nReason: {condition.reason}"
                 # Find out if pods in deployment are schedulable
                 # Get pods in deployment
                 core_api = CoreV1Api(client)
@@ -420,7 +471,9 @@ async def create_inference_engine_service(
                         }
                     )
                 )
-                url = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
+                url = (
+                    f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
+                )
                 if not config.IE_DOMAIN:
                     # use sslip dns service to get a hostname for the service
                     url += ".sslip.io"
@@ -671,7 +724,7 @@ async def update_inference_engine_service(
     user: TokenData = Depends(get_current_user),
 ):
     """Update an existing inference engine inside the K8S cluster
-    
+
     Args:
         service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
         service (UpdateInferenceEngineService) : Configuration (service name and Image URI) of updated Inference Engine
@@ -685,12 +738,14 @@ async def update_inference_engine_service(
         HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
         HTTPException: 404 Not Found if KService with given name is not found
         HTTPException: 403 Forbidden if user does not have owner access to KService
-    
+
     Returns:
         Dict: Service details
     """
     # Create Deployment Template
-    tasks.add_task(delete_orphan_services)  # Remove preview services created in testing
+    tasks.add_task(
+        delete_orphan_services
+    )  # Remove preview services created in testing
     db, mongo_client = db
     updated_metadata = {
         k: v for k, v in service.dict(by_alias=True).items() if v is not None
@@ -737,7 +792,9 @@ async def update_inference_engine_service(
             if not config.IE_DOMAIN:
                 updated_metadata["inferenceUrl"] += ".sslip.io"
         elif service_type == ServiceBackend.EMISSARY:
-            updated_metadata["inferenceUrl"] = f"{protocol}://{host}/{service_name}/"
+            updated_metadata[
+                "inferenceUrl"
+            ] = f"{protocol}://{host}/{service_name}/"
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # Check if user has editor access
@@ -786,8 +843,12 @@ async def update_inference_engine_service(
                                 template.render(
                                     {
                                         "engine_name": service_name,
-                                        "image_name": updated_service["imageUri"],
-                                        "port": updated_service["containerPort"],
+                                        "image_name": updated_service[
+                                            "imageUri"
+                                        ],
+                                        "port": updated_service[
+                                            "containerPort"
+                                        ],
                                         "env": updated_service["env"],
                                         "num_gpus": updated_service["numGpus"],
                                     }
@@ -826,7 +887,9 @@ async def update_inference_engine_service(
                                 service_template.render(
                                     {
                                         "engine_name": service_name,
-                                        "port": updated_service["containerPort"],
+                                        "port": updated_service[
+                                            "containerPort"
+                                        ],
                                     }
                                 )
                             )
@@ -834,8 +897,12 @@ async def update_inference_engine_service(
                                 deployment_template.render(
                                     {
                                         "engine_name": service_name,
-                                        "image_name": updated_service["imageUri"],
-                                        "port": updated_service["containerPort"],
+                                        "image_name": updated_service[
+                                            "imageUri"
+                                        ],
+                                        "port": updated_service[
+                                            "containerPort"
+                                        ],
                                         "env": updated_service["env"],
                                         "num_gpus": updated_service["numGpus"],
                                     }
