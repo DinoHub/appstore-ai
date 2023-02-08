@@ -3,14 +3,19 @@ Welcome to AI App Store documentation!
 
 .. toctree::
    :caption: User Guide
-   :maxdepth: 3
+   :maxdepth: 2
    :glob:
    
    user-guide/*
    
+.. toctree::
+   :maxdepth: 2
+   :caption: Deployment Guide
+   
+   developer-guide/deployment/deployment-on-k8s.md
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
    :caption: Developer Guide
    :glob:
    
@@ -22,11 +27,6 @@ Welcome to AI App Store documentation!
    developer-guide/inference-services/*
    developer-guide/diagrams/*
 
-.. toctree::
-   :maxdepth: 3
-   :caption: Deployment Guide
-   
-   developer-guide/deployment/*
 
 Indices and tables
 ==================
