@@ -14,69 +14,115 @@ async def delete_orphan_services():
     db, mongo_client = get_db()
     k8s_client = get_k8s_client()
 
-    model_services = await (
-        db["models"].find(
-            {}, {"inferenceServiceName": 1}
-        )  # include only service names
-    ).to_list(length=None)
-    # Do a search of all services NOT IN modelServices
-    # This should detect any services that are not referenced in any model card
-    # all new services have uuid in the service name, so this should be safe
-    orphaned_services = db["services"].find(
-        {
-            "serviceName": {
-                "$nin": [x["inferenceServiceName"] for x in model_services]
-            }
-        },
-        {"serviceName": 1},
-    )
+    # model_services = await (
+    #     db["models"].find(
+    #         {}, {"inferenceServiceName": 1}
+    #     )  # include only service names
+    # ).to_list(length=None)
+    # # Do a search of all services NOT IN modelServices
+    # # This should detect any services that are not referenced in any model card
+    # # all new services have uuid in the service name, so this should be safe
+    # orphaned_services = db["services"].find(
+    #     {
+    #         "serviceName": {
+    #             "$nin": [x["inferenceServiceName"] for x in model_services]
+    #         }
+    #     },
+    #     {"serviceName": 1},
+    # )
     with k8s_client as client:
         custom_api = CustomObjectsApi(client)
         core_api = CoreV1Api(client)
         apps_api = AppsV1Api(client)
+
+        # Get all services with the label "aas-ie-service"
+        if config.IE_SERVICE_TYPE == ServiceBackend.KNATIVE:
+            results = custom_api.list_namespaced_custom_object(
+                group="serving.knative.dev",
+                version="v1",
+                plural="services",
+                namespace=config.IE_NAMESPACE,
+                label_selector="aas-ie-service=true",
+            )["metadata"].name
+        elif config.IE_SERVICE_TYPE == ServiceBackend.EMISSARY:
+            results = core_api.list_namespaced_service(
+                namespace=config.IE_NAMESPACE,
+                label_selector="aas-ie-service=true",
+            ).items
+            services = [service.metadata.name for service in results]
+        else:
+            raise NotImplementedError(
+                f"Backend type {config.IE_SERVICE_TYPE} not implemented."
+            )
+
+        # Do a database search for all services that are currently in use
+        model_services = await (
+            db["models"].find(
+                {}, {"inferenceServiceName": 1}
+            )  # include only service names
+        ).to_list(length=None)
+        used_services = [x["inferenceServiceName"] for x in model_services]
+
+        # Do a set difference to find services that are orphaned
+        orphaned_services = set(services) - set(used_services)
+
         async with await mongo_client.start_session() as session:
-            async for service in orphaned_services:
-                # Remove service
-                service_name = service["serviceName"]
-                if "backend" not in service:
-                    # If backend not present, check config for default
-                    backend_type = config.IE_SERVICE_TYPE
-                else:
-                    backend_type = service["backend"]
-                async with session.start_transaction():
-                    try:
-                        await db["services"].delete_one(
-                            {"serviceName": service_name}
-                        )
-                        if backend_type == ServiceBackend.KNATIVE:
-                            custom_api.delete_namespaced_custom_object(
-                                group="serving.knative.dev",
-                                version="v1",
-                                plural="services",
-                                namespace=config.IE_NAMESPACE,
-                                name=service_name,
+            for service_name in orphaned_services:
+                # Attempt to find service in database
+                service = await db["services"].find_one(
+                    {"serviceName": service_name}
+                )
+                backend_type = config.IE_SERVICE_TYPE
+                if service is not None:
+                    if "backend" in service:
+                        # If backend not present, check config for default
+                        backend_type = service["backend"]
+                    # Delete service from database
+                    async with session.start_transaction():
+                        try:
+                            await db["services"].delete_one(
+                                {"serviceName": service_name}
                             )
-                        elif backend_type == ServiceBackend.EMISSARY:
-                            core_api.delete_namespaced_service(
-                                name=service_name,
-                                namespace=config.IE_NAMESPACE,
-                            )
-                            apps_api.delete_namespaced_deployment(
-                                name=service_name + "-deployment",
-                                namespace=config.IE_NAMESPACE,
-                            )
-                            custom_api.delete_namespaced_custom_object(
-                                group="getambassador.io",
-                                version="v2",
-                                plural="mappings",
-                                namespace=config.IE_NAMESPACE,
-                                name=service_name
-                                + "-mapping",  # TODO: make this a separate function so that route can share same code
-                            )
-                    except ApiException as err:
-                        if err.status == 404:
-                            # Service not present
+                        except Exception as err:
                             print(
-                                f"WARN: Service {service_name} not found in cluster."
+                                f"ERROR: Failed to delete service {service_name} from database."
                             )
+                            print(err)
                             continue
+                # Delete service from cluster
+                try:
+                    await db["services"].delete_one(
+                        {"serviceName": service_name}
+                    )
+                    if backend_type == ServiceBackend.KNATIVE:
+                        custom_api.delete_namespaced_custom_object(
+                            group="serving.knative.dev",
+                            version="v1",
+                            plural="services",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name,
+                        )
+                    elif backend_type == ServiceBackend.EMISSARY:
+                        core_api.delete_namespaced_service(
+                            name=service_name,
+                            namespace=config.IE_NAMESPACE,
+                        )
+                        apps_api.delete_namespaced_deployment(
+                            name=service_name + "-deployment",
+                            namespace=config.IE_NAMESPACE,
+                        )
+                        custom_api.delete_namespaced_custom_object(
+                            group="getambassador.io",
+                            version="v2",
+                            plural="mappings",
+                            namespace=config.IE_NAMESPACE,
+                            name=service_name
+                            + "-mapping",  # TODO: make this a separate function so that route can share same code
+                        )
+                except ApiException as err:
+                    if err.status == 404:
+                        # Service not present
+                        print(
+                            f"WARN: Service {service_name} not found in cluster."
+                        )
+                        continue
