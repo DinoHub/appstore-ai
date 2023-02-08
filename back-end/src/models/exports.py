@@ -4,6 +4,7 @@ from typing import List, Optional, Union, Dict
 
 from bson import ObjectId
 from pydantic import BaseModel, Field, validator
+from ..internal.utils import to_camel_case
 
 
 class ExportsPage(BaseModel):
@@ -64,6 +65,13 @@ class ExportLog(BaseModel):
     time_initiated: str = ""
     time_completed: str = ""
 
+    class Config:
+        """Pydantic config to allow creation of data model
+        from a JSON object with camelCase keys.
+        """
+
+        alias_generator = to_camel_case
+        arbitrary_types_allowed = True
 
 class ExportLogPackage(BaseModel):
 
