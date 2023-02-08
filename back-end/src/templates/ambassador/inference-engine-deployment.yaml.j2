@@ -4,6 +4,7 @@ metadata:
   name: {{ engine_name }}-deployment
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: {{ engine_name }}
