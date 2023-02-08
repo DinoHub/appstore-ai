@@ -91,9 +91,6 @@ async def delete_orphan_services():
                             continue
                 # Delete service from cluster
                 try:
-                    await db["services"].delete_one(
-                        {"serviceName": service_name}
-                    )
                     if backend_type == ServiceBackend.KNATIVE:
                         custom_api.delete_namespaced_custom_object(
                             group="serving.knative.dev",
@@ -117,8 +114,11 @@ async def delete_orphan_services():
                             plural="mappings",
                             namespace=config.IE_NAMESPACE,
                             name=service_name
-                            + "-mapping",  # TODO: make this a separate function so that route can share same code
+                            + "-ingress",  # TODO: make this a separate function so that route can share same code
                         )
+                    await db["services"].delete_one(
+                        {"serviceName": service_name}
+                    )
                 except ApiException as err:
                     if err.status == 404:
                         # Service not present
@@ -126,3 +126,5 @@ async def delete_orphan_services():
                             f"WARN: Service {service_name} not found in cluster."
                         )
                         continue
+                    else:
+                        raise err
