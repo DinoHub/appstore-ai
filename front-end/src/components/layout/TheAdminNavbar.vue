@@ -30,8 +30,6 @@
       ></q-btn>
     </div>
   </q-toolbar>
-
-  <div class="row"></div>
 </template>
 
 <script setup lang="ts">
