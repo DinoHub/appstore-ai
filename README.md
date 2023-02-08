@@ -1,26 +1,18 @@
 # AI App Store
 
-<!-- TODO: Add summary -->
-
 ![AAS Logo](.github/media/logo-dark.png)
 
-## How to Use
+[Documentation](https://dinohub.github.io/appstore-ai/index.html)
 
-> Work In Progress
+[![CodeQL](https://github.com/DinoHub/appstore-ai/actions/workflows/codeql.yml/badge.svg)](https://github.com/DinoHub/appstore-ai/actions/workflows/codeql.yml)
+[![Back End CI](https://github.com/DinoHub/appstore-ai/actions/workflows/back-end-ci.yml/badge.svg)](https://github.com/DinoHub/appstore-ai/actions/workflows/back-end-ci.yml)
 
-## Deployment Guide
+The AI App Store is a self-hosted platform for browsing and contributing AI model cards. With the AI App Store, you can easily browse a wide variety of models and use them in your projects. You can also contribute your own models to the store, making them available for others to use.
 
-> Work In Progress
 
 ## Contributing
 
-> As of right now, contributions to this repo will be closed with exception to core contributors. When opened up again, the hidden text below which contains contribution instructions will be uncommented.
-
-<!-- Contributions to this repo are welcome, so long as these guidelines as followed:
-
-1. Open an issue first to discuss any changes
-2. For each main module (e.g back-end, front-end), there should exist a `CONTRIBUTING.md` file. Do follow the guidelines there as applicable to whatever changes you want to contrbribute
-3. For any changes, you'll need to make a pull request first. -->
+Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING) for more information.
 
 ## Roadmap
 

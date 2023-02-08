@@ -2,7 +2,7 @@
 /* TODO: Figure out how to make the width consistent even if no text */
 .log-view {
   max-width: 100ch;
-  height: 75vh; 
+  height: 75vh;
   overflow: auto;
 }
 </style>

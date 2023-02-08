@@ -1,0 +1,3 @@
+apiext_image:
+  repository: docker.io/emissaryingress/emissary
+  tag: 3.4.0

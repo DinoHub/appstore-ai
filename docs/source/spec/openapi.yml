@@ -1,0 +1,2332 @@
+openapi: 3.0.2
+info:
+  title: Model Zoo
+  description: ""
+  version: 1.0.10
+paths:
+  "/auth/":
+    post:
+      tags:
+      - Authentication
+      summary: Auth User
+      description: |-
+        Authenticate user and return access and refresh tokens
+
+        Args:
+            response (Response): Response that will be returned to the client
+            form_data (OAuth2PasswordRequestForm, optional): Username and Password.
+                Defaults to Depends().
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB Connection.
+                Defaults to Depends(get_db).
+
+        Raises:
+            HTTPException: 401 Unauthorized if credentials are invalid
+            HTTPException: 404 Not Found if user does not exist
+
+        Returns:
+            Dict[str, str]: Response containing access and refresh tokens. Credentials are saved as cookies.
+      operationId: auth_user_auth__post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              "$ref": "#/components/schemas/Body_auth_user_auth__post"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Token"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/auth/refresh":
+    post:
+      tags:
+      - Authentication
+      summary: Get Refresh Token
+      description: |-
+        Use refresh token to get new access token
+        when access token expires.
+
+        Args:
+            request (Request): Incoming request
+            response (Response): Response that will be returned to the client
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB Connection.
+                Defaults to Depends(get_db).
+            csrf (CsrfProtect, optional): Perform CSRF protection. Defaults to Depends().
+
+        Raises:
+            HTTPException: 404 if user does not exist
+            HTTPException: 403 if refresh token expired
+            CREDENTIALS_EXCEPTION: 401 if credentials are invalid
+            HTTPException: 409 if CSRF token is invalid
+            HTTPException: 400 otherwise
+
+        Returns:
+            Optional[Dict[str, str]]: Access token if refresh token is valid
+      operationId: get_refresh_token_auth_refresh_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Token"
+  "/auth/logout":
+    delete:
+      tags:
+      - Authentication
+      summary: Logout User
+      description: |-
+        Logout user by deleting cookies
+
+        Args:
+            response (Response): Response that will be returned to the client
+
+        Raises:
+            HTTPException: 500 if an error occurs
+      operationId: logout_user_auth_logout_delete
+      responses:
+        '204':
+          description: Successful Response
+  "/auth/is_admin":
+    get:
+      tags:
+      - Authentication
+      summary: Verify Admin
+      description: This endpoint mostly exists just to test that auth code is working
+      operationId: verify_admin_auth_is_admin_get
+      responses:
+        '204':
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/buckets/video":
+    put:
+      tags:
+      - buckets
+      summary: Replace Video
+      description: |-
+        Replaces a video in the MinIO bucket
+
+        Args:
+            new_video (UploadFile, optional): New video. Defaults to Form().
+            old_video_location (Optional[str], optional): Location of video to replace.
+                Defaults to Form(None).
+            s3_client (Minio, optional): Minio client. Defaults to Depends(minio_api_client).
+
+        Raises:
+            HTTPException: 500 if something went wrong
+
+        Returns:
+            Dict[str, str]: Location of the new video in the bucket
+      operationId: replace_video_buckets_video_put
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              "$ref": "#/components/schemas/Body_replace_video_buckets_video_put"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/VideoUploadResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    post:
+      tags:
+      - buckets
+      summary: Upload Video
+      description: |-
+        Uploads a video to the MinIO bucket
+
+        Args:
+            video (UploadFile): Video file to upload
+            s3_client (Minio, optional): Minio client. Defaults to Depends(minio_api_client).
+
+        Raises:
+            HTTPException: 500 if something went wrong
+
+        Returns:
+            Dict[str, str]: Location of the video in the bucket
+      operationId: upload_video_buckets_video_post
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              "$ref": "#/components/schemas/Body_upload_video_buckets_video_post"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/VideoUploadResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/models/_db/options/filters/":
+    get:
+      tags:
+      - Models
+      summary: Get Available Filters
+      description: |-
+        Get available filters for model zoo search page
+
+        Args:
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+
+        Returns:
+            Dict[str, List[str]]: All available tags, frameworks, and tasks
+      operationId: get_available_filters_models__db_options_filters__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/GetFilterResponseModel"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/models/{creator_user_id}/{model_id}":
+    get:
+      tags:
+      - Models
+      summary: Get Model Card By Id
+      description: |-
+        Get model card by composite ID: creator_user_id/model_id
+
+        Args:
+            model_id (str): Model ID to search for
+            creator_user_id (str): Creator user ID to search for
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+
+        Raises:
+            HTTPException: 404 if model card not found
+
+        Returns:
+            Dict: Model card
+      operationId: get_model_card_by_id_models__creator_user_id___model_id__get
+      parameters:
+      - required: true
+        schema:
+          title: Model Id
+          type: string
+        name: model_id
+        in: path
+      - required: true
+        schema:
+          title: Creator User Id
+          type: string
+        name: creator_user_id
+        in: path
+      - required: false
+        schema:
+          title: Convert S3
+          type: boolean
+          default: true
+        name: convert_s3
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    put:
+      tags:
+      - Models
+      summary: Update Model Card Metadata By Id
+      description: |-
+        Update model card metadata by ID
+
+        Args:
+            model_id (str): Model Id
+            creator_user_id (str): Creator user id
+            card (UpdateModelCardModel): Updated model card
+            tasks (BackgroundTasks): Background tasks to run
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+            user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+        Raises:
+            HTTPException: 404 if model card does not exist
+            HTTPException: 403 if user does not have permission to update model card
+
+        Returns:
+            Optional[Dict]: Updated model card metadata
+      operationId: update_model_card_metadata_by_id_models__creator_user_id___model_id__put
+      parameters:
+      - required: true
+        schema:
+          title: Model Id
+          type: string
+        name: model_id
+        in: path
+      - required: true
+        schema:
+          title: Creator User Id
+          type: string
+        name: creator_user_id
+        in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdateModelCardModel"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ModelCardModelDB"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    delete:
+      tags:
+      - Models
+      summary: Delete Model Card By Id
+      description: |-
+        Delete model card by composite key of Creator User ID and Model ID
+
+        Args:
+            model_id (str): Model Id
+            creator_user_id (str): Creator user id
+            card (UpdateModelCardModel): Updated model card
+            tasks (BackgroundTasks): Background tasks to run
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+            user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+        Raises:
+            HTTPException: 500 if arbitrary error occurs
+      operationId: delete_model_card_by_id_models__creator_user_id___model_id__delete
+      parameters:
+      - required: true
+        schema:
+          title: Model Id
+          type: string
+        name: model_id
+        in: path
+      - required: true
+        schema:
+          title: Creator User Id
+          type: string
+        name: creator_user_id
+        in: path
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/models/":
+    get:
+      tags:
+      - Models
+      summary: Search Cards
+      description: |-
+        Search model cards
+
+        Args:
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection. Defaults to Depends(get_db).
+            page (int, optional): Page number. Defaults to Query(default=1, alias="p", gt=0).
+            rows_per_page (int, optional): Rows per page. Defaults to Query(default=10, alias="n", ge=0).
+            descending (bool, optional): Order to return results in. Defaults to Query(default=False, alias="desc").
+            sort_by (str, optional): Sort by field. Defaults to Query(default="_id", alias="sort").
+            generic_search_text (Optional[str], optional): Search through any relevant text fields. Defaults to Query(default=None, alias="genericSearchText").
+            tasks (Optional[List[str]], optional): Search by task. Defaults to Query(default=None, alias="tasks[]").
+            tags (Optional[List[str]], optional): Search by task. Defaults to Query(default=None, alias="tags[]").
+            frameworks (Optional[List[str]], optional): Search by framework. Defaults to Query( default=None, alias="frameworks[]" ).
+            creator_user_id (Optional[str], optional): Search by creator. Defaults to Query(default=None, alias="creator").
+            return_attr (Optional[List[str]], optional): Which fields to return. Defaults to Query(default=None, alias="return[]").
+            all (Optional[bool], optional): Whether to return all results. Defaults to Query(default=None).
+
+        Returns:
+            Dict: A dictionary containing the results and pagination information
+      operationId: search_cards_models__get
+      parameters:
+      - required: false
+        schema:
+          title: P
+          exclusiveMinimum: 0
+          type: integer
+          default: 1
+        name: p
+        in: query
+      - required: false
+        schema:
+          title: N
+          minimum: 0
+          type: integer
+          default: 10
+        name: n
+        in: query
+      - required: false
+        schema:
+          title: Desc
+          type: boolean
+          default: false
+        name: desc
+        in: query
+      - required: false
+        schema:
+          title: Sort
+          type: string
+          default: _id
+        name: sort
+        in: query
+      - required: false
+        schema:
+          title: Genericsearchtext
+          type: string
+        name: genericSearchText
+        in: query
+      - required: false
+        schema:
+          title: Title
+          type: string
+        name: title
+        in: query
+      - required: false
+        schema:
+          title: Tasks[]
+          type: array
+          items:
+            type: string
+        name: tasks[]
+        in: query
+      - required: false
+        schema:
+          title: Tags[]
+          type: array
+          items:
+            type: string
+        name: tags[]
+        in: query
+      - required: false
+        schema:
+          title: Frameworks[]
+          type: array
+          items:
+            type: string
+        name: frameworks[]
+        in: query
+      - required: false
+        schema:
+          title: Creator
+          type: string
+        name: creator
+        in: query
+      - required: false
+        schema:
+          title: Creatoruseridpartial
+          type: string
+        name: creatorUserIdPartial
+        in: query
+      - required: false
+        schema:
+          title: Return[]
+          type: array
+          items:
+            type: string
+        name: return[]
+        in: query
+      - required: false
+        schema:
+          title: All
+          type: boolean
+        name: all
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SearchModelResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    post:
+      tags:
+      - Models
+      summary: Create Model Card Metadata
+      description: |-
+        Create model card metadata
+
+        Args:
+            card (ModelCardModelIn): Model card
+            tasks (BackgroundTasks): Background tasks to run
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+            user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+        Raises:
+            HTTPException: 409 if model card already exists
+
+        Returns:
+            Dict: Model card metadata
+      operationId: create_model_card_metadata_models__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ModelCardModelIn"
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ModelCardModelDB"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/models/{creator_user_id}":
+    get:
+      tags:
+      - Models
+      summary: Get Model Cards By User
+      description: |-
+        Get all model cards by a user
+
+        Args:
+            creator_user_id (str): Creator user id
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+            return_attr (Optional[List[str]], optional): Fields to return.
+                Defaults to Query(None, alias="return").
+
+        Returns:
+            Dict: Results and pagination information
+      operationId: get_model_cards_by_user_models__creator_user_id__get
+      parameters:
+      - required: true
+        schema:
+          title: Creator User Id
+          type: string
+        name: creator_user_id
+        in: path
+      - required: false
+        schema:
+          title: Return
+          type: array
+          items:
+            type: string
+        name: return
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/SearchModelResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/models/multi":
+    delete:
+      tags:
+      - Models
+      summary: Delete Multiple Model Cards
+      description: |-
+        Delete multiple model cards by List of composite keys of Creator User ID and Model ID
+
+        Args:
+            card_package (modelCardPackage): List of Dictionaries containing models with composite ID identifiers to be removed
+            card (UpdateModelCardModel): Updated model card
+            tasks (BackgroundTasks): Background tasks to run
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+            user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+        Raises:
+            HTTPException: 500 if arbitrary error occurs
+      operationId: delete_multiple_model_cards_models_multi_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/modelCardPackage"
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/models/export":
+    post:
+      tags:
+      - Models
+      summary: Export Models
+      operationId: export_models_models_export_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/modelCardPackage"
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/experiments/{exp_id}":
+    get:
+      tags:
+      - Experiments
+      summary: Get Experiment
+      description: |-
+        Get experiment by ID.
+
+        Args:
+            exp_id (str): Experiment ID
+            connector (Connector): Connector to use
+            return_plots (bool, optional): If plots should be returned. Defaults to True.
+            return_artifacts (bool, optional): If artifacts should be returned. Defaults to True.
+
+        Raises:
+            HTTPException: 404 Not Found if experiment does not exist
+            HTTPException: 500 Internal Server Error if error occurs
+
+        Returns:
+            Dict: Experiment details
+      operationId: get_experiment_experiments__exp_id__get
+      parameters:
+      - required: true
+        schema:
+          title: Exp Id
+          type: string
+        name: exp_id
+        in: path
+      - required: true
+        schema:
+          "$ref": "#/components/schemas/src__models__experiment__Connector"
+        name: connector
+        in: query
+      - required: false
+        schema:
+          title: Return Plots
+          type: boolean
+          default: true
+        name: return_plots
+        in: query
+      - required: false
+        schema:
+          title: Return Artifacts
+          type: boolean
+          default: true
+        name: return_artifacts
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ExperimentResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/experiments/clone":
+    post:
+      tags:
+      - Experiments
+      summary: Clone Experiment
+      description: |-
+        Clone experiment. (Not implemented yet.)
+
+        Args:
+            item (ClonePackageModel): Item to clone
+            connector (Connector): Experiment connector
+
+        Returns:
+            Dict: Details of cloned experiment
+      operationId: clone_experiment_experiments_clone_post
+      parameters:
+      - required: true
+        schema:
+          "$ref": "#/components/schemas/src__models__experiment__Connector"
+        name: connector
+        in: query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ClonePackageModel"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/datasets/search":
+    post:
+      tags:
+      - Datasets
+      summary: Search Datasets
+      description: |-
+        Search endpoint for any datasets stored in
+        the current data connector
+
+        Args:
+            query (FindDatasetModel): Search query
+            connectors (Optional[List[Connector]]): Data connector.
+                If not specified
+
+        Returns:
+            List[Dict]: List of dataset metadata
+      operationId: search_datasets_datasets_search_post
+      parameters:
+      - required: false
+        schema:
+          type: array
+          items:
+            "$ref": "#/components/schemas/src__models__dataset__Connector"
+        name: connectors[]
+        in: query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/FindDatasetModel"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Search Datasets Datasets Search Post
+                type: array
+                items:
+                  "$ref": "#/components/schemas/DatasetModel"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/datasets/{dataset_id}":
+    get:
+      tags:
+      - Datasets
+      summary: Get Dataset By Id
+      description: |-
+        Get a dataset from it's ID
+
+        Args:
+            dataset_id (str): ID of dataset (e.g ClearML Dataset ID)
+            connector (Connector): Data connector type
+
+        Raises:
+            HTTPException: 404 Not Found if dataset not found
+
+        Returns:
+            DatasetModel: Dataset with that ID
+      operationId: get_dataset_by_id_datasets__dataset_id__get
+      parameters:
+      - required: true
+        schema:
+          title: Dataset Id
+          type: string
+        name: dataset_id
+        in: path
+      - required: true
+        schema:
+          "$ref": "#/components/schemas/src__models__dataset__Connector"
+        name: connector
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DatasetModel"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/datasets/":
+    post:
+      tags:
+      - Datasets
+      summary: Create Dataset
+      description: |-
+        Create a new dataset, based on a dataset file uploaded to it
+
+        Args:
+            file (UploadFile, optional): Archived dataset (e.g zip). Defaults to File(...).
+            dataset_name (str, optional): Name of dataset. Defaults to Form(...).
+            project_name (str, optional): Name of project to uplaod to. Defaults to Form(...).
+            connector(Connector): Data connector to use.
+            output_url (Optional[str], optional): Remote URL to upload file to. Defaults to Form(default=None).
+
+        Raises:
+            HTTPException: 413 Request Entity Too Large if dataset size is too large
+            HTTPException: 415 Unsupported Media Type if wrong file type
+            HTTPException: 500 Internal Server Error if any IOErrors
+
+        Returns:
+            DatasetModel : Created dataset
+      operationId: create_dataset_datasets__post
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              "$ref": "#/components/schemas/Body_create_dataset_datasets__post"
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DatasetModel"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/iam/add":
+    post:
+      tags:
+      - IAM
+      summary: Add User
+      description: |-
+        Function to add a user to the MongoDB after reciveing a POST call to the endpoint
+
+        Args:
+            item (UserInsert): The item that contains the user information to be sent to the database for storage
+            db (Any = Depends(get_db)): This retieves the client that is connected to the database.
+
+        Returns:
+            JSONResponse: A Response object with a corresponding code depending on the success of the call or a failure for whatever reason.
+      operationId: add_user_iam_add_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserInsert"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/iam/delete":
+    delete:
+      tags:
+      - IAM
+      summary: Delete User
+      description: |-
+        Delete a user from the database
+
+        Args:
+            userid (UserRemoval): User ID to delete
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+
+        Raises:
+            HTTPException: 404 if user not found
+      operationId: delete_user_iam_delete_delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserRemoval"
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/iam/edit":
+    put:
+      tags:
+      - IAM
+      summary: Update User
+      operationId: update_user_iam_edit_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserInsert"
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/iam/edit/multi":
+    put:
+      tags:
+      - IAM
+      summary: Update Many User
+      operationId: update_many_user_iam_edit_multi_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UsersEdit"
+        required: true
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/iam/":
+    post:
+      tags:
+      - IAM
+      summary: Get Users
+      description: |-
+        Get a list of users from the database
+
+        Args:
+            pages_user (UserPage): Pagination input
+            descending (bool, optional): Order of results. Defaults to Query(default=True, alias="desc").
+            sort_by (str, optional): Sort field. Defaults to Query(default="lastModified", alias="sort").
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+
+        Raises:
+            HTTPException: 422 if unable to get users
+            HTTPException: 404 if user not found
+
+        Returns:
+            Dict: _description_
+      operationId: get_users_iam__post
+      parameters:
+      - required: false
+        schema:
+          title: Desc
+          type: boolean
+          default: true
+        name: desc
+        in: query
+      - required: false
+        schema:
+          title: Sort
+          type: string
+          default: lastModified
+        name: sort
+        in: query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UserPage"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/{service_name}/logs":
+    get:
+      tags:
+      - Inference Engines
+      summary: Get Inference Engine Service Logs
+      description: |-
+        Get logs for an inference service
+
+        Args:
+            service_name (str): Name of the service
+            request (Request): FastAPI Request object
+            k8s_client (ApiClient, optional): K8S Client. Defaults to Depends(get_k8s_client).
+
+        Raises:
+            HTTPException: 404 Not Found if service does not exist
+            HTTPException: 500 Internal Server Error if there is an error getting the service logs
+
+        Returns:
+            EventSourceResponse: SSE response with logs
+      operationId: get_inference_engine_service_logs_engines__service_name__logs_get
+      parameters:
+      - required: true
+        schema:
+          title: Service Name
+          type: string
+        name: service_name
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/{service_name}/scale/{replicas}":
+    patch:
+      tags:
+      - Inference Engines
+      summary: Scale Inference Engine Deployments
+      description: |-
+        Scale the number of replicas of the deployment
+
+        Args:
+            service_name (str): Name of the service
+            replicas (int, optional): Number of replicas. Defaults to Path(ge=0, le=3).
+            k8s_client (ApiClient, optional): K8S Client. Defaults to Depends(get_k8s_client).
+
+        Raises:
+            HTTPException: 404 Not Found if service does not exist
+            HTTPException: 500 Internal Server Error if there is an error scaling the service
+      operationId: scale_inference_engine_deployments_engines__service_name__scale__replicas__patch
+      parameters:
+      - required: true
+        schema:
+          title: Service Name
+          type: string
+        name: service_name
+        in: path
+      - required: true
+        schema:
+          title: Replicas
+          maximum: 3
+          minimum: 0
+          type: integer
+        name: replicas
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/{service_name}":
+    get:
+      tags:
+      - Inference Engines
+      summary: Get Inference Engine Service
+      description: |-
+        Get Inference Engine Service
+
+        Args:
+            service_name (str): Name of the service
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+
+        Raises:
+            HTTPException: 404 Not Found if service does not exist
+
+        Returns:
+            Dict: Service details
+      operationId: get_inference_engine_service_engines__service_name__get
+      parameters:
+      - required: true
+        schema:
+          title: Service Name
+          type: string
+        name: service_name
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/InferenceEngineService"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    delete:
+      tags:
+      - Inference Engines
+      summary: Delete Inference Engine Service
+      description: |-
+        Delete a deployed inference engine from the K8S cluster.
+
+        :param service_name: Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        :type service_name: str, optional
+        :param k8s_client: Python K8S Client, defaults to Depends(get_k8s_client)
+        :type k8s_client: ApiClient, optional
+        :raises HTTPException: 500 Internal Server Error if deletion fails
+      operationId: delete_inference_engine_service_engines__service_name__delete
+      parameters:
+      - description: Name of KService to Delete
+        required: true
+        schema:
+          title: Service Name
+          type: string
+          description: Name of KService to Delete
+        name: service_name
+        in: path
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    patch:
+      tags:
+      - Inference Engines
+      summary: Update Inference Engine Service
+      description: |-
+        Update an existing inference engine inside the K8S cluster
+
+        :param service: Configuration (service name and Image URI) of updated Inference Engine
+        :type service: InferenceEngineService
+        :param k8s_client: Python K8S client, defaults to Depends(get_k8s_client)
+        :type k8s_client: ApiClient, optional
+        :raises HTTPException: 500 Internal Server Error if failed to update
+      operationId: update_inference_engine_service_engines__service_name__patch
+      parameters:
+      - required: true
+        schema:
+          title: Service Name
+          type: string
+        name: service_name
+        in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdateInferenceEngineService"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/{service_name}/status":
+    get:
+      tags:
+      - Inference Engines
+      summary: Get Inference Engine Service Status
+      description: |-
+        Get status of an inference service. This is typically
+        used to give liveness/readiness probes for the service.
+
+        Args:
+            service_name (str): Name of the service
+            k8s_client (ApiClient, optional): K8S Client. Defaults to Depends(get_k8s_client).
+
+        Raises:
+            HTTPException: 404 Not Found if service does not exist
+            HTTPException: 500 Internal Server Error if there is an error getting the service status
+
+        Returns:
+            Dict: Service status
+      operationId: get_inference_engine_service_status_engines__service_name__status_get
+      parameters:
+      - required: true
+        schema:
+          title: Service Name
+          type: string
+        name: service_name
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/InferenceServiceStatus"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/":
+    get:
+      tags:
+      - Inference Engines
+      summary: Get Available Inference Engine Services
+      description: |-
+        Get all available inference engine services
+
+        Args:
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional):
+                MongoDB Connection. Defaults to Depends(get_db).
+
+        Raises:
+            HTTPException: 500 Internal Server Error if there is an error getting the services
+
+        Returns:
+            list : List of available services
+      operationId: get_available_inference_engine_services_engines__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+    post:
+      tags:
+      - Inference Engines
+      summary: Create Inference Engine Service
+      description: |-
+        Create an inference engine service
+
+        Args:
+            service (CreateInferenceEngineService): Service details
+            k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+            db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+                Defaults to Depends(get_db).
+            user (TokenData, optional): User details. Defaults to Depends(get_current_user).
+
+        Raises:
+            HTTPException: 500 Internal Server Error if there is an error creating the service
+            HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+            HTTPException: 500 Internal Server Error if there is an error creating the service in the DB
+            HTTPException: 422 Unprocessable Entity if the service already exists
+            HTTPException: 422 Unprocessable Entity if the namespace is not set
+
+        Returns:
+            Dict: Service details
+      operationId: create_inference_engine_service_engines__post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/CreateInferenceEngineService"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/InferenceEngineService"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/{service_name}/restore":
+    post:
+      tags:
+      - Inference Engines
+      summary: Restore Inference Engine Service
+      description: |-
+        Restore a deleted service (i.e someone accidently removed the deployment).
+        This will do the following:
+        1. Grab information about the service from the database
+        2. Call the delete endpoint to delete the service
+        3. Call the create endpoint to create the service using the information from the database
+
+        TODO: Refactor so that I don't have to repeat code. Preferably factor out
+        stuff into a controller submodule (split up the code for adding to mongodb and k8s)
+        to allow router to simply compose functions together for better reusability of code
+      operationId: restore_inference_engine_service_engines__service_name__restore_post
+      parameters:
+      - required: true
+        schema:
+          title: Service Name
+          type: string
+        name: service_name
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/engines/admin/clear":
+    delete:
+      tags:
+      - Inference Engines
+      summary: Wipe Orphaned Services
+      operationId: wipe_orphaned_services_engines_admin_clear_delete
+      responses:
+        '204':
+          description: Successful Response
+      security:
+      - OAuth2PasswordBearerWithCookie: []
+  "/":
+    get:
+      summary: Root
+      description: |-
+        Return a simple message to test if the server is running.
+
+        Returns:
+            JSONResponse: A simple message that says "Hello World"
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    Artifact:
+      title: Artifact
+      required:
+      - artifactType
+      - name
+      - url
+      type: object
+      properties:
+        artifactType:
+          title: Artifacttype
+          type: string
+        name:
+          title: Name
+          type: string
+        url:
+          title: Url
+          type: string
+        timestamp:
+          title: Timestamp
+          type: string
+        framework:
+          title: Framework
+          type: string
+      description: |-
+        Artifact model for model cards.
+        Artifacts can be linked models, datasets, or other artifacts.
+    Body_auth_user_auth__post:
+      title: Body_auth_user_auth__post
+      required:
+      - username
+      - password
+      type: object
+      properties:
+        grant_type:
+          title: Grant Type
+          pattern: password
+          type: string
+        username:
+          title: Username
+          type: string
+        password:
+          title: Password
+          type: string
+        scope:
+          title: Scope
+          type: string
+          default: ''
+        client_id:
+          title: Client Id
+          type: string
+        client_secret:
+          title: Client Secret
+          type: string
+    Body_create_dataset_datasets__post:
+      title: Body_create_dataset_datasets__post
+      required:
+      - file
+      - dataset_name
+      - project_name
+      - connector
+      type: object
+      properties:
+        file:
+          title: File
+          type: string
+          format: binary
+        dataset_name:
+          title: Dataset Name
+          type: string
+        project_name:
+          title: Project Name
+          type: string
+        connector:
+          "$ref": "#/components/schemas/src__models__dataset__Connector"
+        output_url:
+          title: Output Url
+          type: string
+    Body_replace_video_buckets_video_put:
+      title: Body_replace_video_buckets_video_put
+      required:
+      - new_video
+      - userId
+      - modelId
+      type: object
+      properties:
+        new_video:
+          title: New Video
+          type: string
+          format: binary
+        userId:
+          title: Userid
+          type: string
+        modelId:
+          title: Modelid
+          type: string
+    Body_upload_video_buckets_video_post:
+      title: Body_upload_video_buckets_video_post
+      required:
+      - video
+      type: object
+      properties:
+        video:
+          title: Video
+          type: string
+          format: binary
+    ClonePackageModel:
+      title: ClonePackageModel
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+        clone_name:
+          title: Clone Name
+          type: string
+      description: Model for cloning a experiment. Currently unused.
+    CreateInferenceEngineService:
+      title: CreateInferenceEngineService
+      required:
+      - modelId
+      - imageUri
+      type: object
+      properties:
+        modelId:
+          title: Modelid
+          type: string
+        imageUri:
+          title: Imageuri
+          type: string
+        containerPort:
+          title: Containerport
+          type: integer
+        env:
+          title: Env
+          type: object
+        numGpus:
+          title: Numgpus
+          maximum: 2
+          minimum: 0
+          type: number
+          default: 0
+      description: Request model for creating an inference engine service.
+    DatasetModel:
+      title: DatasetModel
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+        name:
+          title: Name
+          type: string
+        created:
+          title: Created
+          type: string
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        project:
+          title: Project
+          type: string
+        files:
+          title: Files
+          type: object
+        default_remote:
+          title: Default Remote
+          type: string
+        artifacts:
+          title: Artifacts
+          type: array
+          items:
+            "$ref": "#/components/schemas/Artifact"
+      description: Dataset model.
+    ExperimentResponse:
+      title: ExperimentResponse
+      required:
+      - id
+      - owner
+      - name
+      - project_name
+      - tags
+      - frameworks
+      - config
+      type: object
+      properties:
+        id:
+          title: Id
+          type: string
+        owner:
+          title: Owner
+          type: string
+        name:
+          title: Name
+          type: string
+        project_name:
+          title: Project Name
+          type: string
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        frameworks:
+          title: Frameworks
+          type: array
+          items:
+            type: string
+        config:
+          title: Config
+          type: object
+        scalars:
+          title: Scalars
+          type: array
+          items:
+            type: object
+        plots:
+          title: Plots
+          type: array
+          items:
+            type: object
+        artifacts:
+          title: Artifacts
+          type: object
+          additionalProperties:
+            "$ref": "#/components/schemas/Artifact"
+      description: Response model for getting an experiment.
+    FindDatasetModel:
+      title: FindDatasetModel
+      type: object
+      properties:
+        id:
+          title: Id
+          anyOf:
+          - type: string
+          - type: array
+            items:
+              type: string
+        name:
+          title: Name
+          type: string
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        project:
+          title: Project
+          type: string
+      description: Request model for finding datasets.
+    GetFilterResponseModel:
+      title: GetFilterResponseModel
+      required:
+      - tags
+      - frameworks
+      - tasks
+      type: object
+      properties:
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        frameworks:
+          title: Frameworks
+          type: array
+          items:
+            type: string
+        tasks:
+          title: Tasks
+          type: array
+          items:
+            type: string
+      description: Response model for getting filter options for model cards.
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+    InferenceEngineService:
+      title: InferenceEngineService
+      required:
+      - modelId
+      - imageUri
+      - inferenceUrl
+      - ownerId
+      - serviceName
+      - created
+      - lastModified
+      - host
+      - path
+      - backend
+      type: object
+      properties:
+        modelId:
+          title: Modelid
+          type: string
+        imageUri:
+          title: Imageuri
+          type: string
+        containerPort:
+          title: Containerport
+          type: integer
+        env:
+          title: Env
+          type: object
+        numGpus:
+          title: Numgpus
+          maximum: 2
+          minimum: 0
+          type: number
+          default: 0
+        _id:
+          title: " Id"
+          type: string
+        inferenceUrl:
+          title: Inferenceurl
+          type: string
+        ownerId:
+          title: Ownerid
+          type: string
+        serviceName:
+          title: Servicename
+          type: string
+        created:
+          title: Created
+          type: string
+          format: date-time
+        lastModified:
+          title: Lastmodified
+          type: string
+          format: date-time
+        host:
+          title: Host
+          type: string
+        path:
+          title: Path
+          type: string
+        protocol:
+          title: Protocol
+          type: string
+          default: http
+        backend:
+          "$ref": "#/components/schemas/ServiceBackend"
+      description: Data model for inference engine service in database.
+    InferenceServiceStatus:
+      title: InferenceServiceStatus
+      required:
+      - serviceName
+      type: object
+      properties:
+        serviceName:
+          title: Servicename
+          type: string
+        status:
+          allOf:
+          - "$ref": "#/components/schemas/K8SPhase"
+          default: Unknown
+        message:
+          title: Message
+          type: string
+          default: ''
+        ready:
+          title: Ready
+          type: boolean
+          default: true
+        schedulable:
+          title: Schedulable
+          type: boolean
+          default: true
+        expectedReplicas:
+          title: Expectedreplicas
+          minimum: 0
+          type: integer
+          default: 1
+    K8SPhase:
+      title: K8SPhase
+      enum:
+      - Pending
+      - Running
+      - Succeeded
+      - Failed
+      - Unknown
+      type: string
+      description: Enum for K8S phase.
+    LinkedDataset:
+      title: LinkedDataset
+      required:
+      - connector
+      - datasetId
+      type: object
+      properties:
+        connector:
+          "$ref": "#/components/schemas/src__models__dataset__Connector"
+        datasetId:
+          title: Datasetid
+          type: string
+      description: Linked dataset model from model creation/update process.
+    LinkedExperiment:
+      title: LinkedExperiment
+      required:
+      - connector
+      - experimentId
+      type: object
+      properties:
+        connector:
+          "$ref": "#/components/schemas/src__models__experiment__Connector"
+        experimentId:
+          title: Experimentid
+          type: string
+      description: Linked experiment model from model creation/update process.
+    ModelCardModelDB:
+      title: ModelCardModelDB
+      required:
+      - title
+      - markdown
+      - performance
+      - task
+      - tags
+      - frameworks
+      - creatorUserId
+      - modelId
+      - created
+      - lastModified
+      type: object
+      properties:
+        title:
+          title: Title
+          maxLength: 50
+          type: string
+        markdown:
+          title: Markdown
+          type: string
+        performance:
+          title: Performance
+          type: string
+        task:
+          title: Task
+          type: string
+        inferenceServiceName:
+          title: Inferenceservicename
+          type: string
+        videoLocation:
+          title: Videolocation
+          type: string
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        frameworks:
+          title: Frameworks
+          type: array
+          items:
+            type: string
+        description:
+          title: Description
+          type: string
+        explanation:
+          title: Explanation
+          type: string
+        usage:
+          title: Usage
+          type: string
+        limitations:
+          title: Limitations
+          type: string
+        owner:
+          title: Owner
+          type: string
+        pointOfContact:
+          title: Pointofcontact
+          type: string
+        artifacts:
+          title: Artifacts
+          type: array
+          items:
+            "$ref": "#/components/schemas/Artifact"
+        experiment:
+          "$ref": "#/components/schemas/LinkedExperiment"
+        dataset:
+          "$ref": "#/components/schemas/LinkedDataset"
+        _id:
+          title: " Id"
+          type: string
+        creatorUserId:
+          title: Creatoruserid
+          type: string
+        modelId:
+          title: Modelid
+          type: string
+        created:
+          title: Created
+          type: string
+        lastModified:
+          title: Lastmodified
+          type: string
+      description: |-
+        Data model for model card in database.
+        Contain additional fields for database that will
+        be filled in as part of the controller logic.
+    ModelCardModelIn:
+      title: ModelCardModelIn
+      required:
+      - title
+      - markdown
+      - performance
+      - task
+      - tags
+      - frameworks
+      type: object
+      properties:
+        title:
+          title: Title
+          maxLength: 50
+          type: string
+        markdown:
+          title: Markdown
+          type: string
+        performance:
+          title: Performance
+          type: string
+        task:
+          title: Task
+          type: string
+        inferenceServiceName:
+          title: Inferenceservicename
+          type: string
+        videoLocation:
+          title: Videolocation
+          type: string
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        frameworks:
+          title: Frameworks
+          type: array
+          items:
+            type: string
+        description:
+          title: Description
+          type: string
+        explanation:
+          title: Explanation
+          type: string
+        usage:
+          title: Usage
+          type: string
+        limitations:
+          title: Limitations
+          type: string
+        owner:
+          title: Owner
+          type: string
+        pointOfContact:
+          title: Pointofcontact
+          type: string
+        artifacts:
+          title: Artifacts
+          type: array
+          items:
+            "$ref": "#/components/schemas/Artifact"
+        experiment:
+          "$ref": "#/components/schemas/LinkedExperiment"
+        dataset:
+          "$ref": "#/components/schemas/LinkedDataset"
+      description: Request model for creating a model card.
+    SearchModelResponse:
+      title: SearchModelResponse
+      required:
+      - results
+      - total
+      type: object
+      properties:
+        results:
+          title: Results
+          type: array
+          items: {}
+        total:
+          title: Total
+          type: integer
+      description: Response model for searching model cards.
+    ServiceBackend:
+      title: ServiceBackend
+      enum:
+      - knative
+      - emissary
+      type: string
+      description: Enum for service backend.
+    Token:
+      title: Token
+      required:
+      - access_token
+      - refresh_token
+      - token_type
+      type: object
+      properties:
+        access_token:
+          title: Access Token
+          type: string
+        refresh_token:
+          title: Refresh Token
+          type: string
+        token_type:
+          title: Token Type
+          enum:
+          - bearer
+          type: string
+      description: Data model for user tokens
+    UpdateInferenceEngineService:
+      title: UpdateInferenceEngineService
+      required:
+      - imageUri
+      type: object
+      properties:
+        imageUri:
+          title: Imageuri
+          type: string
+        containerPort:
+          title: Containerport
+          type: integer
+        env:
+          title: Env
+          type: object
+        numGpus:
+          title: Numgpus
+          maximum: 2
+          minimum: 0
+          type: number
+          default: 0
+      description: Request model for updating an inference engine service.
+    UpdateModelCardModel:
+      title: UpdateModelCardModel
+      type: object
+      properties:
+        title:
+          title: Title
+          type: string
+        description:
+          title: Description
+          type: string
+        explanation:
+          title: Explanation
+          type: string
+        usage:
+          title: Usage
+          type: string
+        limitations:
+          title: Limitations
+          type: string
+        markdown:
+          title: Markdown
+          type: string
+        performance:
+          title: Performance
+          type: string
+        tags:
+          title: Tags
+          type: array
+          items:
+            type: string
+        task:
+          title: Task
+          type: string
+        frameworks:
+          title: Frameworks
+          type: array
+          items:
+            type: string
+        pointOfContact:
+          title: Pointofcontact
+          type: string
+        owner:
+          title: Owner
+          type: string
+        videoLocation:
+          title: Videolocation
+          type: string
+        inferenceServiceName:
+          title: Inferenceservicename
+          type: string
+        artifacts:
+          title: Artifacts
+          type: array
+          items:
+            "$ref": "#/components/schemas/Artifact"
+        experiment:
+          "$ref": "#/components/schemas/LinkedExperiment"
+        dataset:
+          "$ref": "#/components/schemas/LinkedDataset"
+      description: |-
+        Request model for updating a model card.
+        All fields are optional, to allow for partial updates.
+    UserInsert:
+      title: UserInsert
+      required:
+      - name
+      - user_id
+      - password
+      - password_confirm
+      type: object
+      properties:
+        name:
+          title: Name
+          type: string
+        user_id:
+          title: User Id
+          type: string
+        password:
+          title: Password
+          type: string
+        password_confirm:
+          title: Password Confirm
+          type: string
+        admin_priv:
+          title: Admin Priv
+          type: boolean
+          default: false
+      description: Request model for creating a user.
+    UserPage:
+      title: UserPage
+      type: object
+      properties:
+        page_num:
+          title: Page Num
+          type: integer
+          default: 1
+        user_num:
+          title: User Num
+          type: integer
+          default: 5
+        name:
+          title: Name
+          type: string
+          default: ''
+        userId:
+          title: Userid
+          type: string
+          default: ''
+        admin_priv:
+          title: Admin Priv
+          type: integer
+          default: 2
+        last_modified_range:
+          title: Last Modified Range
+          anyOf:
+          - type: string
+          - type: object
+          default:
+            from: ''
+            to: ''
+        date_created_range:
+          title: Date Created Range
+          anyOf:
+          - type: string
+          - type: object
+          default:
+            from: ''
+            to: ''
+      description: Request model for finding users
+    UserRemoval:
+      title: UserRemoval
+      required:
+      - users
+      type: object
+      properties:
+        users:
+          title: Users
+          type: array
+          items:
+            type: string
+      description: Request model for removing many users.
+    UsersEdit:
+      title: UsersEdit
+      type: object
+      properties:
+        users:
+          title: Users
+          type: array
+          items:
+            type: string
+          default: []
+        priv:
+          title: Priv
+          type: boolean
+          default: false
+      description: Request model for editing many users.
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+    VideoUploadResponse:
+      title: VideoUploadResponse
+      required:
+      - video_location
+      type: object
+      properties:
+        video_location:
+          title: Video Location
+          type: string
+      description: Response model for video upload.
+    modelCard:
+      title: modelCard
+      required:
+      - model_id
+      - creator_user_id
+      type: object
+      properties:
+        model_id:
+          title: Model Id
+          type: string
+        creator_user_id:
+          title: Creator User Id
+          type: string
+      description: General model for the composite key for models of id and creator
+        id
+    modelCardPackage:
+      title: modelCardPackage
+      required:
+      - card_package
+      type: object
+      properties:
+        card_package:
+          title: Card Package
+          type: array
+          items:
+            "$ref": "#/components/schemas/modelCard"
+      description: Model for compiling list of composite keys of the models
+    src__models__dataset__Connector:
+      title: Connector
+      enum:
+      - ''
+      - clearml
+      type: string
+      description: Allowed connectors for datasets.
+    src__models__experiment__Connector:
+      title: Connector
+      enum:
+      - ''
+      - clearml
+      type: string
+      description: Allowed connectors for experiments.
+  securitySchemes:
+    OAuth2PasswordBearerWithCookie:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: "/auth/"
+tags:
+- name: Models
+  description: CRUD endpoints for model cards, as well as for submitting inference.
+- name: Experiments
+  description: APIs mostly used for the transfer learning feature to make a clone
+    of an existing experiment.
+- name: Datasets
+  description: APIs mostly used for transfer learning feature to upload dataset used
+    for transfer learning.
+- name: Inference Engines
+  description: APIs to deploy inference engines
+- name: IAM
+  description: APIs for system admins to manage users in database in IAM system
+- name: Authentication
+  description: APIs to allow end users to login to the system
+- name: Buckets
+  description: APIs to allow for upload and retrieval of media from S3 Storage (MinIO)

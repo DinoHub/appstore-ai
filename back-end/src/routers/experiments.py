@@ -108,13 +108,13 @@ def clone_experiment(
     }
 
 
-@router.put("/config/{experiment_id}")
-def edit_experiment_config(
-    experiment_id: str,
-    config: Dict,
-    clearml_client: APIClient = Depends(clearml_api_client),
-):
-    response = clearml_client.tasks.edit_configuration(
-        configuration=config, task=experiment_id
-    )  # response is an integer indicating success of update
-    raise NotImplementedError
+# @router.put("/config/{experiment_id}")
+# def edit_experiment_config(
+#     experiment_id: str,
+#     config: Dict,
+#     clearml_client: APIClient = Depends(clearml_api_client),
+# ) :
+#     response = clearml_client.tasks.edit_configuration(
+#         configuration=config, task=experiment_id
+#     )  # response is an integer indicating success of update
+#     raise NotImplementedError

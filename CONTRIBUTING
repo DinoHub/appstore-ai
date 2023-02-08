@@ -1,0 +1,59 @@
+# Contributing to the AI App Store
+
+We welcome contributions from the community and are grateful for your efforts to improve the project. Here are the guidelines we would like you to follow:
+
+## Code of Conduct
+As contributors and maintainers of this project, we pledge to respect all people who contribute through reporting issues, posting feature requests, updating documentation, submitting pull requests or patches, and other activities.
+
+We are committed to making participation in this project a harassment-free experience for everyone, regardless of level of experience, gender, gender identity and expression, sexual orientation, disability, personal appearance, body size, race, ethnicity, age, or religion.
+
+Examples of unacceptable behavior by participants include the use of sexual language or imagery, derogatory comments or personal attacks, trolling, public or private harassment, insults, or other unprofessional conduct.
+
+Project maintainers have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct. Project maintainers who do not follow the Code of Conduct may be removed from the project team.
+
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by opening an issue or contacting one or more of the project maintainers.
+
+This code of conduct is adapted from the Contributor Covenant, version 1.4, available at http://contributor-covenant.org/version/1/4.
+
+## Reporting Issues
+
+If you find a bug or have an idea for a new feature, please search the existing issues first. If you can't find an issue that matches what you're experiencing, please open a new issue.
+
+When you open an issue, please provide as much detail as possible about the problem and any steps to reproduce it.
+
+## Contributing Code
+
+### Fork and clone the repository
+
+Fork the repository and clone it to your local machine.
+
+```bash
+git clone https://github.com/dinohub/appstore-ai.git
+```
+
+### Create a new branch
+
+Create a new branch for your changes.
+
+```bash
+git checkout -b <tag>/<feature-name>
+```
+
+### Make changes and test
+
+Make your changes, and test to make sure they work as expected. Check the style guide in the documentation for more information on how to format your code. But in general Python code should be formatted using Black and isort, and Typescript/HTML/CSS code should be formatted using Prettier.
+
+#### Using Pre-Commit Hooks
+If you want to use pre-commit hooks to automatically format your code, you can install the pre-commit package and run the following command:
+
+```bash
+pre-commit install
+```
+### Push changes and open a pull request
+
+Push your changes to your fork on Github. Then, go to the original repository and open a pull request.
+
+Your pull request will be reviewed as soon as possible. If there are any issues with your changes, we'll let you know and work with you to resolve them.
+
+## Licensing
+By contributing to this repository, you agree that your contributions will be licensed under the [LICENSE](LICENSE) file.

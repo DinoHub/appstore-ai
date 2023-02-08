@@ -12,9 +12,9 @@ sys.path.insert(0, os.path.abspath("../../back-end"))
 sys.path.insert(0, os.path.abspath("../../front-end"))
 
 project = "AI App Store"
-copyright = "2022, Defence Science & Technology Agency"
+copyright = "2023, Defence Science & Technology Agency, Digital Hub PC"
 author = "Oh Tien Cheng, Mathias Ho"
-release = "0.1"
+release = "1.0.10"
 language = "en"
 
 # -- General configuration ---------------------------------------------------
@@ -28,7 +28,9 @@ extensions = [
     "sphinx.ext.duration",  # Generate duration report
     "sphinx.ext.napoleon",  # Supports Google-style and Numpy-style docstrings
     "sphinx.ext.viewcode",  # Add link to source code
+    "sphinxcontrib.openapi",  # Use OpenAPI specification to generate documentation
     "sphinxcontrib.apidoc",  # Populate autodoc for API documentation
+    "sphinxcontrib.mermaid",  # Generate diagrams using Mermaid
     "sphinx_copybutton",  # Copy button for code to clipboard
     "sphinx_design",  # Extension for more supporting components
     "sphinx_inline_tabs",  # Extension for inline tabs
@@ -57,7 +59,9 @@ autodoc_mock_imports = [
     # If possible, try to use real imports, but sometimes this is not possible so we fake the import
     "pymongo",
     "motor",
-    "fastapi_csrf_protect"
+    "fastapi_csrf_protect",
+    "minio",
+    "lxml",
 ]
 
 # Set up auto-generated documentation for Front-end
@@ -70,6 +74,7 @@ js_source_path = "../../front-end/src"
 
 html_theme = "furo"
 html_static_path = ["_static"]
+html_favicon = "_static/favicon.ico"
 html_theme_options = {
     "light_logo": "logo-dark.png",
     "dark_logo": "logo-dark.png",

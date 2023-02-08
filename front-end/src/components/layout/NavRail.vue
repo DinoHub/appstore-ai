@@ -1,6 +1,6 @@
 <style>
 .tab-item {
-  border-radius: 0.5rem; 
+  border-radius: 0.5rem;
 }
 </style>
 <template>
