@@ -68,6 +68,7 @@
           color="secondary"
           v-if="selected.length == 1"
           :label="`Edit`"
+          @click="editSelectedModel"
         />
         <q-btn
           class="q-ml-sm"
@@ -462,6 +463,12 @@ const deleteModels = () => {
     tableRef.value?.requestServerInteraction();
     selected.value = [];
   });
+};
+
+const editSelectedModel = () => {
+  router.push(
+    `/admin/models/${selected.value[0].creatorUserId}/${selected.value[0].modelId}/edit/metadata`
+  );
 };
 
 onMounted(() => {
