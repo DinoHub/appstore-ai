@@ -2,6 +2,9 @@ import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
 import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
 import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
 import AdminModelsPage from 'src/pages/admin/AdminModelsPage.vue';
+import AdminModelInferenceServiceEdit from 'src/pages/admin/AdminModelInferenceServiceEdit.vue';
+import AdminModelMetadataEdit from 'src/pages/admin/AdminModelMetadataEdit.vue';
+import AdminModelVideoEdit from 'src/pages/admin/AdminModelVideoEdit.vue';
 import CreateModel from 'src/pages/models/ModelCreate.vue';
 import DashboardLayout from 'src/layouts/DashboardLayout.vue';
 import DashboardPage from 'src/pages/DashboardPage.vue';
@@ -73,7 +76,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'models',
-        name: 'Admin Models Check Page',
+        name: 'Admin Models Dashboard',
         component: AdminModelsPage,
         beforeEnter: () => {
           const auth = useAuthStore();
@@ -86,6 +89,43 @@ const routes: RouteRecordRaw[] = [
             return '/login/admin';
           }
         },
+      },
+      {
+        path: 'models/:userId/:modelId/edit',
+        beforeEnter: () => {
+          console.log('here');
+          const auth = useAuthStore();
+          if (auth.user?.role != 'admin') {
+            auth.logout();
+            Notify.create({
+              type: 'warning',
+              message: 'This account does not have sufficient privileges',
+            });
+            return '/login/admin';
+          }
+        },
+        children: [
+          {
+            path: '',
+            name: 'Edit',
+            redirect: 'metadata',
+          },
+          {
+            path: 'metadata',
+            name: 'Admin Model Metadata',
+            component: AdminModelMetadataEdit,
+          },
+          {
+            path: 'inference',
+            name: 'Admin Model Inference Service',
+            component: AdminModelInferenceServiceEdit,
+          },
+          {
+            path: 'video',
+            name: 'Admin Model Example Video',
+            component: AdminModelVideoEdit,
+          },
+        ],
       },
     ],
   },
