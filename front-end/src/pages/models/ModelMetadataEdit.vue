@@ -562,6 +562,7 @@ const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const modelId = route.params.modelId as string;
+const userId =  route.params.userId as string;
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
@@ -587,7 +588,7 @@ const saveEdit = () => {
         });
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
-        router.push(`/model/${authStore.user?.userId}/${modelId}`);
+        router.push(`/model/${userId}/${modelId}`);
       },
     )
     .catch(() => {

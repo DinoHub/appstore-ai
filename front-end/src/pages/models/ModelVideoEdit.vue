@@ -51,8 +51,14 @@
           </div>
         </div>
       </q-step>
-      <q-step :name="2" class="q-mx-auto" title="Confirm" icon="task" style="width: 37.5%;">
-        <div class="justify-center" >
+      <q-step
+        :name="2"
+        class="q-mx-auto"
+        title="Confirm"
+        icon="task"
+        style="width: 37.5%"
+      >
+        <div class="justify-center">
           <vue-plyr
             ><video controls playsinline>
               <source :src="videoExample" /></video
@@ -184,7 +190,7 @@ const replaceVideo = () => {
   // backend will handle the case where video
   // did not exist beforehand
   uploadStore.replaceVideo(selectedVideo.value, userId, modelId).then(() => {
-    router.push(`/model/${authStore.user?.userId}/${modelId}`);
+    router.push(`/model/${userId}/${modelId}`);
   });
 };
 
