@@ -81,7 +81,7 @@ Configuration File: `k8s/environments/production/emissary-values.yaml`
 
 #### KNative
 
-Note that KNative requires a Kubernetes cluster with minimum version 1.2.0. As such, make sure to check the cluster version before attempting to install. Otherwise, the installation will fail even if you configured the Helm chart properly.
+Note that KNative requires a Kubernetes cluster with minimum version 1.20.0. As such, make sure to check the cluster version before attempting to install. Otherwise, the installation will fail even if you configured the Helm chart properly.
 
 Configuration File: `k8s/environments/production/aas-knative-backend-values.yaml`
 
