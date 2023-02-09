@@ -20,4 +20,4 @@ ingress:
           pathType: Prefix
 
 service:
-  type: LoadBalancer
+  type: ClusterIP

@@ -37,7 +37,7 @@ inferenceServiceBackend:
   knative: false
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
 
 ingress:
   enabled: true
