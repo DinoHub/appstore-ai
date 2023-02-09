@@ -2,6 +2,8 @@ apiVersion: getambassador.io/v2
 kind:  Mapping
 metadata:
   name:  {{ engine_name }}-ingress
+  labels:
+    aas-ie-service: "true"
 spec:
     hostname: "*"
     prefix: /{{ engine_name }}/

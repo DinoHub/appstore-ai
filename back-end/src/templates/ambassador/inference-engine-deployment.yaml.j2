@@ -2,6 +2,8 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ engine_name }}-deployment
+  labels:
+    aas-ie-service: "true"
 spec:
   replicas: 1
   revisionHistoryLimit: 3
@@ -17,6 +19,7 @@ spec:
     metadata:
       labels:
         app: {{ engine_name }}
+        aas-ie-service: "true"
     spec:
       containers:
         - name: {{ engine_name }}

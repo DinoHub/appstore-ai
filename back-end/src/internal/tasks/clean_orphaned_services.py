@@ -13,23 +13,6 @@ async def delete_orphan_services():
     print("INFO: Starting task to remove orphaned services")
     db, mongo_client = get_db()
     k8s_client = get_k8s_client()
-
-    # model_services = await (
-    #     db["models"].find(
-    #         {}, {"inferenceServiceName": 1}
-    #     )  # include only service names
-    # ).to_list(length=None)
-    # # Do a search of all services NOT IN modelServices
-    # # This should detect any services that are not referenced in any model card
-    # # all new services have uuid in the service name, so this should be safe
-    # orphaned_services = db["services"].find(
-    #     {
-    #         "serviceName": {
-    #             "$nin": [x["inferenceServiceName"] for x in model_services]
-    #         }
-    #     },
-    #     {"serviceName": 1},
-    # )
     with k8s_client as client:
         custom_api = CustomObjectsApi(client)
         core_api = CoreV1Api(client)
@@ -43,17 +26,48 @@ async def delete_orphan_services():
                 plural="services",
                 namespace=config.IE_NAMESPACE,
                 label_selector="aas-ie-service=true",
-            )["metadata"].name
+            )
+            service_names = [
+                service["metadata"].name for service in results["items"]
+            ]  # NOTE: I don't actually know the response model
+            # since the k8s documnentation is not very good
+            # and just tells me this will be a dict, but I assume
+            # I should be able to access through `items` key
         elif config.IE_SERVICE_TYPE == ServiceBackend.EMISSARY:
-            results = core_api.list_namespaced_service(
+            ie_services = core_api.list_namespaced_service(
                 namespace=config.IE_NAMESPACE,
                 label_selector="aas-ie-service=true",
             ).items
-            services = [service.metadata.name for service in results]
+            # Also check for deploymnents and mappings
+            ie_deployments = apps_api.list_namespaced_deployment(
+                namespace=config.IE_NAMESPACE,
+                label_selector="aas-ie-service=true",
+            ).items
+            ie_mappings = custom_api.list_namespaced_custom_object(
+                group="getambassador.io",
+                version="v2",
+                plural="mappings",
+                namespace=config.IE_NAMESPACE,
+                label_selector="aas-ie-service=true",
+            )["items"]
+            service_names = [service.metadata.name for service in ie_services]
+            service_names.extend(
+                [
+                    deployment.metadata.name.removesuffix("-deployment")
+                    for deployment in ie_deployments
+                ]
+            )
+            service_names.extend(
+                [
+                    mapping["metadata"]["name"].removesuffix("-ingress")
+                    for mapping in ie_mappings
+                ]
+            )
         else:
             raise NotImplementedError(
                 f"Backend type {config.IE_SERVICE_TYPE} not implemented."
             )
+        print(f"Service names: {set(service_names)}")
 
         # Do a database search for all services that are currently in use
         model_services = await (
@@ -64,7 +78,9 @@ async def delete_orphan_services():
         used_services = [x["inferenceServiceName"] for x in model_services]
 
         # Do a set difference to find services that are orphaned
-        orphaned_services = set(services) - set(used_services)
+        orphaned_services = set(service_names) - set(used_services)
+        print(f"INFO: Found {len(orphaned_services)} orphaned services.")
+        print(orphaned_services)
 
         async with await mongo_client.start_session() as session:
             for service_name in orphaned_services:
@@ -90,8 +106,8 @@ async def delete_orphan_services():
                             print(err)
                             continue
                 # Delete service from cluster
-                try:
-                    if backend_type == ServiceBackend.KNATIVE:
+                if backend_type == ServiceBackend.KNATIVE:
+                    try:
                         custom_api.delete_namespaced_custom_object(
                             group="serving.knative.dev",
                             version="v1",
@@ -99,15 +115,42 @@ async def delete_orphan_services():
                             namespace=config.IE_NAMESPACE,
                             name=service_name,
                         )
-                    elif backend_type == ServiceBackend.EMISSARY:
+                    except ApiException as err:
+                        if err.status == 404:
+                            # Service not present
+                            print(
+                                f"WARN: Service {service_name} not found in cluster."
+                            )
+                        else:
+                            raise err
+                elif backend_type == ServiceBackend.EMISSARY:
+                    try:
                         core_api.delete_namespaced_service(
                             name=service_name,
                             namespace=config.IE_NAMESPACE,
                         )
+                    except ApiException as err:
+                        if err.status == 404:
+                            # Service not present
+                            print(
+                                f"WARN: Service {service_name} not found in cluster."
+                            )
+                        else:
+                            raise err
+                    try:
                         apps_api.delete_namespaced_deployment(
                             name=service_name + "-deployment",
                             namespace=config.IE_NAMESPACE,
                         )
+                    except ApiException as err:
+                        if err.status == 404:
+                            # Deployment not present
+                            print(
+                                f"WARN: Deployment {service_name}-deployment not found in cluster."
+                            )
+                        else:
+                            raise err
+                    try:
                         custom_api.delete_namespaced_custom_object(
                             group="getambassador.io",
                             version="v2",
@@ -116,15 +159,12 @@ async def delete_orphan_services():
                             name=service_name
                             + "-ingress",  # TODO: make this a separate function so that route can share same code
                         )
-                    await db["services"].delete_one(
-                        {"serviceName": service_name}
-                    )
-                except ApiException as err:
-                    if err.status == 404:
-                        # Service not present
-                        print(
-                            f"WARN: Service {service_name} not found in cluster."
-                        )
-                        continue
-                    else:
-                        raise err
+                    except ApiException as err:
+                        if err.status == 404:
+                            # Mapping not present
+                            print(
+                                f"WARN: Mapping {service_name}-ingress not found in cluster."
+                            )
+                        else:
+                            raise err
+                await db["services"].delete_one({"serviceName": service_name})
