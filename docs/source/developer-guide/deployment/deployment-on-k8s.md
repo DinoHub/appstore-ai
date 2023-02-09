@@ -112,7 +112,7 @@ Configuration File: `k8s/environments/production/minio-values.yaml`
 
 Now, it's time to configure the backend of the application.
 
-Note that if your ClearML is self-hosted, you may need to follow the instructions [here](#self-hosted-clearml) to pass the CA certs to allow the backend to access ClearML without errors.
+Note that if your ClearML is self-hosted, you may need to follow the instructions [here](#https-certificates) to pass the CA certs to allow the backend to access ClearML without errors.
 
 Configuration File: `k8s/environments/production/aas-backend-values.yaml`
 
@@ -268,9 +268,9 @@ Along with the images, you should also copy over the `k8s` folder to the machine
 - If your K8S cluster is too old (< 1.20), the KNative backend for serving inference services will not work. As such, you have to use alternative backends such as the `emissary` backend. Note that other backends will not support auto-scaling from 0, meaning that the services will be always running and taking up resources on the cluster.
 - We do currently have a manual-scaling option in the user interface as an alternative.
 
-### Self-Hosted ClearML
+### HTTPS Certificates
 
-If attempting to connected to a self hosted ClearML server, you will need to provide the TLS certificates needed to connect to it, otherwise the ClearML integration will not work.
+If attempting to connected to a self hosted ClearML server using HTTPS (or any other service really), you will need to provide the TLS certificates needed to connect to it, otherwise the ClearML integration will not work.
 
 This is supported by supplying the cert in the Helm chart values:
 
