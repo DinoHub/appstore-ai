@@ -275,6 +275,14 @@
                 ></q-btn>
               </div>
               <div>
+                <!--
+                  TODO: this currently only calls delete model endpoint.
+                  Right now, the delete model endpoint will add the
+                  clear orphaned services task that will run afterwards,
+                  but we should probably expicitly call the delete service
+                  endpoint here as well instead of relying on what is
+                  effectively a side effect.
+                -->
                 <q-form
                   @submit="modelStore.deleteModelById(userId, modelId)"
                   class="q-gutter-md"
