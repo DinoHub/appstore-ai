@@ -81,7 +81,7 @@ Configuration File: `k8s/environments/production/emissary-values.yaml`
 
 #### KNative
 
-Note that KNative requires a Kubernetes cluster with minimum version 1.2.0. As such, make sure to check the cluster version before attempting to install. Otherwise, the installation will fail even if you configured the Helm chart properly.
+Note that KNative requires a Kubernetes cluster with minimum version 1.20.0. As such, make sure to check the cluster version before attempting to install. Otherwise, the installation will fail even if you configured the Helm chart properly.
 
 Configuration File: `k8s/environments/production/aas-knative-backend-values.yaml`
 
@@ -122,8 +122,8 @@ Configuration File: `k8s/environments/production/aas-backend-values.yaml`
 | image.tag                         | string                  | Image tag to pull                                                                                                                                                                                                 | 1.10                                 |
 | env.PROD_FRONTEND_HOST            | string                  | Frontend origins for CORS as a JSON array                                                                                                                                                                         | `'["http://web.appstore.ai"]'`       |
 | env.PROD_SECURE_COOKIES           | string                  | If connection with frontend is secure HTTPS connection, this should be `true`, else `false`                                                                                                                       | false                                |
-| env.PROD_SECRET_KEY               | string                  | Used to hash the password                                                                                                                                                                                         | hello                                |
-| env.PROD_ADMIN_SECRET_KEY         | string                  | Used to hash the admin account passwords                                                                                                                                                                          | hello2                               |
+| env.PROD_SECRET_KEY               | string                  | Used to encrypt JWTs                                                                                                                                                                                              | hello                                |
+| env.PROD_ADMIN_SECRET_KEY         | string                  | Used to encrypt JWTs passwords                                                                                                                                                                                    | hello2                               |
 | env.PROD_ALGORITHM                | string                  | Hashing algorithm used                                                                                                                                                                                            | HS256                                |
 | env.PROD_MONGO_DSN                | string                  | MongoDB Domain Source Name, which should point to the location of your MongoDB (e.g a domain name, IP address)                                                                                                    | mongodb://aas-mongodb                |
 | env.PROD_DB_NAME                  | string                  | Name of the MongoDB database to connect to. If you have configured the MongoDB Helm chart, this should correspond to the name of the database that the service account has been assigned to (`auth.databases[0]`) | appStoreProdDb                       |
