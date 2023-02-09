@@ -93,7 +93,6 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'models/:userId/:modelId/edit',
         beforeEnter: () => {
-          console.log('here');
           const auth = useAuthStore();
           if (auth.user?.role != 'admin') {
             auth.logout();
