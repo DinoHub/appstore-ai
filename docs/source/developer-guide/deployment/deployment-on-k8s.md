@@ -81,7 +81,7 @@ Configuration File: `k8s/environments/production/emissary-values.yaml`
 
 #### KNative
 
-Note that KNative requires a Kubernetes cluster with minimum version 1.2.0. As such, make sure to check the cluster version before attempting to install. Otherwise, the installation will fail even if you configured the Helm chart properly.
+Note that KNative requires a Kubernetes cluster with minimum version 1.20.0. As such, make sure to check the cluster version before attempting to install. Otherwise, the installation will fail even if you configured the Helm chart properly.
 
 Configuration File: `k8s/environments/production/aas-knative-backend-values.yaml`
 
@@ -122,8 +122,8 @@ Configuration File: `k8s/environments/production/aas-backend-values.yaml`
 | image.tag                         | string                  | Image tag to pull                                                                                                                                                                                                 | 1.10                                 |
 | env.PROD_FRONTEND_HOST            | string                  | Frontend origins for CORS as a JSON array                                                                                                                                                                         | `'["http://web.appstore.ai"]'`       |
 | env.PROD_SECURE_COOKIES           | string                  | If connection with frontend is secure HTTPS connection, this should be `true`, else `false`                                                                                                                       | false                                |
-| env.PROD_SECRET_KEY               | string                  | Used to hash the password                                                                                                                                                                                         | hello                                |
-| env.PROD_ADMIN_SECRET_KEY         | string                  | Used to hash the admin account passwords                                                                                                                                                                          | hello2                               |
+| env.PROD_SECRET_KEY               | string                  | Used to encrypt JWTs                                                                                                                                                                                              | hello                                |
+| env.PROD_ADMIN_SECRET_KEY         | string                  | Used to encrypt JWTs passwords                                                                                                                                                                                    | hello2                               |
 | env.PROD_ALGORITHM                | string                  | Hashing algorithm used                                                                                                                                                                                            | HS256                                |
 | env.PROD_MONGO_DSN                | string                  | MongoDB Domain Source Name, which should point to the location of your MongoDB (e.g a domain name, IP address)                                                                                                    | mongodb://aas-mongodb                |
 | env.PROD_DB_NAME                  | string                  | Name of the MongoDB database to connect to. If you have configured the MongoDB Helm chart, this should correspond to the name of the database that the service account has been assigned to (`auth.databases[0]`) | appStoreProdDb                       |
@@ -139,7 +139,7 @@ Configuration File: `k8s/environments/production/aas-backend-values.yaml`
 | env.PROD_MINIO_API_ACCESS_KEY     | string                  | S3 Credentials Access Key                                                                                                                                                                                         | my_access_key                        |
 | env.PROD_MINIO_API_SECRET_KEY     | string                  | S3 Credentials Secret Key                                                                                                                                                                                         | my_secret_key                        |
 | env.PROD_FIRST_SUPERUSER_ID       | string                  | When creating the AI App Store, the app will create a root user. This is the username of that root user                                                                                                           | root                                 |
-| env.PROD_FIRST_SUPERUSER_PASSWORD | string                  | Password of the first root user                                                                                                                                                                                   | p@ssw0rd                             |
+| env.PROD_FIRST_SUPERUSER_PASSWORD | string                  | Password of the first root user                                                                                                                                                                                   | P@ssw0rd                             |
 | env.CLEARML_WEB_HOST              | string                  | Hostname of ClearML Web                                                                                                                                                                                           | app.clear.ml                         |
 | env.CLEARML_API_HOST              | string                  | Hostname of ClearML API Server                                                                                                                                                                                    | api.clear.ml                         |
 | env.CLEARML_FILES_HOST            | string                  | Hostname of ClearML File Server                                                                                                                                                                                   | files.clear.ml                       |
@@ -159,6 +159,7 @@ Configuration File: `k8s/environments/production/aas-frontend-values.yaml`
 | image.repository | string | Image to pull for frontend | registryname/ai-appstore/aas-frontend |
 | image.tag | string | Image tag to pull | 1.10 |
 | ingress.hosts[0].host | string | Hostname of frontend | web.appstore.ai |
+| env.VUE_APP_BACKEND_URL | string | Hostname of backend so it can be accessed by the frontend | https://api.appstore.ai |
 
 ### Configuring Hosts
 
@@ -272,7 +273,7 @@ Along with the images, you should also copy over the `k8s` folder to the machine
 
 If attempting to connected to a self hosted ClearML server, you will need to provide the TLS certificates needed to connect to it, otherwise the ClearML integration will not work.
 
-This is supported by supplying the cert in the Helm chart values:
+This is supported by supplying the cert in the Helm chart values (for the backend Helm chart):
 
 ```bash
 helm install ... --set-file certs.CA_CERT=<path to cert file>
