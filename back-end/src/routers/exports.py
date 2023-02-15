@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Tuple
 from colorama import Fore
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
-from minio import Minio
+from miniopy_async import Minio
 
 from fastapi import (
     APIRouter,
@@ -46,14 +46,14 @@ async def get_exported(
         # narrow search by looking for time intiated within a time range given by req
         if pages_export.time_initiated_range is not None:
             if isinstance(pages_export.time_initiated_range, dict):
-                lookup["created"] = {
+                lookup["timeInitiated"] = {
                     "$gte": pages_export.time_initiated_range["from"],
                     "$lte": pages_export.time_initiated_range["to"],
                 }
         # narrow search by looking for time completed within a time range given by req
         if pages_export.time_completed_range is not None:
             if isinstance(pages_export.time_completed_range, dict):
-                lookup["time"] = {
+                lookup["timeCompleted"] = {
                     "$gte": pages_export.time_completed_range["from"],
                     "$lte": pages_export.time_completed_range["to"],
                 }
@@ -116,7 +116,7 @@ async def remove_exports(
                 (model_bucket, prefix) = (
                     x["exportLocation"].split("s3://")[1].split("/", 1)
                 )
-                errors = remove_data_from_prefix(s3_client, prefix, model_bucket)
+                errors = await remove_data_from_prefix(s3_client, prefix, model_bucket)
                 for error in errors:
                     if error is not None:
                         failed_exports_removals.append(x["exportLocation"])
