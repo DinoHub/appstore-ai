@@ -1,5 +1,6 @@
 """AI Appstore Main Module"""
 from pathlib import Path
+import logging
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,6 +64,8 @@ fastapi_app = FastAPI(
     redoc_url=None,
 )
 fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
+
+logging.getLogger('asyncio').setLevel(logging.CRITICAL)
 
 app = CORSMiddleware(
     fastapi_app,
