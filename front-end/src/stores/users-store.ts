@@ -2,7 +2,6 @@ import { api } from 'src/boot/axios';
 import { AxiosError } from 'axios';
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
-import { Console } from 'console';
 
 export interface CreateUser {
   name: string;

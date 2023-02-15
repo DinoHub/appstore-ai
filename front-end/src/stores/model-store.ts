@@ -223,7 +223,7 @@ export const useModelStore = defineStore('model', {
             position: 'top-right',
           });
           return Promise.reject(
-            'The model name already exists under you. Please enter a different one.',
+            'The model name already exists under you. Please enter a different one.'
           );
         } else {
           Notify.create({
@@ -245,7 +245,7 @@ export const useModelStore = defineStore('model', {
     async updateModel(
       metadata: UpdateModelCard,
       userId: string,
-      modelId: string,
+      modelId: string
     ): Promise<void> {
       try {
         console.warn(metadata);
