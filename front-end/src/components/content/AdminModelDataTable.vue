@@ -309,7 +309,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        }),
+        })
       );
       tasks.splice(
         0,
@@ -319,7 +319,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        }),
+        })
       );
     })
     .catch(() => {
@@ -349,7 +349,14 @@ const columns: QTableColumn[] = [
     align: 'left',
     sortable: true,
   },
-
+  {
+    name: 'modelId',
+    required: true,
+    label: 'Model ID',
+    field: 'modelId',
+    align: 'left',
+    sortable: true,
+  },
   {
     name: 'creatorUserIdPartial',
     required: true,
@@ -386,7 +393,7 @@ const columns: QTableColumn[] = [
     field: 'created',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val,
+        val
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
@@ -397,7 +404,7 @@ const columns: QTableColumn[] = [
     field: 'lastModified',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val,
+        val
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
