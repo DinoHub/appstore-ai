@@ -29,10 +29,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuthStore } from 'src/stores/auth-store';
-import { useUsersStore } from 'src/stores/users-store';
 import { Pagination, SearchFilter } from 'src/components/components/models';
-
 import AdminModelDataTable from 'src/components/content/AdminModelDataTable.vue';
 
 const filterDrawer = ref(true);
