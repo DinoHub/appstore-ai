@@ -36,6 +36,12 @@ export interface UsersSearchFilter {
   dateModifiedRange?: string[];
 }
 
+export interface ExportsSearchFilter {
+  userId?: string;
+  timeInitiatedRange?: string[];
+  timeCompletedRange?: string[];
+}
+
 export interface FormOptionValue {
   label: string;
   value: string;
