@@ -1,5 +1,6 @@
 import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
 import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
+import AdminExportPage from 'src/pages/admin/AdminExportsPage.vue';
 import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
 import AdminModelsPage from 'src/pages/admin/AdminModelsPage.vue';
 import AdminModelInferenceServiceEdit from 'src/pages/admin/AdminModelInferenceServiceEdit.vue';
@@ -62,6 +63,22 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Admin Dashboard',
         component: AdminDashboardPage,
+        beforeEnter: () => {
+          const auth = useAuthStore();
+          if (auth.user?.role != 'admin') {
+            auth.logout();
+            Notify.create({
+              type: 'warning',
+              message: 'This account does not have sufficient privileges',
+            });
+            return '/login/admin';
+          }
+        },
+      },
+      {
+        path: 'exports',
+        name: 'Admin Exports Dashboard',
+        component: AdminExportPage,
         beforeEnter: () => {
           const auth = useAuthStore();
           if (auth.user?.role != 'admin') {
