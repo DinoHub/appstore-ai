@@ -16,7 +16,7 @@ from .dependencies.minio_client import (
 )
 
 
-def preprocess_html_post(html: str) -> str:
+async def preprocess_html_post(html: str) -> str:
     """Preprocessing pipeline for HTML.
 
     This function performs the following steps:
@@ -31,22 +31,22 @@ def preprocess_html_post(html: str) -> str:
     """
     # Convert base64 encoded images to data URIs
     soup = BeautifulSoup(html, "lxml")
-    soup = upload_b64_media(soup)
+    soup = await upload_b64_media(soup)
 
     # Sanitize HTML
-    html = sanitize_html(str(soup))
+    html = await sanitize_html(str(soup))
 
     return html
 
 
-def preprocess_html_get(html: str) -> str:
+async def preprocess_html_get(html: str) -> str:
     soup = BeautifulSoup(html, "lxml")
-    soup = s3_url_to_presigned_url(soup)
+    soup = await s3_url_to_presigned_url(soup)
     html = str(soup)
     return html
 
 
-def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
+async def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
     """Uploads base64 encoded images to S3 Compliant Storage.
 
     Args:
@@ -55,7 +55,7 @@ def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
     Returns:
         BeautifulSoup: Parser with base64 encoded images replaced with data URIs
     """
-    s3_client = minio_api_client()
+    s3_client = await minio_api_client()
     if not s3_client:
         return parser
     # Get all images
@@ -79,7 +79,7 @@ def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
 
             # Upload the image to S3
             # TODO: Allow customization of upload method
-            url = upload_data(
+            url = await upload_data(
                 s3_client,
                 decoded_image,
                 path,
@@ -99,7 +99,7 @@ def upload_b64_media(parser: BeautifulSoup) -> BeautifulSoup:
     return parser
 
 
-def sanitize_html(html: str) -> str:
+async def sanitize_html(html: str) -> str:
     """Sanitize HTML.
 
     Args:
@@ -132,10 +132,10 @@ def sanitize_html(html: str) -> str:
         return "<p>Error parsing HTML</p>"
 
 
-def s3_url_to_presigned_url(
+async def s3_url_to_presigned_url(
     parser: BeautifulSoup,
 ):
-    s3_client = minio_api_client()
+    s3_client = await minio_api_client()
     if not s3_client:
         return parser
     # Get all images
@@ -149,21 +149,21 @@ def s3_url_to_presigned_url(
         bucket_name, object_name = image["src"].split("s3://")[1].split("/", 1)
 
         # Replace the base64 encoded image with the URL of the uploaded image
-        image["src"] = get_presigned_url(s3_client, object_name, bucket_name)
+        image["src"] = await get_presigned_url(s3_client, object_name, bucket_name)
     return parser
 
 
-def process_html_to_base64(html: str) -> str:
+async def process_html_to_base64(html: str) -> str:
     soup = BeautifulSoup(html, "lxml")
-    soup = s3_url_to_base64(soup)
-    html = sanitize_html(str(soup))
+    soup = await s3_url_to_base64(soup)
+    html = await sanitize_html(str(soup))
     return html
 
 
-def s3_url_to_base64(
+async def s3_url_to_base64(
     parser: BeautifulSoup,
 ):
-    s3_client = minio_api_client()
+    s3_client = await minio_api_client()
     if not s3_client:
         return parser
     # Get all images
@@ -175,8 +175,8 @@ def s3_url_to_base64(
         # Extract bucket name and object name
         # s3://<bucket>/<object>
         bucket_name, object_name = image["src"].split("s3://")[1].split("/", 1)
-        bytes_image = get_data(s3_client, object_name, bucket_name)
-        base64_image = b64encode(bytes_image.data).decode("utf-8")
+        bytes_image = await get_data(s3_client, object_name, bucket_name)
+        base64_image = b64encode(await bytes_image.read()).decode("utf-8")
         data_type = guess_type(object_name)[0]
         image["src"] = f"data:{data_type};base64,{base64_image}"
     return parser
