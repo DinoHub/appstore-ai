@@ -4,7 +4,7 @@ from typing import Dict
 
 from colorama import Fore
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
-from minio import Minio
+from miniopy_async import Minio
 
 from ..config.config import config
 from ..internal.dependencies.file_validator import ValidateFileUpload
@@ -40,7 +40,7 @@ video_validator = ValidateFileUpload(
     # dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
-def upload_video(
+async def upload_video(
     video: UploadFile = Form(),
     s3_client: Minio = Depends(minio_api_client),
 ) -> Dict[str, str]:
@@ -57,7 +57,7 @@ def upload_video(
         Dict[str, str]: Location of the video in the bucket
     """
     try:
-        path = upload_data(
+        path = await upload_data(
             s3_client,
             video.file.read(),
             f"videos/{uuid.uuid4().hex}.{video.content_type.replace('video/','')}",
@@ -117,13 +117,12 @@ async def replace_video(
                     url: str = existing_card["videoLocation"]
                     url = url.removeprefix("s3://")
                     bucket, object_name = url.split("/", 1)
-                    print(object_name)
-                    remove_data(s3_client, object_name, bucket)
+                    await remove_data(s3_client, object_name, bucket)
                 except Exception as err:
                     print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {err}")
                     print("WARN:\t  No old video location provided")
         # upload the new video to the bucket
-        path = upload_data(
+        path = await upload_data(
             s3_client,
             new_video.file.read(),
             f"videos/{uuid.uuid4().hex}.{new_video.content_type.replace('video/','')}",

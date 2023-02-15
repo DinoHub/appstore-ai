@@ -4,8 +4,8 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from minio import Minio
-from minio.deleteobjects import DeleteObject
+from miniopy_async import Minio
+from miniopy_async.deleteobjects import DeleteObject
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from src.internal.auth import check_is_admin, get_current_user
@@ -59,15 +59,15 @@ async def flush_db(get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient])
         await db.drop_collection(collection)
 
 @pytest.fixture
-def s3_client(client: TestClient) -> Minio:
+async def s3_client(client: TestClient) -> Minio:
     from src.internal.dependencies.minio_client import minio_api_client
-    s3_client = minio_api_client()
+    s3_client = await minio_api_client()
     return s3_client
 
 @pytest.fixture
-def flush_s3(s3_client: Minio):
+async def flush_s3(s3_client: Minio):
     from src.config.config import config
-    objects = s3_client.list_objects(config.MINIO_BUCKET_NAME, recursive=True)
+    objects = await s3_client.list_objects(config.MINIO_BUCKET_NAME, recursive=True)
     objects_to_delete = [
         DeleteObject(obj.object_name) for obj in objects
     ]

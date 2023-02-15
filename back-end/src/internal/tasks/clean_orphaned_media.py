@@ -13,7 +13,7 @@ async def delete_orphan_images():
     """Delete any images that are not referenced in any model card."""
     print("INFO: Starting task to remove orphaned images")
     db, _ = get_db()
-    s3_client = minio_api_client()
+    s3_client = await minio_api_client()
     bucket_name = config.MINIO_BUCKET_NAME
 
     # Find all existing images
@@ -23,7 +23,7 @@ async def delete_orphan_images():
         )
         return
 
-    objects = list(s3_client.list_objects(bucket_name, "images/"))
+    objects = await s3_client.list_objects((bucket_name, "images/"))
     object_names: Set[str] = set([obj.object_name for obj in objects])
     print(f"INFO: There are {len(object_names)} objects currently stored.")
 

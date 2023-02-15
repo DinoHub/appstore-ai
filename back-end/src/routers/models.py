@@ -1,13 +1,10 @@
 import datetime
-import io
 import json
 import re
-import zipfile
 from typing import Dict, List, Optional, Tuple
 from uuid import uuid4
 
 from bson import json_util
-from colorama import Fore
 from fastapi import (
     APIRouter,
     BackgroundTasks,
@@ -17,7 +14,6 @@ from fastapi import (
     status,
 )
 from fastapi.encoders import jsonable_encoder
-from minio import Minio
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import DuplicateKeyError
@@ -26,17 +22,13 @@ from ..config.config import config
 from ..internal.auth import get_current_user, check_is_admin
 from ..internal.dependencies.file_validator import ValidateFileUpload
 from ..internal.dependencies.minio_client import (
-    compose_data,
-    get_data,
     get_presigned_url,
     minio_api_client,
-    upload_data,
 )
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.preprocess_html import (
     preprocess_html_get,
     preprocess_html_post,
-    process_html_to_base64,
 )
 from ..internal.tasks import (
     delete_orphan_images,
@@ -44,7 +36,6 @@ from ..internal.tasks import (
     export_selected_models,
 )
 from ..internal.utils import uncased_to_snake_case
-from ..models.common import S3Storage
 from ..models.iam import TokenData
 from ..models.model import (
     GetFilterResponseModel,
@@ -144,8 +135,8 @@ async def get_model_card_by_id(
     if convert_s3:
         # Get HTML
         try:
-            model["markdown"] = preprocess_html_get(model["markdown"])
-            model["performance"] = preprocess_html_get(model["performance"])
+            model["markdown"] = await preprocess_html_get(model["markdown"])
+            model["performance"] = await preprocess_html_get(model["performance"])
         except Exception as err:
             print(f"Error: {err}")
         if "videoLocation" in model and model["videoLocation"] is not None:
@@ -153,7 +144,7 @@ async def get_model_card_by_id(
                 url: str = model["videoLocation"]
                 url = url.removeprefix("s3://")
                 bucket, object_name = url.split("/", 1)
-                model["videoLocation"] = get_presigned_url(
+                model["videoLocation"] = await get_presigned_url(
                     s3_client, object_name, bucket
                 )
             except Exception as err:
@@ -403,8 +394,8 @@ async def create_model_card_metadata(
     card.frameworks = list(set(card.frameworks))
 
     # Sanitize html
-    card.markdown = preprocess_html_post(card.markdown)
-    card.performance = preprocess_html_post(card.performance)
+    card.markdown = await preprocess_html_post(card.markdown)
+    card.performance = await preprocess_html_post(card.performance)
 
     card_dict: dict = jsonable_encoder(
         ModelCardModelDB(
@@ -471,9 +462,9 @@ async def update_model_card_metadata_by_id(
 
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
-        card_dict["markdown"] = preprocess_html_post(card_dict["markdown"])
+        card_dict["markdown"] = await preprocess_html_post(card_dict["markdown"])
     if "performance" in card_dict:
-        card_dict["performance"] = preprocess_html_post(card_dict["performance"])
+        card_dict["performance"] = await preprocess_html_post(card_dict["performance"])
     if "task" in card_dict:
         if card_dict["task"] == "Reinforcement Learning":
             card_dict["inferenceServiceName"] = None
@@ -648,7 +639,6 @@ async def export_models(
     card_package: ModelCardPackage,
     tasks: BackgroundTasks,
     user: TokenData = Depends(get_current_user),
-    s3_client: Minio = Depends(minio_api_client),
 ):
 
     try:
@@ -658,7 +648,7 @@ async def export_models(
                 detail="User does not have sufficient privilege to export models!",
             )
         else:
-            tasks.add_task(export_selected_models, card_package, user, s3_client)
+            tasks.add_task(export_selected_models, card_package, user)
     except Exception as err:
         print(err)
         raise HTTPException(
