@@ -11,9 +11,19 @@
         ></q-img></router-link
     ></q-toolbar-title>
     <q-tabs shrink inline-label>
-      <q-route-tab exact icon="supervised_user_circle" label="Users" to="/admin" />
+      <q-route-tab
+        exact
+        icon="supervised_user_circle"
+        label="Users"
+        to="/admin"
+      />
       <q-route-tab exact icon="devices" label="Models" to="/admin/models" />
-      <q-route-tab exact icon="import_export" label="Exports" />
+      <q-route-tab
+        exact
+        icon="import_export"
+        label="Exports"
+        to="/admin/exports"
+      />
     </q-tabs>
     <div class="q-pl-sm">
       <dark-mode-toggle></dark-mode-toggle>
