@@ -26,6 +26,7 @@ from ..internal.dependencies.minio_client import (
     minio_api_client,
 )
 from ..internal.dependencies.mongo_client import get_db
+from ..internal.experiment_connector import Experiment
 from ..internal.preprocess_html import (
     preprocess_html_get,
     preprocess_html_post,
@@ -396,7 +397,11 @@ async def create_model_card_metadata(
     # Sanitize html
     card.markdown = await preprocess_html_post(card.markdown)
     card.performance = await preprocess_html_post(card.performance)
-
+    card.experiment.output_url = (
+        Experiment.from_connector(card.experiment.connector)
+        .get(exp_id=card.experiment.experiment_id)
+        .output_url
+    )
     card_dict: dict = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
@@ -459,7 +464,11 @@ async def update_model_card_metadata_by_id(
     db, mongo_client = db
     # by alias => convert snake_case to camelCase
     card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
-
+    card_dict["experiment"]["outputUrl"] = (
+        Experiment.from_connector(card_dict["experiment"]["connector"])
+        .get(exp_id=card_dict["experiment"]["experimentId"])
+        .output_url
+    )
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
         card_dict["markdown"] = await preprocess_html_post(card_dict["markdown"])

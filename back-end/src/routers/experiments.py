@@ -47,6 +47,7 @@ def get_experiment(
         data = {
             "id": exp.id,
             "name": exp.exp_name,
+            "output_url": exp.output_url,
             "project_name": exp.project_name,
             "tags": exp.tags,
             "frameworks": list(frameworks),
@@ -64,7 +65,6 @@ def get_experiment(
             data["artifacts"] = {}
             data["artifacts"].update(exp.artifacts)
             data["artifacts"].update(exp.models)
-
         return data
     except ValueError as err:
         logging.error(err)
