@@ -14,6 +14,7 @@ export interface Artifact {
 export interface LinkedExperiment {
   connector: string;
   experimentId: string;
+  outputUrl: string;
 }
 
 export interface LinkedDataset {

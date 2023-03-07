@@ -232,8 +232,6 @@ export interface ExportsDataTableProps {
   pagination: Pagination;
 }
 
-const persistent = ref(false);
-
 const selected = ref([]);
 const removePopup = ref(false);
 

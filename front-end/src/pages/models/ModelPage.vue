@@ -194,8 +194,22 @@
                     <td>{{ model.creatorUserId }}</td>
                   </tr>
                   <tr v-if="model.experiment?.connector">
-                    <td>{{ model.experiment.connector }} Experiment ID</td>
-                    <td>{{ model.experiment.experimentId }}</td>
+                    <td>Experiment Platform</td>
+                    <td>{{ model.experiment.connector }}</td>
+                  </tr>
+                  <tr v-if="model.experiment?.experimentId">
+                    <td>Experiment ID</td>
+                    <td>
+                      {{ model.experiment.experimentId }}
+                    </td>
+                  </tr>
+                  <tr v-if="model.experiment?.outputUrl">
+                    <td>Experiment URL</td>
+                    <td>
+                      <a :href="model.experiment.outputUrl">
+                        {{ model.experiment.outputUrl }}</a
+                      >
+                    </td>
                   </tr>
                   <tr>
                     <td>Description</td>
@@ -336,7 +350,11 @@
 }
 </style>
 <script setup lang="ts">
-import { ModelCard } from 'src/stores/model-store';
+import {
+  ModelCard,
+  LinkedExperiment,
+  LinkedDataset,
+} from 'src/stores/model-store';
 import MaterialChip from 'src/components/content/MaterialChip.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
@@ -346,6 +364,7 @@ import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute, useRouter } from 'vue-router';
+import { useExperimentStore } from 'src/stores/experiment-store';
 import {
   InferenceServiceStatus,
   useInferenceServiceStore,
@@ -370,6 +389,7 @@ const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
 const serviceHealthy = ref(true);
 const showDetailedStatus = ref(false);
 const authStore = useAuthStore();
+const expStore = useExperimentStore();
 const modelStore = useModelStore();
 const inferenceServiceStore = useInferenceServiceStore();
 
@@ -391,6 +411,8 @@ const model = reactive({
   explanation: '',
   usage: '',
   limitations: '',
+  experiment: {} as LinkedExperiment,
+  dataset: {} as LinkedDataset,
 }) as ModelCard;
 
 modelStore
@@ -407,7 +429,11 @@ modelStore
     model.lastModified = `${dateLastModified.getDate()}/${
       dateLastModified.getMonth() + 1
     }/${dateLastModified.getFullYear()}, ${dateLastModified.toLocaleTimeString()}`;
-
+    if (model.experiment != undefined) {
+      model.experiment.connector = expStore.experimentConnectors.find(
+        (o) => o.value == model.experiment.connector
+      ).label;
+    }
     if (!model.inferenceServiceName && !model.videoLocation) {
       tab.value = Tabs.metadata; // if both not available, go to metadata
       return;

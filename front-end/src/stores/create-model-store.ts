@@ -132,7 +132,7 @@ export const useCreationStore = defineStore('createModel', {
           'modelUsage',
           'modelLimitations',
           'exampleVideo',
-        ].includes(item),
+        ].includes(item)
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -173,7 +173,7 @@ export const useCreationStore = defineStore('createModel', {
           'modelExplain',
           'modelUsage',
           'modelLimitations',
-        ].includes(item),
+        ].includes(item)
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -222,20 +222,20 @@ export const useCreationStore = defineStore('createModel', {
           this.experimentID,
           this.experimentPlatform,
           false,
-          true,
+          true
         );
         // Get all tags and frameworks from the experiment
         // use Set to remove duplicates
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks]),
+          new Set([...this.frameworks, ...metadata.frameworks])
         );
         // Get all artifacts from the experiment
         this.artifacts = Array.from(
           new Set([
             ...this.artifacts,
             ...Object.values(metadata.artifacts ?? {}),
-          ]),
+          ])
         );
       } catch (error) {
         return Promise.reject(error);
@@ -249,12 +249,12 @@ export const useCreationStore = defineStore('createModel', {
       try {
         const metadata = await datasetStore.getDatasetById(
           this.datasetID,
-          this.datasetPlatform,
+          this.datasetPlatform
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         // Get dataset files as artifacts
         this.artifacts = Array.from(
-          new Set([...this.artifacts, ...(metadata.artifacts ?? [])]),
+          new Set([...this.artifacts, ...(metadata.artifacts ?? [])])
         );
       } catch (error) {
         return Promise.reject(error);
@@ -275,7 +275,7 @@ export const useCreationStore = defineStore('createModel', {
             this.imageUri,
             this.numGpus,
             this.containerPort,
-            this.uniqueEnv,
+            this.uniqueEnv
           );
         this.previewServiceUrl = inferenceUrl;
         this.previewServiceName = serviceName; // save so we know what to clean up
@@ -311,7 +311,7 @@ export const useCreationStore = defineStore('createModel', {
           markdown: this.markdownContent,
           performance: this.performanceMarkdown,
           artifacts: Array.from(
-            new Set([this.mainModelArtifact, ...this.artifacts]),
+            new Set([this.mainModelArtifact, ...this.artifacts])
           ),
           description: this.modelDesc,
           explanation: this.modelExplain,
@@ -335,7 +335,7 @@ export const useCreationStore = defineStore('createModel', {
         // Submit Model
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModel(
-          cardPackage,
+          cardPackage
         );
         // Create Inference Service
         // TODO: Move video upload into this function
@@ -351,7 +351,7 @@ export const useCreationStore = defineStore('createModel', {
             this.imageUri,
             this.numGpus,
             this.containerPort,
-            this.uniqueEnv,
+            this.uniqueEnv
           );
           // Update service with serviceName
           await modelStore.updateModel(
@@ -359,7 +359,7 @@ export const useCreationStore = defineStore('createModel', {
               inferenceServiceName: serviceName,
             },
             creatorUserId,
-            modelId,
+            modelId
           );
         }
         Notify.create({
@@ -424,7 +424,7 @@ export const useCreationStore = defineStore('createModel', {
           usage: this.modelUsage,
           limitations: this.modelLimitations,
           artifacts: Array.from(
-            new Set([this.mainModelArtifact, ...this.artifacts]),
+            new Set([this.mainModelArtifact, ...this.artifacts])
           ),
         } as ModelCard;
 
@@ -443,7 +443,7 @@ export const useCreationStore = defineStore('createModel', {
         }
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModelVideo(
-          cardPackage,
+          cardPackage
         );
         Notify.create({
           message: 'Successfully created model',
