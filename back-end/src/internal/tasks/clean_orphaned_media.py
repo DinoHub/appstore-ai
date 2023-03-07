@@ -18,12 +18,10 @@ async def delete_orphan_images():
 
     # Find all existing images
     if s3_client is None or bucket_name is None:
-        print(
-            "WARN: Unable to get s3 client or bucket_name is None. Returning."
-        )
+        print("WARN: Unable to get s3 client or bucket_name is None. Returning.")
         return
 
-    objects = await s3_client.list_objects((bucket_name, "images/"))
+    objects = await s3_client.list_objects(bucket_name, "images/")
     object_names: Set[str] = set([obj.object_name for obj in objects])
     print(f"INFO: There are {len(object_names)} objects currently stored.")
 
@@ -49,20 +47,15 @@ async def delete_orphan_images():
     # Do a set difference to get orphaned objects
     print(f"Image sources: {image_sources}")
     print(f"Inside Minio: {object_names}")
-    print(
-        f"INFO: There are {len(image_sources)} images found in the model cards."
-    )
+    print(f"INFO: There are {len(image_sources)} images found in the model cards.")
     orphaned_images = object_names.difference(image_sources)
-    print(
-        f"INFO: There are {len(orphaned_images)} orphaned images to be removed."
-    )
+    print(f"INFO: There are {len(orphaned_images)} orphaned images to be removed.")
 
     # Remove orphaned images
-    errors = list(
-        s3_client.remove_objects(
-            bucket_name, [DeleteObject(name) for name in orphaned_images]
-        )
+    errors = await s3_client.remove_objects(
+        bucket_name, [DeleteObject(name) for name in orphaned_images]
     )
+
     print(f"INFO: Number of errors: {len(errors)} in deletion.")
     for error in errors:
         print(f"ERROR: {error}")
