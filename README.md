@@ -37,16 +37,15 @@ Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING) fo
 ### v0.2.0
 
 - [x] Dataset CRUD APIs (ClearML)
+- [ ] Support uploading of datasets, integration with ClearML for versioning
+- [ ] Support browsing and searching of above datasets.
+
+### v0.3.0
 - [ ] Automated Transfer Learning APIs (10%)
 - [ ] Alternative to inference engine with simplified inference so that model owners only need to define how requests are made to the model
 - [ ] Front-end for
   - [ ] Transfer Learning
-  - [ ] Dataset Upload
   
-### v0.3.0
-
-- [ ] Support uploading of datasets, integration with ClearML for versioning
-- [ ] Support browsing and searching of above datasets.
 
 ### v0.4.0
 
