@@ -3,6 +3,8 @@
 ![AI App Store Logo](../_static/logo-dark.png)
 https://github.com/DinoHub/appstore-ai
 
+https://dinohub.github.io/appstore-ai/user-guide/introduction.html#
+
 ## What is the AI App Store?
 
 The AI App Store is a platform for browsing and contributing AI model cards. With the AI App Store, you can easily browse a wide variety of models and use them in your projects. You can also contribute your own models to the store, making them available for others to use.
