@@ -1,6 +1,7 @@
 # Introduction
 
 ![AI App Store Logo](../_static/logo-dark.png)
+https://github.com/DinoHub/appstore-ai
 
 ## What is the AI App Store?
 
