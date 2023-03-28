@@ -22,6 +22,7 @@ async def export_selected_models(
     card_package: ModelCardPackage,
     user: TokenData,
 ):
+    """Export selected models from the app store including metadata and related resources to location in S3"""
     try:
         db, mongo_client = get_db()
         s3_client = await minio_api_client()
@@ -55,7 +56,7 @@ async def export_selected_models(
                                     "creatorUserId": x["creator_user_id"],
                                 }
                             )
-                            
+
                             existing_card["markdown"] = await process_html_to_base64(
                                 existing_card["markdown"]
                             )
@@ -70,7 +71,7 @@ async def export_selected_models(
                                 sort_keys=True,
                                 default=str,
                             )
-                            
+
                             try:
                                 await upload_data(
                                     s3_client,

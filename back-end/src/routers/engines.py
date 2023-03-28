@@ -988,10 +988,22 @@ async def restore_inference_engine_service(
     2. Call the delete endpoint to delete the service
     3. Call the create endpoint to create the service using the information from the database
 
-    TODO: Refactor so that I don't have to repeat code. Preferably factor out
-    stuff into a controller submodule (split up the code for adding to mongodb and k8s)
-    to allow router to simply compose functions together for better reusability of code
+    Args:
+        service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        mongodb (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error restoring service
+
+    Returns:
+        Dict: Details on status of service restoration
     """
+    # TODO: Refactor so that I don't have to repeat code. Preferably factor out
+    # stuff into a controller submodule (split up the code for adding to mongodb and k8s)
+    # to allow router to simply compose functions together for better reusability of code
+
     # Get service information from database
     db, _ = mongodb
 

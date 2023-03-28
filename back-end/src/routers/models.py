@@ -649,7 +649,17 @@ async def export_models(
     tasks: BackgroundTasks,
     user: TokenData = Depends(get_current_user),
 ):
+    """Export selected models in app store to S3 storage that can be imported to app store elsewhere
 
+    Args:
+        card_package (ModelCardPackage): List of Dictionaries containing models with composite ID identifiers to be removed
+        tasks (BackgroundTasks): Background tasks to run
+        user (TokenData, optional): User data. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 403 if user does not have admin/elevated privileges
+        HTTPException: 500 if arbitrary error occurs
+    """
     try:
         if user.role != "admin":
             raise HTTPException(
