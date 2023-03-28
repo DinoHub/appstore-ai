@@ -33,10 +33,10 @@ The AI App Store is a platform for browsing and contributing AI model cards. Wit
 
 ### 💁 As an administrator...
 
-- [🪟 Accessing the Admin Portal](admin/accessing-admin-portal.md)
-- [🪪 Managing Users](admin/managing-users.md)
-- [📦 Importing Model Cards](admin/importing-models.md)
-- [📦 Exporting Model Cards](admin/exporting-models.md)
+- [👨‍💻 Accessing the Admin Portal](admin/accessing-admin-portal.md)
+- [👥 Managing Users](admin/managing-users.md)
+- [🖥️ Managing Models](admin/managing-models.md)
+- [📦 Managing Exports](admin/managing-exports.md)
 
 ## Roadmap
 
