@@ -4,7 +4,17 @@
       <!-- content -->
       <main>
         <div class="row justify-center">
-          <div class="col-11 display-medium q-pl-md q-mt-xl">Exports</div>
+          <div class="col-11 display-medium q-pl-md q-mt-xl">
+            Exports<q-btn
+              padding="none"
+              flat
+              rounded
+              icon="help"
+              color="blue"
+              size="1.5rem"
+              @click="legend = !legend"
+            />
+          </div>
         </div>
         <section>
           <admin-exports-data-table
@@ -22,6 +32,7 @@
         @click="filterDrawer = !filterDrawer"
       ></q-btn>
     </q-page-sticky>
+    <q-dialog v-model="legend"> <export-errors /></q-dialog>
   </div>
 </template>
 
@@ -29,8 +40,9 @@
 import { ref } from 'vue';
 import { Pagination } from 'src/components/components/models';
 import AdminExportsDataTable from 'src/components/content/AdminExportsDataTable.vue';
-
+import ExportErrors from 'src/components/content/ExportErrors.vue';
 const filterDrawer = ref(true);
+const legend = ref(false);
 const pagination: Pagination = {
   sortBy: {
     label: '',
