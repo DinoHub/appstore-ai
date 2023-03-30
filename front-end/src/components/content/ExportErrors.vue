@@ -179,13 +179,76 @@
 
           <q-tab-panel name="model_file">
             <div class="text-h6 q-mb-sm">Model file could not be retrieved</div>
-            <!-- <p>This error</p> -->
+            <p>
+              This error dictates that the model file provided for the model
+              card was not added to the export package.
+            </p>
+            <p>Possible reasons why this might happen:</p>
+            <ul class="q-pl-lg">
+              <li>
+                <strong><u>Problem</u></strong
+                ><br />
+                The backend could not connect to the relevant S3 bucket of the
+                model file to retrieve it<br />
+                <strong><u>Reasons</u></strong
+                ><br />
+                <ol type="1" class="q-pl-md">
+                  <li>
+                    The backend being unable to connect to the S3 bucket that
+                    the model file is stored in due to invalid/insufficient
+                    credentials
+                  </li>
+                  <li>
+                    The URL provided for the model file is invalid and is
+                    incorrect
+                  </li>
+                </ol>
+                <strong><u>Solutions</u></strong
+                ><br />
+                <ol type="1" class="q-pl-md">
+                  <li>
+                    Ensure that the variables used to connect to the S3 bucket
+                    are valid/sufficient and modify the configuration
+                    accordingly if incorrect
+                  </li>
+                  <li>
+                    Seek the creator/maintainer of the model to get the correct
+                    model file URL
+                  </li>
+                </ol>
+              </li>
+            </ul>
+            <p>For additional information please check the backend's logs.</p>
           </q-tab-panel>
 
           <q-tab-panel name="example_video">
             <div class="text-h6 q-mb-sm">
               Example video could not be retrieved
             </div>
+            <p>
+              This error dictates that the example video provided to showcase
+              the model's performance was not added to the export package.
+            </p>
+            <p>Possible reasons why this might happen:</p>
+            <ul class="q-pl-lg">
+              <li>
+                <strong><u>Problem</u></strong
+                ><br />
+                The backend failed to retrieve the example video related to the
+                model stored in the S3 bucket<br />
+                <strong><u>Reason</u></strong
+                ><br />
+                The backend being unable to connect to the S3 bucket that the
+                model file is stored in due to invalid/insufficient
+                credentials<br />
+                <strong><u>Solution</u></strong
+                ><br />
+                Ensure that the variables used to connect to the S3 bucket are
+                valid/sufficient and modify the configuration accordingly if
+                incorrect
+              </li>
+            </ul>
+            <p>For additional information please check the backend's logs.</p>
           </q-tab-panel>
 
           <q-tab-panel name="unexpected">
@@ -196,7 +259,8 @@
             </p>
             <p>
               Check the backend of the AI Appstore to identify the problem that
-              will be present in the logs.
+              will be present in the logs as this is likely a code error that
+              has occurred or something completely unaccounted for.
             </p>
           </q-tab-panel>
         </q-tab-panels>
