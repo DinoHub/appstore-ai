@@ -19,9 +19,4 @@ ingress:
           pathType: Prefix
 
 service:
-  type: LoadBalancer
-
-resources:
-  limits:
-    cpu: 1
-    memory: 3Gi
+  type: ClusterIP

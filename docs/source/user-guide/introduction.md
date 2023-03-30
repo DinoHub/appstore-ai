@@ -1,6 +1,9 @@
 # Introduction
 
 ![AI App Store Logo](../_static/logo-dark.png)
+https://github.com/DinoHub/appstore-ai
+
+https://dinohub.github.io/appstore-ai/user-guide/introduction.html#
 
 ## What is the AI App Store?
 
@@ -33,10 +36,10 @@ The AI App Store is a platform for browsing and contributing AI model cards. Wit
 
 ### 💁 As an administrator...
 
-- [👨‍💻 Accessing the Admin Portal](admin/accessing-admin-portal.md)
-- [👥 Managing Users](admin/managing-users.md)
-- [🖥️ Managing Models](admin/managing-models.md)
-- [📦 Managing Exports](admin/managing-exports.md)
+- [🖥️ Accessing the Admin Portal](admin/accessing-admin-portal.md)
+- [👨‍👩‍👧‍👦 Managing Users](admin/managing-users.md)
+- [📦 Importing Model Cards](admin/importing-models.md)
+- [📦 Exporting Model Cards](admin/exporting-models.md)
 
 ## Roadmap
 

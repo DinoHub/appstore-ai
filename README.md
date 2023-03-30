@@ -16,7 +16,7 @@ Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING) fo
 
 ## Roadmap
 
-### v1.0
+### v0.1.0
 
 - [x] Model Card CRUD APIs
 - [x] ClearML Integration for Experiments
@@ -34,14 +34,23 @@ Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING) fo
   - [x] Model Card Listing
   - [x] Model Card CRUD Operations
 
-### v1.1
+### v0.2.0
 
-- [x] Dataset CRUD APIs
+- [x] Dataset CRUD APIs (ClearML)
+- [ ] Support uploading of datasets, integration with ClearML for versioning
+- [ ] Support browsing and searching of above datasets.
+
+### v0.3.0
 - [ ] Automated Transfer Learning APIs (10%)
 - [ ] Alternative to inference engine with simplified inference so that model owners only need to define how requests are made to the model
 - [ ] Front-end for
   - [ ] Transfer Learning
-  - [ ] Dataset Upload
+  
+
+### v0.4.0
+
+- [ ] Support 'uploading' of AI Applications.
+
 
 ## Licence
 
