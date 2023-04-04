@@ -40,7 +40,7 @@ jobs:
         env:
           MONGO_INITDB_DATABASE: appStoreTestDB
       minio:
-        image: quay.io/minio/minio
+        image: lazybit/minio
         ports:
           - 9000:9000
         env:
