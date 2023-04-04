@@ -5,7 +5,12 @@
  * k8s/environments/production/*.yaml - is for the main installation
  * k8s/*.yaml - is for dependancies
 5. Architecture
-6. Database schema
-7. IMS
-8. Testing
-9. Codes
+ * Falls under tech stack in github pages
+ * Database schema
+    * MongoDB Compass
+    * src.models.
+    * Model cards, Servics, Users
+7. Database schema
+8. IMS
+9. Testing
+10. Codes
