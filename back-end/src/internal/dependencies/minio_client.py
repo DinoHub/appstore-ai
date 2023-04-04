@@ -63,10 +63,10 @@ async def get_presigned_url(
         bucket_name=bucket_name,
         object_name=object_name,
     )
-    url = url.removeprefix("https://")
-    url = url.removeprefix("http://")
-    url = url.replace(config.MINIO_DSN or "", config.MINIO_API_HOST or "")
-    return url
+    url = url.removeprefix("https://")  # type: ignore #ignore
+    url = url.removeprefix("http://")  # type: ignore #ignore
+    url = url.replace(config.MINIO_DSN or "", config.MINIO_API_HOST or "")  # type: ignore #ignore
+    return url  # type: ignore #ignore
 
 
 async def remove_data(
@@ -96,7 +96,7 @@ async def remove_data_from_prefix(
     objects_list = await client.list_objects(
         bucket_name=bucket_name, prefix=prefix, recursive=True
     )
-    delete_object_list = map(lambda x: DeleteObject(x.object_name), objects_list)
+    delete_object_list = map(lambda x: DeleteObject(x.object_name), objects_list)  # type: ignore #ignore
     errors = await client.remove_objects(bucket_name, delete_object_list)
     return errors
 
