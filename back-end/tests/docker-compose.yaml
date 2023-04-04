@@ -18,8 +18,8 @@ services:
       - TEST_CLEARML_WEB_HOST=https://app.clear.ml
       - TEST_CLEARML_API_HOST=https://api.clear.ml
       - TEST_CLEARML_FILES_HOST=https://files.clear.ml
-      # - TEST_CLEARML_API_ACCESS_KEY=<REPLACE> # uncomment this and add your own keys or the 
-      # - TEST_CLEARML_API_SECRET_KEY=<REPLACE>
+      # - TEST_CLEARML_API_ACCESS_KEY=<REPLACE> # uncomment this and add your own keys 
+      # - TEST_CLEARML_API_SECRET_KEY=<REPLACE> # uncomment this and add your own keys 
     depends_on:
       - mongodb
     volumes:
