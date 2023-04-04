@@ -16,4 +16,5 @@
 7. Database schema
 8. IMS
 9. Testing
-10. Codes
+ * :7070/redoc, :7070/doc
+11. Codes
