@@ -1,6 +1,7 @@
 name: back-end-tests
 services:
   back-end:
+    # use this command: poetry run pytest --cov-report xml --cov=./ tests/
     build:
       context: "../."
       dockerfile: Dockerfile.test
@@ -30,11 +31,16 @@ services:
     environment:
       - MONGO_INITDB_DATABASE=appStoreTestDB
   minio:
-    image: quay.io/minio/minio
+    image: orionsolaris/minio:2023-04-04
     environment:
       - MINIO_ROOT_USER=aas-minio-uploader
       - MINIO_ROOT_PASSWORD=TempPassword1234
-    command: server /data --console-address ":9001"
+
+    # image: quay.io/minio/minio
+    # environment:
+    #   - MINIO_ROOT_USER=aas-minio-uploader
+    #   - MINIO_ROOT_PASSWORD=TempPassword1234
+    # command: server /data --console-address ":9001"
 
 networks:
   backend-tests:
