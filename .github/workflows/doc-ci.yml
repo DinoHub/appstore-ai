@@ -4,7 +4,7 @@ on:
   push: # run only on push to avoid updating documentation til everything is checked out
     branches:
       - main
-    paths:
+    paths: # only following two are required as api documentation is under backend and pages documentation is udner docs as part of sphinx workflow
       - 'back-end/**'
       - 'docs/**'
   workflow_dispatch: # Allow manual invokation of run
