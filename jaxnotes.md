@@ -10,6 +10,9 @@
     * MongoDB Compass
     * src.models.
     * Model cards, Servics, Users
+ * K8S codes, falls under engine.py
+ * FastAPI concept
+    * Routers -> Pythantic Model
 7. Database schema
 8. IMS
 9. Testing
