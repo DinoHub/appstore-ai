@@ -4,6 +4,7 @@
 3. Installation
  * k8s/environments/production/*.yaml - is for the main installation
  * k8s/*.yaml - is for dependancies
+ * Need to build 2 custom docker images 
 5. Architecture
  * Falls under tech stack in github pages
  * Database schema
