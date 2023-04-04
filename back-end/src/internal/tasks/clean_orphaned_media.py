@@ -59,4 +59,4 @@ async def delete_orphan_images():
     print(f"INFO: Number of errors: {len(errors)} in deletion.")
     for error in errors:
         print(f"ERROR: {error}")
-    print("INFO: Task Complete (Deleted orphaned task)")
+    print("INFO: Task Complete (Deleted orphaned images)")
