@@ -52,25 +52,30 @@ def get_fake_db(client) -> Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]:
     db, db_client = get_db()
     return db, db_client
 
+
 @pytest_asyncio.fixture
 async def flush_db(get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient]):
     db, client = get_fake_db
     for collection in await db.list_collection_names():
         await db.drop_collection(collection)
 
-@pytest.fixture
+
+@pytest_asyncio.fixture
 async def s3_client(client: TestClient) -> Minio:
     from src.internal.dependencies.minio_client import minio_api_client
+
     s3_client = await minio_api_client()
     return s3_client
 
-@pytest.fixture
+
+@pytest_asyncio.fixture
 async def flush_s3(s3_client: Minio):
     from src.config.config import config
+
     objects = await s3_client.list_objects(config.MINIO_BUCKET_NAME, recursive=True)
-    objects_to_delete = [
-        DeleteObject(obj.object_name) for obj in objects
-    ]
-    results = s3_client.remove_objects(config.MINIO_BUCKET_NAME, objects_to_delete)
+    objects_to_delete = map(lambda x: DeleteObject(x.object_name), objects)
+    results = await s3_client.remove_objects(
+        config.MINIO_BUCKET_NAME, objects_to_delete
+    )
     for result in results:
         pass
