@@ -36,19 +36,13 @@ async def minio_api_client() -> Optional[miniopy_async.Minio]:
             await minio_client.make_bucket(bucket_name)
             print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' created")
         else:
-            print(
-                f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' already exists"
-            )
+            print(f"{Fore.GREEN}INFO{Fore.WHITE}:\t  Bucket '{bucket_name}' already exists")
         return minio_client
-    except:
-        print(
-            f"{Fore.YELLOW}WARNING{Fore.WHITE}:\t  Failed to connect to MinIO instance"
-        )
+    except :
+        print(f"{Fore.YELLOW}WARNING{Fore.WHITE}:  Failed to connect to MinIO instance")
 
 
-async def get_presigned_url(
-    client: miniopy_async.Minio, object_name: str, bucket_name: str
-) -> str:
+async def get_presigned_url(client: miniopy_async.Minio, object_name: str, bucket_name: str) -> str:
     """Get presigned URL to object in S3 bucket
 
     Args:
@@ -93,9 +87,7 @@ async def remove_data_from_prefix(
     prefix: str,
     bucket_name: str,
 ):
-    objects_list = await client.list_objects(
-        bucket_name=bucket_name, prefix=prefix, recursive=True
-    )
+    objects_list = await client.list_objects(bucket_name=bucket_name, prefix=prefix, recursive=True)
     delete_object_list = map(lambda x: DeleteObject(x.object_name), objects_list)  # type: ignore #ignore
     errors = await client.remove_objects(bucket_name, delete_object_list)
     return errors
