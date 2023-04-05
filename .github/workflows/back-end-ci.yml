@@ -40,7 +40,7 @@ jobs:
         env:
           MONGO_INITDB_DATABASE: appStoreTestDB
       minio:
-        image: orionsolaris/minio:2023-04-04
+        image: orionsolaris/minio:2023-04-04 # using personal image that has extra cmd to run the minio s3 storage properly so tests will work
         ports:
           - 9000:9000
         env:
