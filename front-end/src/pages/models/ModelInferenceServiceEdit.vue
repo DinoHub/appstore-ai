@@ -306,6 +306,6 @@ const onCancel = () => {
 };
 
 onMounted(() => {
-  editInferenceServiceStore.loadFromInferenceService(modelId);
+  editInferenceServiceStore.loadFromInferenceService(modelId, userId);
 });
 </script>

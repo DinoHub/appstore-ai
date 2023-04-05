@@ -323,6 +323,7 @@ export const useCreationStore = defineStore('createModel', {
           cardPackage.experiment = {
             connector: this.experimentPlatform,
             experimentId: this.experimentID,
+            outputUrl: '',
           };
         }
 
@@ -432,6 +433,7 @@ export const useCreationStore = defineStore('createModel', {
           cardPackage.experiment = {
             connector: this.experimentPlatform,
             experimentId: this.experimentID,
+            outputUrl: '',
           };
         }
 

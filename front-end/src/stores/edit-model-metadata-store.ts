@@ -56,7 +56,7 @@ export const useEditMetadataStore = defineStore('editMetadata', {
             'modelOwner',
             'modelPOC',
             'plots',
-          ].includes(item),
+          ].includes(item)
       );
       if (this.tags.length == 0 || this.frameworks.length == 0) {
         return false;
@@ -92,17 +92,17 @@ export const useEditMetadataStore = defineStore('editMetadata', {
           this.experimentID,
           this.experimentPlatform,
           false, // returnPlots
-          true, // returnArtifacts
+          true // returnArtifacts
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks]),
+          new Set([...this.frameworks, ...metadata.frameworks])
         );
         this.artifacts = Array.from(
           new Set([
             ...this.artifacts,
             ...Object.values(metadata.artifacts ?? {}),
-          ]),
+          ])
         );
       } catch (error) {
         return Promise.reject(error);
@@ -116,11 +116,11 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       try {
         const metadata = await datasetStore.getDatasetById(
           this.datasetID,
-          this.datasetPlatform,
+          this.datasetPlatform
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.artifacts = Array.from(
-          new Set([...this.artifacts, ...(metadata.artifacts ?? [])]),
+          new Set([...this.artifacts, ...(metadata.artifacts ?? [])])
         );
       } catch (error) {
         return Promise.reject(error);
@@ -128,19 +128,15 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     },
     /**
      * Populate the store with data from existing model card
-     * TODO: Instead of retrieving userID from authStore, read
-     * the route and get the userID from the route
      * @param modelId Model ID to load metadata from
+     * @param userId Associated user ID that created said model
      */
-    async loadFromMetadata(modelId: string): Promise<void> {
+    async loadFromMetadata(modelId: string, userId: string): Promise<void> {
       // Get User ID
       const authStore = useAuthStore();
       const modelStore = useModelStore();
 
-      const original_data = await modelStore.getModelById(
-        authStore.user?.userId ?? '',
-        modelId,
-      );
+      const original_data = await modelStore.getModelById(userId, modelId);
 
       // Load the data
       this.tags = original_data.tags;
@@ -174,8 +170,9 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     /**
      * Submit the metadata to the backend
      * @param modelId ID of the model to update
+     * @param userId associated ID of creator of said model
      */
-    async submitEdit(modelId: string): Promise<void> {
+    async submitEdit(modelId: string, userId: string): Promise<void> {
       const authStore = useAuthStore();
       const modelStore = useModelStore();
       if (authStore.user?.name) {
@@ -201,19 +198,20 @@ export const useEditMetadataStore = defineStore('editMetadata', {
           experiment: {
             connector: this.experimentPlatform,
             experimentId: this.experimentID,
+            outputUrl: '',
           },
           dataset: {
             connector: this.datasetPlatform,
             datasetId: this.datasetID,
           },
           artifacts: Array.from(
-            new Set([this.mainModelArtifact, ...this.artifacts]),
+            new Set([this.mainModelArtifact, ...this.artifacts])
           ),
           owner: this.modelOwner,
           pointOfContact: this.modelPOC,
         },
-        authStore.user?.userId ?? '',
-        modelId,
+        userId,
+        modelId
       );
     },
   },

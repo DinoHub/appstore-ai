@@ -62,7 +62,7 @@
               :label="`${
                 experimentStore.experimentConnectors.find(
                   (connector) =>
-                    connector.value === editMetadataStore.experimentPlatform,
+                    connector.value === editMetadataStore.experimentPlatform
                 )?.label + ' ' ?? ''
               }Experiment ID`"
               autogrow
@@ -88,7 +88,7 @@
               :label="`${
                 datasetStore.datasetConnectors.find(
                   (connector) =>
-                    connector.value === editMetadataStore.datasetPlatform,
+                    connector.value === editMetadataStore.datasetPlatform
                 )?.label + ' ' ?? ''
               }Dataset ID`"
               autogrow
@@ -273,12 +273,12 @@
         icon="assignment"
         :done="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)',
+            '(Example Text to Replace)'
           ) == false
         "
         :error="
           editMetadataStore.markdownContent.includes(
-            '(Example Text to Replace)',
+            '(Example Text to Replace)'
           ) != false
         "
       >
@@ -294,7 +294,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.markdownContent.includes(
-                  '(Example Text to Replace)',
+                  '(Example Text to Replace)'
                 ) != false
               "
             >
@@ -330,12 +330,12 @@
         icon="leaderboard"
         :done="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) == false
         "
         :error="
           editMetadataStore.performanceMarkdown.includes(
-            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+            'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
           ) != false
         "
       >
@@ -358,7 +358,7 @@
               class="text-left q-ml-md q-mb-md text-italic text-negative"
               v-if="
                 editMetadataStore.performanceMarkdown.includes(
-                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!',
+                  'This is an example graph showcasing how the graph option works! Use the button on the toolbar to create new graphs. You can also edit preexisting graphs using the edit button!'
                 ) != false
               "
             >
@@ -552,6 +552,7 @@ import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import { useModelStore } from 'src/stores/model-store';
 import { useDatasetStore } from 'src/stores/dataset-store';
+console.log('HERE');
 
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
@@ -562,7 +563,7 @@ const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const modelId = route.params.modelId as string;
-const userId =  route.params.userId as string;
+const userId = route.params.userId as string;
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
@@ -577,7 +578,7 @@ const buttonDisable = ref(false);
 
 const saveEdit = () => {
   editMetadataStore
-    .submitEdit(modelId)
+    .submitEdit(modelId,userId)
     .then(
       // Redirect to model page
       () => {
@@ -589,7 +590,7 @@ const saveEdit = () => {
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
         router.push(`/model/${userId}/${modelId}`);
-      },
+      }
     )
     .catch(() => {
       Notify.create({
@@ -659,11 +660,11 @@ const addExpPlots = (store: typeof editMetadataStore) => {
             newPerformance += `
           <p></p><chart data-layout="${JSON.stringify(chart.layout).replace(
             /["]/g,
-            '&quot;',
+            '&quot;'
           )}" data-data="${JSON.stringify(chart.data).replace(
-            /["]/g,
-            '&quot;',
-          )}"></chart>
+              /["]/g,
+              '&quot;'
+            )}"></chart>
           <p></p>
         `;
           } catch (err) {
@@ -693,6 +694,6 @@ const addExpPlots = (store: typeof editMetadataStore) => {
 };
 
 onMounted(() => {
-  editMetadataStore.loadFromMetadata(modelId);
+  editMetadataStore.loadFromMetadata(modelId, userId);
 });
 </script>

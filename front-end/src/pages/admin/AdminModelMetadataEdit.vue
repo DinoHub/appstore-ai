@@ -572,10 +572,9 @@ const cancel = ref(false);
 const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
-
 const saveEdit = () => {
   editMetadataStore
-    .submitEdit(modelId)
+    .submitEdit(modelId,userId)
     .then(
       // Redirect to model page
       () => {
@@ -597,7 +596,6 @@ const saveEdit = () => {
       });
     });
 };
-
 const populateEditor = (store: typeof editMetadataStore) => {
   replaceContent.value = true;
   (store.markdownContent = `
@@ -620,7 +618,6 @@ const populateEditor = (store: typeof editMetadataStore) => {
   `),
     (popupContent.value = false);
 };
-
 const setStateFromExperimentDetails = () => {
   buttonDisable.value = true;
   loadingExp.value = true;
@@ -630,7 +627,6 @@ const setStateFromExperimentDetails = () => {
     loadingExp.value = false;
   });
 };
-
 const setStateFromDatasetDetails = () => {
   buttonDisable.value = true;
   loadingExp.value = true;
@@ -640,7 +636,6 @@ const setStateFromDatasetDetails = () => {
     loadingExp.value = false;
   });
 };
-
 // TODO: Extract this common function and put in external store
 const addExpPlots = (store: typeof editMetadataStore) => {
   buttonDisable.value = true;
@@ -689,8 +684,7 @@ const addExpPlots = (store: typeof editMetadataStore) => {
       });
   }
 };
-
 onMounted(() => {
-  editMetadataStore.loadFromMetadata(modelId);
+  editMetadataStore.loadFromMetadata(modelId, userId);
 });
 </script>

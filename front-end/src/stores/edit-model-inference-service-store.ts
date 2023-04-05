@@ -49,17 +49,18 @@ export const useEditInferenceServiceStore = defineStore(
        * the owner ID, we should get the owner ID from
        * the route params
        * @param modelId Model to load inference service from
+       * @param userId Associated owner ID that created said inference service
        * @returns Promise that resolves when data is loaded
        */
-      async loadFromInferenceService(modelId: string): Promise<void> {
+      async loadFromInferenceService(
+        modelId: string,
+        userId: string
+      ): Promise<void> {
         const authStore = useAuthStore();
         const modelStore = useModelStore();
         const inferenceServiceStore = useInferenceServiceStore();
 
-        const data = await modelStore.getModelById(
-          authStore.user?.userId ?? '',
-          modelId
-        );
+        const data = await modelStore.getModelById(userId, modelId);
         const serviceName = data.inferenceServiceName;
 
         if (!serviceName) {
@@ -114,7 +115,10 @@ export const useEditInferenceServiceStore = defineStore(
        * @param modelId  Model ID to update
        * @returns Promise that resolves when the service is updated
        */
-      async updateInferenceService(userId: string, modelId: string | undefined): Promise<void> {
+      async updateInferenceService(
+        userId: string,
+        modelId: string | undefined
+      ): Promise<void> {
         const inferenceServiceStore = useInferenceServiceStore();
         // Remove any existing preview service
         if (this.previewServiceName) {
