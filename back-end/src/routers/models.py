@@ -397,11 +397,12 @@ async def create_model_card_metadata(
     # Sanitize html
     card.markdown = await preprocess_html_post(card.markdown)
     card.performance = await preprocess_html_post(card.performance)
-    card.experiment.output_url = (
-        Experiment.from_connector(card.experiment.connector)
-        .get(exp_id=card.experiment.experiment_id)
-        .output_url
-    )
+    if card.experiment.connector != "" and card.experiment.connector is not None:
+        card.experiment.output_url = (
+            Experiment.from_connector(card.experiment.connector)
+            .get(exp_id=card.experiment.experiment_id)
+            .output_url
+        )
     card_dict: dict = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
@@ -465,11 +466,14 @@ async def update_model_card_metadata_by_id(
     # by alias => convert snake_case to camelCase
     card_dict = {k: v for k, v in card.dict(by_alias=True).items() if v is not None}
     if "experiment" in card_dict:
-        card_dict["experiment"]["outputUrl"] = (
-            Experiment.from_connector(card_dict["experiment"]["connector"])
-            .get(exp_id=card_dict["experiment"]["experimentId"])
-            .output_url
-        )
+        if card_dict["experiment"]["connector"] == "":
+            card_dict["experiment"]["outputUrl"] = None
+        else:
+            card_dict["experiment"]["outputUrl"] = (
+                Experiment.from_connector(card_dict["experiment"]["connector"])
+                .get(exp_id=card_dict["experiment"]["experimentId"])
+                .output_url
+            )
     if "markdown" in card_dict:
         # Upload base64 encoded image to S3
         card_dict["markdown"] = await preprocess_html_post(card_dict["markdown"])
