@@ -1,13 +1,11 @@
 image:
   repository: <REGISTRY>/ai-appstore/aas-backend
   pullPolicy: "IfNotPresent"
-  tag: "1.0.1"
 
 env:
-  PROD_FRONTEND_HOST: <REPLACE_ME>
+  PROD_FRONTEND_HOST: '["<REPLACE_ME>"]' # inner quote must be double quote to fit JSON format
   PROD_SECURE_COOKIES: <REPLACE_ME>
   PROD_SECRET_KEY: <REPLACE_ME>
-  PROD_ADMIN_SECRET_KEY: <REPLACE_ME>
   PROD_ALGORITHM: HS256
   PROD_MONGO_DSN: mongodb://aas-mongodb
   PROD_DB_NAME: <REPLACE_ME>
@@ -55,3 +53,8 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+resources:
+  limits:
+    cpu: 4
+    memory: 8Gi

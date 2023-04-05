@@ -14,6 +14,12 @@ def uncased_to_snake_case(string: str) -> str:
     return "_".join(string.lower().strip().split(" "))
 
 
+def sanitize_for_url(string: str) -> str:
+    url = ";,/?:@&=+$-_.!~*'()"
+    remove_unsafe_chars = str.maketrans(url, "_" * len(url))
+    return string.translate(remove_unsafe_chars)
+
+
 def k8s_safe_name(string: str) -> str:
     """Converts a string to a k8s safe name.
 
@@ -29,7 +35,9 @@ def k8s_safe_name(string: str) -> str:
         str: Output string
     """
     # Give some leeway to allow for adding suffixes (e.g -deployment)
-    return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix("-")[:45]
+    return re.sub(r"[^a-z0-9\-]", "", string.lower().strip()).removeprefix(
+        "-"
+    )[:62]
 
 
 def camel_case_to_snake_case(string: str) -> str:

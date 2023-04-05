@@ -9,17 +9,17 @@ from fastapi import (
     APIRouter,
     BackgroundTasks,
     Depends,
-    Request,
     HTTPException,
     Path,
+    Request,
     status,
 )
 from fastapi.encoders import jsonable_encoder
-from sse_starlette.sse import EventSourceResponse
 from kubernetes.client import ApiClient, AppsV1Api, CoreV1Api, CustomObjectsApi
 from kubernetes.client.rest import ApiException as K8sAPIException
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import DuplicateKeyError
+from sse_starlette.sse import EventSourceResponse
 from yaml import safe_load
 
 from ..config.config import config
@@ -39,6 +39,7 @@ from ..models.engine import (
 from ..models.iam import TokenData, UserRoles
 
 router = APIRouter(prefix="/engines", tags=["Inference Engines"])
+
 
 @router.get("/{service_name}/logs")
 async def get_inference_engine_service_logs(
@@ -101,13 +102,13 @@ async def get_inference_engine_service_logs(
                 if await request.is_disconnected():
                     break
                 logs = core_v1.read_namespaced_pod_log(
-                name=pod_name,
-                namespace=config.IE_NAMESPACE,
-                pretty=True
-            )
+                    name=pod_name, namespace=config.IE_NAMESPACE, pretty=True
+                )
                 yield logs
                 await asyncio.sleep(5)
+
         return EventSourceResponse(event_streamer())
+
 
 @router.patch("/{service_name}/scale/{replicas}")
 async def scale_inference_engine_deployments(
@@ -159,6 +160,7 @@ async def scale_inference_engine_deployments(
 @router.get("/{service_name}", response_model=InferenceEngineService)
 async def get_inference_engine_service(
     service_name: str,
+    k8s_client: ApiClient = Depends(get_k8s_client),
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ) -> Dict:
     """Get Inference Engine Service
@@ -180,12 +182,63 @@ async def get_inference_engine_service(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Service not found"
         )
+    try:
+        if "protocol" not in service:
+            protocol = config.IE_DEFAULT_PROTOCOL
+        else:
+            protocol = service["protocol"]
+        path = service["path"]
+        # Deploy Service on K8S
+        with k8s_client as client:
+            # Get KNative Serving Ext Ip
+            core_api = CoreV1Api(client)
+            service_backend = config.IE_SERVICE_TYPE or ServiceBackend.EMISSARY
+            if config.IE_DOMAIN:
+                host = config.IE_DOMAIN
+            else:
+                if service_backend == ServiceBackend.KNATIVE:
+                    ingress_name = "kourier"
+                    ingress_namespace = "kourier-system"
+                elif service_backend == ServiceBackend.EMISSARY:
+                    ingress_name = "emissary-ingress"
+                    ingress_namespace = "emissary"
+                else:
+                    if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
+                        ingress_name = config.IE_INGRESS_NAME
+                        ingress_namespace = config.IE_INGRESS_NAMESPACE
+                    else:
+                        raise HTTPException(
+                            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                            detail="No Ingress specified",
+                        )
+                ingress = core_api.read_namespaced_service(
+                    name=ingress_name, namespace=ingress_namespace
+                )
+                host = ingress.status.load_balancer.ingress[0].ip
+        # Generate service url
+        if service_backend == ServiceBackend.EMISSARY:
+            url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
+        elif service_backend == ServiceBackend.KNATIVE:
+            url = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
+            if not config.IE_DOMAIN:
+                # use sslip dns service to get a hostname for the service
+                url += ".sslip.io"
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Invalid Service Backend",
+            )
+        service["inferenceUrl"] = url
+    except K8sAPIException as err:
+        print(f"Error getting service url: {err}")
+        print("Defaulting to inference URL specified in database")
     return service
 
 
 @router.get("/{service_name}/status", response_model=InferenceServiceStatus)
 async def get_inference_engine_service_status(
-    service_name: str, k8s_client: ApiClient = Depends(get_k8s_client),
+    service_name: str,
+    k8s_client: ApiClient = Depends(get_k8s_client),
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ) -> Dict:
     """Get status of an inference service. This is typically
@@ -212,7 +265,7 @@ async def get_inference_engine_service_status(
         service = await db["services"].find_one({"serviceName": service_name})
         # Get service backend type
         if "backend" in service:
-            service_backend =  service["backend"]
+            service_backend = service["backend"]
         else:
             service_backend = config.IE_SERVICE_TYPE
         with k8s_client as client:
@@ -364,8 +417,9 @@ async def create_inference_engine_service(
     if not user.user_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
     service_name = k8s_safe_name(
-        f"{user.user_id}-{service.model_id}-{uuid4()}"
-    )
+        f"{user.user_id}-{service.model_id}"[:40] + f"-{uuid4()}"[:5]
+    )  # Limit total length to 45 characters, while avoiding complete truncation
+    # of uuid4
     if not config.IE_NAMESPACE:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -546,13 +600,20 @@ async def delete_inference_engine_service(
     db=Depends(get_db),
     user: TokenData = Depends(get_current_user),
 ):
-    """Delete a deployed inference engine from the K8S cluster.
+    """
+    Delete a deployed inference engine from the K8S cluster.
 
-    :param service_name: Name of KNative service, defaults to Path(description="Name of KService to Delete")
-    :type service_name: str, optional
-    :param k8s_client: Python K8S Client, defaults to Depends(get_k8s_client)
-    :type k8s_client: ApiClient, optional
-    :raises HTTPException: 500 Internal Server Error if deletion fails
+    Args:
+        service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User details. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error deleting the service
+        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+        HTTPException: 403 Forbidden if user does not have owner access to KService
     """
 
     ## Get User ID from Request
@@ -575,42 +636,67 @@ async def delete_inference_engine_service(
             # Get the service type
             try:
                 service_type: ServiceBackend = existing_service["backend"]
-            except AttributeError:
+            except TypeError:
                 print("Existing service not found")
                 service_type = config.IE_SERVICE_TYPE
             await db["services"].delete_one({"serviceName": service_name})
-
             with k8s_client as client:
                 # Create instance of API class
                 try:
                     if service_type == ServiceBackend.KNATIVE:
                         api = CustomObjectsApi(client)
-                        api.delete_namespaced_custom_object(
-                            group="serving.knative.dev",
-                            version="v1",
-                            plural="services",
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name,
-                        )
+                        try:
+                            api.delete_namespaced_custom_object(
+                                group="serving.knative.dev",
+                                version="v1",
+                                plural="services",
+                                namespace=config.IE_NAMESPACE,
+                                name=service_name,
+                            )
+                        except K8sAPIException as err:
+                            if err.status == 404:
+                                pass
+                            else:
+                                raise err
                     elif service_type == ServiceBackend.EMISSARY:
                         # Delete service, mapping, and deployment
                         app_api = AppsV1Api(client)
                         core_api = CoreV1Api(client)
                         custom_api = CustomObjectsApi(client)
-                        core_api.delete_namespaced_service(
-                            namespace=config.IE_NAMESPACE, name=service_name
-                        )
-                        custom_api.delete_namespaced_custom_object(
-                            group="getambassador.io",
-                            version="v2",
-                            plural="mappings",
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name + "-ingress",
-                        )
-                        app_api.delete_namespaced_deployment(
-                            namespace=config.IE_NAMESPACE,
-                            name=service_name + "-deployment",
-                        )
+
+                        try:
+                            core_api.delete_namespaced_service(
+                                namespace=config.IE_NAMESPACE,
+                                name=service_name,
+                            )
+                        except K8sAPIException as err:
+                            if err.status == 404:
+                                pass
+                            else:
+                                raise err
+                        try:
+                            custom_api.delete_namespaced_custom_object(
+                                group="getambassador.io",
+                                version="v2",
+                                plural="mappings",
+                                namespace=config.IE_NAMESPACE,
+                                name=service_name + "-ingress",
+                            )
+                        except K8sAPIException as err:
+                            if err.status == 404:
+                                pass
+                            else:
+                                raise err
+                        try:
+                            app_api.delete_namespaced_deployment(
+                                namespace=config.IE_NAMESPACE,
+                                name=service_name + "-deployment",
+                            )
+                        except K8sAPIException as err:
+                            if err.status == 404:
+                                pass
+                            else:
+                                raise err
                 except (K8sAPIException, HTTPError) as err:
                     raise HTTPException(
                         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -639,11 +725,22 @@ async def update_inference_engine_service(
 ):
     """Update an existing inference engine inside the K8S cluster
 
-    :param service: Configuration (service name and Image URI) of updated Inference Engine
-    :type service: InferenceEngineService
-    :param k8s_client: Python K8S client, defaults to Depends(get_k8s_client)
-    :type k8s_client: ApiClient, optional
-    :raises HTTPException: 500 Internal Server Error if failed to update
+    Args:
+        service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        service (UpdateInferenceEngineService) : Configuration (service name and Image URI) of updated Inference Engine
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        user (TokenData, optional): User details. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error updating the service
+        HTTPException: 500 Internal Server Error if the API has no access to the K8S cluster
+        HTTPException: 404 Not Found if KService with given name is not found
+        HTTPException: 403 Forbidden if user does not have owner access to KService
+
+    Returns:
+        Dict: Service details
     """
     # Create Deployment Template
     tasks.add_task(
@@ -891,10 +988,22 @@ async def restore_inference_engine_service(
     2. Call the delete endpoint to delete the service
     3. Call the create endpoint to create the service using the information from the database
 
-    TODO: Refactor so that I don't have to repeat code. Preferably factor out
-    stuff into a controller submodule (split up the code for adding to mongodb and k8s)
-    to allow router to simply compose functions together for better reusability of code
+    Args:
+        service_name (str, optional): Name of KNative service, defaults to Path(description="Name of KService to Delete")
+        mongodb (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+        k8s_client (ApiClient, optional): K8S client. Defaults to Depends(get_k8s_client).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error restoring service
+
+    Returns:
+        Dict: Details on status of service restoration
     """
+    # TODO: Refactor so that I don't have to repeat code. Preferably factor out
+    # stuff into a controller submodule (split up the code for adding to mongodb and k8s)
+    # to allow router to simply compose functions together for better reusability of code
+
     # Get service information from database
     db, _ = mongodb
 
@@ -1001,3 +1110,30 @@ async def restore_inference_engine_service(
                 detail="Invalid service type",
             )
     return {"message": "Service restored", "service": service}
+
+
+@router.delete("/admin/clear", status_code=status.HTTP_204_NO_CONTENT)
+async def wipe_orphaned_services(
+    user: TokenData = Depends(get_current_user),
+):
+    """Call to delete orphaned inference services
+
+    Args:
+        user (TokenData, optional): User details and info. Defaults to Depends(get_current_user).
+
+    Raises:
+        HTTPException: 500 Internal Server Error if there is an error wiping orphaned services
+    """
+    try:
+        if user.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="User does not have sufficient privilege to clear orphan services!",
+            )
+        await delete_orphan_services()
+        return
+    except Exception as err:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error when trying to wipe orphaned services: {err}",
+        )

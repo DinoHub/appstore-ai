@@ -25,6 +25,8 @@ const toggleDarkMode = () => {
 onMounted(() => {
   // Check localStorage for theme
   // TODO: Move to a Settings pinia store when we have more settings
+  // TODO: make settings account specific and not browser specific
+  // to keep track of user's preferences
   const theme = localStorage.getItem('theme');
   $q.dark.set(theme === 'dark');
   if (theme === 'dark') {

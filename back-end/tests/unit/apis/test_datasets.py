@@ -52,7 +52,9 @@ def test_get_all_datasets(
 def test_search_datasets(
     query: Dict, expected_ids: Set[str], client: TestClient
 ):
-    response = client.post("/datasets/search", json=query)
+    response = client.post(
+        "/datasets/search", json=query, params={"connector": "clearml"}
+    )
     assert response.status_code == status.HTTP_200_OK
 
     results = response.json()
@@ -65,16 +67,20 @@ def test_search_datasets(
 
 @pytest.mark.parametrize("dataset_id", ["e-f581e44aa3ee42f68206f3ec5d4b1ebc"])
 def test_get_dataset_by_id(dataset_id: str, client: TestClient):
-    response = client.get(f"/datasets/{dataset_id}")
+    response = client.get(
+        f"/datasets/{dataset_id}", params={"connector": "clearml"}
+    )
     assert response.status_code == status.HTTP_200_OK
     response_json = response.json()
 
-    for key in ("id", "name", "project", "tags", "files"):
+    for key in ("id", "name", "project", "tags", "files", "artifacts"):
         assert key in response_json
 
 
 def test_get_non_existent_dataset(client: TestClient):
-    response = client.get("/datasets/invalid_dataset")
+    response = client.get(
+        "/datasets/invalid_dataset", params={"connector": "clearml"}
+    )
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -86,6 +92,7 @@ def test_create_dataset(file_path: str, client: TestClient):
         data={
             "dataset_name": "dataset_42",
             "project_name": "test_create_dataset",
+            "connector": "clearml",
         },
         files={"file": open(Path(__file__).parent.joinpath(file_path), "rb")},
     )

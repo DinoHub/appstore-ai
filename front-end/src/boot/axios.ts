@@ -1,6 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-
-import { Cookies } from 'quasar';
+import { Notify } from 'quasar';
 import { boot } from 'quasar/wrappers';
 import { useAuthStore } from 'src/stores/auth-store';
 
@@ -34,6 +33,14 @@ api.interceptors.response.use(
 
       await authStore.refresh();
       return api(originalRequest);
+    }
+    if (error.response?.status === 403) {
+      const authStore = useAuthStore();
+      Notify.create({
+        type: 'warning',
+        message: 'This account does not have sufficient privileges',
+      });
+      return authStore.logout();
     }
     return Promise.reject(error);
   }

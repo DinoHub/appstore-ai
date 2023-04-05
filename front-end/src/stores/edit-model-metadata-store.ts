@@ -2,11 +2,13 @@ import { Chart } from 'src/components/models';
 import { defineStore } from 'pinia';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
-import { useModelStore } from './model-store';
+import { Artifact, useModelStore } from './model-store';
+import { useDatasetStore } from './dataset-store';
 
 export const useEditMetadataStore = defineStore('editMetadata', {
   state: () => ({
     step: 1 as number,
+    artifacts: [] as Artifact[],
     tags: [] as string[],
     frameworks: [] as string[],
     modelPath: '' as string,
@@ -27,6 +29,17 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     plots: [] as Chart[],
   }),
   getters: {
+    mainModelArtifact(): Artifact {
+      return {
+        name: 'Model',
+        artifactType: 'mainModel',
+        url: this.modelPath,
+      };
+    },
+    /**
+     * Checks if model card is missing any required fields
+     * @returns True if all metadata is valid
+     */
     metadataValid(): boolean {
       const keys = Object.keys(this).filter(
         (item) =>
@@ -65,6 +78,10 @@ export const useEditMetadataStore = defineStore('editMetadata', {
     },
   },
   actions: {
+    /**
+     * Attempt to populate the store with data from the experiment
+     * @returns Promise that resolves when data is loaded
+     */
     async loadMetadataFromExperiment(): Promise<void> {
       if (!this.experimentID || !this.experimentPlatform) {
         return Promise.reject();
@@ -74,15 +91,47 @@ export const useEditMetadataStore = defineStore('editMetadata', {
         const metadata = await experimentStore.getExperimentByID(
           this.experimentID,
           this.experimentPlatform,
+          false, // returnPlots
+          true, // returnArtifacts
         );
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
           new Set([...this.frameworks, ...metadata.frameworks]),
         );
+        this.artifacts = Array.from(
+          new Set([
+            ...this.artifacts,
+            ...Object.values(metadata.artifacts ?? {}),
+          ]),
+        );
       } catch (error) {
         return Promise.reject(error);
       }
     },
+    async loadMetadataFromDataset(): Promise<void> {
+      if (!this.datasetID || !this.datasetPlatform) {
+        return Promise.reject();
+      }
+      const datasetStore = useDatasetStore();
+      try {
+        const metadata = await datasetStore.getDatasetById(
+          this.datasetID,
+          this.datasetPlatform,
+        );
+        this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
+        this.artifacts = Array.from(
+          new Set([...this.artifacts, ...(metadata.artifacts ?? [])]),
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    /**
+     * Populate the store with data from existing model card
+     * TODO: Instead of retrieving userID from authStore, read
+     * the route and get the userID from the route
+     * @param modelId Model ID to load metadata from
+     */
     async loadFromMetadata(modelId: string): Promise<void> {
       // Get User ID
       const authStore = useAuthStore();
@@ -96,7 +145,6 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       // Load the data
       this.tags = original_data.tags;
       this.frameworks = original_data.frameworks;
-      // TODO: what to do with modelPath?
       this.experimentPlatform = original_data.experiment?.connector ?? '';
       this.experimentID = original_data.experiment?.experimentId ?? '';
       this.datasetPlatform = original_data.dataset?.connector ?? '';
@@ -117,13 +165,17 @@ export const useEditMetadataStore = defineStore('editMetadata', {
       // Look through artifacts to find model
       // TODO: Replace modelPath with something less hard-coded
       for (const artifact of original_data.artifacts) {
-        if (artifact.artifactType === 'model') {
+        if (artifact.artifactType === 'mainModel') {
           this.modelPath = artifact.url;
           break;
         }
       }
     },
-    async submitEdit(modelId: string) {
+    /**
+     * Submit the metadata to the backend
+     * @param modelId ID of the model to update
+     */
+    async submitEdit(modelId: string): Promise<void> {
       const authStore = useAuthStore();
       const modelStore = useModelStore();
       if (authStore.user?.name) {
@@ -154,14 +206,9 @@ export const useEditMetadataStore = defineStore('editMetadata', {
             connector: this.datasetPlatform,
             datasetId: this.datasetID,
           },
-          artifacts: [
-            {
-              artifactType: 'model',
-              url: this.modelPath,
-              name: 'Model',
-              timestamp: new Date().toISOString(),
-            },
-          ],
+          artifacts: Array.from(
+            new Set([this.mainModelArtifact, ...this.artifacts]),
+          ),
           owner: this.modelOwner,
           pointOfContact: this.modelPOC,
         },

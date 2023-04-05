@@ -7,7 +7,7 @@ from shutil import unpack_archive
 from typing import Dict, List, Optional
 
 import filetype
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, status
 from fastapi.exceptions import HTTPException
 
 from ..config.config import config
@@ -21,7 +21,6 @@ from ..internal.dependencies.file_validator import (
 )
 from ..models.dataset import Connector, DatasetModel, FindDatasetModel
 
-DATA_CONNECTOR = Connector.CLEARML
 ACCEPTED_CONTENT_TYPES = [
     "application/zip",
     "application/x-tar",
@@ -39,36 +38,55 @@ file_validator = ValidateFileUpload(
 router = APIRouter(prefix="/datasets", tags=["Datasets"])
 
 
+# TODO: Convert to GET request
 @router.post(
     "/search",
     response_model=List[DatasetModel],
     response_model_exclude={"files", "default_remote"},
 )
-def search_datasets(query: FindDatasetModel) -> List[Dict]:
+def search_datasets(
+    query: FindDatasetModel,
+    connectors: Optional[List[Connector]] = Query(
+        default=None, alias="connectors[]"
+    ),
+) -> List[Dict]:
     """Search endpoint for any datasets stored in
     the current data connector
 
     Args:
         query (FindDatasetModel): Search query
+        connectors (Optional[List[Connector]]): Data connector.
+            If not specified
 
     Returns:
         List[Dict]: List of dataset metadata
     """
-    datasets = Dataset.from_connector(DATA_CONNECTOR).list_datasets(
-        project=query.project,
-        partial_name=query.name,
-        tags=query.tags,
-        ids=query.id,
-    )
+    datasets = []
+    if connectors is None:
+        connectors = [
+            connector.value for connector in Connector if connector.value != ""
+        ]
+    for connector in connectors:
+        datasets.extend(
+            Dataset.from_connector(connector).list_datasets(
+                project=query.project,
+                partial_name=query.name,
+                tags=query.tags,
+                ids=query.id,
+            )
+        )
     return datasets
 
 
 @router.get("/{dataset_id}", response_model=DatasetModel)
-async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
+async def get_dataset_by_id(
+    dataset_id: str, connector: Connector = Query(...)
+) -> DatasetModel:
     """Get a dataset from it's ID
 
     Args:
         dataset_id (str): ID of dataset (e.g ClearML Dataset ID)
+        connector (Connector): Data connector type
 
     Raises:
         HTTPException: 404 Not Found if dataset not found
@@ -77,7 +95,7 @@ async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
         DatasetModel: Dataset with that ID
     """
     try:
-        dataset = Dataset.from_connector(DATA_CONNECTOR).get(id=dataset_id)
+        dataset = Dataset.from_connector(connector).get(id=dataset_id)
     except ValueError as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -91,6 +109,7 @@ async def get_dataset_by_id(dataset_id: str) -> DatasetModel:
         files=dataset.file_entries,
         default_remote=dataset.default_remote,
         created=None,
+        artifacts=dataset.artifacts,
     )
 
 
@@ -104,6 +123,7 @@ async def create_dataset(
     file: UploadFile = File(...),
     dataset_name: str = Form(...),
     project_name: str = Form(...),
+    connector: Connector = Form(...),
     output_url: Optional[str] = Form(default=None),
 ) -> DatasetModel:
     """Create a new dataset, based on a dataset file uploaded to it
@@ -112,6 +132,7 @@ async def create_dataset(
         file (UploadFile, optional): Archived dataset (e.g zip). Defaults to File(...).
         dataset_name (str, optional): Name of dataset. Defaults to Form(...).
         project_name (str, optional): Name of project to uplaod to. Defaults to Form(...).
+        connector(Connector): Data connector to use.
         output_url (Optional[str], optional): Remote URL to upload file to. Defaults to Form(default=None).
 
     Raises:
@@ -183,7 +204,7 @@ async def create_dataset(
         finally:
             # this will still run even if HTTPException is raised
             remove(path)  # remove zipfile so it is not uploaded
-        dataset = Dataset.from_connector(DATA_CONNECTOR).create(
+        dataset = Dataset.from_connector(connector).create(
             name=dataset_name,
             project=project_name,
         )

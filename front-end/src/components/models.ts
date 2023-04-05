@@ -20,6 +20,7 @@ export interface Pagination {
 
 export interface SearchFilter {
   title?: string;
+  genericSearchText?: string;
   creator?: string;
   creatorUserIdPartial?: string;
   tasks?: string[] | LocationQueryValue[];
@@ -33,6 +34,12 @@ export interface UsersSearchFilter {
   privilege?: number;
   dateCreatedRange?: string[];
   dateModifiedRange?: string[];
+}
+
+export interface ExportsSearchFilter {
+  userId?: string;
+  timeInitiatedRange?: string[];
+  timeCompletedRange?: string[];
 }
 
 export interface FormOptionValue {

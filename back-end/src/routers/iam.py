@@ -9,6 +9,7 @@ from pymongo import errors as pyerrs
 
 from ..internal.auth import check_is_admin, get_password_hash
 from ..internal.dependencies.mongo_client import get_db
+from ..internal.utils import sanitize_for_url, uncased_to_snake_case
 from ..models.iam import UserInsert, UserPage, UserRemoval, UsersEdit
 
 # use openssl rand -hex 32 to generate secret key
@@ -35,12 +36,12 @@ async def add_user(
     """
     db, mongo_client = db
     try:
-        item.password = get_password_hash(item.password)
+        item.password = get_password_hash(item.password.get_secret_value())
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 user = await db["users"].insert_one(
                     {
-                        "userId": item.user_id,
+                        "userId": uncased_to_snake_case(item.user_id),
                         "name": item.name,
                         "password": item.password,
                         "adminPriv": item.admin_priv,
@@ -91,9 +92,7 @@ async def delete_user(
     try:
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
-                await db["users"].delete_many(
-                    {"userId": {"$in": userid.users}}
-                )
+                await db["users"].delete_many({"userId": {"$in": userid.users}})
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
@@ -109,9 +108,20 @@ async def update_user(
     user: UserInsert,
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ):
+    """Edit a single user from the database
+
+    Args:
+        user (UserInsert): User to edit
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 404 if user not found
+        HTTPException: 422 if value error occurs
+    """
     db, mongo_client = db
     try:
-        user.password = get_password_hash(user.password)
+        user.password = get_password_hash(user.password.get_secret_value())
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 await db["users"].update_one(
@@ -146,6 +156,18 @@ async def update_many_user(
     user: UsersEdit,
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db),
 ):
+    """Bulk edit many users' privileges in the database
+
+    Args:
+        user (UsersEdit): Users to edit
+        db (Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient], optional): MongoDB connection.
+            Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: 400 if privilege to change to was not defined
+        HTTPException: 404 if users not found
+        HTTPException: 422 if value error occurs
+    """
     db, mongo_client = db
     try:
         if user.priv is None:

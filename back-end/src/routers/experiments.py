@@ -47,6 +47,7 @@ def get_experiment(
         data = {
             "id": exp.id,
             "name": exp.exp_name,
+            "output_url": exp.output_url,
             "project_name": exp.project_name,
             "tags": exp.tags,
             "frameworks": list(frameworks),
@@ -64,7 +65,6 @@ def get_experiment(
             data["artifacts"] = {}
             data["artifacts"].update(exp.artifacts)
             data["artifacts"].update(exp.models)
-
         return data
     except ValueError as err:
         logging.error(err)
@@ -94,6 +94,7 @@ def clone_experiment(
     Returns:
         Dict: Details of cloned experiment
     """
+    # TODO: Use this for transfer learning if required?
     exp = Experiment.from_connector(connector).get(exp_id=item.id)
     if item.clone_name is None or item.clone_name == "":
         new_exp = exp.clone_self(clone_name=f"Clone of {exp.exp_name}")

@@ -5,12 +5,12 @@ on:
     branches:
       - main
     paths:
-      - 'back-end/**'
+      - "back-end/**"
   push:
     branches:
       - main
     paths:
-      - 'back-end/**'
+      - "back-end/**"
   workflow_dispatch:
 
 env:
@@ -36,9 +36,11 @@ jobs:
       mongodb:
         image: mongo
         ports:
-          - 4051:27017
+          - 27017:27017
+        env:
+          MONGO_INITDB_DATABASE: appStoreTestDB
       minio:
-        image: lazybit/minio
+        image: orionsolaris/minio:2023-04-04
         ports:
           - 9000:9000
         env:

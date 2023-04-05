@@ -1,11 +1,10 @@
 """Data models for model cards."""
-from datetime import datetime
 from typing import List, Optional
 
 from bson import ObjectId
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
-from ..internal.utils import to_camel_case
+from ..internal.utils import sanitize_for_url, to_camel_case
 from .common import Artifact, PyObjectId
 from .dataset import LinkedDataset
 from .experiment import LinkedExperiment
@@ -14,7 +13,7 @@ from .experiment import LinkedExperiment
 class ModelCardModelIn(BaseModel):  # Input spec
     """Request model for creating a model card."""
 
-    title: str
+    title: str = Field(max_length=50)
     markdown: str
     performance: str
     task: str  # a task is a tag
@@ -51,8 +50,20 @@ class ModelCardModelDB(ModelCardModelIn):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     creator_user_id: str  # to be dynamically put in by FastAPI
     model_id: str  # to be generated on back-end
-    created: datetime
-    last_modified: datetime
+    created: str
+    last_modified: str
+
+    @validator("model_id")
+    def sanitize_model_name(cls, v: str) -> str:
+        """Generates a URL safe model id if one is not provided.
+
+        Args:
+            v (str): The model name.
+
+        Returns:
+            str: Generated model id.
+        """
+        return sanitize_for_url(v)
 
     class Config:
         """Pydantic config to allow creation of data model
@@ -71,7 +82,7 @@ class UpdateModelCardModel(BaseModel):
     All fields are optional, to allow for partial updates.
     """
 
-    title: Optional[str] = None
+    title: Optional[str] = Field(default=None, max_length=50)
     description: Optional[str] = None
     explanation: Optional[str] = None
     usage: Optional[str] = None
@@ -113,15 +124,17 @@ class SearchModelResponse(BaseModel):
     """Response model for searching model cards."""
 
     results: List
-    total: int
+    total: int = Field(..., ge=0)
 
 
-class deleteCard(BaseModel):
+class ModelCardCompositeKey(BaseModel):
+    """General model for the composite key for models of id and creator id"""
 
     model_id: str
     creator_user_id: str
 
 
-class deleteCardPackage(BaseModel):
+class ModelCardPackage(BaseModel):
+    """Model for compiling list of composite keys of the models"""
 
-    card_package: List[deleteCard]
+    card_package: List[ModelCardCompositeKey]

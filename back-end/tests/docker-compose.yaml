@@ -1,0 +1,48 @@
+name: back-end-tests
+services:
+  back-end:
+    # use this command: poetry run pytest --cov-report xml --cov=./ tests/
+    build:
+      context: "../."
+      dockerfile: Dockerfile.test
+    env_file:
+      - "../src/config/.env"
+    environment:
+      - TEST_MINIO_DSN=minio:9000
+      - TEST_MONGO_DSN=mongodb://mongodb:27017
+      - TEST_FIRST_SUPERUSER_ID=testingASuperMan
+      - TEST_FIRST_SUPERUSER_PASSWORD=ultraP@ss123
+      - TEST_IE_NAMESPACE=inference-engine
+      - TEST_DB_NAME=appStoreTestDB
+      - TEST_MINIO_API_ACCESS_KEY=aas-minio-uploader
+      - TEST_MINIO_API_SECRET_KEY=TempPassword1234
+      - TEST_MINIO_BUCKET_NAME=model-zoo
+      - TEST_CLEARML_WEB_HOST=https://app.clear.ml
+      - TEST_CLEARML_API_HOST=https://api.clear.ml
+      - TEST_CLEARML_FILES_HOST=https://files.clear.ml
+      # - TEST_CLEARML_API_ACCESS_KEY=<REPLACE> # uncomment this and add your own keys 
+      # - TEST_CLEARML_API_SECRET_KEY=<REPLACE> # uncomment this and add your own keys 
+    depends_on:
+      - mongodb
+    volumes:
+      - ../.:/app
+  mongodb:
+    image: mongo
+    environment:
+      - MONGO_INITDB_DATABASE=appStoreTestDB
+  minio:
+    image: orionsolaris/minio:2023-04-04
+    environment:
+      - MINIO_ROOT_USER=aas-minio-uploader
+      - MINIO_ROOT_PASSWORD=TempPassword1234
+
+    # image: quay.io/minio/minio
+    # environment:
+    #   - MINIO_ROOT_USER=aas-minio-uploader
+    #   - MINIO_ROOT_PASSWORD=TempPassword1234
+    # command: server /data --console-address ":9001"
+
+networks:
+  backend-tests:
+    driver: bridge
+    name: backend-tests

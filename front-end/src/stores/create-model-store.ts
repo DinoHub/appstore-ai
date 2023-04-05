@@ -1,6 +1,6 @@
 import { Chart, EnvField } from 'src/components/models';
 import { defineStore } from 'pinia';
-import { ModelCard, useModelStore } from './model-store';
+import { Artifact, ModelCard, useModelStore } from './model-store';
 import { Notify } from 'quasar';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
@@ -9,15 +9,17 @@ import {
   InferenceServiceStatus,
 } from './inference-service-store';
 import { useUploadStore } from './upload-store';
+import { useDatasetStore } from './dataset-store';
 
 export const useCreationStore = defineStore('createModel', {
   state: () => {
     return {
       step: 1 as number,
+      artifacts: [] as Artifact[],
       tags: [] as string[],
       frameworks: [] as string[],
       modelPath: '' as string,
-      experimentPlatform: '' as string, // todo: enum
+      experimentPlatform: '' as string, // todo: type as enum
       experimentID: '' as string,
       datasetPlatform: '' as string,
       datasetID: '' as string,
@@ -102,6 +104,18 @@ export const useCreationStore = defineStore('createModel', {
     };
   },
   getters: {
+    mainModelArtifact(): Artifact {
+      return {
+        name: 'Model',
+        artifactType: 'mainModel',
+        url: this.modelPath,
+      };
+    },
+    /**
+     * A validator for the model card metadata when there is supposed to be a video instead of service
+     * TODO: have a single validator function, but within the function, check if there is a video or service
+     * @returns {boolean} True if the model card metadata is valid, false otherwise
+     */
     noServiceMetadataValid(): boolean {
       // Redundant?
       const keys = Object.keys(this).filter((item) =>
@@ -118,7 +132,7 @@ export const useCreationStore = defineStore('createModel', {
           'modelUsage',
           'modelLimitations',
           'exampleVideo',
-        ].includes(item),
+        ].includes(item)
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -140,6 +154,11 @@ export const useCreationStore = defineStore('createModel', {
       }
       return true;
     },
+    /**
+     * A validator for the model card metadata when there is supposed to be a service instead of video
+     * TODO: have a single validator function, but within the function, check if there is a video or service
+     * @returns {boolean} True if the model card metadata is valid, false otherwise
+     */
     metadataValid(): boolean {
       const keys = Object.keys(this).filter((item) =>
         [
@@ -154,7 +173,7 @@ export const useCreationStore = defineStore('createModel', {
           'modelExplain',
           'modelUsage',
           'modelLimitations',
-        ].includes(item),
+        ].includes(item)
       );
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
@@ -176,6 +195,10 @@ export const useCreationStore = defineStore('createModel', {
       }
       return true;
     },
+    /**
+     * Remove duplicates environment variables from inference service
+     * @returns {Record<string, string>} A unique set of environment variables
+     */
     uniqueEnv(): Record<string, string> {
       const uniqueEnvs: Record<string, string> = {};
       this.env.forEach(({ key, value }) => {
@@ -185,6 +208,10 @@ export const useCreationStore = defineStore('createModel', {
     },
   },
   actions: {
+    /**
+     * Based on experiment ID and platform, load the metadata from the experiment
+     * @returns {Promise<void>} A promise that resolves when the metadata is loaded
+     */
     async loadMetadataFromExperiment(): Promise<void> {
       if (!this.experimentID || !this.experimentPlatform) {
         return Promise.reject();
@@ -194,15 +221,51 @@ export const useCreationStore = defineStore('createModel', {
         const metadata = await experimentStore.getExperimentByID(
           this.experimentID,
           this.experimentPlatform,
+          false,
+          true
         );
+        // Get all tags and frameworks from the experiment
+        // use Set to remove duplicates
         this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
         this.frameworks = Array.from(
-          new Set([...this.frameworks, ...metadata.frameworks]),
+          new Set([...this.frameworks, ...metadata.frameworks])
+        );
+        // Get all artifacts from the experiment
+        this.artifacts = Array.from(
+          new Set([
+            ...this.artifacts,
+            ...Object.values(metadata.artifacts ?? {}),
+          ])
         );
       } catch (error) {
         return Promise.reject(error);
       }
     },
+    async loadMetadataFromDataset(): Promise<void> {
+      if (!this.datasetID || !this.datasetPlatform) {
+        return Promise.reject();
+      }
+      const datasetStore = useDatasetStore();
+      try {
+        const metadata = await datasetStore.getDatasetById(
+          this.datasetID,
+          this.datasetPlatform
+        );
+        this.tags = Array.from(new Set([...this.tags, ...metadata.tags]));
+        // Get dataset files as artifacts
+        this.artifacts = Array.from(
+          new Set([...this.artifacts, ...(metadata.artifacts ?? [])])
+        );
+      } catch (error) {
+        return Promise.reject(error);
+      }
+    },
+    /**
+     * Launch a inference service for the purpose of allowing the model
+     * owner to preview the inference service
+     * @param modelId model ID to launch preview service for
+     * @returns {Promise<void>} A promise that resolves when the preview service is launched
+     */
     async launchPreviewService(modelId: string): Promise<void> {
       const inferenceServiceStore = useInferenceServiceStore();
       try {
@@ -212,7 +275,7 @@ export const useCreationStore = defineStore('createModel', {
             this.imageUri,
             this.numGpus,
             this.containerPort,
-            this.uniqueEnv,
+            this.uniqueEnv
           );
         this.previewServiceUrl = inferenceUrl;
         this.previewServiceName = serviceName; // save so we know what to clean up
@@ -222,7 +285,11 @@ export const useCreationStore = defineStore('createModel', {
         return Promise.reject(error);
       }
     },
-    async createModel() {
+    /**
+     * Submit a model card to the backend
+     * @returns {Promise<{ modelId: string, creatorUserId: string }>} A promise that resolves when the model is created
+     */
+    async createModel(): Promise<{ modelId: string; creatorUserId: string }> {
       try {
         const authStore = useAuthStore();
 
@@ -243,13 +310,9 @@ export const useCreationStore = defineStore('createModel', {
           pointOfContact: this.modelPOC,
           markdown: this.markdownContent,
           performance: this.performanceMarkdown,
-          artifacts: [
-            {
-              name: 'model',
-              artifactType: 'model',
-              url: this.modelPath,
-            },
-          ],
+          artifacts: Array.from(
+            new Set([this.mainModelArtifact, ...this.artifacts])
+          ),
           description: this.modelDesc,
           explanation: this.modelExplain,
           usage: this.modelUsage,
@@ -269,44 +332,68 @@ export const useCreationStore = defineStore('createModel', {
             datasetId: this.datasetID,
           };
         }
-        // Create Inference Service
-        const inferenceServiceStore = useInferenceServiceStore();
-        // Remove any existing preview service
-        if (this.previewServiceName) {
-          await inferenceServiceStore.deleteService(this.previewServiceName);
-        }
-        const { serviceName } = await inferenceServiceStore.createService(
-          this.modelName,
-          this.imageUri,
-          this.numGpus,
-          this.containerPort,
-          this.uniqueEnv,
-        );
-        cardPackage.inferenceServiceName = serviceName;
         // Submit Model
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModel(
-          cardPackage,
+          cardPackage
         );
+        // Create Inference Service
+        // TODO: Move video upload into this function
+        if (this.imageUri) {
+          const inferenceServiceStore = useInferenceServiceStore();
+          // Remove any existing preview service
+          if (this.previewServiceName) {
+            console.log(`Removing preview service: ${this.previewServiceName}`);
+            await inferenceServiceStore.deleteService(this.previewServiceName);
+          }
+          const { serviceName } = await inferenceServiceStore.createService(
+            modelId,
+            this.imageUri,
+            this.numGpus,
+            this.containerPort,
+            this.uniqueEnv
+          );
+          // Update service with serviceName
+          await modelStore.updateModel(
+            {
+              inferenceServiceName: serviceName,
+            },
+            creatorUserId,
+            modelId
+          );
+        }
         Notify.create({
           message: 'Successfully created model',
           icon: 'success',
           color: 'secondary',
         });
         return { modelId, creatorUserId };
-      } catch (error) {
+      } catch (err) {
+        const error = err as {
+          code: number;
+          message: string;
+        };
         console.warn(error);
-        if (
-          error ==
-          'The model name already exists under you. Please enter a different one.'
-        ) {
+        if (error.code === 409) {
           this.step = 2;
           this.modelName = '';
         }
+        return Promise.reject(error);
       }
     },
-    async createModelWithVideo() {
+    /**
+     * Submit a model card to the backend with a video
+     * TODO: Combine with createModel function
+     * @returns {Promise<{ modelId: string, creatorUserId: string }>} A promise that resolves when the model is created
+     */
+    async createModelWithVideo(): Promise<{
+      modelId: string;
+      creatorUserId: string;
+    }> {
       try {
+        if (!this.exampleVideo) {
+          throw new Error('No video file selected');
+        }
         const authStore = useAuthStore();
         const uploadStore = useUploadStore();
         const videoUploader = uploadStore.uploadVideo(this.exampleVideo);
@@ -332,17 +419,13 @@ export const useCreationStore = defineStore('createModel', {
           pointOfContact: this.modelPOC,
           markdown: this.markdownContent,
           performance: this.performanceMarkdown,
-          artifacts: [
-            {
-              name: 'model',
-              artifactType: 'model',
-              url: this.modelPath,
-            },
-          ],
           description: this.modelDesc,
           explanation: this.modelExplain,
           usage: this.modelUsage,
           limitations: this.modelLimitations,
+          artifacts: Array.from(
+            new Set([this.mainModelArtifact, ...this.artifacts])
+          ),
         } as ModelCard;
 
         if (this.experimentID != '' && this.experimentPlatform != '') {
@@ -360,7 +443,7 @@ export const useCreationStore = defineStore('createModel', {
         }
         const modelStore = useModelStore();
         const { modelId, creatorUserId } = await modelStore.createModelVideo(
-          cardPackage,
+          cardPackage
         );
         Notify.create({
           message: 'Successfully created model',
@@ -376,6 +459,7 @@ export const useCreationStore = defineStore('createModel', {
           this.step = 2;
           this.modelName = '';
         }
+        return Promise.reject(error);
       }
     },
   },
@@ -383,6 +467,7 @@ export const useCreationStore = defineStore('createModel', {
     storage: localStorage,
     paths: [
       'step',
+      'artifacts',
       'tags',
       'frameworks',
       'modelPath',

@@ -1,4 +1,5 @@
 <template>
+  <!-- Form to set environment variables for an inference service -->
   <form :class="containerClass">
     <span :class="titleClass">
       <slot name="title">Set Environment Variables</slot>
@@ -21,6 +22,7 @@
       v-for="idx in Array(store.env.length).keys()"
       :key="idx"
     >
+      <!-- Display error if some variables have same name -->
       <q-input
         outlined
         label="Key"
@@ -72,6 +74,9 @@ const props = withDefaults(defineProps<EnvVarEditorProps>(), {
   fieldsetClass: '',
 });
 
+// Update different store depending on mode
+// NOTE: this is somewhat hacky and should be refactored
+// e.g passing in store as prop
 const store =
   props.mode === 'create' ? useCreationStore() : useEditInferenceServiceStore();
 
@@ -82,5 +87,5 @@ const addField = () =>
   });
 const deleteField = (idx: number) => store.env.splice(idx, 1);
 const checkDuplicateEnvVar = (val: string) =>
-  store.env.filter(({ key }) => key === val).length > 1;
+  store.env.filter(({ key }) => key.trim() === val.trim()).length > 1;
 </script>

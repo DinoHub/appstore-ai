@@ -19,6 +19,7 @@ class LinkedExperiment(BaseModel):
 
     connector: Connector
     experiment_id: str = Field(..., alias="experimentId")
+    output_url: Optional[str] = Field(default="", alias="outputUrl")
 
     class Config:
         """Pydantic config to allow creation of data model
@@ -34,6 +35,7 @@ class ExperimentResponse(BaseModel):
     owner: str
     name: str
     project_name: str
+    output_url: Optional[str]
     tags: List[str]
     frameworks: List[str]
     config: dict

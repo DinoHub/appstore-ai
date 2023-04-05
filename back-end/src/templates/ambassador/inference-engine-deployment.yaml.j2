@@ -2,8 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ engine_name }}-deployment
+  labels:
+    aas-ie-service: "true"
 spec:
   replicas: 1
+  revisionHistoryLimit: 3
   selector:
     matchLabels:
       app: {{ engine_name }}
@@ -16,6 +19,7 @@ spec:
     metadata:
       labels:
         app: {{ engine_name }}
+        aas-ie-service: "true"
     spec:
       containers:
         - name: {{ engine_name }}
@@ -27,8 +31,8 @@ spec:
           {% if env %}
           env:
           {% for key, value in env.items()  %}
-            - name: {{ key }}
-              value: {{ value }}
+            - name: "{{ key|string }}"
+              value: "{{ value|string }}"
           {% endfor %}
           {% endif %}
           readinessProbe:

@@ -1,174 +1,261 @@
 <template>
-  <div>
-    <div class="row">
-      <q-drawer show-if-above :model-value="props.filterDrawer" class="q-ml-md">
-        <aside class="col-4 q-pt-md">
-          <q-form>
-            <div class="text-h6">Query Filters</div>
-            <q-expansion-item default-opened icon="task" label="Task">
-              <q-option-group
-                v-model="filter.tasks"
-                :options="tasks"
-                color="primary"
-                type="checkbox"
-              ></q-option-group>
-            </q-expansion-item>
-            <q-expansion-item icon="code" label="Frameworks">
-              <q-option-group
-                v-model="filter.frameworks"
-                :options="frameworks"
-                color="primary"
-                type="checkbox"
-              ></q-option-group>
-            </q-expansion-item>
-            <q-expansion-item default-opened icon="tag" label="Tags">
-              <q-select
-                hint="Type in tags or use dropdown to add available tags"
-                class="q-ma-sm"
-                color="secondary"
-                v-model="filter.tags"
-                use-input
-                use-chips
-                multiple
-                autogrow
-                outlined
-                input-debounce="500"
-                new-value-mode="add-unique"
-                :options="tags"
-              ></q-select>
-            </q-expansion-item>
-          </q-form>
-        </aside>
-      </q-drawer>
-    </div>
-    <div class="row justify-center">
-      <q-table
-        class="col-11 q-ml-md"
-        ref="tableRef"
-        :rows-per-page-options="[5, 7, 10, 15, 20, 25, 50]"
-        rows-per-page-label="Models per page:"
-        :rows="rows"
-        :columns="columns"
-        :row-key="compositeId"
-        :filter="filter"
-        :loading="loading"
-        @request="onSearchRequest"
-        v-model:selected="selected"
-        selection="multiple"
-        v-model:pagination="pagination"
-      >
-        <template v-slot:top>
-          <q-btn
-            class="q-ml-sm"
-            color="secondary"
-            v-if="selected.length == 1"
-            :label="`Edit`"
-          />
-          <q-btn
-            class="q-ml-sm"
-            color="negative"
-            v-if="selected.length > 0"
-            :label="`Remove (${selected.length})`"
-            @click="removePopup = true"
-          />
-          <q-btn
-            class="q-ml-sm"
-            color="primary"
-            v-if="selected.length > 0"
-            :label="`Export (${selected.length})`"
-            @click="exportModels"
-          />
-          <q-space />
-          <form autocomplete="off" class="q-mr-md" style="width: 22.5%">
-            <q-input
-              hint="Search By Name"
-              dense
-              debounce="700"
+  <!-- This component is similar to the ModelCardDataTable component -->
+  <div class="row">
+    <!-- Left sidebar -->
+    <q-drawer show-if-above :model-value="props.filterDrawer">
+      <aside class="col-4 q-pt-md">
+        <q-form>
+          <div class="text-h6 q-pl-md">Query Filters</div>
+          <q-expansion-item default-opened icon="task" label="Task">
+            <q-option-group
+              v-model="filter.tasks"
+              :options="tasks"
               color="primary"
-              v-model="filter.title"
-              label=""
-              type="search"
-            >
-              <template v-if="filter.title" v-slot:append>
-                <q-icon name="close" @click.stop.prevent="filter.title = ''" />
-              </template>
-              <template v-slot:before>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-          </form>
-          <form autocomplete="off" style="width: 22.5%">
-            <q-input
-              hint="Search By Creator ID"
-              dense
-              label=""
-              debounce="700"
+              type="checkbox"
+              class="q-pl-sm"
+            ></q-option-group>
+          </q-expansion-item>
+          <q-expansion-item icon="code" label="Frameworks">
+            <q-option-group
+              v-model="filter.frameworks"
+              :options="frameworks"
               color="primary"
-              v-model="filter.creatorUserIdPartial"
-              type="search"
-            >
-              <template v-if="filter.creatorUserIdPartial" v-slot:append>
-                <q-icon
-                  name="close"
-                  @click.stop.prevent="filter.creatorUserIdPartial = ''"
-                />
-              </template>
-              <template v-slot:before>
-                <q-icon name="search" />
-              </template>
-            </q-input>
-          </form>
-        </template>
-      </q-table>
-    </div>
-    <q-dialog v-model="removePopup" persistent>
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Remove Models</div>
-          <q-list>
-            <q-item-label header class="text-black text-bold q-pl-none"
-              >Deleting {{ selected.length }} models(s):</q-item-label
-            ><q-item
-              v-for="x in selected"
-              :key="x.creatorUserId"
-              class="q-pl-none q-pt-none"
-            >
-              <q-item-section avatar>
-                <q-avatar
-                  color="primary"
-                  text-color="white"
-                  icon="tablet_android    "
-                />
-              </q-item-section>
-              <q-item-section>
-                {{ x.title }} {{ ` (${x.creatorUserId})` }}
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn
-            rounded
-            outline
-            label="Cancel"
-            padding="sm md"
-            color="error"
-            v-close-popup
-          />
-          <q-space></q-space>
-          <q-btn
-            rounded
-            label="Confirm"
-            color="primary"
-            padding="sm md"
-            outline
-            v-close-popup
-            @click="deleteModels"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+              type="checkbox"
+              class="q-pl-sm"
+            ></q-option-group>
+          </q-expansion-item>
+          <q-expansion-item default-opened icon="tag" label="Tags">
+            <q-select
+              hint="Type in tags or use dropdown to add available tags"
+              class="q-ma-sm q-ml-md q-mr-lg"
+              color="secondary"
+              v-model="filter.tags"
+              use-input
+              use-chips
+              multiple
+              autogrow
+              outlined
+              input-debounce="500"
+              new-value-mode="add-unique"
+              label="Filter by Tags"
+              :options="tags"
+            ></q-select>
+          </q-expansion-item>
+        </q-form>
+      </aside>
+    </q-drawer>
   </div>
+  <div class="row justify-center">
+    <q-table
+      class="col-11 q-ml-md"
+      ref="tableRef"
+      :rows-per-page-options="[5, 7, 10, 15, 20, 25, 50]"
+      rows-per-page-label="Models per page:"
+      :rows="rows"
+      :columns="columns"
+      :row-key="compositeId"
+      :filter="filter"
+      :loading="loading"
+      @request="onSearchRequest"
+      v-model:selected="selected"
+      selection="multiple"
+      v-model:pagination="pagination"
+      wrap-cells
+    >
+      <template v-slot:top>
+        <q-btn
+          class="q-ml-sm"
+          color="secondary"
+          v-if="selected.length == 1"
+          :label="`Edit`"
+          @click="editSelectedModel"
+        />
+        <q-btn
+          class="q-ml-sm"
+          color="negative"
+          v-if="selected.length > 0"
+          :label="`Remove (${selected.length})`"
+          @click="removePopup = true"
+        />
+        <q-btn
+          class="q-ml-sm"
+          color="primary"
+          v-if="selected.length > 0"
+          :label="`Export (${selected.length})`"
+          @click="exportPopup = true"
+        />
+
+        <q-space />
+        <form autocomplete="off" class="q-mr-md" style="width: 22.5%">
+          <q-input
+            hint="Search By Name"
+            dense
+            debounce="700"
+            color="primary"
+            v-model="filter.title"
+            label=""
+            type="search"
+          >
+            <template v-if="filter.title" v-slot:append>
+              <q-icon name="close" @click.stop.prevent="filter.title = ''" />
+            </template>
+            <template v-slot:before>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </form>
+        <form autocomplete="off" style="width: 22.5%">
+          <q-input
+            hint="Search By Creator ID"
+            dense
+            label=""
+            debounce="700"
+            color="primary"
+            v-model="filter.creatorUserIdPartial"
+            type="search"
+          >
+            <template v-if="filter.creatorUserIdPartial" v-slot:append>
+              <q-icon
+                name="close"
+                @click.stop.prevent="filter.creatorUserIdPartial = ''"
+              />
+            </template>
+            <template v-slot:before>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+        </form>
+      </template>
+
+      <template v-slot:body-cell-tags="props">
+        <q-td class="q-gutter-xs" :props="props">
+          <q-badge
+            color="secondary"
+            dense
+            rounded
+            v-for="x in props.value.split(', ')"
+            :key="x"
+            :label="x"
+          />
+        </q-td>
+      </template>
+
+      <template v-slot:body-cell-frameworks="props">
+        <q-td class="q-gutter-xs" :props="props">
+          <q-badge
+            color="tertiary"
+            dense
+            rounded
+            v-for="x in props.value.split(', ')"
+            :key="x"
+            :label="x"
+          />
+        </q-td>
+      </template>
+    </q-table>
+  </div>
+
+  <q-dialog v-model="removePopup" persistent>
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Remove Models</div>
+        <q-list>
+          <q-item-label header class="text-black text-bold q-pl-none"
+            >Deleting {{ selected.length }} models(s):</q-item-label
+          ><q-item
+            v-for="x in selected"
+            :key="x.creatorUserId"
+            class="q-pl-none q-pt-none"
+          >
+            <q-item-section avatar>
+              <q-avatar
+                color="primary"
+                text-color="white"
+                icon="tablet_android"
+              />
+            </q-item-section>
+
+            <q-item-section>
+              {{ x.title }} {{ ` (${x.creatorUserId})` }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          rounded
+          no-caps
+          outline
+          label="Cancel"
+          padding="sm md"
+          color="error"
+          v-close-popup
+        />
+        <q-space></q-space>
+        <q-btn
+          rounded
+          no-caps
+          label="Confirm"
+          color="primary"
+          padding="sm md"
+          outline
+          v-close-popup
+          @click="deleteModels"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <q-dialog v-model="exportPopup" persistent>
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Export Models</div>
+        <q-list>
+          <q-item-label header class="text-black text-bold q-pl-none"
+            >Exporting {{ selected.length }} models(s):</q-item-label
+          ><q-item
+            v-for="x in selected"
+            :key="x.creatorUserId"
+            class="q-pl-none q-pt-none"
+          >
+            <q-item-section avatar>
+              <q-avatar
+                color="primary"
+                text-color="white"
+                icon="tablet_android"
+              />
+            </q-item-section>
+
+            <q-item-section>
+              {{ x.title }} {{ ` (${x.creatorUserId})` }}
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn
+          rounded
+          no-caps
+          outline
+          label="Cancel"
+          padding="sm md"
+          color="error"
+          v-close-popup
+        />
+        <q-space></q-space>
+        <q-btn
+          rounded
+          no-caps
+          label="Confirm"
+          color="primary"
+          padding="sm md"
+          outline
+          v-close-popup
+          @click="exportModels"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script setup lang="ts">
@@ -176,13 +263,8 @@ import { QTable, QTableColumn, QTableProps, Notify } from 'quasar';
 import { ModelCardSummary, useModelStore } from 'src/stores/model-store';
 import { onMounted, reactive, Ref, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import ModelCard from './ModelCard.vue';
-import {
-  FormOptionValue,
-  Pagination,
-  SearchFilter,
-  SortOption,
-} from './models';
+
+import { FormOptionValue, Pagination, SearchFilter } from './models';
 
 export interface ModelCardDataTableProps {
   rows?: ModelCardSummary[];
@@ -195,11 +277,11 @@ export interface ModelCardDataTableProps {
 }
 
 const persistent = ref(false);
-
 const selected = ref([]);
 const exportPopup = ref(false);
 const removePopup = ref(false);
 const loading = ref(false);
+
 const router = useRouter();
 const route = useRoute();
 
@@ -227,7 +309,7 @@ if (props.showFilter) {
             label: framework,
             value: framework,
           };
-        }),
+        })
       );
       tasks.splice(
         0,
@@ -237,7 +319,7 @@ if (props.showFilter) {
             label: task,
             value: task,
           };
-        }),
+        })
       );
     })
     .catch(() => {
@@ -267,7 +349,14 @@ const columns: QTableColumn[] = [
     align: 'left',
     sortable: true,
   },
-
+  {
+    name: 'modelId',
+    required: true,
+    label: 'Model ID',
+    field: 'modelId',
+    align: 'left',
+    sortable: true,
+  },
   {
     name: 'creatorUserIdPartial',
     required: true,
@@ -284,18 +373,10 @@ const columns: QTableColumn[] = [
   },
 
   {
-    name: 'description',
-    required: true,
-    label: 'Description',
-    field: 'description',
-    sortable: true,
-  },
-  {
     name: 'tags',
     required: true,
     label: 'Tags',
     field: 'tags',
-    sortable: true,
     format: (val) => val.join(', '),
   },
   {
@@ -303,7 +384,6 @@ const columns: QTableColumn[] = [
     required: true,
     label: 'Frameworks',
     field: 'frameworks',
-    sortable: true,
     format: (val) => val.join(', '),
   },
   {
@@ -313,7 +393,7 @@ const columns: QTableColumn[] = [
     field: 'created',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val,
+        val
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
@@ -324,7 +404,7 @@ const columns: QTableColumn[] = [
     field: 'lastModified',
     format: (val) =>
       `${new Date(val).getDate()}/${new Date(val).getMonth() + 1}/${new Date(
-        val,
+        val
       ).getFullYear()}, ${new Date(val).toLocaleTimeString()}`,
     sortable: true,
   },
@@ -366,13 +446,37 @@ const onSearchRequest = (props: QTableProps) => {
     });
 };
 
-function exportModels() {
-  console.log(selected.value);
-}
-function deleteModels() {
-  modelStore.deleteModelMultiple(selected.value);
-  console.log(selected.value);
-}
+const exportModels = () => {
+  modelStore
+    .exportModels(selected.value)
+    .then(() => {
+      Notify.create({
+        message: 'Export request successfully initiated!',
+        type: 'positive',
+      });
+      tableRef.value?.requestServerInteraction();
+      selected.value = [];
+    })
+    .catch(() => {
+      Notify.create({
+        message: 'Export request failed...',
+        type: 'negative',
+      });
+    });
+};
+
+const deleteModels = () => {
+  modelStore.deleteModelMultiple(selected.value).then(() => {
+    tableRef.value?.requestServerInteraction();
+    selected.value = [];
+  });
+};
+
+const editSelectedModel = () => {
+  router.push(
+    `/admin/models/${selected.value[0].creatorUserId}/${selected.value[0].modelId}/edit/metadata`
+  );
+};
 
 onMounted(() => {
   // TODO: overhaul this?

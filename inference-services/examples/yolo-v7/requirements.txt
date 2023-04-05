@@ -1,0 +1,2 @@
+# Put any extra dependencies here
+yolov7detect

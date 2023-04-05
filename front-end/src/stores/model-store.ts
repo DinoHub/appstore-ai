@@ -14,6 +14,7 @@ export interface Artifact {
 export interface LinkedExperiment {
   connector: string;
   experimentId: string;
+  outputUrl: string;
 }
 
 export interface LinkedDataset {
@@ -97,6 +98,7 @@ export interface SearchParams {
   creatorUserId?: string;
   creatorUserIdPartial?: string;
   title?: string;
+  genericSearchText?: string;
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
   tasks?: string[] | LocationQueryValue[];
@@ -126,6 +128,10 @@ export const useModelStore = defineStore('model', {
   }),
   getters: {},
   actions: {
+    /**
+     * Get the available filters for the model search
+     * @returns A mapping of filters to their available options
+     */
     async getFilterOptions(): Promise<AvailableFilterResponse> {
       try {
         const res = await api.get('models/_db/options/filters');
@@ -134,6 +140,11 @@ export const useModelStore = defineStore('model', {
         return Promise.reject(error);
       }
     },
+    /**
+     * Get the model cards that match the search parameters
+     * @param params Search parameters to filter the results
+     * @returns A list of model cards and the total number of results
+     */
     async getModels(params: SearchParams): Promise<SearchResponse> {
       try {
         const res = await api.get('models/', {
@@ -143,6 +154,7 @@ export const useModelStore = defineStore('model', {
               'modelId',
               'creatorUserId',
               'title',
+              'genericSearchText',
               'task',
               'description',
               'tags',
@@ -160,22 +172,29 @@ export const useModelStore = defineStore('model', {
         return Promise.reject(error);
       }
     },
+    /**
+     * Post a new model card to the database
+     * @param metadata JSON object containing the metadata for the model card
+     * @returns Promise that resolves to the created model card
+     */
     async createModel(metadata: CreateModelCard): Promise<ModelCard> {
       try {
         const res = await api.post('models/', metadata);
         const data: ModelCard = res.data;
         return data;
       } catch (error) {
-        if (error.response.status == 409) {
+        const httpError = error as AxiosError;
+        if (httpError.response?.status === 409) {
           Notify.create({
             type: 'warning',
             message:
               'The model name already exists under you. Please enter a different one.',
             position: 'top-right',
           });
-          return Promise.reject(
-            'The model name already exists under you. Please enter a different one.'
-          );
+          return Promise.reject({
+            status: 409,
+            message: 'Duplicate Model ID',
+          });
         } else {
           Notify.create({
             message: 'Failed to create model',
@@ -186,6 +205,11 @@ export const useModelStore = defineStore('model', {
         }
       }
     },
+    /**
+     * TODO: Is this necessary? Looks exactly like createModel
+     * @param metadata  JSON object containing the metadata for the model card
+     * @returns  Promise that resolves to the created model card
+     */
     async createModelVideo(metadata: CreateModelCard): Promise<ModelCard> {
       try {
         const res = await api.post('models/', metadata);
@@ -212,6 +236,13 @@ export const useModelStore = defineStore('model', {
         }
       }
     },
+    /**
+     * Update a model card
+     * @param metadata JSON object containing fields to update
+     * @param userId  user id of the model card owner
+     * @param modelId  model id of the model card
+     * @returns Promise that resolves once the model card is updated
+     */
     async updateModel(
       metadata: UpdateModelCard,
       userId: string,
@@ -226,6 +257,12 @@ export const useModelStore = defineStore('model', {
         return Promise.reject('Failed to edit model card');
       }
     },
+    /**
+     * Get a model card by its id
+     * @param userId  user id of the model card owner
+     * @param modelId  model id of the model card
+     * @returns Promise that resolves to the model card
+     */
     async getModelById(userId: string, modelId: string): Promise<ModelCard> {
       try {
         const res = await api.get(`models/${userId}/${modelId}`);
@@ -240,6 +277,11 @@ export const useModelStore = defineStore('model', {
         return Promise.reject('Unable to get model metadata');
       }
     },
+    /**
+     * Delete a model card by its id
+     * @param userId user id of the model card owner
+     * @param modelId  model id of the model card
+     */
     async deleteModelById(userId: string, modelId: string): Promise<void> {
       try {
         await api.delete(`models/${userId}/${modelId}`);
@@ -276,6 +318,21 @@ export const useModelStore = defineStore('model', {
         });
       } catch (error) {
         console.error(error);
+      }
+    },
+    async exportModels(models: Array<any>): Promise<any> {
+      try {
+        const exportModels = models.map(({ modelId, creatorUserId }) => {
+          return { model_id: modelId, creator_user_id: creatorUserId };
+        });
+        console.log(exportModels);
+        const response = await api.post(`models/export`, {
+          card_package: exportModels,
+        });
+        return response;
+      } catch (error) {
+        console.error(error);
+        Promise.reject(error);
       }
     },
   },

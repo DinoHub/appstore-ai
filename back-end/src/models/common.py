@@ -1,5 +1,4 @@
 """Common Pydantic models and functions.""" ""
-from datetime import datetime
 from typing import Optional
 
 from bson import ObjectId
@@ -14,7 +13,7 @@ class Artifact(BaseModel):
     artifact_type: str = Field(..., alias="artifactType")
     name: str
     url: str
-    timestamp: Optional[datetime] = None
+    timestamp: Optional[str] = None
     framework: Optional[str] = None
 
     class Config:
@@ -51,3 +50,10 @@ class PyObjectId(ObjectId):
     @classmethod
     def __modify_schema__(cls, field_schema):
         field_schema.update(type="string")
+
+
+class S3Storage(BaseModel):
+    """Custom Pydantic type for storing S3 bucket and object information as a dict"""
+
+    bucket_name: str
+    object_name: str

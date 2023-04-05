@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{ engine_name }}
+  labels:
+    aas-ie-service: "true"
 spec:
   selector:
     app: {{ engine_name }}

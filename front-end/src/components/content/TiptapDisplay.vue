@@ -1,4 +1,8 @@
 <template>
+  <!-- Use tiptap to render.-->
+  <!-- We do not re-use the editor component due to some issues faced with the watch callback -->
+  <!-- TODO: Check if the issues are still there to avoid re-use of code -->
+  <!-- or consider an if-else statement on watcher to see if that works -->
   <editor-content class="text-left q-pl-md" :editor="editor" />
 </template>
 

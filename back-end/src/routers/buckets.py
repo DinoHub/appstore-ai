@@ -1,10 +1,10 @@
 """Endpoints for handling object storage buckets."""
 import uuid
-from typing import Dict, Optional
+from typing import Dict
 
 from colorama import Fore
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
-from minio import Minio
+from miniopy_async import Minio
 
 from ..config.config import config
 from ..internal.dependencies.file_validator import ValidateFileUpload
@@ -13,9 +13,10 @@ from ..internal.dependencies.minio_client import (
     remove_data,
     upload_data,
 )
+from ..internal.dependencies.mongo_client import get_db
 from ..models.buckets import VideoUploadResponse
 
-router = APIRouter(prefix="/buckets", tags=["buckets"])
+router = APIRouter(prefix="/buckets", tags=["Buckets"])
 
 BUCKET_NAME = config.MINIO_BUCKET_NAME or "default"
 
@@ -39,7 +40,7 @@ video_validator = ValidateFileUpload(
     # dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
-def upload_video(
+async def upload_video(
     video: UploadFile = Form(),
     s3_client: Minio = Depends(minio_api_client),
 ) -> Dict[str, str]:
@@ -56,7 +57,7 @@ def upload_video(
         Dict[str, str]: Location of the video in the bucket
     """
     try:
-        path = upload_data(
+        path = await upload_data(
             s3_client,
             video.file.read(),
             f"videos/{uuid.uuid4().hex}.{video.content_type.replace('video/','')}",
@@ -78,37 +79,50 @@ def upload_video(
     # dependencies=[Depends(video_validator)],
     response_model=VideoUploadResponse,
 )
-def replace_video(
+async def replace_video(
     new_video: UploadFile = Form(),
-    old_video_location: Optional[str] = Form(None),
+    userId: str = Form(),
+    modelId: str = Form(),
     s3_client: Minio = Depends(minio_api_client),
+    db=Depends(get_db),
 ) -> Dict[str, str]:
-    """Replaces a video in the MinIO bucket
+    """Replaces the video of a model
 
     Args:
-        new_video (UploadFile, optional): New video. Defaults to Form().
-        old_video_location (Optional[str], optional): Location of video to replace.
-            Defaults to Form(None).
-        s3_client (Minio, optional): Minio client. Defaults to Depends(minio_api_client).
+        new_video (UploadFile): New video to upload. Defaults to Form().
+        userId (str, optional): userId of model card. Defaults to Form().
+        modelId (str, optional): modelId of model card. Defaults to Form().
+        s3_client (Minio, optional): Connection to S3 storage. Defaults to Depends(minio_api_client).
+        db (_type_, optional): Connection to MongoDB. Defaults to Depends(get_db).
 
     Raises:
         HTTPException: 500 if something went wrong
 
     Returns:
-        Dict[str, str]: Location of the new video in the bucket
+        Dict[str, str]: A dictionary with the location of the new video in the bucket
     """
     try:
         # remove the old video inside the bucket
-        if old_video_location is not None:
-            video_location = old_video_location.replace(
-                f"{config.MINIO_API_HOST}/{config.MINIO_BUCKET_NAME}/", ""
-            )
-            remove_data(s3_client, video_location, config.MINIO_BUCKET_NAME)
-        else:
-            print("WARN:\t  No old video location provided")
+        db, mongo_client = db
 
+        async with await mongo_client.start_session() as session:
+            async with session.start_transaction():
+                existing_card = await db["models"].find_one(
+                    {
+                        "modelId": modelId,
+                        "creatorUserId": userId,
+                    }
+                )
+                try:
+                    url: str = existing_card["videoLocation"]
+                    url = url.removeprefix("s3://")
+                    bucket, object_name = url.split("/", 1)
+                    await remove_data(s3_client, object_name, bucket)
+                except Exception as err:
+                    print(f"{Fore.RED}ERROR{Fore.WHITE}:\t  {err}")
+                    print("WARN:\t  No old video location provided")
         # upload the new video to the bucket
-        path = upload_data(
+        path = await upload_data(
             s3_client,
             new_video.file.read(),
             f"videos/{uuid.uuid4().hex}.{new_video.content_type.replace('video/','')}",

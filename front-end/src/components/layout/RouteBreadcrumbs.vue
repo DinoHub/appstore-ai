@@ -1,5 +1,5 @@
-<style scoped></style>
 <template>
+  <!-- Use breadcrumbs to show user where they are in the site -->
   <q-breadcrumbs class="text-primary">
     <q-breadcrumbs-el
       :label="crumb.label"
@@ -14,7 +14,7 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { Breadcrumb } from './models';
+import { Breadcrumb } from 'src/components/models';
 
 const route = useRoute();
 
@@ -23,7 +23,7 @@ const breadcrumbs = computed(() => {
   const output: Breadcrumb[] = [];
   const path = route.fullPath.split('/');
   let cumulativePath = '';
-  path.shift();
+  path.shift(); // remove first part of path
   path.forEach((p) => {
     cumulativePath += `/${p}`;
     output.push({

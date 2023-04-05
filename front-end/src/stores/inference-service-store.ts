@@ -22,15 +22,29 @@ export interface InferenceServiceStatus {
   message?: string;
 }
 
+export const imageUriRegex = new RegExp(
+  '^(?:(?=[^:/]{1,253})(?!-)[a-zA-Z0-9-]{1,63}(?<!-)(?:.(?!-)[a-zA-Z0-9-]{1,63}(?<!-))*(?::[0-9]{1,5})?/)?((?![._-])(?:[a-z0-9._-]*)(?<![._-])(?:/(?![._-])[a-z0-9._-]*(?<![._-]))*)(?::(?![.-])[a-zA-Z0-9_.-]{1,128})?$',
+);
+
 export const useInferenceServiceStore = defineStore('service', {
   state: () => ({
     previewServiceName: null as string | null,
+    currentServiceStatus: null as InferenceServiceStatus | null,
   }),
   getters: {},
   actions: {
+    /**
+     * Use the Kubernetes API to check if the service is ready
+     * by pinging the back-end to get the status of the service
+     * @param serviceName Name of the service to check
+     * @param maxRetries Maximum number of retries to check
+     * @param initialWaitSeconds Initial wait time in seconds
+     * @param maxDeadlineSeconds Maximum time to wait in seconds
+     * @returns
+     */
     async getServiceReady(
       serviceName: string,
-      maxRetries = 5,
+      maxRetries = 15,
       initialWaitSeconds = 10,
       maxDeadlineSeconds = 300, // 5 minutes
     ): Promise<InferenceServiceStatus> {
@@ -38,6 +52,7 @@ export const useInferenceServiceStore = defineStore('service', {
         for (let noRetries = 0; noRetries < maxRetries; noRetries++) {
           const res = await api.get(`engines/${serviceName}/status`);
           const data: InferenceServiceStatus = res.data;
+          this.currentServiceStatus = data; // Store to allow other components to access
           console.log(data);
           if (data.expectedReplicas === 0) {
             console.warn('Service has no replicas');
@@ -78,6 +93,11 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to get status of service');
       }
     },
+    /**
+     * Get the service by name
+     * @param serviceName Name of the service to get
+     * @returns Service data
+     */
     async getServiceByName(
       serviceName: string,
     ): Promise<InferenceEngineService> {
@@ -93,6 +113,17 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to get inference engine');
       }
     },
+    /**
+     * Create a new service
+     * NOTE: Currently back-end does not support different ports
+     * so you should always pass in 8080 (til we fix this)
+     * @param modelId Model ID to create service for
+     * @param imageUri Image URI to use for service
+     * @param numGpus Number of GPUs to use for service
+     * @param port Port number to use for service
+     * @param env A mapping of environment variables and their values
+     * @returns Promise of the service data
+     */
     async createService(
       modelId: string,
       imageUri: string,
@@ -127,13 +158,26 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to create inference engine');
       }
     },
+    /**
+     * Create a temporary service meant for testing.
+     * @param modelId Model ID to create service for
+     * @param imageUri Image URI to use for service
+     * @param numGpus Number of GPUs to use for service
+     * @param port Port number to use for service
+     * @param env Mapping of environment variables and their values
+     * @returns The service name, inference URL, and status
+     */
     async launchPreviewService(
       modelId: string,
       imageUri: string,
       numGpus: number,
       port?: number,
       env?: Record<string, any>,
-    ) {
+    ): Promise<{
+      serviceName: string;
+      inferenceUrl: string;
+      status: InferenceServiceStatus;
+    }> {
       Notify.create({
         message: 'Creating service, please wait...',
       });
@@ -160,6 +204,15 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Failed to launch preview service');
       }
     },
+    /**
+     * Update an existing service
+     * @param serviceName ID of the service to update
+     * @param imageUri Image URI to use for service
+     * @param numGpus Number of GPUs to use for service
+     * @param port Port number to use for service
+     * @param env Mapping of environment variables and their values
+     * @returns Promise of the service data
+     */
     async updateService(
       serviceName: string,
       imageUri?: string,
@@ -180,6 +233,11 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to update inference engine');
       }
     },
+    /**
+     * Deletes an existing service
+     * @param serviceName ID of the service to delete
+     * @returns Promise that resolves when the service is deleted
+     */
     async deleteService(serviceName: string): Promise<void> {
       try {
         await api.delete(`/engines/${serviceName}`);
@@ -187,6 +245,12 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to delete inference engine');
       }
     },
+    /**
+     * Attempt to scale a service to a given number of replicas
+     * @param serviceName ID of the service to scale
+     * @param replicas Value to scale the service to
+     * @returns Promise that resolves when the service is scaled
+     */
     async scaleService(serviceName: string, replicas: number): Promise<void> {
       try {
         await api.patch(`/engines/${serviceName}/scale/${replicas}`, {});
@@ -198,6 +262,11 @@ export const useInferenceServiceStore = defineStore('service', {
         return Promise.reject('Unable to scale inference engine');
       }
     },
+    /**
+     * Repairs a service, recreating any missing resources (e.g deployment, service, etc.)
+     * @param serviceName ID of the service to restore
+     * @returns Promise that resolves when the service is restored
+     */
     async restoreService(serviceName: string): Promise<void> {
       try {
         await api.post(`/engines/${serviceName}/restore`, {});

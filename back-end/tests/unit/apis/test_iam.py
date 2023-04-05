@@ -1,10 +1,18 @@
-from datetime import datetime
-from typing import Dict, List, Tuple
+from datetime import datetime, timedelta
+from typing import Dict, Tuple
 
 import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
+from hypothesis import HealthCheck, given, settings
+from hypothesis import strategies as st
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
+
+from src.models.iam import UserInsert
+
+password_strategy = st.from_regex(
+    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$"
+)
 
 
 @pytest.fixture
@@ -35,62 +43,87 @@ def userConflictData() -> Dict:
 
 @pytest.mark.usefixtures("flush_db")
 @pytest.mark.asyncio
+@settings(
+    suppress_health_check=[
+        HealthCheck.filter_too_much,
+        HealthCheck.function_scoped_fixture,
+    ],
+    deadline=timedelta(milliseconds=500),
+)
+@given(
+    st.builds(
+        UserInsert,
+        password=st.shared(password_strategy, key="password"),
+        password_confirm=st.shared(password_strategy, key="password"),
+    )
+)
 async def test_add_users(
     admin_client: TestClient,
     get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
-    userAddData: Dict,
+    user: UserInsert,
 ):
     db, _ = get_fake_db
+    await db.drop_collection("users")
+    user_dict = user.dict()
+    user_dict["password"] = user.password.get_secret_value()
+    user_dict["password_confirm"] = user.password_confirm.get_secret_value()
+
     response = admin_client.post(
         "/iam/add",
-        json=userAddData,
+        json=user_dict,
     )
     userList = await db["users"].find().to_list(length=None)
     assert response.status_code == status.HTTP_201_CREATED
     assert len(userList) == 1
-    assert userList[0]["userId"] != ""
+    assert userList[0]["name"] == user.name
+    assert userList[0]["adminPriv"] == user.admin_priv
+
     await db.drop_collection("users")
 
 
 @pytest.mark.xfail(reason="Password mismatch")
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
+@settings(
+    suppress_health_check=[
+        HealthCheck.filter_too_much,
+        HealthCheck.function_scoped_fixture,
+    ]
+)
+@given(
+    st.builds(
+        UserInsert,
+        password=password_strategy,
+        password_confirm=password_strategy,
+    )
+)
 async def test_add_users_password_mismatch(
     admin_client: TestClient,
     get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+    user: UserInsert,
 ):
-    await test_add_users(
+    test_add_users(
         admin_client=admin_client,
         get_fake_db=get_fake_db,
-        userAddData={
-            "user_id": "",
-            "name": "Master Tester",
-            "password": "Testing123!",
-            "password_confirm": "Testing12",
-            "admin_priv": True,
-        },
+        user=user,
     )
 
 
 @pytest.mark.xfail(reason="Password too weak")
 @pytest.mark.asyncio
 @pytest.mark.usefixtures("flush_db")
+@settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
+@given(st.builds(UserInsert))
 async def test_add_users_password_weak(
     admin_client: TestClient,
     get_fake_db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient],
+    user: UserInsert,
 ):
-    await test_add_users(
+    test_add_users(
         admin_client=admin_client,
         get_fake_db=get_fake_db,
-        userAddData={
-            "user_id": "",
-            "name": "Master Tester",
-            "password": "Testing123",
-            "password_confirm": "Testing123",
-            "admin_priv": True,
-        },
+        user=user,
     )
-
 
 
 @pytest.mark.usefixtures("flush_db")
@@ -102,7 +135,7 @@ async def test_search_users(
     db, _ = get_fake_db
     await db["users"].insert_one(
         {
-            "userId": "searchtest-01",
+            "userId": "searchtest_01",
             "name": "Master Searcher",
             "password": "Testing123!",
             "adminPriv": True,
@@ -129,7 +162,7 @@ async def test_search_users(
     assert response.status_code == status.HTTP_200_OK
     assert len(content["results"]) == 1
     assert isinstance(content["results"][0], dict)
-    assert content["results"][0]["userId"] == "searchtest-01"
+    assert content["results"][0]["userId"] == "searchtest_01"
     await db.drop_collection("users")
 
 
@@ -142,7 +175,7 @@ async def test_edit_user(
     db, _ = get_fake_db
     await db["users"].insert_one(
         {
-            "userId": "edittest-01",
+            "userId": "edittest_01",
             "name": "Master Editor",
             "password": "Testing123!",
             "adminPriv": True,
@@ -155,7 +188,7 @@ async def test_edit_user(
     response = admin_client.put(
         "/iam/edit",
         json={
-            "user_id": "edittest-01",
+            "user_id": "edittest_01",
             "name": "Master Editor Edited",
             "password": "Testing123!",
             "password_confirm": "Testing123!",
@@ -179,7 +212,7 @@ async def test_edit_users_many(
     await db["users"].insert_many(
         [
             {
-                "userId": "edittest-01",
+                "userId": "edittest_01",
                 "name": "Master Editor Many 01",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -187,7 +220,7 @@ async def test_edit_users_many(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "edittest-02",
+                "userId": "edittest_02",
                 "name": "Master Editor Many 02",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -195,7 +228,7 @@ async def test_edit_users_many(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "edittest-03",
+                "userId": "edittest_03",
                 "name": "Master Editor Many 03",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -209,7 +242,7 @@ async def test_edit_users_many(
     response = admin_client.put(
         "/iam/edit/multi",
         json={
-            "users": ["edittest-01", "edittest-02", "edittest-03"],
+            "users": ["edittest_01", "edittest_02", "edittest_03"],
             "priv": False,
         },
     )
@@ -231,7 +264,7 @@ async def test_delete_users(
     await db["users"].insert_many(
         [
             {
-                "userId": "deltest-01",
+                "userId": "deltest_01",
                 "name": "Master Deleter 01",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -239,7 +272,7 @@ async def test_delete_users(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "deltest-02",
+                "userId": "deltest_02",
                 "name": "Master Deleter 02",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -247,7 +280,7 @@ async def test_delete_users(
                 "created": str(datetime.now()),
             },
             {
-                "userId": "deltest-03",
+                "userId": "deltest_03",
                 "name": "Master Deleter 03",
                 "password": "Testing123!",
                 "adminPriv": True,
@@ -261,7 +294,7 @@ async def test_delete_users(
     response = admin_client.delete(
         "/iam/delete",
         json={
-            "users": ["deltest-03"],
+            "users": ["deltest_03"],
         },
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -270,7 +303,7 @@ async def test_delete_users(
     response = admin_client.delete(
         "/iam/delete",
         json={
-            "users": ["deltest-02", "deltest-01"],
+            "users": ["deltest_02", "deltest_01"],
         },
     )
     assert response.status_code == status.HTTP_204_NO_CONTENT

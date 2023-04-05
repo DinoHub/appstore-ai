@@ -51,11 +51,17 @@
           </div>
         </div>
       </q-step>
-      <q-step :name="2" title="Confirm" icon="task">
-        <div class="row justify-center">
+      <q-step
+        :name="2"
+        class="q-mx-auto"
+        title="Confirm"
+        icon="task"
+        style="width: 37.5%"
+      >
+        <div class="justify-center">
           <vue-plyr
             ><video controls playsinline>
-              <source size="1080" :src="videoExample" /></video
+              <source :src="videoExample" /></video
           ></vue-plyr>
         </div>
       </q-step>
@@ -150,7 +156,11 @@
     </dialog>
   </q-page>
 </template>
-
+<style>
+.plyr--video {
+  width: 100%;
+}
+</style>
 <script setup lang="ts">
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import { useModelStore } from 'src/stores/model-store';
@@ -176,23 +186,12 @@ const selectedVideo = ref();
 const modelId = route.params.modelId as string;
 const userId = route.params.userId as string;
 
-let currentData = {};
-
-modelStore.getModelById(userId, modelId).then((card) => {
-  Object.assign(currentData, card);
-});
-
 const replaceVideo = () => {
-  uploadStore
-    .replaceVideo(
-      selectedVideo.value,
-      currentData.videoLocation,
-      userId,
-      modelId,
-    )
-    .then(() => {
-      router.push(`/model/${authStore.user?.userId}/${modelId}`);
-    });
+  // backend will handle the case where video
+  // did not exist beforehand
+  uploadStore.replaceVideo(selectedVideo.value, userId, modelId).then(() => {
+    router.push(`/model/${userId}/${modelId}`);
+  });
 };
 
 const counterLabelFn = ({ totalSize, filesNumber, maxFiles }: any) => {

@@ -22,9 +22,18 @@ export const useEditInferenceServiceStore = defineStore(
       previewServiceStatus: null as InferenceServiceStatus | null,
     }),
     getters: {
+      /**
+       * Returns true if all metadata is valid
+       * @returns True if all metadata is valid
+       */
       metadataValid(): boolean {
         return this.imageUri !== '' && this.serviceName !== '';
       },
+      /**
+       * Removes any duplicate environment variables, and represents
+       * as an map of key-value pairs
+       * @returns Environment variables as a unique key-value pair
+       */
       uniqueEnv(): Record<string, string> {
         const uniqueEnvs: Record<string, string> = {};
         this.env.forEach(({ key, value }) => {
@@ -34,6 +43,14 @@ export const useEditInferenceServiceStore = defineStore(
       },
     },
     actions: {
+      /**
+       * Populates the store with data from the inference service
+       * TODO: Instead of assuming current user ID is
+       * the owner ID, we should get the owner ID from
+       * the route params
+       * @param modelId Model to load inference service from
+       * @returns Promise that resolves when data is loaded
+       */
       async loadFromInferenceService(modelId: string): Promise<void> {
         const authStore = useAuthStore();
         const modelStore = useModelStore();
@@ -41,7 +58,7 @@ export const useEditInferenceServiceStore = defineStore(
 
         const data = await modelStore.getModelById(
           authStore.user?.userId ?? '',
-          modelId,
+          modelId
         );
         const serviceName = data.inferenceServiceName;
 
@@ -51,7 +68,7 @@ export const useEditInferenceServiceStore = defineStore(
 
         // Get the inference service
         const service = await inferenceServiceStore.getServiceByName(
-          serviceName,
+          serviceName
         );
 
         // Load the data
@@ -67,7 +84,12 @@ export const useEditInferenceServiceStore = defineStore(
           });
         });
       },
-      async launchPreviewService(modelId: string) {
+      /**
+       * Start a preview service to test the inference service
+       * @param modelId Model to launch preview service for
+       * @returns Promise that resolves when the service is launched
+       */
+      async launchPreviewService(modelId: string): Promise<void> {
         const inferenceServiceStore = useInferenceServiceStore();
         try {
           const { serviceName, inferenceUrl, status } =
@@ -76,7 +98,7 @@ export const useEditInferenceServiceStore = defineStore(
               this.imageUri,
               this.numGpus,
               this.containerPort,
-              this.uniqueEnv,
+              this.uniqueEnv
             );
           this.previewServiceName = serviceName;
           this.previewServiceUrl = inferenceUrl;
@@ -86,7 +108,13 @@ export const useEditInferenceServiceStore = defineStore(
           return Promise.reject(error);
         }
       },
-      async updateInferenceService() {
+      /**
+       * Updates the inference service
+       * @param userId User ID of the model owner
+       * @param modelId  Model ID to update
+       * @returns Promise that resolves when the service is updated
+       */
+      async updateInferenceService(userId: string, modelId: string | undefined): Promise<void> {
         const inferenceServiceStore = useInferenceServiceStore();
         // Remove any existing preview service
         if (this.previewServiceName) {
@@ -96,21 +124,46 @@ export const useEditInferenceServiceStore = defineStore(
             console.error(error);
           }
         }
-        const { serviceName } = await inferenceServiceStore.updateService(
-          this.serviceName,
-          this.imageUri,
-          this.numGpus,
-          this.containerPort,
-          this.uniqueEnv,
-        );
-        // Check status of updated service
-        const status = await inferenceServiceStore.getServiceReady(serviceName);
-        if (status.ready) {
-          return Promise.resolve();
+        if (this.serviceName) {
+          const { serviceName } = await inferenceServiceStore.updateService(
+            this.serviceName,
+            this.imageUri,
+            this.numGpus,
+            this.containerPort,
+            this.uniqueEnv
+          );
+          // Check status of updated service
+          const status = await inferenceServiceStore.getServiceReady(
+            serviceName
+          );
+          if (status.ready) {
+            return Promise.resolve();
+          } else {
+            return Promise.reject('Failed to update inference service');
+          }
         } else {
-          return Promise.reject('Failed to update inference service');
+          // Create a new service if none exists
+          if (!modelId) {
+            return Promise.reject('No model id provided');
+          }
+          const modelStore = useModelStore();
+          const { serviceName } = await inferenceServiceStore.createService(
+            modelId,
+            this.imageUri,
+            this.numGpus,
+            this.containerPort,
+            this.uniqueEnv
+          );
+          // Update service with serviceName
+          await modelStore.updateModel(
+            {
+              inferenceServiceName: serviceName,
+            },
+            userId,
+            modelId
+          );
         }
       },
     },
-  },
+  }
 );

@@ -93,6 +93,7 @@
               }Dataset ID`"
               autogrow
               :rules="[(val) => !!val || 'Field is required']"
+              @update:model-value="setStateFromDatasetDetails()"
             >
             </q-input>
           </div>
@@ -561,6 +562,7 @@ const authStore = useAuthStore();
 const route = useRoute();
 const router = useRouter();
 const modelId = route.params.modelId as string;
+const userId =  route.params.userId as string;
 
 // bool for loading state when retrieving experiments
 const loadingExp = ref(false);
@@ -586,7 +588,7 @@ const saveEdit = () => {
         });
         editMetadataStore.$reset();
         localStorage.removeItem(`${editMetadataStore.$id}`);
-        router.push(`/model/${authStore.user?.userId}/${modelId}`);
+        router.push(`/model/${userId}/${modelId}`);
       },
     )
     .catch(() => {
@@ -626,6 +628,16 @@ const setStateFromExperimentDetails = () => {
   loadingExp.value = true;
 
   editMetadataStore.loadMetadataFromExperiment().finally(() => {
+    buttonDisable.value = false;
+    loadingExp.value = false;
+  });
+};
+
+const setStateFromDatasetDetails = () => {
+  buttonDisable.value = true;
+  loadingExp.value = true;
+
+  editMetadataStore.loadMetadataFromDataset().finally(() => {
     buttonDisable.value = false;
     loadingExp.value = false;
   });

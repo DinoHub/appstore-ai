@@ -14,6 +14,7 @@ class ExperimentConnector(ABC):
         self.project_name: Optional[str] = None
         self.exp_name: Optional[str] = None
         self.id: Optional[str] = None
+        self.output_url: Optional[str] = None
         self.logger: Logger = Logger(__name__)
         self.user: Optional[str] = None
 

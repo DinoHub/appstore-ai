@@ -30,18 +30,24 @@ export const useAuthStore = defineStore('auth', {
     returnUrl: null as string | null,
   }),
   actions: {
+    /**
+     * Login to the application 
+     * @param userId  User ID
+     * @param password Plain text password
+     */
     async login(userId: string, password: string): Promise<void> {
       try {
         const creds = new FormData();
         creds.append('username', userId);
         creds.append('password', password);
+        // Back-end sets JWT in cookie and also returns it
         const response = await api.post('/auth/', creds);
         // Decode JWT
         const { access_token }: LoginResponse = response.data;
         const jwt_data = jwt_decode(access_token) as JWT;
 
         if (!jwt_data) {
-          console.error('Failed to decode');
+          throw new Error('Failed to decode');
         }
         this.user = {
           userId: jwt_data.sub,
@@ -53,12 +59,19 @@ export const useAuthStore = defineStore('auth', {
           type: 'negative',
           message: 'Failed to login',
         });
+        return Promise.reject(err);
       }
       if (this.returnUrl == '/admin') {
         this.returnUrl = '/';
       }
       this.router.push(this.returnUrl || '/');
     },
+    // TODO: change to camelCase
+    /**
+     * Login to admin panel
+     * @param userId User ID of admin user
+     * @param password Plain text password
+     */
     async admin_login(userId: string, password: string): Promise<void> {
       try {
         const creds = new FormData();
@@ -72,6 +85,7 @@ export const useAuthStore = defineStore('auth', {
         const jwt_data = jwt_decode(access_token) as JWT;
         if (!jwt_data) {
           console.error('Failed to decode');
+          throw new Error('Failed to decode');
         }
 
         localStorage.removeItem('creationStore');
@@ -89,8 +103,12 @@ export const useAuthStore = defineStore('auth', {
           message:
             'Failed to login, credentials invalid or insufficient privileges',
         });
+        return Promise.reject(err);
       }
     },
+    /**
+     * Logout of the application
+     */
     logout(): void {
       try {
         api.delete('/auth/logout');
@@ -104,6 +122,10 @@ export const useAuthStore = defineStore('auth', {
         console.warn(err);
       }
     },
+    // TODO: change to camelCase
+    /**
+     * Logout of admin panel
+     */
     admin_logout(): void {
       try {
         api.delete('/auth/logout');
@@ -115,6 +137,9 @@ export const useAuthStore = defineStore('auth', {
         console.warn('Logout failed');
       }
     },
+    /**
+     * Use refresh token to get new access token
+     */
     async refresh(): Promise<void> {
       console.warn('Refreshing access token');
       try {

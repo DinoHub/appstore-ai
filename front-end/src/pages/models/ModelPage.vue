@@ -101,6 +101,40 @@
                         : 'Service is down or not found.'
                     }}
                   </div>
+                  <div v-if="serviceHealthy">
+                    <div class="text-center">
+                      <q-btn
+                        class="q-my-md"
+                        rounded
+                        no-caps
+                        padding="sm xl"
+                        label="View Status (Debug)"
+                        @click="showDetailedStatus = true"
+                      />
+                    </div>
+                    <p>This may be due to one of the following reasons:</p>
+                    <ol>
+                      <li>
+                        The service is still being created (e.g pulling in
+                        image).
+                      </li>
+                      <li>
+                        The service is unable to be spun up due to a lack of
+                        resources
+                      </li>
+                      <li>
+                        The service container is unable to properly startup
+                      </li>
+                    </ol>
+                  </div>
+                  <div v-else>
+                    <p>This may be due to one of the following reasons:</p>
+                    <ol>
+                      <!-- Currently only unhealthy if status endpoint returns 404 -->
+                      <li>The service has been removed from the cluster.</li>
+                      <li>The service has been renamed.</li>
+                    </ol>
+                  </div>
                 </q-card-section>
                 <q-card-actions>
                   <q-btn
@@ -122,11 +156,12 @@
                   <div class="text-h6">Video Preview</div>
                 </q-card-section>
                 <q-separator></q-separator>
-                <q-card-actions>
-                  <vue-plyr
-                    ><video controls playsinline>
-                      <source size="1080" :src="model.videoLocation" /></video
-                  ></vue-plyr>
+                <q-card-actions class="justify-center">
+                  <vue-plyr playsinline>
+                    <video controls playsinline>
+                      <source :src="model.videoLocation" />
+                    </video>
+                  </vue-plyr>
                 </q-card-actions>
               </q-card>
             </q-tab-panel>
@@ -159,8 +194,22 @@
                     <td>{{ model.creatorUserId }}</td>
                   </tr>
                   <tr v-if="model.experiment?.connector">
-                    <td>{{ model.experiment.connector }} Experiment ID</td>
-                    <td>{{ model.experiment.experimentId }}</td>
+                    <td>Experiment Platform</td>
+                    <td>{{ model.experiment.connector }}</td>
+                  </tr>
+                  <tr v-if="model.experiment?.experimentId">
+                    <td>Experiment ID</td>
+                    <td>
+                      {{ model.experiment.experimentId }}
+                    </td>
+                  </tr>
+                  <tr v-if="model.experiment?.outputUrl">
+                    <td>Experiment URL</td>
+                    <td>
+                      <a :href="model.experiment.outputUrl">
+                        {{ model.experiment.outputUrl }}</a
+                      >
+                    </td>
                   </tr>
                   <tr>
                     <td>Description</td>
@@ -189,6 +238,7 @@
                 v-bind:key="artifact.name"
                 :name="artifact.name"
                 :url="artifact.url"
+                class="q-mb-md"
               ></artifact-card>
             </q-tab-panel>
             <q-tab-panel v-if="isModelOwner" name="manage">
@@ -204,9 +254,16 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md" v-if="model.inferenceServiceName">
+              <div
+                class="q-py-md"
+                v-if="model.task !== 'Reinforcement Learning'"
+              >
                 <q-btn
-                  label="Edit Model Inference Service"
+                  :label="
+                    model.inferenceServiceName
+                      ? 'Edit Model Inference Service'
+                      : 'Create Model Inference Service'
+                  "
                   :to="`/model/${userId}/${modelId}/edit/inference`"
                   rounded
                   color="tertiary"
@@ -214,9 +271,16 @@
                   padding="sm xl"
                 ></q-btn>
               </div>
-              <div class="q-py-md" v-if="model.videoLocation">
+              <div
+                class="q-py-md"
+                v-if="model.task === 'Reinforcement Learning'"
+              >
                 <q-btn
-                  label="Edit Example Video"
+                  :label="
+                    model.videoLocation
+                      ? 'Edit Example Video'
+                      : 'Upload Example Video'
+                  "
                   :to="`/model/${userId}/${modelId}/edit/video`"
                   rounded
                   color="tertiary"
@@ -225,6 +289,14 @@
                 ></q-btn>
               </div>
               <div>
+                <!--
+                  TODO: this currently only calls delete model endpoint.
+                  Right now, the delete model endpoint will add the
+                  clear orphaned services task that will run afterwards,
+                  but we should probably expicitly call the delete service
+                  endpoint here as well instead of relying on what is
+                  effectively a side effect.
+                -->
                 <q-form
                   @submit="modelStore.deleteModelById(userId, modelId)"
                   class="q-gutter-md"
@@ -256,19 +328,51 @@
         </div>
       </aside>
     </main>
+    <aside>
+      <q-dialog v-model="showDetailedStatus" persistent>
+        <q-card>
+          <q-card-section>
+            <service-status-display
+              :status="inferenceServiceStore.currentServiceStatus"
+            >
+            </service-status-display>
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              rounded
+              no-caps
+              padding="sm xl"
+              v-close-popup
+              label="Close"
+            ></q-btn>
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+    </aside>
   </q-page>
 </template>
 
+<style>
+.plyr--video {
+  width: 100%;
+}
+</style>
 <script setup lang="ts">
-import { ModelCard } from 'src/stores/model-store';
+import {
+  ModelCard,
+  LinkedExperiment,
+  LinkedDataset,
+} from 'src/stores/model-store';
 import MaterialChip from 'src/components/content/MaterialChip.vue';
 import GradioFrame from 'src/components/content/GradioFrame.vue';
 import ArtifactCard from 'src/components/content/ArtifactCard.vue';
 import TiptapDisplay from 'src/components/content/TiptapDisplay.vue';
+import ServiceStatusDisplay from 'src/components/content/ServiceStatusDisplay.vue';
 import { computed, reactive, ref, Ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { useModelStore } from 'src/stores/model-store';
 import { useRoute, useRouter } from 'vue-router';
+import { useExperimentStore } from 'src/stores/experiment-store';
 import {
   InferenceServiceStatus,
   useInferenceServiceStore,
@@ -290,8 +394,10 @@ const userId = route.params.userId as string;
 const tab: Ref<Tabs> = ref(Tabs.inference);
 const inferenceUrl: Ref<string | null> = ref(null);
 const inferenceStatus: Ref<InferenceServiceStatus | undefined> = ref();
-const serviceHealthy: Ref<boolean> = ref(true);
+const serviceHealthy = ref(true);
+const showDetailedStatus = ref(false);
 const authStore = useAuthStore();
+const expStore = useExperimentStore();
 const modelStore = useModelStore();
 const inferenceServiceStore = useInferenceServiceStore();
 
@@ -313,6 +419,8 @@ const model = reactive({
   explanation: '',
   usage: '',
   limitations: '',
+  experiment: {} as LinkedExperiment,
+  dataset: {} as LinkedDataset,
 }) as ModelCard;
 
 modelStore
@@ -329,7 +437,11 @@ modelStore
     model.lastModified = `${dateLastModified.getDate()}/${
       dateLastModified.getMonth() + 1
     }/${dateLastModified.getFullYear()}, ${dateLastModified.toLocaleTimeString()}`;
-
+    if (model.experiment != undefined) {
+      model.experiment.connector = expStore.experimentConnectors.find(
+        (o) => o.value == model.experiment.connector
+      ).label;
+    }
     if (!model.inferenceServiceName && !model.videoLocation) {
       tab.value = Tabs.metadata; // if both not available, go to metadata
       return;

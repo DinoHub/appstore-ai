@@ -29,16 +29,14 @@ class ClearMLExperiment(ExperimentConnector):
         elif project and exp_name:
             task = Task.get_task(project_name=project, task_name=exp_name)
         else:
-            raise ValueError(
-                "Must specify either exp_id or project and exp_name"
-            )
+            raise ValueError("Must specify either exp_id or project and exp_name")
         exp.id = task.id
         exp.project_name = task.get_project_name()
         exp.exp_name = task.name
         exp.task = task
         metadata = exp.get_metadata()
         exp.user = metadata["user"]
-
+        exp.output_url = task.get_output_log_web_page().replace("/output/log", "")
         return exp
 
     @classmethod
@@ -70,9 +68,7 @@ class ClearMLExperiment(ExperimentConnector):
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         raw_data: Dict[str, Dict] = self.task.get_reported_scalars()
-        return [
-            self._to_plotly_json(name, data) for name, data in raw_data.items()
-        ]
+        return [self._to_plotly_json(name, data) for name, data in raw_data.items()]
 
     @property
     def artifacts(self) -> Dict[str, Artifact]:
@@ -85,7 +81,7 @@ class ClearMLExperiment(ExperimentConnector):
                 artifactType=artifact.type,
                 name=name,
                 url=artifact.url,
-                timestamp=artifact.timestamp,
+                timestamp=str(artifact.timestamp),
                 framework=None,
             )
         return output
@@ -121,10 +117,7 @@ class ClearMLExperiment(ExperimentConnector):
         """
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
-        return [
-            json.loads(plot["plot_str"])
-            for plot in self.task.get_reported_plots()
-        ]
+        return [json.loads(plot["plot_str"]) for plot in self.task.get_reported_plots()]
 
     def get_metadata(self) -> Dict:
         """Get metadata for the current experiment.
@@ -148,9 +141,7 @@ class ClearMLExperiment(ExperimentConnector):
             raise ValueError("Unable to find task")
         return tasks[0]
 
-    def clone_self(
-        self, clone_name: Optional[str] = None
-    ) -> "ClearMLExperiment":
+    def clone_self(self, clone_name: Optional[str] = None) -> "ClearMLExperiment":
         """Clone the current experiment.
 
         Args:
@@ -187,14 +178,10 @@ class ClearMLExperiment(ExperimentConnector):
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         return dict(
-            self.task.enqueue(
-                self.task, queue_name=queue_name, queue_id=queue_id
-            )
+            self.task.enqueue(self.task, queue_name=queue_name, queue_id=queue_id)
         )
 
-    def close(
-        self, delete_task: bool = False, delete_artifacts: bool = False
-    ) -> None:
+    def close(self, delete_task: bool = False, delete_artifacts: bool = False) -> None:
         if not self.task:
             raise ValueError("Not currently connected to any experiments")
         self.task.close()

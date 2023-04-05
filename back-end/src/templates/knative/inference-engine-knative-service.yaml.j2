@@ -2,6 +2,8 @@ apiVersion: serving.knative.dev/v1
 kind: Service
 metadata:
   name: {{ engine_name }}
+  labels:
+    aas-ie-service: "true"
 spec:
   template:
     spec:
@@ -16,8 +18,8 @@ spec:
           {% if env %}
           env:
           {% for key, value in env.items()  %}
-            - name: {{ key }}
-              value: {{ value }}
+            - name: "{{ key|string }}"
+              value: "{{ value|string }}"
           {% endfor %}
           {% endif %}
           resources:
