@@ -28,7 +28,7 @@ colorama = "^0.4.6"
 sse-starlette = "^1.2.1"
 hypothesis = "^6.67.1"
 miniopy-async = "^1.12"
-aiohttp = "^3.8.4"
+aiohttp = "^3.8.5"
 
 [tool.poetry.scripts]
 boot = "main:start"
