@@ -397,12 +397,13 @@ async def create_model_card_metadata(
     # Sanitize html
     card.markdown = await preprocess_html_post(card.markdown)
     card.performance = await preprocess_html_post(card.performance)
-    if card.experiment.connector != "" and card.experiment.connector is not None:
-        card.experiment.output_url = (
-            Experiment.from_connector(card.experiment.connector)
-            .get(exp_id=card.experiment.experiment_id)
-            .output_url
-        )
+    if card.experiment:
+        if card.experiment.connector != "" and card.experiment.connector is not None:
+            card.experiment.output_url = (
+                Experiment.from_connector(card.experiment.connector)
+                .get(exp_id=card.experiment.experiment_id)
+                .output_url
+            )
     card_dict: dict = jsonable_encoder(
         ModelCardModelDB(
             **card.dict(),
