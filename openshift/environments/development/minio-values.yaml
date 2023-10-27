@@ -33,6 +33,9 @@ buckets:
 
 persistence:
   size: 10Gi
+  storageClass: "aas-minio"
+  accessMode: ReadWriteOnce
+  size: 5Gi
 
 resources:
   requests:

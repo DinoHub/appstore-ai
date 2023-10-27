@@ -1,3 +1,6 @@
+define: &uid 1000740000
+define: &storageclass crc-csi-hostpath-provisioner
+
 auth:
   enabled: true
   rootUser: aasRootDBUser
@@ -9,6 +12,21 @@ auth:
   databases:  
     - appStoreProdDB
 
+persistence:
+  enabled: true
+  storageClass: *storageclass
+  accessModes:
+    - ReadWriteOnce
+  size: 8Gi
+
+podSecurityContext:
+  enabled: true
+  fsGroup: *uid
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: *uid
+  runAsNonRoot: true
 
 # initdbScripts:
 #   init-db.js: |
