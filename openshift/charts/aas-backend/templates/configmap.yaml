@@ -1,0 +1,11 @@
+{{- if .Values.certs -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-certs
+data:
+    {{- range $key, $value := .Values.certs }}
+    {{ $key }}: {{ $value | quote }}
+    {{- end }}
+{{- end -}}
+  

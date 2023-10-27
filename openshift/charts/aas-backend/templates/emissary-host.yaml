@@ -1,0 +1,13 @@
+{{ if .Values.inferenceServiceBackend.emissary }}
+apiVersion: getambassador.io/v2
+kind: Host
+metadata:
+  name: ambassador
+spec:
+  hostname: '*'
+  acmeProvider:
+    authority: none
+  requestPolicy:
+    insecure:
+      action: Route
+{{ end }}

@@ -1,0 +1,22 @@
+image:
+  repository: <REGISTRY>/ai-appstore/aas-frontend
+  pullPolicy: "IfNotPresent"
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/proxy-body-size: 10000m # Max upload size 10GB
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: <REPLACE_ME>
+      paths:
+        - path: /(.*)
+          pathType: Prefix
+
+service:
+  type: ClusterIP

@@ -1,0 +1,11 @@
+# Configure KNative
+# Set up image credentials for private registries
+imageCredentials: 
+  registry: ''
+  username: ''
+  password: ''
+
+# Configure KNative domain
+domain: # use real domain or sslip.io?
+  enabled: false # if false, will use the default domain
+  name: 'knative.example.com'

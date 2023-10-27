@@ -1,0 +1,28 @@
+# Configure KNative
+# Set up image credentials for private registries
+imageCredentials: 
+  registry: ''
+  username: ''
+  password: ''
+
+# Configure KNative domain
+domain: # use real domain or sslip.io?
+  enabled: false # if false, will use the default domain
+  name: 'knative.example.com'
+
+baseImages:
+  queue: gcr.io/knative-releases/knative.dev/serving/cmd/queue@sha256:f78383554ed81895ff230217f3e0ce9bf9ff2048d4303cc9fb36342ac3f470b3
+  activator: gcr.io/knative-releases/knative.dev/serving/cmd/activator@sha256:24c6c8de9a6872ca796a13d1e8324a4dd250aacc5094975b60ce235122abb97f
+  autoscaler: gcr.io/knative-releases/knative.dev/serving/cmd/autoscaler@sha256:f26a8b516112413cbba4244b36202354d1c98ed209301b255c55958213708a78
+  controller: gcr.io/knative-releases/knative.dev/serving/cmd/controller@sha256:ea48ea2f2433cc7e5c25940e79465ca7226750260faaa1724b95dd8cfac92034
+  domainMapping: gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping@sha256:9197c51406208c8f3cc98c2b1f69ed2ba8b88e11cf765616700abecc5dd18350
+  domainMappingWebhook: gcr.io/knative-releases/knative.dev/serving/cmd/domain-mapping-webhook@sha256:1b6e7f382c878f8ac168ce36a92f1af4dbdac0f61aae9e73fe899486786a4bbf
+  webhook: gcr.io/knative-releases/knative.dev/serving/cmd/webhook@sha256:e271d46b5168e25e9742f6f33a461cfcdc17b2460d4355fff7fe0c71fc1e4378
+  kourierNet: gcr.io/knative-releases/knative.dev/net-kourier/cmd/kourier@sha256:f7456a7995567eddab4b34c8807f4a11c3a343836b65aa9183f8f47c2a9f3d6e
+  kourierGateway: docker.io/envoyproxy/envoy:v1.21-latest
+  defaultDomain: gcr.io/knative-releases/knative.dev/serving/cmd/default-domain@sha256:7b7b266e3a87e33cc9700e356940714adb11e6df86b6161aba4ad78a8d75228c
+
+baseImageCredentials:
+  registry: ''
+  username: ''
+  password: ''

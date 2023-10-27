@@ -1,0 +1,54 @@
+env:
+  PROD_FRONTEND_HOST: '["http://appstore.ai"]'
+  PROD_SECURE_COOKIES: 'false'
+  PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+  PROD_ALGORITHM: HS256
+  PROD_MONGO_DSN: mongodb://aas-mongodb
+  PROD_DB_NAME: appStoreProdDB
+  PROD_MAX_UPLOAD_SIZE_GB: "10"
+  PROD_MONGO_USERNAME: aas-backend-serviceAcct
+  PROD_MONGO_PASSWORD: TempPassword1234 # Replace in prod
+  PROD_IE_NAMESPACE: inference-engine
+  PROD_IE_SERVICE_TYPE: emissary
+  PROD_IE_DEFAULT_PROTOCOL: http
+  PROD_MINIO_DSN: minio:9000
+  PROD_MINIO_BUCKET_NAME: model-zoo
+  PROD_MINIO_TLS: "False"
+  PROD_MINIO_API_HOST: http://storage.appstore.ai
+  PROD_MINIO_API_ACCESS_KEY: aas-minio-uploader
+  PROD_MINIO_API_SECRET_KEY: TempPassword1234 # Replace in prod
+  PROD_FIRST_SUPERUSER_ID: admin
+  PROD_FIRST_SUPERUSER_PASSWORD: Password1234!
+  CLEARML_WEB_HOST: https://app.clear.ml
+  CLEARML_API_HOST: https://api.clear.ml
+  CLEARML_FILES_HOST: https://files.clear.ml
+  CLEARML_API_ACCESS_KEY: 5BGFOYCD786OFPFP3M9F
+  CLEARML_API_SECRET_KEY: HHqILZP4YZqOeTKneHUEc4oG6VosVEfDtVQV2ySheRLFVq9aSn
+environment: prod
+
+service:
+  type: LoadBalancer
+
+inferenceServiceBackend:
+  emissary: true
+  knative: false
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 10000m # Max upload size 10GB
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    # Note for local dev, set the following in the hostfile
+    # 127.0.0.1 api.appstore.ai
+    # 127.0.0.1 appstore.ai
+    - host: "api.appstore.ai"
+      paths:
+        - path: /
+          pathType: Prefix
+  # tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
