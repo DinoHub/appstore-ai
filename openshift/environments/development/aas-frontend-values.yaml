@@ -1,5 +1,5 @@
 ingress:
-  enabled: true
+  enabled: false
   className: "nginx"
   annotations:
     kubernetes.io/ingress.allow-http: "true"
@@ -13,9 +13,19 @@ ingress:
       paths:
         - path: /(.*)
           pathType: Prefix
+          backend:
+            service:
+              name: aas-frontend
+              port: 80
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
 
 env:
-  VUE_APP_BACKEND_URL: http://api.appstore.ai
+  VUE_APP_BACKEND_URL: http://aas-backend.apps-crc.testing
+
+image:
+  repository: docker.io/jovanhuang/aas-frontend
+  pullPolicy: Always
+  tag: "1.1.0"
+  
