@@ -72,7 +72,7 @@ router = APIRouter(prefix="/models", tags=["Models"])
 
 
 @router.get(
-    "/_db/options/filters/", response_model=GetFilterResponseModel
+    "/_db/options/filters", response_model=GetFilterResponseModel
 )  # prevent accidently matching with user/model id
 async def get_available_filters(
     db: Tuple[AsyncIOMotorDatabase, AsyncIOMotorClient] = Depends(get_db)
