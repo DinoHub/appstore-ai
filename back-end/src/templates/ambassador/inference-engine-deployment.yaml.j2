@@ -21,11 +21,12 @@ spec:
         app: {{ engine_name }}
         aas-ie-service: "true"
     spec:
+      serviceAccountName: backend-service-engines
       containers:
         - name: {{ engine_name }}
           image: {{ image_name }}
           # imagePullPolicy: Always # TODO: uncomment when registry is properly set up
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ port if port else 8080 }}
           {% if env %}
