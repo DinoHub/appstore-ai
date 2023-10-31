@@ -1,3 +1,6 @@
+define: &uid 1000740000
+define: &storageclass crc-csi-hostpath-provisioner
+
 rootUser: root 
 rootPassword: RootTempPassword1234 # Replace in prod
 replicas: 1
@@ -12,31 +15,22 @@ svcaccts:
     secretKey: TempPassword1234 # Replace in prod
     user: ai-appstore
 
-ingress:
-  enabled: true
-  ingressClassName: "nginx"
-  path: /
-  hosts: 
-    - storage.appstore.ai
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    # nginx.ingress.kubernetes.io/configuration-snippet: |
-    #   more_set_input_headers 'Host: minio:9000';
-    nginx.ingress.kubernetes.io/upstream-vhost: "minio:9000"
-
-# consoleService:
-#   type: LoadBalancer
-
 buckets:
   - name: model-zoo
     policy: download
 
 persistence:
   size: 10Gi
-  storageClass: "aas-minio"
+  storageClass: *storageclass
   accessMode: ReadWriteOnce
   size: 5Gi
 
 resources:
   requests:
     memory: 512Mi
+
+securityContext:
+  enabled: true
+  runAsUser: *uid
+  runAsGroup: *uid
+  fsGroup: *uid
