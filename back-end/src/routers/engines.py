@@ -214,6 +214,7 @@ async def get_inference_engine_service(
                 ingress = core_api.read_namespaced_service(
                     name=ingress_name, namespace=ingress_namespace
                 )
+                
                 if ingress.spec.load_balancer_ip:
                     host = ingress.spec.load_balancer_ip
                 else:
