@@ -36,7 +36,7 @@ jobs:
       mongodb:
         image: mongo
         ports:
-          - 27017:27017
+          - 27016:27017
         env:
           MONGO_INITDB_DATABASE: appStoreTestDB
       minio:
