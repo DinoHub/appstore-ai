@@ -17,4 +17,4 @@ security:
 
 service:
   type: LoadBalancer
-  loadBalancerIP: http://appstore-model.apps-crc.testing
+  loadBalancerIP: https://appstore-model.apps-crc.testing

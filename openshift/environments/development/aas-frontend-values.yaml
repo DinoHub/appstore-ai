@@ -22,7 +22,7 @@ service:
   type: ClusterIP
 
 env:
-  VUE_APP_BACKEND_URL: http://aas-backend.apps-crc.testing
+  VUE_APP_BACKEND_URL: https://aas-backend.apps-crc.testing
 
 image:
   repository: docker.io/jovanhuang/aas-frontend

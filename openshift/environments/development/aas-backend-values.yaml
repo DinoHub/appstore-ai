@@ -1,5 +1,5 @@
 env:
-  PROD_FRONTEND_HOST: '["http://appstore.apps-crc.testing"]'
+  PROD_FRONTEND_HOST: '["https://appstore.apps-crc.testing"]'
   PROD_SECURE_COOKIES: 'false'
   PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
   PROD_ALGORITHM: HS256
@@ -14,7 +14,7 @@ env:
   PROD_MINIO_DSN: storage.apps-crc.testing
   PROD_MINIO_BUCKET_NAME: model-zoo
   PROD_MINIO_TLS: "False"
-  PROD_MINIO_API_HOST: http://storage.apps-crc.testing
+  PROD_MINIO_API_HOST: https://storage.apps-crc.testing
   PROD_MINIO_API_ACCESS_KEY: aas-minio-uploader
   PROD_MINIO_API_SECRET_KEY: TempPassword1234 # Replace in prod
   PROD_FIRST_SUPERUSER_ID: admin
