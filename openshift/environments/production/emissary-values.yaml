@@ -1,0 +1,10 @@
+image:
+  repository: <REGISTRY>/emissaryingress/emissary
+  tag: 3.4.0
+
+agent:
+  image:
+    repository: <REGISTRY>/ambassador/ambassador-agent
+    tag: 1.0.3
+
+createDefaultListeners: true

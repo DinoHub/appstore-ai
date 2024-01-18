@@ -1,0 +1,31 @@
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/proxy-body-size: 10000m # Max upload size 10GB
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: appstore.ai
+      paths:
+        - path: /(.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: aas-frontend
+              port: 80
+
+service:
+  type: ClusterIP
+
+env:
+  VUE_APP_BACKEND_URL: http://aas-backend.apps-crc.testing
+
+image:
+  repository: docker.io/jovanhuang/aas-frontend
+  pullPolicy: Always
+  tag: "1.1.0"
+  

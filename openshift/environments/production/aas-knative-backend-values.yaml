@@ -1,0 +1,15 @@
+domain:
+  enabled: false
+  name: <TO-REPLACE>
+
+baseImages:
+  queue: <REGISTRY>/knative-releases/knative.dev/serving/cmd/queue@sha256:v1.8.3
+  activator: <REGISTRY>/knative-releases/knative.dev/serving/cmd/activator:v1.8.3
+  autoscaler: <REGISTRY>/knative-releases/knative.dev/serving/cmd/autoscaler:v1.8.3
+  controller: <REGISTRY>/knative-releases/knative.dev/serving/cmd/controller:v1.8.3
+  domainMapping: <REGISTRY>/knative-releases/knative.dev/serving/cmd/domain-mapping:v1.8.3
+  domainMappingWebhook: <REGISTRY>/knative-releases/knative.dev/serving/cmd/domain-mapping-webhook:v1.8.3
+  webhook: <REGISTRY>/knative-releases/knative.dev/serving/cmd/webhook:v1.8.3
+  kourierNet: <REGISTRY>/knative-releases/knative.dev/net-kourier/cmd/kourier:v1.8.1
+  kourierGateway: <REGISTRY>/envoyproxy/envoy:v1.21-latest
+  defaultDomain: <REGISTRY>/knative-releases/knative.dev/serving/cmd/default-domain:v1.8.3

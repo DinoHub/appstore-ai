@@ -1,0 +1,125 @@
+# Default values for backend.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: aas-backend
+  pullPolicy: Never
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: "aas-backend"
+fullnameOverride: "aas-backend"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: "backend-service"
+
+inferenceServiceBackend:
+  emissary: true
+  knative: false
+
+env:
+  PROD_FRONTEND_HOST: '["http://appstore.ai"]'
+  PROD_SECURE_COOKIES: 'false'
+  PROD_SECRET_KEY: 60bbf2dacae7ed30a5f79a31f2e1f0424dfbed678ea0b23c7c3374b3a67c1119
+  PROD_ALGORITHM: HS256
+  PROD_MONGO_DSN: mongodb://aas-mongodb
+  PROD_DB_NAME: appStoreProdDB
+  PROD_MAX_UPLOAD_SIZE_GB: "10"
+  PROD_MONGO_USERNAME: <TO-REPLACE>
+  PROD_MONGO_PASSWORD: <TO-REPLACE>
+  PROD_IE_NAMESPACE: inference-engine
+  PROD_IE_SERVICE_TYPE: emissary
+  PROD_IE_DEFAULT_PROTOCOL: http
+  PROD_FIRST_SUPERUSER_ID: <TO-REPLACE>
+  PROD_FIRST_SUPERUSER_PASSWORD: <TO-REPLACE>
+  CLEARML_WEB_HOST:  <TO-REPLACE> # https://app.clear.ml
+  CLEARML_API_HOST:  <TO-REPLACE> # https://api.clear.ml
+  CLEARML_FILES_HOST: <TO-REPLACE>  # https://files.clear.ml
+  CLEARML_API_ACCESS_KEY: <TO-REPLACE>
+  CLEARML_API_SECRET_KEY: <TO-REPLACE>
+
+certs: {}
+  # CA_CERT: ''
+
+environment: prod
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+probe:
+  containerPort: 8080
+
+readinessProbe:
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  timeoutSeconds: 10
+  failureThreshold: 6
+  successThreshold: 1
+
+
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: api.appstore.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

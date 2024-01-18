@@ -1,0 +1,60 @@
+image:
+  repository: <REGISTRY>/ai-appstore/aas-backend
+  pullPolicy: "IfNotPresent"
+
+env:
+  PROD_FRONTEND_HOST: '["<REPLACE_ME>"]' # inner quote must be double quote to fit JSON format
+  PROD_SECURE_COOKIES: <REPLACE_ME>
+  PROD_SECRET_KEY: <REPLACE_ME>
+  PROD_ALGORITHM: HS256
+  PROD_MONGO_DSN: mongodb://aas-mongodb
+  PROD_DB_NAME: <REPLACE_ME>
+  PROD_MAX_UPLOAD_SIZE_GB: "10"
+  PROD_MONGO_USERNAME: <REPLACE_ME>
+  PROD_MONGO_PASSWORD: <REPLACE_ME>
+  PROD_IE_NAMESPACE: inference-engine
+  PROD_IE_SERVICE_TYPE: emissary
+  PROD_IE_DEFAULT_PROTOCOL: http
+  PROD_MINIO_DSN: minio:9000
+  PROD_MINIO_BUCKET_NAME: <REPLACE_ME>
+  PROD_MINIO_TLS: "False"
+  PROD_MINIO_API_HOST: <REPLACE_ME>
+  PROD_MINIO_API_ACCESS_KEY: <REPLACE_ME>
+  PROD_MINIO_API_SECRET_KEY: <REPLACE_ME>
+  PROD_FIRST_SUPERUSER_ID: <REPLACE_ME>
+  PROD_FIRST_SUPERUSER_PASSWORD: <REPLACE_ME>
+  CLEARML_WEB_HOST: <REPLACE_ME>
+  CLEARML_API_HOST: <REPLACE_ME>
+  CLEARML_FILES_HOST: <REPLACE_ME>
+  CLEARML_API_ACCESS_KEY: <REPLACE_ME>
+  CLEARML_API_SECRET_KEY: <REPLACE_ME>
+environment: prod
+
+inferenceServiceBackend:
+  emissary: true
+  knative: false
+
+service:
+  type: ClusterIP
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.allow-http: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: 10000m # Max upload size 10GB
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: <REPLACE_ME>
+      paths:
+        - path: /
+          pathType: Prefix
+  # tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources:
+  limits:
+    cpu: 4
+    memory: 8Gi

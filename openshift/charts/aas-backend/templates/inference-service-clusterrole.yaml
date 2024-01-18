@@ -1,0 +1,65 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # "namespace" omitted since ClusterRoles are not namespaced
+  name: inference-engine-manager
+rules:
+  - apiGroups: ["", "apps", "getambassador.io", "serving.knative.dev", "knative.serving.dev"]
+    resources: ["services", "pods", "pods/log", "deployments", "mappings", "listeners", "deployments/status", "deployments/scale"]
+    verbs: ["get", "watch", "list", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: manage-inference-engine
+  namespace: inference-engine
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: inference-engine-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  # "namespace" omitted since ClusterRoles are not namespaced
+  name: read-gateway-dns
+rules:
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get"]
+---
+{{ if .Values.inferenceServiceBackend.emissary }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-gateway-dns-emissary
+  namespace: emissary
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: read-gateway-dns
+  apiGroup: rbac.authorization.k8s.io
+{{ end }}
+---
+{{ if .Values.inferenceServiceBackend.knative }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-gateway-dns-kourier
+  namespace: kourier-system
+subjects:
+  - kind: ServiceAccount
+    name: {{ .Values.serviceAccount.name }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: read-gateway-dns
+  apiGroup: rbac.authorization.k8s.io
+{{ end }}
