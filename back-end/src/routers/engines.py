@@ -200,7 +200,7 @@ async def get_inference_engine_service(
                     ingress_name = "kourier"
                     ingress_namespace = "kourier-system"
                 elif service_backend == ServiceBackend.EMISSARY:
-                    ingress_name = "emissary-emissary-ingress"
+                    ingress_name = "emissary-ingress"
                     ingress_namespace = "emissary"
                 else:
                     if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
@@ -221,8 +221,8 @@ async def get_inference_engine_service(
                     host = ingress.status.load_balancer.ingress[0].ip
         # Generate service url
         if service_backend == ServiceBackend.EMISSARY:
-            # url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
-            url = f"{host}/{path}/"
+            url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
+            # url = f"{host}/{path}/"
         elif service_backend == ServiceBackend.KNATIVE:
             url = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
             if not config.IE_DOMAIN:
@@ -446,7 +446,7 @@ async def create_inference_engine_service(
                     ingress_name = "kourier"
                     ingress_namespace = "kourier-system"
                 elif service_backend == ServiceBackend.EMISSARY:
-                    ingress_name = "emissary-emissary-ingress"
+                    ingress_name = "emissary-ingress"
                     ingress_namespace = "emissary"
                 else:
                     if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
@@ -493,8 +493,8 @@ async def create_inference_engine_service(
                     body=service_render,
                 )
             elif service_backend == ServiceBackend.EMISSARY:
-                url = f"{host}/{path}/"
-                # url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
+                # url = f"{host}/{path}/"
+                url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
                 # else css and js files are not loaded properly
                 service_template = template_env.get_template(
                     "ambassador/inference-engine-service.yaml.j2"
@@ -777,7 +777,7 @@ async def update_inference_engine_service(
                     ingress_name = "kourier"
                     ingress_namespace = "kourier-system"
                 elif service_type == ServiceBackend.EMISSARY:
-                    ingress_name = "emissary-emissary-ingress"
+                    ingress_name = "emissary-ingress"
                     ingress_namespace = "emissary"
                 else:
                     if config.IE_INGRESS_NAME and config.IE_INGRESS_NAMESPACE:
@@ -806,8 +806,8 @@ async def update_inference_engine_service(
         elif service_type == ServiceBackend.EMISSARY:
             updated_metadata[
                 "inferenceUrl"
-            ] = f"{host}/{service_name}/"
-            # f"{protocol}://{host}/{service_name}/"
+            ] = f"{protocol}://{host}/{service_name}/"
+            # f"{host}/{service_name}/"
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # Check if user has editor access
