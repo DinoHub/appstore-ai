@@ -58,7 +58,7 @@ ingress:
   #      - chart-example.local
 
 image:
-  repository: docker.io/aas-backend # Please use own repository link for back-end image.
+  repository: docker.io/<docker_username>/aas-backend # Please use own repository link for back-end image.
   pullPolicy: Always
   tag: "1.1.0"
 

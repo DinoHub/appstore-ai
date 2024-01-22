@@ -25,7 +25,7 @@ env:
   VUE_APP_BACKEND_URL: https://aas-backend.<domain-name> # If using OpenShift, please use the Openshift route for back-end
 
 image:
-  repository: docker.io/aas-frontend # Please use own repository link for front-end image.
+  repository: docker.io/<docker_username>/aas-frontend # Please use own repository link for front-end image.
   pullPolicy: Always
   tag: "1.1.0"
   
