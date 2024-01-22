@@ -1,3 +1,0 @@
-apiext_image:
-  repository: <REGISTRY>/emissaryingress/emissary
-  tag: 3.4.0
