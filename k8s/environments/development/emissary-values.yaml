@@ -1,3 +1,5 @@
+define: &uid 8888 # For openshift, pls use the UID within the project UID range.
+
 image:
   repository: docker.io/emissaryingress/emissary
   tag: 3.4.0
@@ -8,3 +10,11 @@ agent:
     tag: 1.0.3
 
 createDefaultListeners: true
+
+security:
+  podSecurityContext:
+    runAsUser: *uid
+
+service:
+  type: LoadBalancer
+  loadBalancerIP: appstore-model.<domain-name> # For Openshift, please use the route for emissary
