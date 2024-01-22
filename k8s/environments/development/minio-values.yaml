@@ -1,3 +1,6 @@
+define: &uid 1000 # For openshift, pls use the UID within the project UID range.
+define: &storageclass "" # pls update according to the storageclass provision in your deployment.
+
 rootUser: root 
 rootPassword: RootTempPassword1234 # Replace in prod
 replicas: 1
@@ -13,7 +16,7 @@ svcaccts:
     user: ai-appstore
 
 ingress:
-  enabled: true
+  enabled: false # Please use false if using Openshift.
   ingressClassName: "nginx"
   path: /
   hosts: 
@@ -33,7 +36,16 @@ buckets:
 
 persistence:
   size: 10Gi
+  storageClass: *storageclass
+  accessMode: ReadWriteOnce
+  size: 5Gi
 
 resources:
   requests:
     memory: 512Mi
+
+securityContext:
+  enabled: true
+  runAsUser: *uid
+  runAsGroup: *uid
+  fsGroup: *uid

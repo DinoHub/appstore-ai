@@ -214,7 +214,11 @@ async def get_inference_engine_service(
                 ingress = core_api.read_namespaced_service(
                     name=ingress_name, namespace=ingress_namespace
                 )
-                host = ingress.status.load_balancer.ingress[0].ip
+                
+                if ingress.spec.load_balancer_ip:
+                    host = ingress.spec.load_balancer_ip
+                else:
+                    host = ingress.status.load_balancer.ingress[0].ip
         # Generate service url
         if service_backend == ServiceBackend.EMISSARY:
             url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
@@ -455,7 +459,10 @@ async def create_inference_engine_service(
                 ingress = core_api.read_namespaced_service(
                     name=ingress_name, namespace=ingress_namespace
                 )
-                host = ingress.status.load_balancer.ingress[0].ip
+                if ingress.spec.load_balancer_ip:
+                    host = ingress.spec.load_balancer_ip
+                else:
+                    host = ingress.status.load_balancer.ingress[0].ip
             if service_backend == ServiceBackend.KNATIVE:
                 service_template = template_env.get_template(
                     "knative/inference-engine-knative-service.yaml.j2"
@@ -782,7 +789,10 @@ async def update_inference_engine_service(
                 ingress = core_api.read_namespaced_service(
                     name=ingress_name, namespace=ingress_namespace
                 )
-                host = ingress.status.load_balancer.ingress[0].ip
+                if ingress.spec.load_balancer_ip:
+                    host = ingress.spec.load_balancer_ip
+                else:
+                    host = ingress.status.load_balancer.ingress[0].ip
         updated_metadata["protocol"] = protocol
         updated_metadata["host"] = host
         if service_type == ServiceBackend.KNATIVE:

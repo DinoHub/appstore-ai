@@ -1,5 +1,5 @@
 ingress:
-  enabled: true
+  enabled: false # Please use false if using Openshift.
   className: "nginx"
   annotations:
     kubernetes.io/ingress.allow-http: "true"
@@ -13,9 +13,19 @@ ingress:
       paths:
         - path: /(.*)
           pathType: Prefix
+          backend:
+            service:
+              name: aas-frontend
+              port: 80
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
 
 env:
-  VUE_APP_BACKEND_URL: http://api.appstore.ai
+  VUE_APP_BACKEND_URL: https://aas-backend.<domain-name> # If using OpenShift, please use the Openshift route for back-end
+
+image:
+  repository: docker.io/<docker_username>/aas-frontend # Please use own repository link for front-end image.
+  pullPolicy: Always
+  tag: "1.1.0"
+  
