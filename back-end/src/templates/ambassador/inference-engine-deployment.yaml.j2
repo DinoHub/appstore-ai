@@ -26,7 +26,7 @@ spec:
         - name: {{ engine_name }}
           image: {{ image_name }}
           # imagePullPolicy: Always # TODO: uncomment when registry is properly set up
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: {{ port if port else 8080 }}
           {% if env %}
