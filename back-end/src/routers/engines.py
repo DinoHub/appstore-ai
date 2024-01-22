@@ -222,7 +222,6 @@ async def get_inference_engine_service(
         # Generate service url
         if service_backend == ServiceBackend.EMISSARY:
             url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
-            # url = f"{host}/{path}/"
         elif service_backend == ServiceBackend.KNATIVE:
             url = f"{protocol}://{service_name}.{config.IE_NAMESPACE}.{host}"
             if not config.IE_DOMAIN:
@@ -493,7 +492,6 @@ async def create_inference_engine_service(
                     body=service_render,
                 )
             elif service_backend == ServiceBackend.EMISSARY:
-                # url = f"{host}/{path}/"
                 url = f"{protocol}://{host}/{path}/"  # need to add trailing slash for ambassador
                 # else css and js files are not loaded properly
                 service_template = template_env.get_template(
@@ -807,7 +805,6 @@ async def update_inference_engine_service(
             updated_metadata[
                 "inferenceUrl"
             ] = f"{protocol}://{host}/{service_name}/"
-            # f"{host}/{service_name}/"
         async with await mongo_client.start_session() as session:
             async with session.start_transaction():
                 # Check if user has editor access
