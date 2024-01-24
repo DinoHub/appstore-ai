@@ -29,11 +29,12 @@ sse-starlette = "^1.2.1"
 hypothesis = "^6.67.1"
 miniopy-async = "^1.12"
 aiohttp = "^3.8.4"
+python-keycloak = "^3.7.0"
 
 [tool.poetry.scripts]
 boot = "main:start"
 
-[tool.poetry.group.dev.dependencies]
+[tool.poetry.dev-dependencies]
 black = "^22.8.0"
 pytest = "^7.1.3"
 mtools = "^1.7.0"
