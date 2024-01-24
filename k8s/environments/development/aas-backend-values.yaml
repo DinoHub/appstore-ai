@@ -60,7 +60,7 @@ ingress:
 image:
   repository: docker.io/<docker_username>/aas-backend # Please use own repository link for back-end image.
   pullPolicy: Always
-  tag: "1.1.0"
+  tag: "1.2.0"
 
 serviceAccountengines:
   create: true
