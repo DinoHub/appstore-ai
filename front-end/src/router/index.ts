@@ -8,7 +8,6 @@ import {
 import { route } from 'quasar/wrappers';
 import routes from './routes';
 import { useAuthStore } from 'src/stores/auth-store';
-import { Notify } from 'quasar';
 
 /*
  * If not building with SSR mode, you can
@@ -37,19 +36,12 @@ export default route(function (/* { store, ssrContext } */) {
   });
 
   // Validate authentication
-  Router.beforeEach(async (to) => {
-    const publicPages = ['/login', '/login/admin'];
-    const authRequired = !publicPages.includes(to.path);
-    const auth = useAuthStore();
-
-    if (authRequired && !auth.user) {
-      auth.returnUrl = to.fullPath;
-      Notify.create({
-        type: 'negative',
-        message: 'Authentication required',
-      });
-      return '/login';
-    }
+  Router.beforeEach(async (to) => { 
+      const auth = useAuthStore();
+      if (!auth._user){
+        auth._returnUrl = to.fullPath;
+        await auth.login();
+      }
   });
 
   return Router;

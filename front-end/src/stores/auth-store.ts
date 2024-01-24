@@ -2,6 +2,8 @@ import jwt_decode from 'jwt-decode';
 import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
+import KeyCloakService from 'src/security/KeycloakService';
+
 export enum Role {
   user = 'user',
   admin = 'admin',
@@ -26,45 +28,50 @@ export interface JWT {
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null as User | null,
-    returnUrl: null as string | null,
+    _user: null as User | null,
+    _accessToken: undefined as string | undefined,
+    _returnUrl: null as string | null,
   }),
   actions: {
+    async getToken() {
+      // When calling RefreshToken() function, check if token is updated first before keeping it in our state.
+      const isTokenUpdated = await KeyCloakService.CallRefreshToken();
+      if (isTokenUpdated) {
+        const access_token = KeyCloakService.GetAccessToken();
+        this._accessToken = access_token
+      }
+      return this._accessToken
+    },
     /**
      * Login to the application 
      * @param userId  User ID
      * @param password Plain text password
      */
-    async login(userId: string, password: string): Promise<void> {
-      try {
-        const creds = new FormData();
-        creds.append('username', userId);
-        creds.append('password', password);
-        // Back-end sets JWT in cookie and also returns it
-        const response = await api.post('/auth/', creds);
-        // Decode JWT
-        const { access_token }: LoginResponse = response.data;
-        const jwt_data = jwt_decode(access_token) as JWT;
-
-        if (!jwt_data) {
-          throw new Error('Failed to decode');
-        }
-        this.user = {
-          userId: jwt_data.sub,
-          name: jwt_data.name,
-          role: jwt_data.role,
+    async login() {
+      const isAuthenticated = await KeyCloakService.CallLogin();
+      if (isAuthenticated) {
+        const role_list: string[] | undefined= KeyCloakService.GetUserRoles()
+        this._user = {
+          userId: KeyCloakService.GetUserId(), 
+          name: KeyCloakService.GetFullName(), 
+          role: role_list[0]
+          // role: "admin" //TODO: remove hardcode when doing authorization aspect
         } as User;
-      } catch (err) {
-        Notify.create({
-          type: 'negative',
-          message: 'Failed to login',
-        });
-        return Promise.reject(err);
+      } else {
+        this._user = null;
       }
-      if (this.returnUrl == '/admin') {
-        this.returnUrl = '/';
+
+      if (this._returnUrl?.startsWith('/admin')) {
+        if (this._user?.role != 'admin') {
+          Notify.create({
+            type: 'negative',
+            message:
+              'Failed to login, insufficient privileges'
+          });
+          this.logout()
+        }
       }
-      this.router.push(this.returnUrl || '/');
+      this.router.push(this._returnUrl || '/');
     },
     // TODO: change to camelCase
     /**
@@ -77,7 +84,7 @@ export const useAuthStore = defineStore('auth', {
         const creds = new FormData();
         creds.append('username', userId);
         creds.append('password', password);
-        const response = await api.post('/auth/', creds);
+        const response = await api.post('/keycloak_auth/', creds);
         // Validate admin, if not admin, error will be thrown
         await api.get('/auth/is_admin');
         // Decode JWT
@@ -110,32 +117,8 @@ export const useAuthStore = defineStore('auth', {
      * Logout of the application
      */
     logout(): void {
-      try {
-        api.delete('/auth/logout');
-        this.user = null;
-        this.returnUrl = this.router.currentRoute.value.fullPath;
-        localStorage.removeItem('auth');
-        localStorage.removeItem('creationStore');
-        this.router.push({ name: 'Login' });
-      } catch (err) {
-        console.warn('Logout failed');
-        console.warn(err);
-      }
-    },
-    // TODO: change to camelCase
-    /**
-     * Logout of admin panel
-     */
-    admin_logout(): void {
-      try {
-        api.delete('/auth/logout');
-        this.user = null;
-        localStorage.removeItem('auth');
-        localStorage.removeItem('creationStore');
-        this.router.push({ name: 'Admin Login' });
-      } catch (err) {
-        console.warn('Logout failed');
-      }
+      KeyCloakService.CallLogOut();
+      this._user = null;
     },
     /**
      * Use refresh token to get new access token
@@ -143,22 +126,19 @@ export const useAuthStore = defineStore('auth', {
     async refresh(): Promise<void> {
       console.warn('Refreshing access token');
       try {
-        await api.post('/auth/refresh', {
-          grant_type: 'refresh_token',
-        });
+        await KeyCloakService.CallRefreshToken();
       } catch (err) {
-        localStorage.removeItem('auth');
-        localStorage.removeItem('creationStore');
-        console.error(err);
         this.logout();
-        Notify.create({
-          type: 'negative',
-          message: 'Invalid tokens. Unable to refresh.',
-        });
-        return Promise.reject(err);
       }
     },
   },
+
+  getters: {
+    user: (state) => state._user,
+    returnUrl: (state) => state._returnUrl,
+    accessToken: (state) => state._accessToken,
+  },
+
   persist: {
     // add returnURL path back if you fix this
     storage: localStorage,

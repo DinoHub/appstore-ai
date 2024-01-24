@@ -306,48 +306,48 @@ const onSearchRequest = (props: QTableProps) => {
 onMounted(() => {
   // TODO: overhaul this?
   // If URL contains filter params, auto add
-  if (props.showFilter) {
-    const params = route.query;
-    // Process tags
-    // check for tag param in route
-    if (params.tags) {
-      if (!filter.tags) {
-        filter.tags = [];
-      }
-      // if only a single tag, then add to array
-      if (typeof params.tags === 'string') {
-        filter.tags.push(params.tags);
-      } else {
-        // else, tags will already be an array
-        // so just assign it
-        filter.tags = params.tags;
-      }
-    }
-    // ditto for frameworks
-    if (params.frameworks) {
-      if (!filter.frameworks) {
-        filter.frameworks = [];
-      }
-      if (typeof params.frameworks === 'string') {
-        filter.frameworks.push(params.frameworks);
-      } else {
-        filter.frameworks = params.frameworks;
-      }
-    }
-    // ditto for tasks
-    if (params.tasks) {
-      if (!filter.tasks) {
-        filter.tasks = [];
-      }
-      if (typeof params.tasks === 'string') {
-        filter.tasks.push(params.tasks);
-      } else {
-        filter.tasks = params.tasks;
-      }
-    }
-    // remove filter params from URL
-    router.replace({ query: undefined });
-  }
+  // if (props.showFilter) {
+  //   const params = route.query;
+  //   // Process tags
+  //   // check for tag param in route
+  //   if (params.tags) {
+  //     if (!filter.tags) {
+  //       filter.tags = [];
+  //     }
+  //     // if only a single tag, then add to array
+  //     if (typeof params.tags === 'string') {
+  //       filter.tags.push(params.tags);
+  //     } else {
+  //       // else, tags will already be an array
+  //       // so just assign it
+  //       filter.tags = params.tags;
+  //     }
+  //   }
+  //   // ditto for frameworks
+  //   if (params.frameworks) {
+  //     if (!filter.frameworks) {
+  //       filter.frameworks = [];
+  //     }
+  //     if (typeof params.frameworks === 'string') {
+  //       filter.frameworks.push(params.frameworks);
+  //     } else {
+  //       filter.frameworks = params.frameworks;
+  //     }
+  //   }
+  //   // ditto for tasks
+  //   if (params.tasks) {
+  //     if (!filter.tasks) {
+  //       filter.tasks = [];
+  //     }
+  //     if (typeof params.tasks === 'string') {
+  //       filter.tasks.push(params.tasks);
+  //     } else {
+  //       filter.tasks = params.tasks;
+  //     }
+  //   }
+  //   // remove filter params from URL
+  //   router.replace({ query: undefined });
+  // }
   // Update table with latest value from Server
   tableRef.value?.requestServerInteraction();
 });

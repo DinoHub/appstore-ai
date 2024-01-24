@@ -11,12 +11,6 @@
         ></q-img></router-link
     ></q-toolbar-title>
     <q-tabs shrink inline-label>
-      <q-route-tab
-        exact
-        icon="supervised_user_circle"
-        label="Users"
-        to="/admin"
-      />
       <q-route-tab exact icon="devices" label="Models" to="/admin/models" />
       <q-route-tab
         exact
@@ -51,5 +45,5 @@ import DarkModeToggle from './DarkModeToggle.vue';
 const authStore = useAuthStore();
 
 const loggedIn = computed(() => authStore.user && authStore.user !== null);
-const onLogout = () => authStore.admin_logout();
+const onLogout = () => authStore.logout();
 </script>
