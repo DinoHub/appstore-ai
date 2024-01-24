@@ -75,6 +75,13 @@ class GlobalConfig(BaseSettings):
     CLEARML_API_ACCESS_KEY: Optional[str] = None
     CLEARML_API_SECRET_KEY: Optional[str] = None
 
+    KEYCLOAK_SERVER_URL: Optional[str] = None
+    KEYCLOAK_REALM_NAME: str = Field(default="CommonServices")
+    KEYCLOAK_CLIENT_ID: str = Field(default="ai-appstore-backend")
+    KEYCLOAK_CLIENT_SECRET_KEY: Optional[str] = None
+    KEYCLOAK_AUTHORIZATION_URL: Optional[str] = None
+    KEYCLOAK_TOKEN_URL: Optional[str] = None
+
     @validator("FRONTEND_HOST", pre=True)
     def assemble_cors_origins(
         cls, v: Union[str, List[str]]

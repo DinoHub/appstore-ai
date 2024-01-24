@@ -15,7 +15,7 @@ from fastapi.responses import JSONResponse
 
 from ..models.exports import ExportsPage, ExportLogPackage
 
-from ..internal.auth import check_is_admin
+from ..internal.keycloak_auth import check_is_admin
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.dependencies.minio_client import (
     minio_api_client,

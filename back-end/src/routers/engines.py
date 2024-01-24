@@ -23,7 +23,7 @@ from sse_starlette.sse import EventSourceResponse
 from yaml import safe_load
 
 from ..config.config import config
-from ..internal.auth import get_current_user
+from ..internal.keycloak_auth import get_current_user 
 from ..internal.dependencies.k8s_client import get_k8s_client
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.tasks import delete_orphan_services

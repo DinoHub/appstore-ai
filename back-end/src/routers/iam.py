@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo import ASCENDING, DESCENDING
 from pymongo import errors as pyerrs
 
-from ..internal.auth import check_is_admin, get_password_hash
+from ..internal.keycloak_auth import check_is_admin, get_password_hash
 from ..internal.dependencies.mongo_client import get_db
 from ..internal.utils import sanitize_for_url, uncased_to_snake_case
 from ..models.iam import UserInsert, UserPage, UserRemoval, UsersEdit

@@ -12,7 +12,7 @@ from fastapi.openapi.docs import (
 from fastapi.staticfiles import StaticFiles
 
 from .config.config import config
-from .internal.auth import check_is_admin, get_current_user
+from .internal.keycloak_auth import get_current_user, check_is_admin
 from .internal.tasks import init_db
 from .routers import auth, buckets, datasets, engines, experiments, iam, models, exports
 
