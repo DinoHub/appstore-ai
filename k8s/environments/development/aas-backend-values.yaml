@@ -24,7 +24,7 @@ env:
   CLEARML_FILES_HOST: https://files.clear.ml
   CLEARML_API_ACCESS_KEY: VFWFHQ8ZMRYC22CWLGVY
   CLEARML_API_SECRET_KEY: DdvZjx2M5QfEYCqzf0BWTgJb91nAchSm8ofojvranqKs9QxrW8
-  PROD_LOADBALANCER_IP: https://appstore-model.<domain-name>
+  
   PROD_KEYCLOAK_SERVER_URL: https://keycloak.<domain-name>/
   PROD_KEYCLOAK_REALM_NAME: CommonServices
   PROD_KEYCLOAK_CLIENT_ID: ai-appstore-backend
