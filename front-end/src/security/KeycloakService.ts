@@ -1,8 +1,8 @@
 import Keycloak from "keycloak-js";
 
-const CLIENT_ID = "ai-appstore-frontend";
-const KEYCLOAK_URL = "https://keycloak.apps-crc.testing";
-const KEYCLOAK_REALM = "CommonServices";
+const CLIENT_ID = "";
+const KEYCLOAK_URL = "";
+const KEYCLOAK_REALM = "";
 
 const initOptions = {
     realm: KEYCLOAK_REALM,
