@@ -13,6 +13,8 @@ const initOptions = {
     "confidential-port": 0,
 }
 
+// If token expires within minTokenValidityInSeconds, the token is refreshed. 
+// If minTokenValidityInSeconds is assigned to -1, the token will be forcibly refreshed.
 const minTokenValidityInSeconds = -1;
 
 const keycloakInstance = new Keycloak(initOptions);
