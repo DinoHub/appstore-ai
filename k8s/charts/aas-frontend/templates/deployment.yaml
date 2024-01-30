@@ -35,7 +35,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8081
               protocol: TCP
           env:
             - name: VUE_APP_BACKEND_URL
