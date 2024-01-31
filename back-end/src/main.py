@@ -13,8 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config.config import config
 from .internal.keycloak_auth import get_current_user, check_is_admin
-from .internal.tasks import init_db
-from .routers import auth, buckets, datasets, engines, experiments, iam, models, exports
+from .routers import buckets, datasets, engines, experiments, models, exports
 
 with open(
     Path(__file__).parent.parent.joinpath("README.md"), "r", encoding="utf-8"
@@ -59,7 +58,6 @@ fastapi_app = FastAPI(
     title="Model Zoo",
     description=description,
     openapi_tags=tags_metadata,
-    on_startup=[init_db],
     docs_url=None,
     redoc_url=None,
 )
@@ -101,13 +99,11 @@ async def redoc_html():
     )
 
 
-app.app.include_router(auth.router)
 app.app.include_router(buckets.router, dependencies=[Depends(get_current_user)])
 app.app.include_router(models.router, dependencies=[Depends(get_current_user)])
 app.app.include_router(experiments.router, dependencies=[Depends(get_current_user)])
 app.app.include_router(exports.router, dependencies=[Depends(check_is_admin)])
 app.app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
-app.app.include_router(iam.router, dependencies=[Depends(check_is_admin)])
 app.app.include_router(engines.router, dependencies=[Depends(get_current_user)])
 
 

@@ -119,13 +119,13 @@ async def check_is_admin(
     else:
         return user
 
-def get_password_hash(password: str) -> str:
-    """Convert plain text password to hashed password
+# def get_password_hash(password: str) -> str:
+#     """Convert plain text password to hashed password
 
-    Args:
-        password (str): Password in plain text
+#     Args:
+#         password (str): Password in plain text
 
-    Returns:
-        str: Hashed password
-    """
-    return pwd_context.hash(password)
+#     Returns:
+#         str: Hashed password
+#     """
+#     return pwd_context.hash(password)

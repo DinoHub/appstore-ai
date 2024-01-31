@@ -17,8 +17,6 @@ env:
   PROD_MINIO_API_HOST: https://storage.<domain-name>
   PROD_MINIO_API_ACCESS_KEY: aas-minio-uploader
   PROD_MINIO_API_SECRET_KEY: TempPassword1234 # Replace in prod
-  PROD_FIRST_SUPERUSER_ID: admin
-  PROD_FIRST_SUPERUSER_PASSWORD: Password1234!
   CLEARML_WEB_HOST: https://app.clear.ml
   CLEARML_API_HOST: https://api.clear.ml
   CLEARML_FILES_HOST: https://files.clear.ml

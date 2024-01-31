@@ -39,8 +39,6 @@ env:
   PROD_IE_NAMESPACE: inference-engine
   PROD_IE_SERVICE_TYPE: emissary
   PROD_IE_DEFAULT_PROTOCOL: http
-  PROD_FIRST_SUPERUSER_ID: <TO-REPLACE>
-  PROD_FIRST_SUPERUSER_PASSWORD: <TO-REPLACE>
   CLEARML_WEB_HOST:  <TO-REPLACE> # https://app.clear.ml
   CLEARML_API_HOST:  <TO-REPLACE> # https://api.clear.ml
   CLEARML_FILES_HOST: <TO-REPLACE>  # https://files.clear.ml

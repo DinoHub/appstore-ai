@@ -1,5 +1,3 @@
-import jwt_decode from 'jwt-decode';
-import { api } from 'src/boot/axios';
 import { defineStore } from 'pinia';
 import { Notify } from 'quasar';
 import KeyCloakService from 'src/security/KeycloakService';
@@ -71,46 +69,6 @@ export const useAuthStore = defineStore('auth', {
         }
       }
       this.router.push(this._returnUrl || '/');
-    },
-    // TODO: change to camelCase
-    /**
-     * Login to admin panel
-     * @param userId User ID of admin user
-     * @param password Plain text password
-     */
-    async admin_login(userId: string, password: string): Promise<void> {
-      try {
-        const creds = new FormData();
-        creds.append('username', userId);
-        creds.append('password', password);
-        const response = await api.post('/keycloak_auth/', creds);
-        // Validate admin, if not admin, error will be thrown
-        await api.get('/auth/is_admin');
-        // Decode JWT
-        const { access_token }: LoginResponse = response.data;
-        const jwt_data = jwt_decode(access_token) as JWT;
-        if (!jwt_data) {
-          console.error('Failed to decode');
-          throw new Error('Failed to decode');
-        }
-
-        localStorage.removeItem('creationStore');
-        this.user = {
-          // TODO: Replace with actual api call
-          userId: jwt_data.sub,
-          name: jwt_data.name,
-          role: jwt_data.role,
-        } as User;
-        this.router.push('/admin');
-      } catch (err) {
-        this.admin_logout();
-        Notify.create({
-          type: 'negative',
-          message:
-            'Failed to login, credentials invalid or insufficient privileges',
-        });
-        return Promise.reject(err);
-      }
     },
     /**
      * Logout of the application

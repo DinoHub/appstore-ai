@@ -40,8 +40,6 @@ class GlobalConfig(BaseSettings):
     SECRET_KEY: Optional[
         str
     ] = None  # NOTE: set to none as a hack to get Sphinx to build correctly
-    FIRST_SUPERUSER_ID: Optional[str] = None
-    FIRST_SUPERUSER_PASSWORD: Optional[str] = None
 
     # Database Settings
     DB_NAME: str = Field(default="appStoreDB")
