@@ -5,10 +5,10 @@ const KEYCLOAK_URL = "";
 const KEYCLOAK_REALM = "";
 
 const initOptions = {
-    realm: KEYCLOAK_REALM,
-    url: KEYCLOAK_URL,
+    "realm": KEYCLOAK_REALM,
+    "url": KEYCLOAK_URL,
     "ssl-required": "external",
-    clientId: CLIENT_ID,
+    "clientId": CLIENT_ID,
     "public-client": true,
     "confidential-port": 0,
 }
