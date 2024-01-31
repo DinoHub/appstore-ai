@@ -55,7 +55,6 @@ export const useAuthStore = defineStore('auth', {
           userId: KeyCloakService.GetUserId(), 
           name: KeyCloakService.GetFullName(), 
           role: role_list[0]
-          // role: "admin" //TODO: remove hardcode when doing authorization aspect
         } as User;
       } else {
         this._user = null;
