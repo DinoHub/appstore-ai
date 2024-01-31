@@ -18,8 +18,7 @@ keycloak_bearer_only = KeycloakOpenID(
     realm_name= config.KEYCLOAK_REALM_NAME,
     client_id= config.KEYCLOAK_CLIENT_ID,
     client_secret_key= config.KEYCLOAK_CLIENT_SECRET_KEY,
-    # verify="../../certs/crc.crt" # TODO: Enable True to allow SSL verification
-    verify=False
+    verify=True
 )
 
 oauth2_scheme = OAuth2AuthorizationCodeBearer(

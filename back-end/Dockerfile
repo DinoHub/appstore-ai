@@ -1,5 +1,11 @@
 FROM python:3.9-slim as python-base
 
+# Copy cert into container and update the host cert. Also, define the ca bundle to be used. 
+# This is required to use https with Keycloak
+COPY <cert-path> /usr/local/share/ca-certificates
+RUN update-ca-certificates
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+
 # https://python-poetry.org/docs#ci-recommendations
 ENV POETRY_VERSION=1.2.1
 ENV POETRY_HOME=/opt/poetry
