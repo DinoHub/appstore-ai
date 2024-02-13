@@ -552,7 +552,6 @@ import TiptapEditor from 'src/components/editor/TiptapEditor.vue';
 import ModelCardEditTabs from 'src/components/layout/ModelCardEditTabs.vue';
 import { useModelStore } from 'src/stores/model-store';
 import { useDatasetStore } from 'src/stores/dataset-store';
-console.log('HERE');
 
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();

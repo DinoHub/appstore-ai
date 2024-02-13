@@ -17,13 +17,18 @@ env:
   PROD_MINIO_API_HOST: https://storage.<domain-name>
   PROD_MINIO_API_ACCESS_KEY: aas-minio-uploader
   PROD_MINIO_API_SECRET_KEY: TempPassword1234 # Replace in prod
-  PROD_FIRST_SUPERUSER_ID: admin
-  PROD_FIRST_SUPERUSER_PASSWORD: Password1234!
   CLEARML_WEB_HOST: https://app.clear.ml
   CLEARML_API_HOST: https://api.clear.ml
   CLEARML_FILES_HOST: https://files.clear.ml
   CLEARML_API_ACCESS_KEY: VFWFHQ8ZMRYC22CWLGVY
   CLEARML_API_SECRET_KEY: DdvZjx2M5QfEYCqzf0BWTgJb91nAchSm8ofojvranqKs9QxrW8
+  
+  PROD_KEYCLOAK_SERVER_URL: https://keycloak.<domain-name>/
+  PROD_KEYCLOAK_REALM_NAME: CommonServices
+  PROD_KEYCLOAK_CLIENT_ID: ai-appstore-backend
+  PROD_KEYCLOAK_CLIENT_SECRET_KEY: XFbGTTVysHfoi5IUMUOtG3TFFkAvylUM
+  PROD_KEYCLOAK_AUTHORIZATION_URL: https://keycloak.<domain-name>/realms/CommonServices/protocol/openid-connect/auth
+  PROD_KEYCLOAK_TOKEN_URL: https://keycloak.<domain-name>/realms/CommonServices/protocol/openid-connect/token
 environment: prod
 
 service:
@@ -60,7 +65,7 @@ ingress:
 image:
   repository: docker.io/<docker_username>/aas-backend # Please use own repository link for back-end image.
   pullPolicy: Always
-  tag: "1.1.0"
+  tag: "1.2.0"
 
 serviceAccountengines:
   create: true

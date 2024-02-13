@@ -19,8 +19,23 @@ const api = axios.create({
   baseURL: process.env.API,
   withCredentials: true,
 });
-// Set Interceptor
 
+// Set Interceptor for before a request is sent
+api.interceptors.request.use(async (config) => {
+
+  const authStore = useAuthStore();
+
+  const token = await authStore.getToken();
+  
+  // Adding bearer token to headers for authorization only if token exists
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
+// Set Interceptor for after receiving response
 api.interceptors.response.use(
   (response) => {
     // If request succeeds, reset indicator

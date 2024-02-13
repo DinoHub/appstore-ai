@@ -8,7 +8,7 @@ from miniopy_async import Minio
 from miniopy_async.deleteobjects import DeleteObject
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-from src.internal.auth import check_is_admin, get_current_user
+from src.internal.keycloak_auth import check_is_admin, get_current_user
 from src.main import app as fastapi_app
 
 from .utils import fake_login_admin, fake_login_user

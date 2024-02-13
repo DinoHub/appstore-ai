@@ -481,41 +481,41 @@ const editSelectedModel = () => {
 onMounted(() => {
   // TODO: overhaul this?
   // If URL contains filter params, auto add
-  if (props.showFilter) {
-    const params = route.query;
-    // Process tags
-    if (params.tags) {
-      if (!filter.tags) {
-        filter.tags = [];
-      }
-      if (typeof params.tags === 'string') {
-        filter.tags.push(params.tags);
-      } else {
-        filter.tags = params.tags;
-      }
-    }
-    if (params.frameworks) {
-      if (!filter.frameworks) {
-        filter.frameworks = [];
-      }
-      if (typeof params.frameworks === 'string') {
-        filter.frameworks.push(params.frameworks);
-      } else {
-        filter.frameworks = params.frameworks;
-      }
-    }
-    if (params.tasks) {
-      if (!filter.tasks) {
-        filter.tasks = [];
-      }
-      if (typeof params.tasks === 'string') {
-        filter.tasks.push(params.tasks);
-      } else {
-        filter.tasks = params.tasks;
-      }
-    }
-    router.replace({ query: undefined });
-  }
+  // if (props.showFilter) {
+  //   const params = route.query;
+  //   // Process tags
+  //   if (params.tags) {
+  //     if (!filter.tags) {
+  //       filter.tags = [];
+  //     }
+  //     if (typeof params.tags === 'string') {
+  //       filter.tags.push(params.tags);
+  //     } else {
+  //       filter.tags = params.tags;
+  //     }
+  //   }
+  //   if (params.frameworks) {
+  //     if (!filter.frameworks) {
+  //       filter.frameworks = [];
+  //     }
+  //     if (typeof params.frameworks === 'string') {
+  //       filter.frameworks.push(params.frameworks);
+  //     } else {
+  //       filter.frameworks = params.frameworks;
+  //     }
+  //   }
+  //   if (params.tasks) {
+  //     if (!filter.tasks) {
+  //       filter.tasks = [];
+  //     }
+  //     if (typeof params.tasks === 'string') {
+  //       filter.tasks.push(params.tasks);
+  //     } else {
+  //       filter.tasks = params.tasks;
+  //     }
+  //   }
+  //   router.replace({ query: undefined });
+  // }
   // Update table with latest value from Server
   tableRef.value?.requestServerInteraction();
 });

@@ -1,7 +1,6 @@
 import AdminDashboardLayout from 'src/layouts/AdminDashboardLayout.vue';
 import AdminDashboardPage from 'src/pages/admin/AdminDashboardPage.vue';
 import AdminExportPage from 'src/pages/admin/AdminExportsPage.vue';
-import AdminLoginPage from 'src/pages/admin/AdminLoginPage.vue';
 import AdminModelsPage from 'src/pages/admin/AdminModelsPage.vue';
 import AdminModelInferenceServiceEdit from 'src/pages/admin/AdminModelInferenceServiceEdit.vue';
 import AdminModelMetadataEdit from 'src/pages/admin/AdminModelMetadataEdit.vue';
@@ -10,8 +9,6 @@ import CreateModel from 'src/pages/models/ModelCreate.vue';
 import DashboardLayout from 'src/layouts/DashboardLayout.vue';
 import DashboardPage from 'src/pages/DashboardPage.vue';
 import ErrorNotFound from 'src/pages/ErrorNotFound.vue';
-import LoginLayout from 'src/layouts/LoginLayout.vue';
-import LoginPage from 'src/pages/auth/LoginPage.vue';
 import MainLayout from 'src/layouts/MainLayout.vue';
 import ModelInferenceServiceEdit from 'src/pages/models/ModelInferenceServiceEdit.vue';
 import ModelMetadataEdit from 'src/pages/models/ModelMetadataEdit.vue';
@@ -25,36 +22,6 @@ import { RouteRecordRaw } from 'vue-router';
 import { useAuthStore } from 'src/stores/auth-store';
 
 const routes: RouteRecordRaw[] = [
-  {
-    path: '/login',
-    component: LoginLayout,
-    children: [
-      {
-        path: '',
-        name: 'Login',
-        component: LoginPage,
-        beforeEnter: () => {
-          const auth = useAuthStore();
-          if (auth.user?.userId) {
-            // Logged in
-            return '/';
-          }
-        },
-      },
-      {
-        path: 'admin',
-        name: 'Admin Login',
-        beforeEnter: () => {
-          const auth = useAuthStore();
-          if (auth.user?.role == 'admin') {
-            // Logged in
-            return '/admin';
-          }
-        },
-        component: AdminLoginPage,
-      },
-    ],
-  },
   {
     path: '/admin',
     component: AdminDashboardLayout,

@@ -4,13 +4,15 @@
       <!-- content -->
       <main>
         <div class="row justify-center">
-          <div class="col-11 display-medium q-pl-md q-mt-xl">Users</div>
+          <div class="col-11 display-medium q-pl-md q-mt-xl">Models</div>
         </div>
         <section>
-          <users-data-table
+          <admin-model-data-table
             :pagination="pagination"
             :filter-drawer="filterDrawer"
-          ></users-data-table>
+            :show-filter="filterDrawer"
+            :filter="filter"
+          ></admin-model-data-table>
         </section>
       </main>
     </q-page>
@@ -27,10 +29,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuthStore } from 'src/stores/auth-store';
-import { useUsersStore } from 'src/stores/users-store';
-import { Pagination } from 'src/components/components/models';
-import UsersDataTable from 'src/components/content/UsersDataTable.vue';
+import { Pagination, SearchFilter } from 'src/components/components/models';
+import AdminModelDataTable from 'src/components/content/AdminModelDataTable.vue';
 
 const filterDrawer = ref(true);
 const pagination: Pagination = {
@@ -43,5 +43,13 @@ const pagination: Pagination = {
   page: 1,
   rowsPerPage: 5,
   rowsNumber: 1,
+};
+
+const filter: SearchFilter = {
+  title: '',
+  creator: '',
+  tasks: [],
+  tags: [],
+  frameworks: [],
 };
 </script>

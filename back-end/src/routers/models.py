@@ -19,7 +19,7 @@ from pymongo import ASCENDING, DESCENDING
 from pymongo.errors import DuplicateKeyError
 
 from ..config.config import config
-from ..internal.auth import get_current_user, check_is_admin
+from ..internal.keycloak_auth import get_current_user, check_is_admin
 from ..internal.dependencies.file_validator import ValidateFileUpload
 from ..internal.dependencies.minio_client import (
     get_presigned_url,
