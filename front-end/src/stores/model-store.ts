@@ -84,6 +84,10 @@ export interface UpdateModelCard {
   frameworks?: string[];
   owner?: string;
   pointOfContact?: string;
+  accessControl?: {
+    enabled: boolean;
+    authorized: string[];
+  };
   inferenceServiceName?: string;
   videoLocation?: string;
   markdown?: string;
