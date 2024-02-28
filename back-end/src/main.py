@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config.config import config
 from .internal.keycloak_auth import get_current_user, check_is_admin
-from .routers import buckets, datasets, engines, experiments, models, exports
+from .routers import buckets, datasets, engines, experiments, models, exports, accesscontrol
 
 with open(
     Path(__file__).parent.parent.joinpath("README.md"), "r", encoding="utf-8"
@@ -105,7 +105,7 @@ app.app.include_router(experiments.router, dependencies=[Depends(get_current_use
 app.app.include_router(exports.router, dependencies=[Depends(check_is_admin)])
 app.app.include_router(datasets.router, dependencies=[Depends(get_current_user)])
 app.app.include_router(engines.router, dependencies=[Depends(get_current_user)])
-
+app.app.include_router(accesscontrol.router, dependencies=[Depends(get_current_user)])
 
 @app.app.get("/")
 def root():
