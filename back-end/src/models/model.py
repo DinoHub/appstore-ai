@@ -97,6 +97,7 @@ class UpdateModelCardModel(BaseModel):
     task: Optional[str] = None  # a task is a tag
     frameworks: Optional[List[str]] = None
     point_of_contact: Optional[str] = None
+    access_control: Optional[AccessControl] = None
     owner: Optional[str] = None
     video_location: Optional[str] = None
     inference_service_name: Optional[str] = None
