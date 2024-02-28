@@ -4,6 +4,7 @@ import { Artifact, ModelCard, useModelStore } from './model-store';
 import { Notify } from 'quasar';
 import { useAuthStore } from './auth-store';
 import { useExperimentStore } from './experiment-store';
+import { useAccessControlStore } from './access-control-store';
 import {
   useInferenceServiceStore,
   InferenceServiceStatus,
@@ -27,6 +28,9 @@ export const useCreationStore = defineStore('createModel', {
       modelTask: '' as string,
       modelOwner: '' as string,
       modelPOC: '' as string,
+      modelAccessList: [] as string[],
+      enableModelAccess: false as boolean,
+      previousModelAccessList: [] as string[],
       modelDesc: '' as string,
       modelExplain: '' as string,
       modelUsage: '' as string,
@@ -137,7 +141,8 @@ export const useCreationStore = defineStore('createModel', {
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
         (this.datasetID == '' && this.datasetPlatform != '') ||
-        (this.experimentID == '' && this.experimentPlatform != '')
+        (this.experimentID == '' && this.experimentPlatform != '') ||
+        (this.modelAccessList.length == 0 && this.enableModelAccess == true)
       ) {
         return false;
       }
@@ -178,7 +183,8 @@ export const useCreationStore = defineStore('createModel', {
       console.warn(`Keys: ${JSON.stringify(keys)}`);
       if (
         (this.datasetID == '' && this.datasetPlatform != '') ||
-        (this.experimentID == '' && this.experimentPlatform != '')
+        (this.experimentID == '' && this.experimentPlatform != '') ||
+        (this.modelAccessList.length == 0 && this.enableModelAccess == true)
       ) {
         return false;
       }
@@ -261,6 +267,50 @@ export const useCreationStore = defineStore('createModel', {
       }
     },
     /**
+     * Based on a list of usernames provided from frontend, do a check 
+     * against Keycloak to see if they exist.
+     * @returns {Promise<void>} A promise that resolves when check is done
+     */
+    async validateUsernames(): Promise<void> {
+      const AccessControlStore = useAccessControlStore();
+      const authStore = useAuthStore();
+      const user = authStore.user?.userId ?? undefined
+
+      // Remove items from previousModelAccessList that are not in modelAccessList
+      // With this, when username that was removed before and added again, we can validate it against keycloak
+      this.previousModelAccessList = this.previousModelAccessList.filter(value => this.modelAccessList.includes(value));
+  
+      // Split the input in modelAccessList by , / space / ; 
+      this.modelAccessList = this.modelAccessList
+      .flatMap(username => username.split(/[,;\s]+/))
+      .filter(Boolean); // remove empty strings
+
+      // Remove duplicates here if frontend did not remove, by converting array to set and to array.
+      // Why? q-select cannot prevent duplicates if user copied a string of usernames in which some already exist in the box.
+      this.modelAccessList = [...new Set(this.modelAccessList)]
+
+      // If model owner entered his/her own username in the list, remove it and trigger notification.
+      if (user && this.modelAccessList.includes(user)) {
+        this.modelAccessList.splice(this.modelAccessList.indexOf(user), 1);
+        Notify.create({
+            message: `The username, ${user} is the model's owner and already has access.`,
+            type: 'negative',
+            timeout: 5000
+        });
+      }
+
+      // filter out newly added usernames to validate against Keycloak instead of checking the whole list
+      const addedUsernames = this.modelAccessList.filter(value => !this.previousModelAccessList.includes(value));
+
+      if (addedUsernames.length > 0){
+        const validationResults = await AccessControlStore.validateUsernamesWithKeycloak(addedUsernames)
+        this.previousModelAccessList.push(...validationResults.newUsernamesList)
+        this.modelAccessList = this.previousModelAccessList
+      }
+      
+    },
+
+    /**
      * Launch a inference service for the purpose of allowing the model
      * owner to preview the inference service
      * @param modelId model ID to launch preview service for
@@ -301,6 +351,9 @@ export const useCreationStore = defineStore('createModel', {
             this.modelPOC = authStore.user.name;
           }
         }
+        if (this.enableModelAccess == false) {
+          this.modelAccessList = [];
+        }
         const cardPackage = {
           title: this.modelName,
           task: this.modelTask,
@@ -308,6 +361,10 @@ export const useCreationStore = defineStore('createModel', {
           frameworks: this.frameworks,
           owner: this.modelOwner,
           pointOfContact: this.modelPOC,
+          accessControl: {
+            enabled: this.enableModelAccess,
+            authorized: this.modelAccessList,
+          },
           markdown: this.markdownContent,
           performance: this.performanceMarkdown,
           artifacts: Array.from(
@@ -480,6 +537,8 @@ export const useCreationStore = defineStore('createModel', {
       'modelName',
       'modelTask',
       'modelOwner',
+      'modelAccessList',
+      'enableModelAccess',
       'modelPOC',
       'modelDesc',
       'modelExplain',

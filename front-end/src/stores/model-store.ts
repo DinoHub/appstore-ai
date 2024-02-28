@@ -37,6 +37,10 @@ export interface ModelCardSummary {
 export interface ModelCard extends ModelCardSummary {
   owner?: string;
   pointOfContact?: string;
+  accessControl: {
+    enabled: boolean;
+    authorized: string[];
+  };
   inferenceServiceName?: string;
   videoLocation?: string;
   explanation: string;
@@ -56,6 +60,10 @@ export interface CreateModelCard {
   frameworks: string[];
   owner?: string;
   pointOfContact?: string;
+  accessControl: {
+    enabled: boolean;
+    authorized: string[];
+  };
   inferenceServiceName?: string;
   videoLocation?: string;
   markdown: string;
