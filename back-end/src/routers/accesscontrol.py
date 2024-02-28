@@ -35,7 +35,6 @@ def validate_usernames(
     Args:
         usernamesList (List of str): usernames
     Raises:
-        HTTPException: 404 Not Found if there are usernames that do not exist
         HTTPException: 500 Internal Server Error if error occurs
 
     Returns:
