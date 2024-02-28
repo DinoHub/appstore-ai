@@ -33,11 +33,15 @@
 import ModelCardDataTable from 'src/components/content/ModelCardDataTable.vue';
 import { Pagination, SearchFilter } from 'src/components/models';
 import { ref } from 'vue';
+import { useAuthStore } from 'src/stores/auth-store';
+
+const authStore = useAuthStore();
 
 const filter: SearchFilter = {
   tags: [],
   tasks: [],
   frameworks: [],
+  user: authStore.user?.userId ?? undefined
 };
 
 const filterDrawer = ref(true);

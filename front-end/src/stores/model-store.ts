@@ -114,6 +114,7 @@ export interface SearchParams {
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
   tasks?: string[] | LocationQueryValue[];
+  user?: string;
 }
 
 export interface AvailableFilterResponse {

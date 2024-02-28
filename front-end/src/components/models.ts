@@ -26,6 +26,7 @@ export interface SearchFilter {
   tasks?: string[] | LocationQueryValue[];
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
+  user?: string;
 }
 
 export interface UsersSearchFilter {

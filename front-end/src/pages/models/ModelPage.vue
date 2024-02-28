@@ -197,6 +197,12 @@
                     <td>Experiment Platform</td>
                     <td>{{ model.experiment.connector }}</td>
                   </tr>
+                  <tr v-if="isModelOwner">
+                    <td>Allowed Users</td>
+                    <td>
+                      {{ model.accessControl.enabled ? model.accessControl.authorized.join(', ') : 'Everyone' }}
+                    </td>
+                  </tr>
                   <tr v-if="model.experiment?.experimentId">
                     <td>Experiment ID</td>
                     <td>
@@ -408,6 +414,10 @@ const model = reactive({
   tags: [],
   frameworks: [],
   creatorUserId: '',
+  accessControl : {
+    enabled: false,
+    authorized: []
+  },
   inferenceServiceName: '',
   videoLocation: '',
   markdown: '',
