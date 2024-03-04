@@ -32,14 +32,12 @@ export const useAccessControlStore = defineStore('access-control', {
      * @param returnArtifacts Whether to return artifacts or not
      * @returns Experiment data
      */
-
     async validateUsernamesWithKeycloak(
         usernamesList: string[]
     ): Promise<AccessControl> {
         try {
             const res = await api.post(`access-control/`, usernamesList)
             const data: AccessControl = res.data
-
             if (data.invalidUsernames.length){
                 const invalidUsernamesString: string = data.invalidUsernames.join(', ')
                 Notify.create({
@@ -60,10 +58,6 @@ export const useAccessControlStore = defineStore('access-control', {
         } catch (error) {
             return Promise.reject('Unable to validate')
         }
-        
-
-        
     }
-
   },
 });
