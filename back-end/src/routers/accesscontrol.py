@@ -13,10 +13,7 @@ from ..config.config import config
 
 keycloak_connection = KeycloakOpenIDConnection(
                         server_url=config.KEYCLOAK_SERVER_URL,
-                        # username='',
-                        # password='',
                         realm_name=config.KEYCLOAK_REALM_NAME,
-                        # user_realm_name= config.KEYCLOAK_REALM_NAME,
                         client_id=config.KEYCLOAK_CLIENT_ID,
                         client_secret_key=config.KEYCLOAK_CLIENT_SECRET_KEY,
                         verify=True
