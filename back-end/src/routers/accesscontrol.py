@@ -26,18 +26,13 @@ async def validate_usernames(
     Returns:
         Dict: Validation results
     """
-    valid_usernames = []
-    invalid_usernames = []
     try:
         keycloak_admin = await initialize_keycloak_admin()
         users_in_keycloak = keycloak_admin.get_users({})
         usernames_in_keycloak_set = {user['username'] for user in users_in_keycloak}
-        for username in usernames_list:
-            if username in usernames_in_keycloak_set:
-                valid_usernames.append(username)
-            else:
-                invalid_usernames.append(username)
-        new_usernames_list = [username for username in usernames_list if username not in invalid_usernames]
+        valid_usernames = list(filter(lambda username: username in usernames_in_keycloak_set, usernames_list))
+        invalid_usernames = list(filter(lambda username: username not in usernames_in_keycloak_set, usernames_list))
+        new_usernames_list = list(filter(lambda username: username not in invalid_usernames, usernames_list))
         data = {
             "validUsernames": valid_usernames, 
             "invalidUsernames": invalid_usernames,
