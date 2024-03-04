@@ -48,9 +48,10 @@ def validate_usernames(
             else:
                 invalid_usernames.append(username)
         new_usernames_list = [username for username in usernames_list if username not in invalid_usernames]
-        data = {"validUsernames": valid_usernames, 
-                "invalidUsernames": invalid_usernames,
-                "newUsernamesList": new_usernames_list
+        data = {
+            "validUsernames": valid_usernames, 
+            "invalidUsernames": invalid_usernames,
+            "newUsernamesList": new_usernames_list
         }
         return data
 
