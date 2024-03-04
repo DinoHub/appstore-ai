@@ -155,8 +155,8 @@ export const useEditMetadataStore = defineStore('editMetadata', {
   
       // Split the input in modelAccessList by , or space or ; 
       this.modelAccessList = this.modelAccessList
-      .flatMap(username => username.split(/[,;\s]+/))
-      .filter(Boolean); // remove empty strings
+        .flatMap(username => username.split(/[,;\s]+/))
+        .filter(Boolean); // remove empty strings
 
       // Remove duplicates here if frontend did not remove, by converting array to set and to array.
       // Why? q-select cannot prevent duplicates if user copied a string of usernames in which some already exist in the box.
