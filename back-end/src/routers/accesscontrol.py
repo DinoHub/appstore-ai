@@ -7,24 +7,13 @@ from ..models.accesscontrol import (
     AccessControlResponse
 )
 
-from keycloak import KeycloakAdmin
-from keycloak import KeycloakOpenIDConnection
+from ..internal.keycloak_auth import initialize_keycloak_admin
 from ..config.config import config
-
-keycloak_connection = KeycloakOpenIDConnection(
-    server_url=config.KEYCLOAK_SERVER_URL,
-    realm_name=config.KEYCLOAK_REALM_NAME,
-    client_id=config.KEYCLOAK_CLIENT_ID,
-    client_secret_key=config.KEYCLOAK_CLIENT_SECRET_KEY,
-    verify=True
-)
-                        
-keycloak_admin = KeycloakAdmin(connection=keycloak_connection)
 
 router = APIRouter(prefix="/access-control", tags=["Access control"])
 
 @router.post("/", response_model=AccessControlResponse)
-def validate_usernames(
+async def validate_usernames(
     usernames_list: List[str],
 ) -> Dict:
     """Validate usernames.
@@ -40,6 +29,7 @@ def validate_usernames(
     valid_usernames = []
     invalid_usernames = []
     try:
+        keycloak_admin = await initialize_keycloak_admin()
         users_in_keycloak = keycloak_admin.get_users({})
         usernames_in_keycloak_set = {user['username'] for user in users_in_keycloak}
         for username in usernames_list:
