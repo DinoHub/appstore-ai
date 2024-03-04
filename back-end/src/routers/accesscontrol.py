@@ -28,32 +28,32 @@ router = APIRouter(prefix="/access-control", tags=["Access control"])
 
 @router.post("/", response_model=AccessControlResponse)
 def validate_usernames(
-    usernamesList: List[str],
+    usernames_list: List[str],
 ) -> Dict:
     """Validate usernames.
 
     Args:
-        usernamesList (List of str): usernames
+        usernames_list (List of str): usernames
     Raises:
         HTTPException: 500 Internal Server Error if error occurs
 
     Returns:
         Dict: Validation results
     """
-    validUsernames = []
-    invalidUsernames = []
+    valid_usernames = []
+    invalid_usernames = []
     try:
         users_in_keycloak = keycloak_admin.get_users({})
         usernames_in_keycloak_set = {user['username'] for user in users_in_keycloak}
-        for username in usernamesList:
+        for username in usernames_list:
             if username in usernames_in_keycloak_set:
-                validUsernames.append(username)
+                valid_usernames.append(username)
             else:
-                invalidUsernames.append(username)
-        newUsernamesList = [username for username in usernamesList if username not in invalidUsernames]
-        data = {"validUsernames": validUsernames, 
-                "invalidUsernames": invalidUsernames,
-                "newUsernamesList": newUsernamesList
+                invalid_usernames.append(username)
+        new_usernames_list = [username for username in usernames_list if username not in invalid_usernames]
+        data = {"validUsernames": valid_usernames, 
+                "invalidUsernames": invalid_usernames,
+                "newUsernamesList": new_usernames_list
         }
         return data
 
