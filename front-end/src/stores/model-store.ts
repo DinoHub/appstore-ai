@@ -37,6 +37,10 @@ export interface ModelCardSummary {
 export interface ModelCard extends ModelCardSummary {
   owner?: string;
   pointOfContact?: string;
+  accessControl: {
+    enabled: boolean;
+    authorized: string[];
+  };
   inferenceServiceName?: string;
   videoLocation?: string;
   explanation: string;
@@ -56,6 +60,10 @@ export interface CreateModelCard {
   frameworks: string[];
   owner?: string;
   pointOfContact?: string;
+  accessControl: {
+    enabled: boolean;
+    authorized: string[];
+  };
   inferenceServiceName?: string;
   videoLocation?: string;
   markdown: string;
@@ -76,6 +84,10 @@ export interface UpdateModelCard {
   frameworks?: string[];
   owner?: string;
   pointOfContact?: string;
+  accessControl?: {
+    enabled: boolean;
+    authorized: string[];
+  };
   inferenceServiceName?: string;
   videoLocation?: string;
   markdown?: string;
@@ -102,6 +114,7 @@ export interface SearchParams {
   tags?: string[] | LocationQueryValue[];
   frameworks?: string[] | LocationQueryValue[];
   tasks?: string[] | LocationQueryValue[];
+  user?: string;
 }
 
 export interface AvailableFilterResponse {

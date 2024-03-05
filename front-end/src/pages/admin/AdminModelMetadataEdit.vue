@@ -105,13 +105,16 @@
           editMetadataStore.modelName != '' &&
           editMetadataStore.modelTask != '' &&
           editMetadataStore.tags.length > 0 &&
-          editMetadataStore.frameworks.length > 0
+          editMetadataStore.frameworks.length > 0 &&
+          (!editMetadataStore.enableModelAccess ||
+          (editMetadataStore.enableModelAccess && editMetadataStore.modelAccessList.length > 0))
         "
         :error="
           editMetadataStore.modelName == '' ||
           editMetadataStore.modelTask == '' ||
           editMetadataStore.tags.length <= 0 ||
-          editMetadataStore.frameworks.length <= 0
+          editMetadataStore.frameworks.length <= 0 ||
+          (editMetadataStore.enableModelAccess && editMetadataStore.modelAccessList.length === 0)
         "
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
@@ -196,6 +199,40 @@
               label="Point of Contact (Optional)"
               hint="This is the person to contact for enquiries on the model."
             ></q-input>
+          </div>
+          <div class="col q-pl-md q-ml-xl shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-mb-lg">Access Control</h6>
+            <q-select
+              outlined
+              v-model="editMetadataStore.enableModelAccess"
+              class="q-ml-md q-pr-md q-pb-xl"
+              :options="accessControlStore.enableModelAccessOptions"
+              label="Enable Access Control"
+              hint="Enable access control to allow only authorized people to view your model."
+              emit-value
+              map-options
+            />
+            <q-select
+              outlined  
+              v-if="editMetadataStore.enableModelAccess == true"
+              v-model="editMetadataStore.modelAccessList"
+              multiple
+              use-input
+              use-chips
+              autogrow
+              hide-dropdown-icon
+              input-debounce="0"
+              new-value-mode="add-unique"
+              :loading="loadingExp"
+              class="q-ml-md q-pr-md q-pb-xl"
+              label="Authorized Usernames"
+              hint="Press enter to add a new authorized username, or enter multiple usernames separated by , ; or space"
+              :rules="[
+                (val) => val.length >= 1 || 'One or more usernames required',
+              ]"
+              @update:model-value="populateUsernames('admin')"
+              debounce="2000"
+            />
           </div>
         </div>
       </q-step>
@@ -543,6 +580,7 @@ import { onMounted, ref } from 'vue';
 import { useAuthStore } from 'src/stores/auth-store';
 import { Notify, QStepper } from 'quasar';
 import { useExperimentStore } from 'src/stores/experiment-store';
+import { useAccessControlStore } from 'src/stores/access-control-store';
 import { useEditMetadataStore } from 'src/stores/edit-model-metadata-store';
 import { useRoute, useRouter } from 'vue-router';
 
@@ -554,6 +592,7 @@ import { useDatasetStore } from 'src/stores/dataset-store';
 // Initialize with data from model
 const editMetadataStore = useEditMetadataStore();
 const experimentStore = useExperimentStore();
+const accessControlStore = useAccessControlStore();
 const datasetStore = useDatasetStore();
 const modelStore = useModelStore();
 const authStore = useAuthStore();
@@ -573,7 +612,8 @@ const popupContent = ref(false);
 const showPlotModal = ref(false);
 const buttonDisable = ref(false);
 const saveEdit = () => {
-  editMetadataStore
+  if (editMetadataStore.metadataValid) {
+    editMetadataStore
     .submitEdit(modelId,userId)
     .then(
       // Redirect to model page
@@ -595,11 +635,19 @@ const saveEdit = () => {
         color: 'negative',
       });
     });
-};
-const populateEditor = (store: typeof editMetadataStore) => {
-  replaceContent.value = true;
-  (store.markdownContent = `
-  <h3>Description <a id="description"></a></h3>
+  } else {
+    Notify.create({
+      message: 'Enter all values into required fields first before proceeding',
+      icon: 'warning',
+      color: 'negative',
+    });
+  }
+  };
+
+  const populateEditor = (store: typeof editMetadataStore) => {
+    replaceContent.value = true;
+    (store.markdownContent = `
+    <h3>Description <a id="description"></a></h3>
   <hr>
   ${store.modelDesc}
   <p>&nbsp;</p>
@@ -636,6 +684,16 @@ const setStateFromDatasetDetails = () => {
     loadingExp.value = false;
   });
 };
+
+const populateUsernames = (editor: string) => {
+    loadingExp.value = true;
+    buttonDisable.value = true;
+    editMetadataStore.validateUsernames(editor).finally(() => {
+      loadingExp.value = false; // don't lock user out when error
+      buttonDisable.value = false;
+    });
+  }
+
 // TODO: Extract this common function and put in external store
 const addExpPlots = (store: typeof editMetadataStore) => {
   buttonDisable.value = true;

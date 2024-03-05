@@ -9,6 +9,9 @@ from .common import Artifact, PyObjectId
 from .dataset import LinkedDataset
 from .experiment import LinkedExperiment
 
+class AccessControl(BaseModel):
+    enabled: bool
+    authorized: List[str]
 
 class ModelCardModelIn(BaseModel):  # Input spec
     """Request model for creating a model card."""
@@ -32,6 +35,7 @@ class ModelCardModelIn(BaseModel):  # Input spec
     ] = None  # will need to use GET /experiments/{exp_id} to get this
     experiment: Optional[LinkedExperiment] = None
     dataset: Optional[LinkedDataset] = None
+    access_control: AccessControl
 
     class Config:
         """Pydantic config to allow creation of data model
@@ -93,6 +97,7 @@ class UpdateModelCardModel(BaseModel):
     task: Optional[str] = None  # a task is a tag
     frameworks: Optional[List[str]] = None
     point_of_contact: Optional[str] = None
+    access_control: Optional[AccessControl] = None
     owner: Optional[str] = None
     video_location: Optional[str] = None
     inference_service_name: Optional[str] = None

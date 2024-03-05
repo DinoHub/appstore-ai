@@ -114,13 +114,16 @@
           creationStore.modelName != '' &&
           creationStore.modelTask != '' &&
           creationStore.tags.length > 0 &&
-          creationStore.frameworks.length > 0
+          creationStore.frameworks.length > 0 &&
+          (!creationStore.enableModelAccess ||
+          (creationStore.enableModelAccess && creationStore.modelAccessList.length > 0))
         "
         :error="
           creationStore.modelName == '' ||
           creationStore.modelTask == '' ||
           creationStore.tags.length <= 0 ||
-          creationStore.frameworks.length <= 0
+          creationStore.frameworks.length <= 0 ||
+          (creationStore.enableModelAccess && creationStore.modelAccessList.length === 0)
         "
       >
         <div class="row justify-center full-height" style="min-height: 35rem">
@@ -205,6 +208,40 @@
               label="Point of Contact (Optional)"
               hint="This is the person to contact for enquiries on the model."
             ></q-input>
+          </div>
+          <div class="col q-pl-md q-ml-xl shadow-2 rounded">
+            <h6 class="text-left q-mt-md q-mb-lg">Access Control</h6>
+            <q-select
+              outlined
+              v-model="creationStore.enableModelAccess"
+              class="q-ml-md q-pr-md q-pb-xl"
+              :options="accessControlStore.enableModelAccessOptions"
+              label="Enable Access Control"
+              hint="Enable access control to allow only authorized people to view your model."
+              emit-value
+              map-options
+            />
+            <q-select
+              outlined  
+              v-if="creationStore.enableModelAccess == true"
+              v-model="creationStore.modelAccessList"
+              multiple
+              use-input
+              use-chips
+              autogrow
+              hide-dropdown-icon
+              input-debounce="0"
+              new-value-mode="add-unique"
+              :loading="loadingExp"
+              class="q-ml-md q-pr-md q-pb-xl"
+              label="Authorized Usernames"
+              hint="Press enter to add a new authorized username, or enter multiple usernames separated by , ; or space"
+              :rules="[
+                (val) => val.length >= 1 || 'One or more usernames required',
+              ]"
+              @update:model-value="checkIfUsernamesExist()"
+              debounce="2000"
+            />
           </div>
         </div>
       </q-step>
@@ -865,8 +902,8 @@
 </style>
 <script setup lang="ts">
 import { useExperimentStore } from 'src/stores/experiment-store';
+import { useAccessControlStore } from 'src/stores/access-control-store';
 import { useCreationStore } from 'src/stores/create-model-store';
-import { useAuthStore } from 'src/stores/auth-store';
 import {
   useInferenceServiceStore,
   imageUriRegex,
@@ -886,6 +923,7 @@ import { useDatasetStore } from 'src/stores/dataset-store';
 const router = useRouter();
 // constants for stores
 const experimentStore = useExperimentStore();
+const accessControlStore = useAccessControlStore();
 const datasetStore = useDatasetStore();
 const creationStore = useCreationStore();
 const modelStore = useModelStore();
@@ -926,6 +964,16 @@ const retrieveDatasetDetails = () => {
   buttonDisable.value = true;
   creationStore.loadMetadataFromDataset().finally(() => {
     loadingExp.value = false; // don't lock user out when error
+    buttonDisable.value = false;
+  });
+};
+
+// function for triggering events that should happen when next step is triggered
+const checkIfUsernamesExist = () => {
+  loadingExp.value = true;
+  buttonDisable.value = true;
+  creationStore.validateUsernames().finally(() => {
+    loadingExp.value = false;
     buttonDisable.value = false;
   });
 };

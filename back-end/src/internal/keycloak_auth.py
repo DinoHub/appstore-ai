@@ -9,7 +9,9 @@ from passlib.context import CryptContext
 
 from ..config.config import config
 from ..models.iam import TokenData, UserRoles
-from .dependencies.mongo_client import get_db
+
+from keycloak import KeycloakAdmin
+from keycloak import KeycloakOpenIDConnection
 
 
 # Create a KeycloakOpenID instance for the Bearer-only client
@@ -92,6 +94,16 @@ async def get_current_user(
     
     return token_data
 
+async def initialize_keycloak_admin() -> KeycloakAdmin:
+    keycloak_connection = KeycloakOpenIDConnection(
+        server_url=config.KEYCLOAK_SERVER_URL,
+        realm_name=config.KEYCLOAK_REALM_NAME,
+        client_id=config.KEYCLOAK_CLIENT_ID,
+        client_secret_key=config.KEYCLOAK_CLIENT_SECRET_KEY,
+        verify=True
+    )
+    return KeycloakAdmin(connection=keycloak_connection)
+
 async def check_is_admin(
     token: str = Depends(oauth2_scheme),
 ) -> TokenData:
@@ -101,7 +113,6 @@ async def check_is_admin(
         request (Request): Incoming HTTP request
         token (str, optional): Encoded JWT. Defaults to Depends(oauth2_scheme).
         csrf (CsrfProtect, optional): CSRF Protection. Defaults to Depends().
-        db (_type_, optional): MongoDB Connection. Defaults to Depends(get_db).
 
     Raises:
         HTTPException: If user is not an admin

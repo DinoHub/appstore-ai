@@ -170,6 +170,7 @@ async def search_cards(
     creator_user_id_partial: Optional[str] = Query(
         default=None, alias="creatorUserIdPartial"
     ),
+    user: Optional[str] = Query(default=None),
     return_attr: Optional[List[str]] = Query(default=None, alias="return[]"),
     all: Optional[bool] = Query(default=None),
 ) -> Dict:
@@ -198,7 +199,117 @@ async def search_cards(
     # so should prob rely on elasticsearch or something
     # So set up ES, sync with Mongo with Logstash, then
     # use ES BM25 search
-    if generic_search_text:
+    if user and generic_search_text:
+        query["$and"] = [
+            {
+                "$or": [
+                { "accessControl.enabled": False },
+                { 
+                    "$and": [
+                        {"accessControl.enabled": True},
+                        {"accessControl.authorized": user}
+                    ]
+                },
+                { "creatorUserId": user }
+                ]
+            },
+            {
+               "$or": [
+                   {
+                    "title": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "task": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "tags": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "frameworks": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "creatorUserId": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "owner": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "pointOfContact": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "markdown": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "performance": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "description": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "explanation": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "usage": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+                {
+                    "limitations": {
+                        "$regex": re.escape(generic_search_text),
+                        "$options": "i",
+                    }
+                },
+               ] 
+            }
+        ]
+    
+    elif user:
+        query["$or"] = [
+            { "accessControl.enabled": False },
+            { 
+                "$and": [
+                    {"accessControl.enabled": True},
+                    {"accessControl.authorized": user}
+                ]
+            },
+            { "creatorUserId": user }
+        ]
+
+    elif generic_search_text:
         query["$or"] = [
             {
                 "title": {
