@@ -1,8 +1,8 @@
 import Keycloak from "keycloak-js";
 
-const CLIENT_ID = "";
-const KEYCLOAK_URL = "";
-const KEYCLOAK_REALM = "";
+const CLIENT_ID = process.env.CLIENT_ID;
+const KEYCLOAK_URL = process.env.KEYCLOAK_URL;
+const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM;
 
 const initOptions = {
     "realm": KEYCLOAK_REALM,
