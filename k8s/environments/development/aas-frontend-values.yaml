@@ -23,6 +23,9 @@ service:
 
 env:
   VUE_APP_BACKEND_URL: https://aas-backend.<domain-name> # If using OpenShift, please use the Openshift route for back-end
+  VUE_APP_KEYCLOAK_CLIENT_ID_ENV: ai-appstore-frontend
+  VUE_APP_KEYCLOAK_URL_ENV: https://keycloak.<domain-name>
+  VUE_APP_KEYCLOAK_REALM_ENV: CommonServices
 
 image:
   repository: docker.io/<docker_username>/aas-frontend # Please use own repository link for front-end image.
