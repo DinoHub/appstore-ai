@@ -46,6 +46,10 @@ spec:
               value: {{ .Values.env.VUE_APP_KEYCLOAK_URL | quote }}
             - name: VUE_APP_KEYCLOAK_REALM
               value: {{ .Values.env.VUE_APP_KEYCLOAK_REALM | quote }}
+            - name: VUE_APP_FRONTEND_VERSION
+              value: {{ .Values.env.VUE_APP_FRONTEND_VERSION | quote }}
+            - name: VUE_APP_BACKEND_VERSION
+              value: {{ .Values.env.VUE_APP_BACKEND_VERSION | quote }}
           livenessProbe:
             httpGet:
               path: /

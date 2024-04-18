@@ -1,6 +1,6 @@
 #!/bin/sh
 # Build image
-FRONTEND_APP_VERSION=${1:-'1.2.1'}
+FRONTEND_APP_VERSION=${1:-'1.2.2'}
 BACKEND_APP_VERSION=${1:-'1.2.0'}
 
 DOCKER_USERNAME=<docker_username>
