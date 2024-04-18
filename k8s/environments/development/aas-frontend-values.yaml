@@ -30,5 +30,5 @@ env:
 image:
   repository: docker.io/<docker_username>/aas-frontend # Please use own repository link for front-end image.
   pullPolicy: Always
-  tag: "1.2.0"
+  tag: "1.2.1"
   
