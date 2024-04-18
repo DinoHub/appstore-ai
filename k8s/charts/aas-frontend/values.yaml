@@ -46,6 +46,8 @@ env:
   VUE_APP_KEYCLOAK_CLIENT_ID: ai-appstore-frontend
   VUE_APP_KEYCLOAK_URL: https://keycloak.ai
   VUE_APP_KEYCLOAK_REALM: CommonServices
+  VUE_APP_BACKEND_VERSION: "1.0.0"
+  VUE_APP_FRONTEND_VERSION: "1.0.0"
 
 ingress:
   enabled: false

@@ -1,6 +1,6 @@
 import Keycloak from "keycloak-js";
 
-const CLIENT_ID = process.env.CLIENT_ID;
+const KEYCLOAK_CLIENT_ID = process.env.KEYCLOAK_CLIENT_ID;
 const KEYCLOAK_URL = process.env.KEYCLOAK_URL;
 const KEYCLOAK_REALM = process.env.KEYCLOAK_REALM;
 
@@ -8,7 +8,7 @@ const initOptions = {
     "realm": KEYCLOAK_REALM,
     "url": KEYCLOAK_URL,
     "ssl-required": "external",
-    "clientId": CLIENT_ID,
+    "clientId": KEYCLOAK_CLIENT_ID,
     "public-client": true,
     "confidential-port": 0,
 }
@@ -55,7 +55,7 @@ const UserRoles = (): string[] | undefined => {
     if (keycloakInstance.resourceAccess == undefined) {
         return undefined;
     }
-    return keycloakInstance.resourceAccess[CLIENT_ID].roles;
+    return keycloakInstance.resourceAccess[KEYCLOAK_CLIENT_ID].roles;
 }
 
 const isLoggedIn = () => !!keycloakInstance.token;

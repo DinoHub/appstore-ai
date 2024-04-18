@@ -75,9 +75,11 @@ module.exports = configure(function (ctx) {
         // if not set in docker build,
         // will use value from .env file
         API: ctx.dev ? 'http://localhost:7070' : process.env.BACKEND_URL,
-        CLIENT_ID: process.env.KEYCLOAK_CLIENT_ID,
+        KEYCLOAK_CLIENT_ID: process.env.KEYCLOAK_CLIENT_ID,
         KEYCLOAK_URL: process.env.KEYCLOAK_URL,
-        KEYCLOAK_REALM: process.env.KEYCLOAK_REALM
+        KEYCLOAK_REALM: process.env.KEYCLOAK_REALM,
+        BACKEND_VERSION: process.env.BACKEND_VERSION,
+        FRONTEND_VERSION: process.env.FRONTEND_VERSION
       },
       // rawDefine: {}
       // ignorePublicFolder: true,
