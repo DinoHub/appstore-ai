@@ -9,7 +9,7 @@
   "example_task": [
     "None",
     "Image Classification",
-    "Zero Shot Text Classification",
+    "Zero Shot Text Classification"
   ],
   "python_version": ["3.9"]
 }
